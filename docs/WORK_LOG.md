@@ -1,5 +1,13 @@
 # 작업 이력
 
+## 2026-10-07 — 사용자 공개키 수신·실제 백업 암호화와 복원 명령 준비
+
+- 사용자가 기존 준비 명령의 PowerShell 실행 화면을 보냈고, 이후 정확한 RSAKeyValue XML을 텍스트로 전달했습니다. 스크린샷을 추측 전사하지 않고 정확한 공개키 입력을 사용했습니다. 공개 modulus 256bytes/2048비트·exponent 65537을 확인했습니다. 개인 전송키는 사용자 PC의 DPAPI 파일에 있으며 클라우드에 없습니다.
+- 기존 `tools/encrypt-signing-backup.py`로 실제 사용자 공개키와 기존 개인 ZIP을 암호화했습니다. packet은 `/workspace/artifacts/transfer-029/encrypted-signing-packet.json`, pasteable Windows capsule은 같은 폴더 `Restore-MySigningBackup.ps1`입니다. 원본 ZIP hash/크기 2,989bytes와 압축 검사가 정상이고, 결과 암호문은 14개 RSA 블록/3,584bytes입니다. 암호문·원본 파일 모두 Git에 추가하지 않습니다.
+- 추가 파일 `pixel-traffic/tools/Restore-BackupTransfer.ps1`: scope 안 ErrorAction Stop, 동일 Windows 계정/PC의 DPAPI 개인 전송키 가져오기, 실제 공개 modulus hash 대조, ciphertext 블록 크기/길이 확인, 메모리에서 OAEP-SHA1 복호화, 기존 ZIP의 고정 SHA256·크기 확인 후 CreateNew 저장. 다른 기존 파일은 거부하며 같은 ZIP이면 idempotent 종료합니다. RSA/메모리/hash/FileStream은 사용 후 Dispose합니다. 원본 앱 키를 추출하거나 기존 다른 키를 덮어쓰지 않습니다.
+- 검증: 실제 packet Base64가 3,584bytes/블록256이고 원본 SHA256이 맞는지 확인했습니다. 생성된 capsule의 here-string JSON을 다시 파싱해 packet과 일치함을 확인했습니다. 기존 실제 helper의 임시 RSA round-trip 검사를 입력 무변경으로 반복하지 않았습니다. 사용자 전송키가 없는 클라우드에서는 실제 packet 복호화를 할 수 없습니다. PowerShell 준비 스크립트의 공개 XML 출력은 사용자 화면에서 관측했지만 최종 Windows 복호화/파일 저장은 사용자 실행 결과 대기입니다.
+- STATUS/BACKUP_TRANSFER/WORK_LOG 갱신. 기능 소스·버전·PNG는 바꾸지 않아 Android/전체 모델 검사와 APK 설치는 수행하지 않았습니다. 원격에는 공통 복원 도우미와 기록만 추가합니다. 사용자에게 다운로드 대신 복사 실행 가능한 하나의 명령과 실제 출력 ZIP 경로를 전달하고 ZIP hash 검증 성공을 확인한 뒤 인수인계를 마무리합니다.
+
 ## 2026-10-07 — 아티팩트 다운로드 재실패 조사와 대체 전달 준비
 
 - 사용자가 두 ZIP에 ‘아티팩트를 다운로드할 수 없다’는 오류가 난다고 보고하고 용량 문제인지 질문했습니다. 3KB 파일에도 같은 현상이므로 용량 단독 원인 가능성은 낮습니다. 오류의 서비스 원인은 관측 불가이며 정확한 backend 원인이나 아티팩트 등록 성공을 주장하지 않습니다.

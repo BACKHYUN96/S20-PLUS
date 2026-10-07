@@ -26,3 +26,13 @@ python tools/encrypt-signing-backup.py /tmp/user-public.xml /workspace/artifacts
 ## 실제 확인과 대기
 
 현재 클라우드에서 생성한 임시 RSA fixture로 실제 2,989bytes 서명 ZIP의 암호화/복호화 byte 일치를 확인했습니다. 암호문은 3,584bytes입니다. Windows/DPAPI 실행은 미검증입니다. 실제 사용자 전송은 공개키 수신·노트북 복원 확인 대기이며 완료된 것으로 보고하지 않습니다. 앱 소스/버전/자산은 바뀌지 않았습니다.
+
+## 사용자 공개키 수신 후 전달 준비 — 2026-10-07
+
+사용자가 PowerShell 준비 스크립트 실행 화면과 공개 XML을 제공했습니다. 공개 modulus 256bytes/2048비트와 exponent 65537을 확인하고 실제 공개키로 기존 ZIP을 암호화했습니다. 암호문은 RSA 블록 14개/3,584bytes입니다. 원본 ZIP은 2,989bytes이며 SHA256 `bd5dd8d7effd0e58490e08420aada989c56050a8d020c1bbc80e7e2acd67821d`와 압축 무결성이 일치합니다.
+
+`pixel-traffic/tools/Restore-BackupTransfer.ps1`은 복원용 공통 스크립트입니다. 실제 암호화 packet JSON과 함께 하나의 PowerShell script block으로 감싸 사용자에게 전달합니다. 개인키나 원본 ZIP 내용은 capsule에 없습니다. 동일 Windows 사용자/PC의 DPAPI 전송키를 사용하고, 수신자 modulus hash·암호 블록 크기·원본 ZIP 길이/SHA256을 확인한 뒤 파일을 생성합니다. 같은 이름의 다른 파일은 보존하고 같은 ZIP이 이미 있으면 성공으로 종료합니다.
+
+기본 출력은 `%USERPROFILE%/Desktop/블랙/AI/새 폴더/S20-PLUS-0.29.0-signing-backup.zip`입니다. 사용자가 출력 파일을 별도 개인 보관한 뒤 새 환경에 첨부하여 기존 빌드 서명키를 복원합니다. 암호화 packet과 실제 pasteable capsule은 현재 클라우드 `/workspace/artifacts/transfer-029/`에 있으며 Git에는 넣지 않습니다.
+
+실제 Windows 준비 스크립트는 사용자 화면에서 공개 XML 출력까지 관측했습니다. 노트북의 실제 암호문 복호화·ZIP 저장/검증은 아직 확인되지 않았으므로 전달 완료로 보고하지 않습니다. 새 앱 빌드/실기기 성능 검사는 이번 범위가 아닙니다.
