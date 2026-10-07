@@ -1,0 +1,16 @@
+**/.local/
+**/__pycache__/
+**/.gradle/
+**/build/
+**/local.properties
+**/.env
+**/.env.*
+*.keystore
+*.jks
+*.p12
+*.pfx
+*.apk
+*.aab
+*.bundle
+*handoff*.zip
+*signing*.zip

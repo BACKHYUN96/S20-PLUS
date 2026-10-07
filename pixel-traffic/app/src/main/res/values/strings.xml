@@ -1,0 +1,4 @@
+<resources><string name="app_name">픽셀 트래픽</string><string name="wallpaper_description">저녁 도심 도로의 픽셀 라이브 배경화면</string><string name="follow_saver">휴대폰 절전 모드에서는 최대 15fps</string><string name="diagnostics">최근 주행 진단</string><string name="automatic_time">휴대폰 시간에 따라 장면 자동 전환</string><string name="preview_note">실시간 미리보기 · 15fps
+설정 변경을 바로 확인하세요. 실제 배경화면은 선택한 프레임 설정을 사용합니다.</string> <string name="section_title">%1$s %2$s</string>
+ <string name="preview_expand_note">%1$s\n미리보기를 누르면 전체 화면으로 볼 수 있어요.</string>
+</resources>
