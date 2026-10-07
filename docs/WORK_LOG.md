@@ -1,5 +1,17 @@
 # 작업 이력
 
+## 2026-10-07 — 새 채팅 이동용 소스 보존·복원 검증 완료
+
+- 범위: 최신 0.29.0 소스/그림/검사/기록의 보존과 다음 채팅 인수인계. 새로운 앱 기능이나 버전 변경은 없습니다. 사용자 확인은 ‘잘 적용됨’이며 새 기기별 모든 조합/FPS/전력 확인으로 확대하지 않았습니다.
+- 첫 소스 체크포인트 `82c5cbdcdaf17d408565b26addf01411792a3f73`에 루트 README의 기존 수정, AGENTS, docs, pixel-traffic을 보존했습니다. 애초 미추적이었던 최신 프로젝트부터 Git 기록을 시작했으며 과거 버전별 소스 커밋을 재구성하지 않았습니다. `.gitignore`로 키/로컬 설정/생성물/백업을 제외하고 `.gitattributes`로 텍스트·바이너리와 플랫폼 줄바꿈을 명시했습니다.
+- staging 검사에서 Windows Gradle wrapper의 CRLF가 trailing whitespace로 판정됐습니다. `git add --renormalize pixel-traffic/gradlew.bat`로 인덱스 줄바꿈을 정규화하고 `git diff --cached --check`를 통과했습니다. wrapper의 실행 내용은 변경하지 않았습니다.
+- 새 clone `/tmp/pixel-handoff-restore-029`에서 앱 src/main 전체가 원래 체크아웃과 byte 단위로 같은지 확인했습니다. `cd pixel-traffic; python tools/build-cloud.py --offline :app:assembleDebug :app:lintDebug`로 43개 작업을 실행해 19초에 성공했습니다. Lint `No issues found.`; APK versionCode 29/versionName 0.29.0/minSdk29/targetSdk35, 기존 v2 인증서와 PNG 13개 일치. 재생성 APK는 37,460,214bytes이며 SHA256 `a04bfa9d27b9687f6af6feb41a3f944d5f8cc10355ceae73554ccc11688d978a`로 기존 전달 파일과 동일했습니다. 로그는 현재 환경의 `/tmp/pixel-handoff-build.log`입니다.
+- 새 빌드 도우미는 checkout 위치를 따라가고 기존 JDK/SDK/Gradle 캐시와 프록시/CA를 사용합니다. 사라질 수 있는 외부 helper에 의존하지 않습니다. 키 hash 검증/없는 키 중지 및 restore 도우미의 동일 키 반복/다른 키 보존은 별도 fixture로 확인했습니다. 기능 소스가 바뀌지 않아 통과했던 전체 0.29 기하/조명/주행 검사를 반복하지 않았습니다. Windows 실행·새 머신 SDK 설치·실기기 테스트는 미실행입니다.
+- 기존 HTTPS Git 프록시로 `git push --atomic origin HEAD:refs/heads/main refs/tags/pixel-traffic-v0.29.0`를 수행했습니다. 원격 main과 peeled 태그가 위 체크포인트 SHA인 것을 `git ls-remote`로 확인했습니다. 강제 push/reset/사용자 파일 삭제나 토큰 추출은 없습니다. 이후 이 완료 문서를 별도 커밋으로 main에 추가합니다.
+- 체크포인트 전체 Git bundle 생성·verify, 별도 폴더 clone과 `git fsck --full`이 통과했습니다. 최종 오프라인 ZIP 구성은 bundle/최신 APK/야간 합성/RESTORE/manifest/checksum이며 최종 commit/checksum은 ZIP manifest에 기록합니다. 서명키 ZIP은 별도이며 프로젝트 ZIP/Git에 포함하지 않습니다. SDK/JDK/캐시와 과거 첨부 원본의 제외 범위도 복원 안내에 명시했습니다.
+- 환경 설정 스킬에 따라 실제 검사한 시작 절차를 `start_skill` 하나에 저장했습니다. 도구 결과 `status=saved`, `requires_publish=true`. 기존 설치/네트워크/저장소 목록/비밀 요구사항 필드는 건드리지 않았습니다. 초안 저장과 게시/새 태스크 복원은 구분하며 활성화에는 사용자 환경 설정의 검토·저장/Publish가 필요합니다. 저장 초안은 서버에 보존되지만 자동 적용된 것으로 주장하지 않습니다.
+- 새 채팅 진입점은 HANDOFF → STATUS 최신 항목 → PATCH_GUIDE와 요청 관련 파일입니다. 이전 결정을 필요할 때만 WORK_LOG에서 확장합니다. 다음 패치는 선택되지 않았으며 보행자/신호 안전 횡단은 후보입니다. 사용자에게 다운로드 백업 두 개와 새 채팅 시작 문구를 전달합니다.
+
 ## 2026-10-07 — 새 채팅 이동 전 보존·복원 작업 착수
 
 - 사용자가0.29정상적용을확인한뒤새채팅으로이동하기전준비를완벽히요청했습니다. 소스/기록보관이필요하다는직전설명과연결된요청으로Git커밋/원격보존·별도백업과검증을진행합니다. 기능패치는추가하지않습니다.
