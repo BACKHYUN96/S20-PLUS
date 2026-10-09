@@ -1,5 +1,15 @@
 # 작은 패치 작업 안내
 
+## Unity 횡단보도 차선 보정 0.5.1 범위와 검사
+
+| 변경 대상 | 관련 파일 | 확인 |
+| --- | --- | --- |
+| 횡단보도 안 중앙선·흰색 dash 제거 | Editor/CityEnvironment.cs | 실제12stripe와 CentreLine/LaneDash renderer bounds 비중첩·횡단보도 바깥 표시·Editor PNG |
+| 버전·새 장면 | Runtime/StarterConfig.cs, Editor/StarterScene.cs | 0.5.1/code6/Wallpaper051·이전 장면 보존·기존 pipeline Unity/BuildPlayer/launcher Lint·원본 v2 서명·APK 해시/manifest |
+| 변경 없는 host·보행·차량 | NativeAndroid, StreetModel/SidewalkRoutes/StreetSimulation, 차량 geometry | 0.5.0과 SHA 동일. host library Lint38003123943(errors0/warnings14)을 재사용하며 source가 바뀌면 다시 수행 |
+
+이 패치는 도로표시3파일만 수정합니다. 횡단보도 z8~12m의 간격까지 차선을 비우고 바깥 차선/stop line/횡단 band는 유지합니다. 시간대·날씨·차량 모델 기능을 추가하지 않습니다. 기존 자동 pipeline의 필수 검사 묶음을 사용하며 별도 무관한 native/host/model 검사를 중복 실행하지 않습니다. 최종 문서만 바꾸면 같은 source 빌드를 반복하지 않습니다.
+
 ## Unity 라이브 배경화면 0.5.0 범위와 검사
 
 | 변경 대상 | 관련 파일 | 필수 확인 |

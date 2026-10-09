@@ -1,6 +1,12 @@
-# Pixel Traffic Unity — 라이브 배경화면 0.5.0
+# Pixel Traffic Unity — 횡단보도 차선 보정 0.5.1
 
-## 현재 패치 — 라이브 배경화면·저장 설정 0.5.0 (2026-10-10 KST)
+## 현재 패치 — 횡단보도 차선 보정 0.5.1 (2026-10-10 KST)
+
+0.5.0의 실제 폰 적용 성공을 확인한 뒤, 횡단보도 내부에 겹친 노란 중앙선과 흰색 차선만 제거합니다. 횡단보도 바깥 차선·stop line·12개 흰 stripe와 도시/차량/보행/배경화면 설정을 유지합니다. 새 Wallpaper-0.5.1/Generated/Wallpaper051을 사용해 이전 장면을 보존하며 appID·기존 서명은 동일합니다. APK는 `Builds/pixel-traffic-unity-prototype-0.5.1.apk`이며 code6입니다.
+
+기존 CityEnvironment 장면 검사에서 실제 renderer bounds 비중첩을 확인합니다. PC 장면/Editor PNG·Android 빌드/Lint·실제 APK 서명/버전 결과와 집 PC 설치 명령은 [최신 상태](../docs/STATUS.md)를 확인합니다. 변경되지 않은 NativeAndroid/host/model/vehicle SHA와 이전 host Lint 결과를 재사용합니다. 다음 추천은 낮·노을·야간 및 조명 전환이며 이번 버전에 추가하지 않습니다.
+
+## 이전 패치 — 라이브 배경화면·저장 설정 0.5.0 (2026-10-10 KST)
 
 0.4.0의 도시·차량·신호·인도 보행을 Android 라이브 배경화면으로 연결합니다. 앱을 열면 한국어 설정 화면이 나옵니다. 보행자 4~100명(4명 단위, 기본 32명)과 절전 모드를 자동 저장하며, **배경화면 미리보기 및 적용** 버튼으로 Android의 미리보기를 엽니다. 실제 적용은 시스템 화면에서 선택합니다. 기본 30 FPS, 절전 설정 또는 기기 절전 시 15 FPS는 목표값이며 측정 FPS가 아닙니다.
 
@@ -12,7 +18,7 @@ PC 빌드·Lint·실제 APK 서비스/서명 검증 결과와 최신 설치 명�
 
 Unity 6000.3.26f1/Android 모듈을 사용합니다. `tools/run-pipeline.ps1 -Operation Validate`로 장면·production 모델·manifest 템플릿 검사를 수행하고, `-Operation BuildApk`로 Android 빌드/Lint/원본 v2 인증서 및 APK 메타데이터를 검사합니다. Gradle 생성 후 `AndroidWallpaperBuild`가 `NativeAndroid/src`와 `res`를 복사하고 service/provider/설정 Activity를 등록합니다. Export에도 같은 처리를 적용합니다. 실제 Android 컴파일은 PC BuildApk 결과로 확인합니다. 새 NativeAndroid 모듈은 `tools/check-wallpaper-lint.ps1`로 unityLibrary Lint를 추가 확인합니다. 이 도구는 생성된 Java/리소스 SHA가 현재 소스와 같은지 먼저 확인하며 APK를 다시 만들지 않습니다. 이번 결과는 launcher 오류0/경고8, unityLibrary 오류0/경고14입니다.
 
-Editor 메뉴 **4. Build Signed Wallpaper APK**를 사용할 수 있습니다. APK는 `Builds/pixel-traffic-unity-prototype-0.5.0.apk`에 생성됩니다. 기존 `BuildActivityApk` 메서드 이름은 PowerShell 호출 호환용으로 유지하며 결과 앱은 라이브 배경화면입니다. 서명 환경 변수 및 PC runner 설정은 아래 초기 기록과 [자동화 안내](../docs/UNITY_AUTOMATION.md)를 참조합니다. 최신 안내가 아래 초기 0.1.0 기록보다 우선합니다.
+Editor 메뉴 **4. Build Signed Wallpaper APK**를 사용할 수 있습니다. APK는 `Builds/pixel-traffic-unity-prototype-0.5.1.apk`에 생성됩니다. 기존 `BuildActivityApk` 메서드 이름은 PowerShell 호출 호환용으로 유지하며 결과 앱은 라이브 배경화면입니다. 서명 환경 변수 및 PC runner 설정은 아래 초기 기록과 [자동화 안내](../docs/UNITY_AUTOMATION.md)를 참조합니다. 최신 안내가 아래 초기 0.1.0 기록보다 우선합니다.
 
 ## 이전 기록 — 0.4.0 및 초기 설정
 ## 이전 패치 — 신호·인도 보행·횡단 0.4.0 (2026-10-10 KST)

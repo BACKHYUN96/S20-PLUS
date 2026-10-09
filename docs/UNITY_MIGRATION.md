@@ -1,5 +1,49 @@
 # Pixel Traffic — Unity 전환 준비
 
+## 2026-10-10 — Unity 0.5.1 횡단보도 차선 보정 APK 전달 (KST)
+
+사용자가 **0.5.0 실제 폰 적용 성공**을 확인했다. 요청한 횡단보도 내부 중앙선·흰색차선만 제거한 **0.5.1/code6**을 전달한다. 실제0.5.1 폰 보정 표시는 설치후확인한다. 다음은 **낮·노을·야간과 가로등/창문/차량 라이트 전환**을 추천하며 이번패치에는구현하지않았다.
+
+### 변경과 과정
+
+- CityEnvironment.cs에서 횡단보도z8~12m내의CentreLine/LaneDash만clip한다. 바깥중앙선/흰dash·12zebra/stop line·도시/차량/보행/배경화면/저장설정을유지한다. 원인은 표시를횡단보도와관계없이도로전체길이로생성했던것이다. 기존장면검사에서 실제12stripe/94차선 renderer bounds 비중첩을확인한다.
+- StarterConfig.cs 버전0.5.1/code6/Wallpaper-0.5.1.unity, StarterScene.cs Generated/Wallpaper051로이전장면을보존한다. 실제source변경은3C#파일과문서뿐이다. 기존dirty native/index를보존한다.
+- 원격base85166199a0c0c4771618a10c53e52fa42e44b4a0 → source **40fc91cc78f4ebfb173634bafb75bc677ec7b8f1**의main Validate성공 → 같은source **unity-apk-0.5.1-build1**태그APK완료. 신규독립테스트/무관한native검사를추가하지않고기존pipeline필수검사묶음을사용했다. 실패한compile/build는없다.
+
+### 실제 확인
+
+| 확인 | 결과 |
+| --- | --- |
+| PCUnity6000.3.26f1 컴파일/장면 | [Validate38003973846](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38003973846), job114068403182 success. 실제12stripe와94차선 bounds 비중첩PASS |
+| 기존도시/모델검사 | 기본106792triangles/2139renderers/43materials,최대100명115768/2207/43으로0.5.0과동일.4/32/100명·223횡단/33신호주기·minimumFootDistance0.3999990523/bumper1.7999997139 PASS |
+| 실제GPU렌더 | D3D11 Editor540×1200 PNG PASS,횡단보도안노란/흰차선이사라진것을관찰. PNGSHA256 `8625a1b65c5e4723d66ab5a3262157f5a8d80149ca9955560820594c9294d551`. 폰스크린샷아님 |
+| Android BuildPlayer/Lint | [BuildApk38004234027](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38004234027), job114069217140 success; BuildPlayer errors0/warnings0, launcher Lint errors0/warnings8 |
+| 변경없는host library Lint | NativeAndroid/bridge/모델/차량18입력이0.5.0과byte동일.53빌드입력SHA기록. 기존 [host Lint38003123943](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38003123943) errors0/warnings14를재사용하며새기기테스트로기록하지않는다 |
+| 다운로드실제APK | ZIPdigest/CRC·APKhash/bytes·aapt0.5.1/code6/min29/target36/ARM64·원본v2cert·SettingsActivity launcher·BIND_WALLPAPER/:wallpaper/meta/providerfalse/UnityActivitydisabled PASS |
+
+이전PNG와rawpixel차분은화면전체에도차이가나므로 '횡단보도외픽셀동일'의근거로사용하지않았다. 실제renderer bounds/원본소스SHA/렌더관찰을확인근거로한다. 인원·절전설정이같은appID로보존되는구현을유지했지만실제0.5.1 업데이트후설정보존/홈·잠금·FPS/발열은사용자폰에서확인한다.
+
+### 파일·서명·추적
+
+- `/workspace/artifacts/pixel-traffic-unity-prototype-0.5.1.apk`, **29517535 bytes**, SHA256 **`eda001cfa9925e1754c31d70f0f9d404ca629a164b7bc6848836d9d092a66b8f`**.
+- 기존인증서SHA256 **`a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6`**, v2 PASS. PC기존DPAPI서명을재사용해원본키백업을중복복원하지않았다.
+- Build reports artifact11650407942/1198294bytes ZIP SHA256 `066f98dab0b6c160bb319f3619d0ba972731d2bb7c86cec2c2045d33ddbb9bb3`; APK artifact11650597598/28543359bytes ZIP SHA256 `7774aa5d6d38fbfeb2e4ffbee256f5756d3e6274e2af9216358f9df4e40294a7`. API digest/CRC일치.
+- 보고서 `/workspace/artifacts/unity-prototype-0.5.1-reports/`, source-manifest·download-verification·preview-comparison JSON은동일artifacts폴더. 문서commit은별도기록하고최종docs-only게시뒤같은검사를반복하지않는다.
+
+### 집PC 설치·확인
+
+APK를 `C:\Users\김백현\Desktop\AI`에저장한뒤PowerShell에서실행한다.
+
+```powershell
+$unityAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $unityAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.5.1.apk"
+if ($LASTEXITCODE -eq 0) {
+    & $unityAdb shell am start -W -n "com.s20plus.pixeltraffic.unityprototype/com.s20plus.pixeltraffic.unitywallpaper.WallpaperSettingsActivity"
+}
+```
+
+앱의**배경화면 미리보기 및 적용**에서미리보고시스템화면에서적용한뒤횡단보도틈새의중앙선/차선이없는지확인한다. 이명령을클라우드에서사용자폰에실행하거나배경화면을자동적용하지않았다. next기능은사용자선택후진행한다.
+
 ## 2026-10-10 — Unity 0.5.1 횡단보도 안 차선 제거 시작 (KST, 진행 중)
 
 사용자가0.5.0 실제폰 적용 성공을 확인했고, 횡단보도 사이 중앙선/흰색차선만 지워달라고 요청했다. 다음 기능은 추천만 요청했으므로 시간대/조명 기능을 구현하지 않는다. 원격main85166199a0c0c4771618a10c53e52fa42e44b4a0 확인. 실제index와 누적native변경을 보존한다.

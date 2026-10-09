@@ -1,6 +1,6 @@
 # S20+
 
-Unity 라이브 배경화면 **0.5.0**를 전달했습니다. 기존 도시·신호·보행을 홈 화면에 연결하고, 인원 4~100명과 절전 설정을 저장합니다. PC Unity·Android 빌드/Lint·실제 APK 서비스 등록·기존 v2 서명을 확인했습니다. [설치·적용 및 검증 결과](docs/UNITY_AUTOMATION.md), [Unity 소스 안내](pixel-traffic-unity/README.md)를 확인합니다. 실제 폰의 홈/잠금·숨김 복귀·FPS/발열 확인은 별도입니다.
+Unity 라이브 배경화면 **0.5.1**은 횡단보도 안에 겹친 중앙선·흰색 차선만 제거한 수정입니다. 0.5.0 실제 폰 적용 성공을 확인했고 기존 인원·절전 설정과 서명을 유지합니다. PC 장면/렌더·Android 빌드/Lint·실제 APK 서명/버전을 확인했습니다. [설치·검증 기록](docs/UNITY_AUTOMATION.md), [Unity 안내](pixel-traffic-unity/README.md)를 확인합니다. 0.5.1 실제 폰 표시는 설치 후 확인합니다.
 
 루팅된 Samsung Galaxy S20+ 관련 앱과 도구의 개발 작업 공간입니다.
 
