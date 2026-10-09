@@ -229,6 +229,14 @@ namespace PixelTraffic.UnityPrototype
                 Path(p,p.goal);p.routeRepairSeconds=1;
                 if(p.pathCursor<p.pathCount)target=Routes.Node(p.path[p.pathCursor],p.side);else target=p.goal;
             }
+            // The tight outer tree-bed corridor fits two 0.40m foot streams.
+            // Keep right in world travel direction so opposing pedestrians do not share its centre.
+            if(Mathf.Abs(p.position.x)>9.86f&&Mathf.Abs(target.x)>9.86f&&Mathf.Abs(target.y-p.position.y)>.5f)
+            {
+                float stream=p.side*(target.y-p.position.y)>0?10.55f:10.05f;
+                Vector2 passing=new Vector2(p.side*stream,target.y);
+                if(SidewalkRoutes.SegmentAllowed(p.position,passing))target=passing;
+            }
             Move(i,target,false);
             if(Vector2.Distance(p.position,p.goal)<.14f)
             {
