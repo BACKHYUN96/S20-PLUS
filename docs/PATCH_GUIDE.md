@@ -1,5 +1,16 @@
 # 작은 패치 작업 안내
 
+## Unity 도시·조명 패치의 범위와 검사
+
+| 변경 대상 | 관련 파일 | 필수 확인 |
+| --- | --- | --- |
+| 도시 지면·건물·가로수·재질 | pixel-traffic-unity/Assets/PixelTraffic/Editor/CityEnvironment.cs, StarterScene.cs | PC Unity compile, scene viewport ground coverage·triangle/renderer/material budget·shader/mipmap/shadow |
+| 버전/장면/APK | Runtime/StarterConfig.cs, Editor/PrototypeBuild.cs, tools/run-pipeline.ps1 | 코드/파일명 일치, Android BuildPlayer·Lint, 원본v2 certificate·SDK·ARM64·APK 해시 |
+| 실제 렌더 미리보기 | Editor/CityPreview.cs, tools/run-unity.ps1, workflow | GPU warmup 후 실제 PNG/loaded material colors; Editor 렌더와 phone/FPS를 구분 |
+| APK 전달 | docs/UNITY_AUTOMATION.md 및 STATUS | 최신 Windows 폴더와 Unity SDK adb.exe 직접 호출·install 성공 후 Activity 시작 |
+
+확인된 main 컴파일/scene 뒤 APK tag를 게시합니다. IPC 일시 실패는 원인 로그를 확인한 뒤 failed job만 제한적으로 재시도하며, source compile 실패에는 APK tag를 만들지 않습니다. Editor-only 캡처 수정은 장면/런타임/build 입력 blob 동일성을 확인하면 APK를 반복 빌드하지 않습니다. 결과 문서만 수정할 때 source pipeline을 재실행하지 않습니다. 누적 native 파일이나 dirty root 문서를 통째로 stage하지 말고 원격 main에서 Unity 범위·문서 entry만 반영합니다. 실제 폰 성능은 별도 확인입니다.
+
 ## 2026-10-09 — Unity PC 자동 검사 연결
 
 사용자 Windows PC에서 수정 실행기의 `Unity Validate completed` 및 GitHub runner 2.337.0의 `Connected to GitHub` / `Listening for Jobs`를 화면으로 확인했습니다. Unity 6000.3.26f1 프로젝트와 공통 PowerShell pipeline을 `pixel-traffic-unity/`에 추가하고 main의 Unity 관련 변경을 자동 Validate에 연결합니다. main 수동 Validate/BuildApk도 지원하며 PR 코드는 자동 실행하지 않습니다. runner 라벨은 self-hosted/Windows/X64/pixel-traffic-unity입니다.
