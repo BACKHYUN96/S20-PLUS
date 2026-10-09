@@ -34,7 +34,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Validate or build with the shared entry point
-        shell: ${{ runner.os == 'Windows' && 'powershell' || 'pwsh' }}
+        # steps.shell cannot use the runner context. Configure pwsh for Linux.
+        shell: ${{ vars.PIXEL_TRAFFIC_RUNNER_SHELL || 'powershell' }}
         env:
           UNITY_EDITOR_PATH: ${{ vars.UNITY_EDITOR_PATH }}
           UNITY_ANDROID_SDK_PATH: ${{ vars.UNITY_ANDROID_SDK_PATH }}

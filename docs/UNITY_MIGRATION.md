@@ -1,5 +1,11 @@
 # Pixel Traffic — Unity 전환 준비
 
+## 2026-10-09 — GitHub 게시 완료 / 첫 workflow 설정 수정
+
+PR #1을 main에 squash 반영했습니다: e08955c27b111622203e6059284ab68b951d85ff. Unity 관련 29파일만 게시했고 기존 native 앱의 누적 로컬 변경과 실제 index/checkout을 보존했습니다. 첫 push 실행 37914163143은 failure이며 jobs가 0개로 PC/Unity 작업 이전에 종료됐습니다. GitHub workflow steps.shell에 허용되지 않는 runner.os 참조를 발견해 vars.PIXEL_TRAFFIC_RUNNER_SHELL 기본 powershell로 변경합니다. Linux 이전 시 이 변수에 pwsh를 설정합니다. 첫 정적 YAML 구조 검사만으로 GitHub 표현식 의미 검증을 대체하지 못한 점을 기록합니다.
+
+첫 실패는 Unity 장면 검사 실패로 기록하지 않습니다. 실제 remote 재검사 및 artifact 결과는 이후 확인하며 Unity APK/기기/WallpaperService는 미완료입니다. 키/암호를 게시하지 않았습니다.
+
 ## PC runner 연결 확인 / GitHub 소스 게시·첫 자동 검사 진행 (2026-10-09)
 
 사용자 화면에서 runner2.337.0 Connected to GitHub / Listening for Jobs를 확인했습니다. PC 로컬 Validate completed에 이어 원격 source/workflow 게시를 진행합니다. main은 effa3c1998fd0a758c648ad0d466cf97d57e77a4이며 Unity source/workflow가 없어 새 관련 파일과 선택 문서만 추가합니다. 기존 0.29→0.48 누적 Android 작업/로컬 index/checkout은 보존합니다. main Unity 변경은 자동 Validate로 연결하며 PR 자동 실행은 두지 않습니다.
