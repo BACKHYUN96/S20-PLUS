@@ -126,6 +126,19 @@ try {
         if (-not (Test-Path -LiteralPath (Join-Path $gradleProject 'launcher/build.gradle'))) {
             throw 'Generated Unity Android Gradle project missing; Lint cannot run.'
         }
+        # Unity emits Windows drive paths with a bare colon in these generated
+        # property files. Canonical Java-property escaping satisfies PropertyEscape
+        # without changing the decoded path or suppressing a Lint check.
+        foreach ($propertyName in @('gradle.properties', 'local.properties')) {
+            $propertyPath = Join-Path $gradleProject $propertyName
+            if (Test-Path -LiteralPath $propertyPath) {
+                $propertyText = [IO.File]::ReadAllText($propertyPath)
+                $escapedProperties = [regex]::Replace($propertyText, '(?m)^([^#!\r\n=]*=[ \t]*)([A-Za-z]):(/)', '$1$2\:$3')
+                if ($escapedProperties -ne $propertyText) {
+                    [IO.File]::WriteAllText($propertyPath, $escapedProperties, [Text.UTF8Encoding]::new($false))
+                }
+            }
+        }
         $onWindows = [Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT
         $gradle = Join-Path $androidPlayer $(if ($onWindows) { 'Tools/gradle/bin/gradle.bat' } else { 'Tools/gradle/bin/gradle' })
         $gradleArguments = @('--no-daemon', '-p', $gradleProject, ':launcher:lintDebug')
