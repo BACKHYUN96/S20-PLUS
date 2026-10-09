@@ -1,5 +1,9 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-10 — Unity 0.6.0 생성 재질 연결 수정 / 재검사 대기 (KST)
+
+source6a2d13a4bfd1c4c1fcf24dd474231791823d83da의 PC Validate38006052374/job114074980425에서 C# 컴파일은 exit0으로 통과했으나 ClimateScene.Create의 Climate surface missing 예외로 장면 생성이 중단됐다. Renderer.sharedMaterial.name 표시 이름 비교를 제거하고 StarterScene.Generated의 기존 확정 .mat 경로 6개를 AssetDatabase.LoadAssetAtPath로 직접 연결한다. Unity import/display name에 의존하지 않으며 누락 예외에는 asset 이름을 포함한다. 변경은 ClimateScene.cs 하나와 진행 문서다. 실패 artifact11651471415/6383bytes ZIP SHA2561b1a04666c1bc1e075bbd6a77733cf5aac22cd61dc8aa457fc44ccd3ee6bcd57/CRC를 확인했다. 다음 실제 재검사가 장면 연결·새 전환 검사를 확인한다.
+
 ## 2026-10-10 — Unity 0.6.0 추가 조명 API 컴파일 수정 / 재검사 대기 (KST)
 
 source2197d37c5f30f9158829c5b4cfeb514c6130357c의 PC Validate38005928444/job114074595963에서 StarterScene.cs117의 CS0200으로 실패했다. URP17.3 additionalLightsRenderingMode는 읽기 전용이므로 기존 shadow 필드처럼 SerializedObject의 m_AdditionalLightsRenderingMode를 PerPixel로 설정한다. maxAdditionalLightsCount4 setter는 컴파일 오류가 없다. 실패 보고서 artifact11651540790/2081bytes ZIP SHA256 e01a92e45f31971413a0f0031eece7800890da2bea654203c3bb261a50cff75b/CRC를 확인했다. 동반 Licensing 로그는 entitlement 해결 후 실제 C# 컴파일까지 진행했으므로 실패 원인으로 판단하지 않는다. 변경은 StarterScene.cs 하나와 진행 문서이며 실제 재검사 결과는 다음 기록에 추가한다.

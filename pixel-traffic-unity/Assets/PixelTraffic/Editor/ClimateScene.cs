@@ -13,14 +13,17 @@ namespace PixelTraffic.UnityPrototype.Editor
             var root = new GameObject("Climate and Lighting");
             var controller = root.AddComponent<CityClimate>(); var effects = root.AddComponent<ClimateEffects>();
             var materials = new Material[6]; string[] names = { "Asphalt", "Paving", "Window Glass", "Lamp Lens", "Headlamp", "Tail Lamp" };
+            for (int i = 0; i < names.Length; i++)
+            {
+                materials[i] = AssetDatabase.LoadAssetAtPath<Material>(StarterScene.Generated + "/" + names[i].Replace(" ", "") + ".mat");
+                if (materials[i] == null) throw new InvalidOperationException("Climate material asset missing: " + names[i]);
+            }
             var lamps = new List<Transform>(); var trees = new List<Transform>();
             foreach (var renderer in UnityEngine.Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None))
             {
-                for (int i = 0; i < names.Length; i++) if (renderer.sharedMaterial.name == names[i]) materials[i] = renderer.sharedMaterial;
                 if (renderer.name == "Lamp Lens") lamps.Add(renderer.transform);
                 if (renderer.name == "Layered Canopy") { trees.Add(renderer.transform); GameObjectUtility.SetStaticEditorFlags(renderer.gameObject, 0); }
             }
-            foreach (var mat in materials) if (mat == null) throw new InvalidOperationException("Climate surface missing.");
             for (int i = 2; i < materials.Length; i++) { materials[i].EnableKeyword("_EMISSION"); materials[i].SetColor("_EmissionColor", Color.black); EditorUtility.SetDirty(materials[i]); }
             lamps.Sort((a, b) => Vector3.Distance(a.position, Camera.main.transform.position).CompareTo(Vector3.Distance(b.position, Camera.main.transform.position)));
             Light[] lights = new Light[4]; var pools = new Renderer[lamps.Count];
