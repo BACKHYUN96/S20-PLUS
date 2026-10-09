@@ -33,7 +33,7 @@ jobs:
     timeout-minutes: 60
     defaults:
       run:
-        shell: ${{ vars.PIXEL_TRAFFIC_RUNNER_SHELL || 'powershell' }}
+        shell: ${{ vars.PIXEL_TRAFFIC_RUNNER_SHELL || 'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "{0}"' }}
     steps:
       - uses: actions/checkout@v4
       - name: Validate or build with the shared entry point
