@@ -52,6 +52,8 @@ namespace PixelTraffic.UnityPrototype.Editor
                 climate.Preview(theme, weather); climate.Advance(.1, true);
                 Need(climate.TimeBlend.Weights[theme] == 1 && climate.WeatherBlend.Weights[weather] == 1, "Saved selection does not snap on initial load.");
                 Need(RenderSettings.sun.intensity > 0 && RenderSettings.fogEndDistance > RenderSettings.fogStartDistance && RenderSettings.fogEndDistance < Camera.main.farClipPlane, "Invalid lighting/fog endpoint.");
+                Need(GameObject.Find("Rain Pool").GetComponent<Renderer>().enabled == (weather == 1 || weather == 2 || weather == 5), "Actual rain pool visibility differs.");
+                Need(GameObject.Find("Snow Pool").GetComponent<Renderer>().enabled == (weather == 3), "Actual snow pool visibility differs.");
                 double expectedWet = weather == 1 ? .68 : weather == 2 || weather == 5 ? 1 : weather == 4 ? .35 : 0;
                 Need(Math.Abs(climate.Wetness - expectedWet) < .0001, "Native wetness mapping differs."); combos++;
             }
@@ -64,21 +66,27 @@ namespace PixelTraffic.UnityPrototype.Editor
             Need(Equal(before, climate.TimeBlend.Weights), "Scene retarget jumps.");
             for (int i = 0; i < 40; i++) climate.Advance(.1, true);
             Need(climate.TimeBlend.Weights[1] == 1 && climate.WeatherBlend.Weights[3] == 1, "Scene transition incomplete after four active seconds.");
-            climate.Preview(2, 5); Quaternion treeBefore = trees[0].localRotation;
-            for (int i = 0; i < 300; i++) climate.Advance(.1, true);
-            Need(Quaternion.Angle(treeBefore, trees[0].localRotation) > .01f, "Storm does not move actual canopy.");
+            climate.Preview(2, 5); var treeBefore = new Quaternion[trees.Count]; var swing = new float[trees.Count];
+            for (int i = 0; i < trees.Count; i++) treeBefore[i] = trees[i].localRotation;
+            for (int frame = 0; frame < 300; frame++)
+            {
+                climate.Advance(.1, true);
+                for (int i = 0; i < trees.Count; i++) swing[i] = Mathf.Max(swing[i], Quaternion.Angle(treeBefore[i], trees[i].localRotation));
+            }
+            float minimumCanopySwing = float.MaxValue; foreach (float angle in swing) minimumCanopySwing = Mathf.Min(minimumCanopySwing, angle);
+            Need(minimumCanopySwing > 1, "At least one actual canopy does not sway over the storm interval.");
             Need(climate.Effects.PaperLaunches - launches >= 5 && climate.Effects.LastPaperInterval >= 3 && climate.Effects.LastPaperInterval <= 5, "Storm paper cadence invalid.");
             for (int i = 0; i < fixedObjects.Count; i++) Need(fixedObjects[i].position == fixedPositions[i] && fixedObjects[i].rotation == fixedRotations[i], "Climate moves traffic, pedestrians or obstacles.");
             Need(climate.Effects.RainCapacity == 160 && climate.Effects.SnowCapacity == 96, "Precipitation pool is unbounded.");
-            var report = new Report { result = "PASS: native four-second smoothstep oracle, retarget, pause, 18 scene endpoints, wind and fixed-capacity effects; device test pending", durationSeconds = 4, frameRates = rates, blendCases = blendCases, combinations = combos, realtimeStreetLights = climate.AdditionalLights, rainCapacity = 160, snowCapacity = 96, paperLaunches = climate.Effects.PaperLaunches, lastPaperInterval = climate.Effects.LastPaperInterval };
+            var report = new Report { result = "PASS: native four-second smoothstep oracle, retarget, pause, 18 scene endpoints, wind and fixed-capacity effects; device test pending", durationSeconds = 4, frameRates = rates, blendCases = blendCases, combinations = combos, realtimeStreetLights = climate.AdditionalLights, rainCapacity = 160, snowCapacity = 96, paperLaunches = climate.Effects.PaperLaunches, lastPaperInterval = climate.Effects.LastPaperInterval, animatedCanopies = trees.Count, minimumCanopySwing = minimumCanopySwing };
             climate.Preview(0, 0); climate.Advance(.01, true); return report;
         }
         private static bool Equal(double[] a, double[] b) { for (int i = 0; i < a.Length; i++) if (a[i] != b[i]) return false; return true; }
         private static void Need(bool condition, string reason) { if (!condition) throw new InvalidOperationException(reason); }
         [Serializable] public sealed class Report
         {
-            public string result; public int durationSeconds, blendCases, combinations, realtimeStreetLights, rainCapacity, snowCapacity, paperLaunches;
-            public int[] frameRates; public float lastPaperInterval;
+            public string result; public int durationSeconds, blendCases, combinations, realtimeStreetLights, rainCapacity, snowCapacity, paperLaunches, animatedCanopies;
+            public int[] frameRates; public float lastPaperInterval, minimumCanopySwing;
         }
     }
 }
