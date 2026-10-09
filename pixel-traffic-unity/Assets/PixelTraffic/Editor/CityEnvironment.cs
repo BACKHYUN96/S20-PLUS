@@ -259,9 +259,10 @@ namespace PixelTraffic.UnityPrototype.Editor
             Need(pipeline.supportsMainLightShadows&&pipeline.supportsSoftShadows&&pipeline.shadowDistance>=65,"City/contact shadows are disabled.");
             Need(RenderSettings.sun!=null&&RenderSettings.sun.color.r>RenderSettings.sun.color.b,"Warm afternoon sun missing.");
             Need(RenderSettings.fog&&RenderSettings.fogEndDistance<camera.farClipPlane,"Distant haze outside camera coverage.");
-            var renderers=UnityEngine.Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None);
+            var renderers=UnityEngine.Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None);
             var materials=new HashSet<Material>();int triangles=0,trees=0,buildings=0,lamps=0,towers=0;
             foreach(var filter in UnityEngine.Object.FindObjectsByType<MeshFilter>(FindObjectsSortMode.None)) triangles+=filter.sharedMesh.triangles.Length/3;
+            foreach(var skin in UnityEngine.Object.FindObjectsByType<SkinnedMeshRenderer>(FindObjectsSortMode.None)) triangles+=skin.sharedMesh.triangles.Length/3;
             foreach(var transform in UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
             {
                 if(transform.name=="City Tree")trees++;if(transform.name=="City Building")buildings++;if(transform.name=="Street Lamp")lamps++;if(transform.name=="Skyline Tower")towers++;

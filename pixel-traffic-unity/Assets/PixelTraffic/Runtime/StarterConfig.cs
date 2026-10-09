@@ -3,9 +3,9 @@ namespace PixelTraffic.UnityPrototype
     public static class StarterConfig
     {
         public const string EditorVersion = "6000.3.26f1";
-        public const string VersionName = "0.3.0";
-        public const int VersionCode = 3;
-        public const string ScenePath = "Assets/PixelTraffic/Scenes/Traffic-0.3.0.unity";
+        public const string VersionName = "0.4.0";
+        public const int VersionCode = 4;
+        public const string ScenePath = "Assets/PixelTraffic/Scenes/Crossing-0.4.0.unity";
         public const string ExperimentAppId = "com.s20plus.pixeltraffic.unityprototype";
         public const string ReleaseAppId = "com.s20plus.pixeltraffic";
         public const float LaneWidth = 3.2f;
@@ -16,5 +16,7 @@ namespace PixelTraffic.UnityPrototype
         public const int VehiclesPerLane = 6;
         public const float SpeedMetresPerSecond = 6;
         public const int TargetFps = 30;
+        public const int DefaultPeople = 32;
+        public const float CrossingZ = 10;
     }
 }

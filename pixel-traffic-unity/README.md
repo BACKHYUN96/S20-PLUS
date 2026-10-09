@@ -1,5 +1,9 @@
 # Pixel Traffic Unity — 3D 차량·양방향 교통 0.3.0
 
+## 진행 패치 — 신호·인도 보행·횡단 0.4.0
+
+차량 신호/stop line·앞차 간격과 인도 보행자를 연결합니다. 기본32명/폰 People +/-4로4~100명, 인도 무작위 목적지/화단·가로등 회피·최대12대기자리·양방향 zebra band를 사용합니다. 차량/보행이 비운 뒤 다음 흐름을 시작하고 인원 감소 시 횡단 중인 사람은 인도에 도착한 뒤 빠집니다. Crossing-0.4.0/Generated/Crossing040은 이전 장면을 보존하며 동일prototype appID/기존 서명으로 업데이트합니다. 현재 PC compile/production model/실제 scene·GPU/Android/Lint/서명 검사를 진행합니다. 최신 결과와 PowerShell은 [STATUS](../docs/STATUS.md)를 확인합니다. 실제 폰 FPS·발열·WallpapaperService/기존 날씨·영구 설정 저장은 후속입니다.
+
 ## 현재 패치 — 3D 차량·양방향 교통 0.3.0 (2026-10-09)
 
 세단·스포츠 쿠페·SUV·택시의 경사진 차체/유리·앞뒤 램프·회전하는4바퀴를 실제 metre 단위로 생성합니다. 차선별 root scale1로 폭/높이를 압축하지 않습니다. 4차선×6대=24대, 왼쪽은 다가오고 오른쪽은 멀어지며 고정 lane별 속도/순환간격을 유지합니다. 차체 mesh는4모델이 재사용하고 재등장 때 새 객체를 생성하지 않습니다.

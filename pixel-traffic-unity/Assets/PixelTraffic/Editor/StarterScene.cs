@@ -14,7 +14,7 @@ namespace PixelTraffic.UnityPrototype.Editor
     // Generated geometry stays in its own scene; existing scenes are never rebuilt in place.
     public static class StarterScene
     {
-        internal const string Generated = "Assets/PixelTraffic/Generated/Traffic030";
+        internal const string Generated = "Assets/PixelTraffic/Generated/Crossing040";
         private const string PipelinePath = Generated + "/MobileURP.asset";
         private static readonly Dictionary<string, Material> materials = new Dictionary<string, Material>();
 
@@ -91,6 +91,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             CityEnvironment.Create(road, scenery);
 
             TrafficFleet.Create();
+            StreetScene.Create();
             EditorSceneManager.SaveScene(scene, StarterConfig.ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(StarterConfig.ScenePath, true) };
             AssetDatabase.SaveAssets();
@@ -205,6 +206,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             Require(pipeline.scriptableRenderer != null, "URP renderer not available.");
             Require(PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android) == StarterConfig.ExperimentAppId, "Experimental app ID changed.");
             TrafficFleet.Report traffic = TrafficFleet.Validate();
+            StreetChecks.Report street = StreetChecks.Validate();
             Require(Camera.main != null && Camera.main.farClipPlane > 120, "Portrait camera missing.");
             CityEnvironment.Report environment = CityEnvironment.Validate(Camera.main, pipeline);
             Require(PlayerSettings.bundleVersion == StarterConfig.VersionName &&
@@ -212,7 +214,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             Directory.CreateDirectory("Reports");
             File.WriteAllText("Reports/scene-validation.json", JsonUtility.ToJson(new ValidationReport {
                 editor = Application.unityVersion, applicationId = StarterConfig.ExperimentAppId,
-                utc = DateTime.UtcNow.ToString("O"), traffic = traffic,
+                utc = DateTime.UtcNow.ToString("O"), traffic = traffic, street = street,
                 version = StarterConfig.VersionName, environment = environment,
                 result = "PASS: actual city and two-way fleet geometry, material, lane bounds, motion, wrap, wheels and lifecycle; not an Android/device test"
             }, true));
@@ -230,6 +232,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             public string editor, applicationId, utc, result, version;
             public CityEnvironment.Report environment;
             public TrafficFleet.Report traffic;
+            public StreetChecks.Report street;
         }
     }
 }

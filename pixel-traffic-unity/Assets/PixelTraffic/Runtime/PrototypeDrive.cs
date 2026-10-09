@@ -11,6 +11,7 @@ namespace PixelTraffic.UnityPrototype
         [SerializeField] private float speed = StarterConfig.SpeedMetresPerSecond;
         [SerializeField] private float wheelRadius = .32f;
         [SerializeField] private string model;
+        [SerializeField] private StreetSimulation street;
         private bool paused, focused = true, initialized;
         private double routePosition;
 
@@ -36,7 +37,16 @@ namespace PixelTraffic.UnityPrototype
             ResetPosition(transform.position.z);
         }
 
-        private void Update() => Step(Time.deltaTime);
+        private void Update() { if (street == null) Step(Time.deltaTime); }
+        public void Bind(StreetSimulation controller) => street = controller;
+
+        public void ApplyTraffic(double position, float distance)
+        {
+            routePosition = position;
+            transform.position = new Vector3(LaneX, 0, (float)position);
+            float degrees = distance / wheelRadius * Mathf.Rad2Deg;
+            foreach (Transform wheel in wheels) if (wheel != null) wheel.Rotate(Vector3.right, degrees, Space.Self);
+        }
 
         public void ResetPosition(float z)
         {
