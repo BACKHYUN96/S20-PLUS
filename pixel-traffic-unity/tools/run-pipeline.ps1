@@ -23,18 +23,25 @@ $previousGradleHome = $env:GRADLE_USER_HOME
 $previousTemp = $env:TEMP
 $previousTmp = $env:TMP
 function Invoke-AndroidTool {
-    param([string]$Tool, [string[]]$ToolArguments)
+    param([string]$Tool, [string[]]$ToolArguments, [string]$OutputPath)
     $previousPreference = $ErrorActionPreference
     try {
         $ErrorActionPreference = 'Continue'
         $toolOutput = & $Tool @ToolArguments 2>&1 | Out-String
         $toolExit = $LASTEXITCODE
     } finally { $ErrorActionPreference = $previousPreference }
+    if ($OutputPath) {
+        $toolOutput | Set-Content -LiteralPath $OutputPath -Encoding UTF8
+        if ($toolExit -ne 0) {
+            & (Join-Path $PSScriptRoot 'collect-build-failure.ps1') -LogPath $OutputPath `
+                -OutputPath (Join-Path $reports 'verification-failure.json') -SourceRevision $env:GITHUB_SHA
+        }
+    }
     if ($toolExit -ne 0) { throw "Android verification tool failed: $(Split-Path -Leaf $Tool)" }
     return $toolOutput
 }
 try {
-    foreach ($reportName in @('scene-validation.json', 'apk-verification.json', 'android-build-result.txt', 'android-lint-result.json')) {
+    foreach ($reportName in @('scene-validation.json', 'apk-verification.json', 'android-build-result.txt', 'android-lint-result.json', 'verification-failure.json', 'android-lint.log')) {
         $oldReport = Join-Path $reports $reportName
         if (Test-Path -LiteralPath $oldReport) { Remove-Item -LiteralPath $oldReport }
     }
@@ -121,8 +128,20 @@ try {
         }
         $onWindows = [Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT
         $gradle = Join-Path $androidPlayer $(if ($onWindows) { 'Tools/gradle/bin/gradle.bat' } else { 'Tools/gradle/bin/gradle' })
-        $lintOutput = Invoke-AndroidTool $gradle @('--no-daemon', '-p', $gradleProject, ':launcher:lintDebug')
-        $lintOutput | Set-Content -LiteralPath (Join-Path $reports 'android-lint.log') -Encoding UTF8
+        $gradleArguments = @('--no-daemon', '-p', $gradleProject, ':launcher:lintDebug')
+        if (-not (Test-Path -LiteralPath $gradle)) {
+            # Unity may ship Gradle libraries without the distribution's bin script.
+            # Run that same bundled Gradle with Unity's JDK, as the Editor does.
+            $gradleLibraries = Join-Path $androidPlayer 'Tools/gradle/lib'
+            if (-not (Test-Path -LiteralPath $gradleLibraries)) {
+                throw 'Unity bundled Gradle launcher missing; Lint cannot run.'
+            }
+            $launchers = @(Get-ChildItem -LiteralPath $gradleLibraries -Filter 'gradle-launcher-*.jar' -File)
+            if ($launchers.Count -ne 1) { throw 'Expected exactly one Unity bundled Gradle launcher.' }
+            $gradle = Join-Path $env:JAVA_HOME $(if ($onWindows) { 'bin/java.exe' } else { 'bin/java' })
+            $gradleArguments = @('-classpath', $launchers[0].FullName, 'org.gradle.launcher.GradleMain') + $gradleArguments
+        }
+        $lintOutput = Invoke-AndroidTool $gradle $gradleArguments -OutputPath (Join-Path $reports 'android-lint.log')
         $lintXml = Join-Path $gradleProject 'launcher/build/reports/lint-results-debug.xml'
         [xml]$lintReport = Get-Content -LiteralPath $lintXml -Raw
         $lintErrors = @($lintReport.issues.issue | Where-Object { $_.severity -in @('Fatal', 'Error') }).Count
