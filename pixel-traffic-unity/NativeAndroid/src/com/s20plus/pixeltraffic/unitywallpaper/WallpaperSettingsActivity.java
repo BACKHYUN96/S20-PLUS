@@ -6,6 +6,11 @@ import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
+import com.unity3d.player.R;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
@@ -16,24 +21,39 @@ import android.widget.Toast;
 
 public final class WallpaperSettingsActivity extends Activity {
     @Override protected void onCreate(Bundle state) {
-        super.onCreate(state); setTitle("픽셀 트래픽 Unity");
+        super.onCreate(state); setTitle(R.string.pixel_traffic_wallpaper_name);
         ScrollView scroll = new ScrollView(this); LinearLayout layout = new LinearLayout(this); layout.setOrientation(LinearLayout.VERTICAL);
         int gap = Math.round(20 * getResources().getDisplayMetrics().density); layout.setPadding(gap, gap, gap, gap);
-        scroll.addView(layout); setContentView(scroll);
-        TextView title = new TextView(this); title.setText("움직이는 도시를 홈 화면에"); title.setTextSize(24); layout.addView(title);
-        TextView description = new TextView(this); description.setText("차량과 사람들이 오가는 도시를 미리 보고 배경화면으로 적용하세요. 화면이 꺼지거나 배경화면이 보이지 않을 때는 움직임을 멈춥니다."); description.setPadding(0, gap, 0, gap); layout.addView(description);
+        scroll.setFitsSystemWindows(true); scroll.addView(layout); setContentView(scroll);
+        TextView title = new TextView(this); title.setText(R.string.pixel_traffic_settings_title); title.setTextSize(24); layout.addView(title);
+        TextView description = new TextView(this); description.setText(R.string.pixel_traffic_settings_description); description.setPadding(0, gap, 0, gap); layout.addView(description);
+        selection(layout, R.string.pixel_traffic_time_label, R.array.pixel_traffic_times, WallpaperPreferences.theme(this), true);
+        selection(layout, R.string.pixel_traffic_weather_label, R.array.pixel_traffic_weather, WallpaperPreferences.weather(this), false);
         TextView population = new TextView(this); population.setTextSize(18); layout.addView(population);
-        SeekBar people = new SeekBar(this); people.setMax(24); people.setProgress((WallpaperPreferences.population(this) - 4) / 4); people.setContentDescription("보행자 수 4명부터 100명");
-        population.setText("보행자 " + WallpaperPreferences.population(this) + "명");
+        SeekBar people = new SeekBar(this); people.setMax(24); people.setProgress((WallpaperPreferences.population(this) - 4) / 4); people.setContentDescription(getString(R.string.pixel_traffic_population_description));
+        population.setText(getString(R.string.pixel_traffic_population, WallpaperPreferences.population(this)));
         people.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) { int count = 4 + progress * 4; population.setText("보행자 " + count + "명"); if (fromUser) WallpaperPreferences.savePopulation(WallpaperSettingsActivity.this, count); }
+            @Override public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) { int count = 4 + progress * 4; population.setText(getString(R.string.pixel_traffic_population, count)); if (fromUser) WallpaperPreferences.savePopulation(WallpaperSettingsActivity.this, count); }
             @Override public void onStartTrackingTouch(SeekBar bar) { }
             @Override public void onStopTrackingTouch(SeekBar bar) { }
         }); layout.addView(people);
-        CheckBox economy = new CheckBox(this); economy.setText("절전 모드 · 15 FPS 목표"); economy.setChecked(WallpaperPreferences.economy(this));
+        CheckBox economy = new CheckBox(this); economy.setText(R.string.pixel_traffic_economy); economy.setChecked(WallpaperPreferences.economy(this));
         economy.setOnCheckedChangeListener((button, checked) -> WallpaperPreferences.saveEconomy(this, checked)); layout.addView(economy);
-        TextView saving = new TextView(this); saving.setText("설정은 자동 저장됩니다. 기본은 32명 · 30 FPS 목표이며, 기기 절전 모드에서는 15 FPS 목표로 동작합니다."); saving.setPadding(0, gap / 2, 0, gap); layout.addView(saving);
-        Button apply = new Button(this); apply.setText("배경화면 미리보기 및 적용"); apply.setOnClickListener(view -> openWallpaper()); layout.addView(apply);
+        TextView saving = new TextView(this); saving.setText(R.string.pixel_traffic_saving); saving.setPadding(0, gap / 2, 0, gap); layout.addView(saving);
+        Button apply = new Button(this); apply.setText(R.string.pixel_traffic_apply); apply.setOnClickListener(view -> openWallpaper()); layout.addView(apply);
+    }
+    private void selection(LinearLayout layout, int label, int choices, int selected, boolean time) {
+        TextView heading = new TextView(this); heading.setText(label); heading.setTextSize(18); layout.addView(heading);
+        Spinner picker = new Spinner(this); picker.setContentDescription(getString(label));
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this, choices, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item); picker.setAdapter(adapter); picker.setSelection(selected);
+        picker.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (time) WallpaperPreferences.saveTheme(WallpaperSettingsActivity.this, position);
+                else WallpaperPreferences.saveWeather(WallpaperSettingsActivity.this, position);
+            }
+            @Override public void onNothingSelected(AdapterView<?> parent) { }
+        }); layout.addView(picker);
     }
     private void openWallpaper() {
         Intent intent = new Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER);
@@ -41,7 +61,7 @@ public final class WallpaperSettingsActivity extends Activity {
         try { startActivity(intent); }
         catch (ActivityNotFoundException first) {
             try { startActivity(new Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER)); }
-            catch (ActivityNotFoundException unavailable) { Toast.makeText(this, "기기의 배경화면 설정에서 픽셀 트래픽 Unity를 선택해 주세요.", Toast.LENGTH_LONG).show(); }
+            catch (ActivityNotFoundException unavailable) { Toast.makeText(this, R.string.pixel_traffic_unavailable, Toast.LENGTH_LONG).show(); }
         }
     }
 }

@@ -1,5 +1,15 @@
 # Pixel Traffic — Unity 전환 준비
 
+## 2026-10-10 — Unity 0.6.0 시간대·날씨 자연스러운 전환 구현 / 실제 검사 대기 (KST)
+
+사용자가 0.5.1 실제 폰 적용 성공을 확인하고 다음 패치로 기존 앱과 같은 부드러운 시간대·날씨 변경을 요청했다. base d1d64e74b85db701647d4678dfbfd95c3bfecadd에서 0.6.0/code7을 구현한다. 아직 실제 Unity/Android 검사 결과를 완료로 기록하지 않는다.
+
+- 원본 native ThemeBlend/RoadWetness/CinematicScene/WindStorm의 4초 smoothstep, 현재 가중치에서 재선택, 초기 저장 설정 snap, 0.1초 frame cap, active-time 계약을 읽고 SceneBlend/CityClimate로 옮겼다. 낮/노을/야간 3종과 맑음/약한 비/강한 비/눈/안개/비바람 6종은 독립적으로 4초 전환한다. Android provider로 두 설정을 저장/공유하며 기존 인원/절전 키와 appID를 유지한다. 수동 설정이며 실제 시각/기상 API는 연결하지 않는다.
+- 조명·ambient·먼 안개·노면 색/젖음·창문/차량/가로등 emission을 혼합한다. 추가 shadowless spot light는 가까운 4개로 제한하고 20개 가로등의 따뜻한 노면 빛을 공유 quad로 그린다. 160 rain/96 snow 고정 mesh pool, 비바람 안개/32 canopy 흔들림과 3~5 active seconds 간격 신문지 1장을 추가한다. 나무의 canopy만 static flag를 풀어 실제 움직이게 하고 도로/차량/보행/장애물 좌표는 유지한다.
+- 범위: 신규 Runtime SceneBlend/CityClimate/ClimateEffects, Editor ClimateScene/ClimateChecks 및 5 meta; StarterConfig/StarterScene/AndroidWallpaperBridge/CityPreview, 신호등 emission용 StreetSimulation 1줄, NativeAndroid WallpaperPreferences/WallpaperSettingsActivity/values XML. Generated/Climate060와 Climate-0.6.0.unity로 이전 장면을 보존한다. CityEnvironment/StreetModel/SidewalkRoutes/VehicleGeometry/Surface host 소스는 변경하지 않는다. dirty/index 시작 상태는 unity-0.6.0-start-state.json에 기록했다.
+- 검사는 15/30/60/120Hz의 독립 smoothstep oracle 180경우, 재선택/invalid delta/frame cap/숨김 시간 정지, 실제 18개 scene endpoint/젖음/나무/신문지 cadence를 포함한다. 기존 fleet/횡단/인원/100명 budget 검사도 pipeline 필수 묶음으로 실행한다. 실제 D3D11 540×1200 selected climate endpoint 6종과 0/2/4초 전환 PNG를 캡처한다. 이는 Editor 렌더이며 폰 스크린샷/FPS 검사가 아니다.
+- 다음: 실제 PC Validate → signed APK/launcher Lint → 변경된 Java/res를 unityLibrary host Lint로 검사 → 다운로드 ZIP/실제 APK CRC/hash/certificate/버전/manifest와 렌더 관찰 → 전달/최종 문서. 실패가 있으면 원인과 수정/재검사를 추가 기록한다.
+
 ## 2026-10-10 — Unity 0.5.1 횡단보도 차선 보정 APK 전달 (KST)
 
 사용자가 **0.5.0 실제 폰 적용 성공**을 확인했다. 요청한 횡단보도 내부 중앙선·흰색차선만 제거한 **0.5.1/code6**을 전달한다. 실제0.5.1 폰 보정 표시는 설치후확인한다. 다음은 **낮·노을·야간과 가로등/창문/차량 라이트 전환**을 추천하며 이번패치에는구현하지않았다.

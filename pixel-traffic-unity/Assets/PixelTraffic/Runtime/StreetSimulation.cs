@@ -94,7 +94,7 @@ namespace PixelTraffic.UnityPrototype
             }
             for(int i=0;i<walkLights.Length;i++)Tint(walkLights[i],i%2==1?(model.CanEnter?new Color(.08f,1,.26f):new Color(.03f,.04f,.04f)):(model.CanEnter?new Color(.03f,.04f,.04f):new Color(1,.035f,.02f)));
         }
-        private void Tint(Renderer renderer,Color color){lightBlock.SetColor("_BaseColor",color);renderer.SetPropertyBlock(lightBlock);}
+        private void Tint(Renderer renderer,Color color){lightBlock.SetColor("_BaseColor",color);lightBlock.SetColor("_EmissionColor",color*.65f);renderer.SetPropertyBlock(lightBlock);}
         public void SetPaused(bool value)=>paused=value;
         private void OnApplicationPause(bool value){SetPaused(value);if(!value)skipNextDelta=true;}
         private void OnApplicationFocus(bool value)=>focused=value;

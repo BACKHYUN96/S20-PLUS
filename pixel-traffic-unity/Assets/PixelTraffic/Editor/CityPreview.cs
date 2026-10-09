@@ -25,6 +25,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 EditorSceneManager.OpenScene(StarterConfig.ScenePath);
                 var street = UnityEngine.Object.FindFirstObjectByType<StreetSimulation>();
                 if (street != null) { street.ResetModel(); street.Advance(30); street.ApplyViews(); }
+                UnityEngine.Object.FindFirstObjectByType<CityClimate>().Initialize();
                 started = EditorApplication.timeSinceStartup;
                 warmupFrames = 0;
                 EditorApplication.update += CaptureWhenReady;
@@ -114,11 +115,28 @@ namespace PixelTraffic.UnityPrototype.Editor
                     pipeline.useSRPBatcher = oldBatcher;
                     GraphicsSettings.useScriptableRenderPipelineBatching = oldGraphicsBatcher;
                 }
+                var climate = UnityEngine.Object.FindFirstObjectByType<CityClimate>();
+                var previews = new System.Collections.Generic.List<string>();
+                int[] themes = { 1, 2, 0, 0, 0, 2 }; int[] weather = { 0, 0, 2, 3, 4, 5 };
+                string[] labels = { "sunset", "night", "rain", "snow", "fog", "storm-night" };
+                for (int i = 0; i < labels.Length; i++)
+                {
+                    climate.Preview(themes[i], weather[i]);
+                    for (int n = 0; n < 50; n++) climate.Advance(.1, true);
+                    previews.Add(CaptureState(camera, request, target, image, labels[i]));
+                }
+                climate.Preview(0, 0); climate.Advance(.01, true); climate.Select(2, 5);
+                previews.Add(CaptureState(camera, request, target, image, "transition-0s"));
+                for (int n = 0; n < 20; n++) climate.Advance(.1, true);
+                previews.Add(CaptureState(camera, request, target, image, "transition-2s"));
+                for (int n = 0; n < 20; n++) climate.Advance(.1, true);
+                previews.Add(CaptureState(camera, request, target, image, "transition-4s"));
+                climate.Preview(0, 0);
                 File.WriteAllText("Reports/preview-result.json", JsonUtility.ToJson(new Report {
                     result = "PASS", version = StarterConfig.VersionName, editor = Application.unityVersion,
                     graphicsApi = SystemInfo.graphicsDeviceType.ToString(), width = width, height = height,
                     image = output, source = "Unity Editor URP camera; not a phone screenshot or FPS test"
-                    , materialColors = colors
+                    , materialColors = colors, climateImages = previews.ToArray()
                 }, true));
                 Debug.Log("PASS: real city camera preview saved: " + output);
             }
@@ -130,6 +148,16 @@ namespace PixelTraffic.UnityPrototype.Editor
                 if (image != null) UnityEngine.Object.DestroyImmediate(image);
             }
             EditorApplication.Exit(0);
+        }
+
+        private static string CaptureState(Camera camera, UniversalRenderPipeline.SingleCameraRequest request, RenderTexture target, Texture2D image, string label)
+        {
+            RenderPipeline.SubmitRenderRequest(camera, request); RenderTexture.active = target;
+            image.ReadPixels(new Rect(0, 0, image.width, image.height), 0, 0); image.Apply();
+            int visible = 0, pink = 0; foreach (Color32 pixel in image.GetPixels32())
+            { if (pixel.r + pixel.g + pixel.b > 15) visible++; if (pixel.r > 220 && pixel.b > 220 && pixel.g < 50) pink++; }
+            if (visible < image.width * image.height / 3 || pink > image.width * image.height / 100) throw new InvalidOperationException("Climate preview is black or pink: " + label);
+            string path = "Reports/city-preview-" + StarterConfig.VersionName + "-" + label + ".png"; File.WriteAllBytes(path, image.EncodeToPNG()); return path;
         }
 
         private static void Fail(Exception exception)
@@ -148,7 +176,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         {
             public string result, version, editor, graphicsApi, image, source;
             public int width, height;
-            public string[] materialColors;
+            public string[] materialColors, climateImages;
         }
     }
 }

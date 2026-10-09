@@ -14,7 +14,7 @@ namespace PixelTraffic.UnityPrototype.Editor
     // Generated geometry stays in its own scene; existing scenes are never rebuilt in place.
     public static class StarterScene
     {
-        internal const string Generated = "Assets/PixelTraffic/Generated/Wallpaper051";
+        internal const string Generated = "Assets/PixelTraffic/Generated/Climate060";
         private const string PipelinePath = Generated + "/MobileURP.asset";
         private static readonly Dictionary<string, Material> materials = new Dictionary<string, Material>();
 
@@ -92,10 +92,11 @@ namespace PixelTraffic.UnityPrototype.Editor
 
             TrafficFleet.Create();
             StreetScene.Create();
+            ClimateScene.Create();
             EditorSceneManager.SaveScene(scene, StarterConfig.ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(StarterConfig.ScenePath, true) };
             AssetDatabase.SaveAssets();
-            Debug.Log("Traffic scene saved. Set Game view to 9:20, then press Play. This is an Activity prototype; live wallpaper integration is pending.");
+            Debug.Log("Traffic scene saved. Set Game view to 9:20, then press Play. Time/weather settings are available in the live wallpaper launcher.");
         }
 
         private static void ConfigurePipeline()
@@ -113,6 +114,8 @@ namespace PixelTraffic.UnityPrototype.Editor
                 pipeline = UniversalRenderPipelineAsset.Create(renderer);
                 pipeline.renderScale = 1;
                 pipeline.msaaSampleCount = 2;
+                pipeline.additionalLightsRenderingMode = LightRenderingMode.PerPixel;
+                pipeline.maxAdditionalLightsCount = 4;
                 pipeline.supportsHDR = false;
                 pipeline.shadowDistance = 70;
                 pipeline.shadowCascadeCount = 2;
@@ -210,13 +213,14 @@ namespace PixelTraffic.UnityPrototype.Editor
             AndroidWallpaperBuild.ValidateTemplates();
             Require(Camera.main != null && Camera.main.farClipPlane > 120, "Portrait camera missing.");
             CityEnvironment.Report environment = CityEnvironment.Validate(Camera.main, pipeline);
+            ClimateChecks.Report climate = ClimateChecks.Validate();
             Require(PlayerSettings.bundleVersion == StarterConfig.VersionName &&
                 PlayerSettings.Android.bundleVersionCode == StarterConfig.VersionCode, "APK version differs from source configuration.");
             Directory.CreateDirectory("Reports");
             File.WriteAllText("Reports/scene-validation.json", JsonUtility.ToJson(new ValidationReport {
                 editor = Application.unityVersion, applicationId = StarterConfig.ExperimentAppId,
                 utc = DateTime.UtcNow.ToString("O"), traffic = traffic, street = street,
-                version = StarterConfig.VersionName, environment = environment,
+                version = StarterConfig.VersionName, environment = environment, climate = climate,
                 result = "PASS: actual city and two-way fleet geometry, material, lane bounds, motion, wrap, wheels and lifecycle; not an Android/device test"
             }, true));
             Debug.Log("PASS: city and two-way traffic geometry and motion. Reports/scene-validation.json");
@@ -232,6 +236,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         {
             public string editor, applicationId, utc, result, version;
             public CityEnvironment.Report environment;
+            public ClimateChecks.Report climate;
             public TrafficFleet.Report traffic;
             public StreetChecks.Report street;
         }

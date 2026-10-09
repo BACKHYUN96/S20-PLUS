@@ -2,4 +2,16 @@
 <resources>
     <string name="pixel_traffic_wallpaper_name">픽셀 트래픽 Unity</string>
     <string name="pixel_traffic_wallpaper_description">차량과 사람들이 오가는 3D 도시</string>
+    <string name="pixel_traffic_settings_title">움직이는 도시를 홈 화면에</string>
+    <string name="pixel_traffic_settings_description">시간대와 날씨를 골라 나만의 도시를 꾸며 보세요. 변경한 장면은 4초 동안 자연스럽게 이어집니다. 화면이 꺼지거나 배경화면이 보이지 않을 때는 움직임을 멈춥니다.</string>
+    <string name="pixel_traffic_time_label">시간대</string>
+    <string name="pixel_traffic_weather_label">날씨</string>
+    <string-array name="pixel_traffic_times"><item>낮</item><item>노을</item><item>야간</item></string-array>
+    <string-array name="pixel_traffic_weather"><item>맑음</item><item>약한 비</item><item>강한 비</item><item>눈</item><item>안개</item><item>비바람</item></string-array>
+    <string name="pixel_traffic_population">보행자 %1$d명</string>
+    <string name="pixel_traffic_population_description">보행자 수 4명부터 100명</string>
+    <string name="pixel_traffic_economy">절전 모드 · 15 FPS 목표</string>
+    <string name="pixel_traffic_saving">설정은 자동 저장됩니다. 기본은 낮 · 맑음 · 32명 · 30 FPS 목표이며, 기기 절전 모드에서는 15 FPS 목표로 동작합니다.</string>
+    <string name="pixel_traffic_apply">배경화면 미리보기 및 적용</string>
+    <string name="pixel_traffic_unavailable">기기의 배경화면 설정에서 픽셀 트래픽 Unity를 선택해 주세요.</string>
 </resources>
