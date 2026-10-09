@@ -224,6 +224,10 @@ namespace PixelTraffic.UnityPrototype.Editor
                 result = "PASS: actual city and two-way fleet geometry, material, lane bounds, motion, wrap, wheels and lifecycle; not an Android/device test"
             }, true));
             Debug.Log("PASS: city and two-way traffic geometry and motion. Reports/scene-validation.json");
+            // Checks create transient runtime materials/meshes. Build from the saved scene,
+            // so the next player initializes from original asset references and stored preferences.
+            EditorSceneManager.OpenScene(StarterConfig.ScenePath);
+            Require(UnityEngine.Object.FindFirstObjectByType<CityClimate>().TimeBlend == null, "Validation state leaked into the build scene.");
         }
 
         private static void Require(bool condition, string message)

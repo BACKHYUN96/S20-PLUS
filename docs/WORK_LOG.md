@@ -1,5 +1,9 @@
 # 작업 이력
 
+## 2026-10-10 — Unity 0.6.0 검사 후 빌드 장면 초기화 보강 (KST)
+
+wind sampling 보정 sourcee41a272cf6241728f5d8a24759296aa2d31bcc92의 실제 검사는 진행 중이다. 코드 검토에서 ClimateChecks.Initialize가 열린 Editor 장면의 Renderer/MeshFilter에 임시 runtime material/mesh를 연결한 채 BuildPlayer로 이어질 수 있음을 확인했다. BuildPlayer의 열린 scene 처리에 기대지 않도록 StarterScene.Validate 성공 후 저장된 ScenePath를 다시 열고 CityClimate.TimeBlend가 미초기화 null인지 확인한다. 소스 장면은 이미 검사 전 저장되어 있고 임시 검사 상태는 저장하지 않는다. 원래 재질 참조와 Android 저장 설정으로 player가 초기화되도록 보장하는 수정이며 실제 폰에서 발생한 버그라고 주장하지 않는다. Editor 임시 material/mesh는 앞서 OnDestroy에서 edit/play API를 구분해 정리한다. 변경은 StarterScene.cs와 진행 문서, 다음 실제 검사/빌드로 확인한다.
+
 ## 2026-10-10 — Unity 0.6.0 바람 검사 샘플링 보정 / 재검사 대기 (KST)
 
 source26702d17e8b0f8b3056fc358be93a758baa922e5의 PC Validate38006299543/job114075768071에서 생성 재질 연결·기존 fleet/street/budget 검사·4초 oracle·18 endpoint·숨김/재선택 검사까지 진행한 뒤 단일 canopy의 시작/30초 끝 quaternion 비교에서 실패했다. 주기적인 흔들림은 끝에 비슷한 각도로 돌아올 수 있고 Quaternion.Angle의 float 분해능보다 작은 차이(해당 위상 계산에서 약0.02~0.03도)가0으로 판정될 수 있어, 두 끝점 비교가 움직임 유무의 근거로 부족했다. ClimateChecks.cs에서 32개 실제 canopy를 30초 동안 매0.1초 관찰해 각각의 최대 변위가1도 이상인지 확인하고 최소 측정 sway를 보고한다. Runtime wind 코드는 바꾸지 않았다. 실제 rain/snow renderer 활성 상태도18 endpoint에서 확인한다. artifact11651308245/8861bytes ZIP SHA256490cd06470ddc1334096d8539f2efe12e58286fa8771e2893ef087d440a28d55/CRC를 확인했다. 다음 재검사에서 실제 측정값을 기록한다.
