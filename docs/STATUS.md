@@ -1,5 +1,9 @@
 # 현재 상태
 
+## 2026-10-10 — Unity host Lint tag 실행 보정 (KST, 진행 중)
+
+check1 태그 commit의[skip ci]가tag push에도 적용되어 실행이생성되지않았다. 이사실을수정해 docs-only commit을skip문구없이게시하고check2태그를사용한다. 기존Unity workflow는docs 경로를대상으로하지않으므로 model/APK검사는반복되지않고새hostLint만실행한다. check1은옮기거나삭제하지않는다. 실제APK의6nativeclass와bridge4method도 DEX로확인했다.
+
 ## 2026-10-10 — Unity host Lint 실행 경로 보완 (KST, 진행 중)
 
 직접 GitHub API workflow_dispatch 요청이 환경 proxy의403으로 거부되었다. API를 우회하지 않고 허용된 Git 게시/태그 실행 경로를 사용한다. unity-wallpaper-lint workflow에unity-host-lint-* 태그 실행을 추가한다. 기존unity-apk-* workflow와 분리되어 APK/장면검사를중복실행하지않는다. 동일NativeJava/리소스인기존생성프로젝트만Lint한다. 실제결과대기.
