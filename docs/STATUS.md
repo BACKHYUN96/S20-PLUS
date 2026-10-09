@@ -1,5 +1,11 @@
 # 현재 상태
 
+## 2026-10-10 — Unity 0.5.0 APK 완료 / host 모듈 Lint 추가 확인 (KST, 진행 중)
+
+source76a6360cbf0c9f864f967919cfb54af801517c6c/tagunity-apk-0.5.0-build1, BuildApk38002257912/job114062852173 success. BuildPlayer errors0/warnings0, launcher Lint errors0/warnings8. 다운로드 APK29517587bytes SHA256d22ba8bce7d0a6c3f1849835c634bc5fdd228ebc7e92fa25a6437a852c1cfe04. 실제aapt/apksigner로0.5.0/code5/ARM64/min29/target36/원본v2cert/SettingsActivity launcher/BIND_WALLPAPER service/:wallpaper/metadata/privateprovider/UnityActivitydisabled를 대조했다. 실제 폰 홈 수명주기는 미검증.
+
+새 Java가 unityLibrary에 들어가므로 해당 모듈의Lint도 별도 확인한다. check-wallpaper-lint.ps1와 수동 전용unity-wallpaper-lint workflow를 추가한다. 기존 생성 프로젝트8개NativeJava/리소스SHA가현재소스와같은지먼저검사하고 :unityLibrary:lintDebug만 실행한다. 이미통과한 APK/Unity 장면검사를 반복하지 않으며 [skip ci] 확인도구게시후 수동작업으로 실제PS parser/Lint를검증한다. 런타임/장면/서명은변경하지않는다. 결과아직대기.
+
 ## 2026-10-10 — Unity 0.5.0 라이브 배경화면 호스트 구현 시작 (KST, 진행 중)
 
 사용자가0.4.0 적용 성공과 다음 단계 진행을 승인했다. 원격main 기준c5f1ea0571f0d146c9c586f77dcff65dabcf0de9을 확인했고 기존dirty native/index는 보존한다. 기존0.4 APK의 실제DEX에서 UnityPlayerForActivityOrService(Context),displayChanged(int,Surface),pause/resume/windowFocusChanged를 확인했다. Unity6.3 공식 라이브러리 설명 및 IPostGenerateGradleAndroidProject 설명과 Service resume 관련 Unity discussion을 대조했다.

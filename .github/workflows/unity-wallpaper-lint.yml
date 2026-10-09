@@ -1,0 +1,36 @@
+name: Unity Wallpaper Host Lint
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: pixel-traffic-unity
+  cancel-in-progress: false
+jobs:
+  host-lint:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ${{ fromJSON(vars.PIXEL_TRAFFIC_RUNNER_LABELS || '["self-hosted","Windows","X64","pixel-traffic-unity"]') }}
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: ${{ vars.PIXEL_TRAFFIC_RUNNER_SHELL || 'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "{0}"' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          clean: false
+          persist-credentials: false
+      - name: Lint matching generated wallpaper sources without rebuilding APK
+        env:
+          UNITY_EDITOR_PATH: ${{ vars.UNITY_EDITOR_PATH }}
+        run: |
+          $tokens = $null; $errors = $null
+          [Management.Automation.Language.Parser]::ParseFile((Resolve-Path './pixel-traffic-unity/tools/check-wallpaper-lint.ps1'), [ref]$tokens, [ref]$errors) | Out-Null
+          if ($errors.Count) { throw "PowerShell syntax errors: $errors" }
+          ./pixel-traffic-unity/tools/check-wallpaper-lint.ps1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wallpaper-host-lint-${{ github.run_id }}
+          path: pixel-traffic-unity/Reports/wallpaper-lint-result.json
+          if-no-files-found: warn
+          retention-days: 7
