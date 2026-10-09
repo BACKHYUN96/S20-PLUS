@@ -1,5 +1,58 @@
 # 작업 이력
 
+## 2026-10-10 — Unity 0.5.0 라이브 배경화면 APK 전달 / PC 검증 완료 (KST)
+
+사용자가 Unity0.4.0 적용 성공과 다음 단계 진행을 확인했다. 이번0.5.0은 도시·차량·신호·인도 보행을 Android 라이브 배경화면으로 연결하고 인원4~100명/기본32명·절전 설정을 자동 저장한다. 별도prototype appID `com.s20plus.pixeltraffic.unityprototype`, 원본 서명, 기존native0.48.0 앱은 유지한다. 실제0.5.0 폰 홈 화면 적용 결과는 아직 확인 대기다.
+
+### 구현과 개발 과정
+
+- 새 `NativeAndroid/src/com/s20plus/pixeltraffic/unitywallpaper/`의6 Java 소스, `res/xml`·`res/values`, production `SurfaceArbiterChecks`, Runtime/AndroidWallpaperBridge(.meta), Editor/AndroidWallpaperBuild(.meta)를 추가했다. StreetSimulation/StarterConfig/StarterScene/PrototypeBuild/pipeline/workflow를 연결한다. StreetModel/SidewalkRoutes/CityEnvironment/VehicleGeometry/TrafficFleet는0.4와 byte 동일하다.
+- 기존 APK 실제 DEX와 Unity6.3 API 문서를 대조해 UnityPlayerForActivityOrService의 외부Surface 및 `resume()/pause()`를 사용한다. Activity lifecycle wrapper를 Service에 호출하지 않는다. WallpaperService의단일Unity를 live/preview Engine이 공유하고 `:wallpaper` process로 분리해 설정 Activity의수명을보존한다. 같은UID·exported=false ContentProvider가 main process의SharedPreferences를읽어process간설정을전달한다.
+- 유효하고 visible인Surface만 연결하며 미리보기를우선하고 live로복귀한다. 크기/Surface 변경 시 재연결하고 숨김·화면OFF에는pause/Surface해제한다. C# 업데이트를 host렌더상태로 제한하고 첫resumeDelta를 버려 숨겨진시간의catchup을피한다. 인원은4명단위·기본32명, 절전설정/기기절전은15FPS목표·기본30FPS목표이며 측정FPS가아니다. 배경화면에서People OnGUI를표시하지않는다.
+- Gradle생성callback이Java/res를복사하고SettingsActivity를launcher로, service를BIND_WALLPAPER/metadata/:wallpaper로 등록한다. 별도UnityActivity는enabled/exported=false로한다. wallpaper.xml은SettingsActivity를설정화면으로연결한다. 설정앱의**배경화면 미리보기 및 적용** 버튼을누른뒤사용자가Android시스템화면에서적용한다. 자동으로사용자배경화면을바꾸지않는다.
+- source main `76a6360cbf0c9f864f967919cfb54af801517c6c` → 실제Validate성공 → 같은source태그`unity-apk-0.5.0-build1` → APK빌드/검증을완료했다. 새Java가unityLibrary에속해해당모듈Lint를별도로보강했다. `tools/check-wallpaper-lint.ps1`은현재NativeJava/res8파일의SHA가생성프로젝트와일치할때만`:unityLibrary:lintDebug`를실행한다. 추가수동/`unity-host-lint-*`workflow는기존APK/장면검사를중복실행하지않는다.
+- 직접workflow_dispatch는환경proxy403으로실행되지않았다. 허용된Git태그실행을사용했으며 check1의[skip ci]가tag에도적용되어실행이생성되지않은점을보정해check2로성공했다. 태그를옮기거나실패이력을삭제하지않았다. check2 main `17a4fb40921f1ad32afa61bd253e69ec2bf24a4b`에서기존51개빌드입력이원래APKsource와동일함을확인했다. 추가2검사도구/문서만게시했다. 실제Gitindex/누적native변경을보존했다.
+
+### 실제 실행한 검증
+
+| 검사 | 결과 및 출처 |
+| --- | --- |
+| 클라우드기존JDK21 production SurfaceArbiter | preview/live 우선·fallback·OFF/hidden·invalid/zero-size·generation/resize·1000회생성/제거 PASS; Android기기검사아님 |
+| 실제PC Unity6000.3.26f1 컴파일/장면/manifest template | [Validate38001940380](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38001940380), job114061824829 success |
+| 실제production차량/보행검사 | 4/32/100명200/600/600초·모두진행/최소1횡단·223횡단/33신호주기·minimumFootDistance0.3999990523/bumper1.7999997139·15/30/60/120Hz/pause. 최대100명115768triangles/2207renderers/43materials |
+| 실제Editor URP camera | D3D11 540×1200 PNG/미리보기 PASS. SHA256 `6f3269d70576458eafbd941e5f60f3596b86213742e1fab68fa3a7cf0c217e3f`. 실제폰홈스크린샷/FPS검사아님 |
+| 실제Android BuildPlayer | [BuildApk38002257912](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38002257912), job114062852173 success; Errors0/Warnings0 |
+| 실제Android Lint | launcher errors0/warnings8; 추가 [host Lint38003123943](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38003123943), job114065669173 success; unityLibrary errors0/warnings14, Native8파일 SHA 일치 |
+| 실제APK다운로드대조 | artifactZIPdigest/CRC·APKhash/bytes·aapt0.5.0/code5/min29/target36/ARM64·원본v2cert·SettingsActivity launcher/servicepermission/process/metadata/providerfalse/UnityActivitydisabled·APK DEX6nativeclass/4bridgemethod PASS |
+
+라이브러리Lint14경고에는 Unity생성API/ABI/의존성 관련9건, application context를process수명동안저장하는StaticFieldLeak1건, 한국어설정문자열의SetTextI18n4건이있다. Activity Context를static으로저장하지않는다. 경고를0건으로보고하거나전체Lint를억제하지않았다. 다국어문자열정리는후속이며 실제기기누수/발열은PC검사로확인할수없다.
+
+### 산출물과 추적 정보
+
+- APK `/workspace/artifacts/pixel-traffic-unity-prototype-0.5.0.apk`, **29517587 bytes**, SHA256 **`d22ba8bce7d0a6c3f1849835c634bc5fdd228ebc7e92fa25a6437a852c1cfe04`**.
+- 원본인증서SHA256 **`a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6`**/v2. PC의기존DPAPI서명설정을재사용해백업키를중복복원하지않았다.
+- 실제보고서 `/workspace/artifacts/unity-prototype-0.5.0-reports/`, 다운로드APK검증JSON/host-policy JSON/source-manifest JSON은동일artifacts폴더. 51빌드입력과추가검사도구SHA를기록한다.
+- Build reports artifact11649789022/1198043bytes ZIP SHA256 `4abc2d0f8afddd68b49159a696431ccb9444ca268cd6c8651fb56ebe7c10efce`; APK artifact11649599487/28542851bytes ZIP SHA256 `f3a985942cb51f18448cb0d077c972cb97aa581b902ff81e4cbf5ea4923ee7e5`; host Lint artifact11650026947/1249bytes ZIP SHA256 `9d46fb473a67a4965b34eec28dbaa0da92ed0effed00ddccbc32681d9ed705e0`. 모두API digest 및CRC일치.
+- 소스/결과문서/main게시는각각수행한단계를구분한다. 최종문서만[skip ci]로게시하며같은APK/소스검사를반복하지않는다. 문서commit은작업artifacts의source-manifest에별도기록한다.
+
+### 집 PC 설치 및 적용
+
+APK를 `C:\Users\김백현\Desktop\AI`에다운로드하고사용자PC PowerShell에서실행한다. bareadb가무출력인문제를피하기위해확인된Unity SDK adb.exe를직접사용한다.
+
+```powershell
+$unityAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $unityAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.5.0.apk"
+if ($LASTEXITCODE -eq 0) {
+    & $unityAdb shell am start -W -n "com.s20plus.pixeltraffic.unityprototype/com.s20plus.pixeltraffic.unitywallpaper.WallpaperSettingsActivity"
+}
+```
+
+`Success`후설정화면에서인원/절전을정하고**배경화면 미리보기 및 적용**→시스템미리보기→적용을선택한다. 기존UnityPlayerActivity실행명령은이번버전에서사용하지않는다. 이명령을클라우드에서사용자폰에실행하거나배경화면을자동적용하지않았다.
+
+### 미검증과 다음 단계
+
+실제S20+/S26 Ultra에서첫미리보기·홈/잠금 적용·다른앱진입/홈복귀·화면OFF/ON·live/preview전환·인원/절전저장·재부팅후설정/배경화면복원·최대100명FPS/발열을확인한다. 표시·복귀문제가있다면동일appID Service runtime로그/기기정보로관련호스트만수정한다. 안정적용확인뒤저녁/야간·비/비바람/조명·차량세부모델을단계적으로이전하고목표시안품질을올린다. 기존native날씨/브랜드자산을복제재생성하거나완전이전이끝났다고보고하지않는다.
+
 ## 2026-10-10 — Unity host Lint tag 실행 보정 (KST, 진행 중)
 
 check1 태그 commit의[skip ci]가tag push에도 적용되어 실행이생성되지않았다. 이사실을수정해 docs-only commit을skip문구없이게시하고check2태그를사용한다. 기존Unity workflow는docs 경로를대상으로하지않으므로 model/APK검사는반복되지않고새hostLint만실행한다. check1은옮기거나삭제하지않는다. 실제APK의6nativeclass와bridge4method도 DEX로확인했다.

@@ -1,6 +1,6 @@
 # S20+
 
-Unity 신호·인도 보행 테스트 APK **0.4.0**를 전달했습니다. 차량 신호/정차·자연스러운 인도 산책/횡단·군중 회피와 폰4~100명 조절을 구현했고, 실제 PC 장면/모의·Editor 렌더·Android 빌드/Lint·기존v2서명 검증을 완료했습니다. [최신 설치·검증 결과](docs/UNITY_AUTOMATION.md)와 [Unity 소스 안내](pixel-traffic-unity/README.md)를 확인합니다. 실제 폰 FPS·발열·라이브 배경화면 연결은 후속입니다.
+Unity 라이브 배경화면 **0.5.0**를 전달했습니다. 기존 도시·신호·보행을 홈 화면에 연결하고, 인원 4~100명과 절전 설정을 저장합니다. PC Unity·Android 빌드/Lint·실제 APK 서비스 등록·기존 v2 서명을 확인했습니다. [설치·적용 및 검증 결과](docs/UNITY_AUTOMATION.md), [Unity 소스 안내](pixel-traffic-unity/README.md)를 확인합니다. 실제 폰의 홈/잠금·숨김 복귀·FPS/발열 확인은 별도입니다.
 
 루팅된 Samsung Galaxy S20+ 관련 앱과 도구의 개발 작업 공간입니다.
 

@@ -1,5 +1,16 @@
 # 작은 패치 작업 안내
 
+## Unity 라이브 배경화면 0.5.0 범위와 검사
+
+| 변경 대상 | 관련 파일 | 필수 확인 |
+| --- | --- | --- |
+| Service Surface 연결·미리보기/홈 공유 | NativeAndroid/src/*WallpaperService, WallpaperRuntimeHost, SurfaceArbiter | 실제 Unity Service API 대조·production selection 우선/숨김/화면OFF/invalid/resize/1000회 생성 제거·실제 Android 컴파일 |
+| 인원·절전 설정 저장 및 Android bridge | NativeAndroid/src/*SettingsActivity, *SettingsProvider, WallpaperPreferences; Runtime/AndroidWallpaperBridge, StreetSimulation | provider 비공개 같은 UID·설정 범위·숨김 업데이트 중지/복귀 delta·production 보행/차량 검사; 폰 저장/재시작은 별도 |
+| Gradle service/launcher 등록·APK | Editor/AndroidWallpaperBuild, StarterConfig, PrototypeBuild, tools/run-pipeline.ps1, workflow | manifest 템플릿 idempotence·실제 BuildPlayer/launcher 및 unityLibrary Lint·service BIND_WALLPAPER/process/metadata·provider exported=false·SettingsActivity launcher·Unity Activity disabled·원본 v2 cert·0.5.0/code5/ARM64/min/target/hash |
+| 적용/기기 수명주기 | 앱 README, UNITY_AUTOMATION, STATUS | 사용자 시스템 미리보기 적용·홈/잠금·다른 앱/화면OFF/복귀·재부팅/설정 보존·FPS/발열. PC 검사와 구분 |
+
+StreetModel/SidewalkRoutes/geometry를 바꾸지 않습니다. 별도 prototype appID를 유지하며 화면 적용은 사용자가 Android 시스템 화면에서 선택합니다. Editor 렌더는 폰 배경화면 스크린샷이 아닙니다. 15/30 FPS는 목표값입니다. 실제 PC 결과 문서만 갱신할 때 동일 소스 검사를 반복하지 않습니다.
+
 ## Unity 신호·인도 보행 0.4.0 범위와 검사
 
 | 변경 대상 | 관련 파일 | 필수 확인 |

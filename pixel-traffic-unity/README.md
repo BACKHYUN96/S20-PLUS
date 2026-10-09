@@ -1,6 +1,21 @@
-# Pixel Traffic Unity — 신호·인도 보행·횡단 0.4.0
+# Pixel Traffic Unity — 라이브 배경화면 0.5.0
 
-## 현재 패치 — 신호·인도 보행·횡단 0.4.0 (2026-10-10 KST)
+## 현재 패치 — 라이브 배경화면·저장 설정 0.5.0 (2026-10-10 KST)
+
+0.4.0의 도시·차량·신호·인도 보행을 Android 라이브 배경화면으로 연결합니다. 앱을 열면 한국어 설정 화면이 나옵니다. 보행자 4~100명(4명 단위, 기본 32명)과 절전 모드를 자동 저장하며, **배경화면 미리보기 및 적용** 버튼으로 Android의 미리보기를 엽니다. 실제 적용은 시스템 화면에서 선택합니다. 기본 30 FPS, 절전 설정 또는 기기 절전 시 15 FPS는 목표값이며 측정 FPS가 아닙니다.
+
+WallpaperService는 별도 `:wallpaper` 프로세스에서 Unity 실행 하나를 공유합니다. 보이는 유효한 Surface만 연결하고 미리보기를 우선하며, 숨김·화면 꺼짐에는 pause/Surface 해제를 수행합니다. 인원 설정은 비공개 같은 UID ContentProvider를 통해 전달합니다. 기본 설정 Activity에는 Unity 렌더러를 만들지 않습니다. Wallpaper-0.5.0/Generated/Wallpaper050을 사용하며 기존 prototype appID와 서명을 유지합니다. native 앱 0.48.0과 공존합니다.
+
+PC 빌드·Lint·실제 APK 서비스/서명 검증 결과와 최신 설치 명령은 [현재 상태](../docs/STATUS.md)를 확인합니다. 실제 S20+/S26 Ultra 홈·잠금 화면의 미리보기/적용, 숨김 복귀, 재부팅 후 복원, 설정 저장, FPS·발열은 기기에서 확인해야 합니다. Editor PNG는 실제 폰 홈 화면 캡처가 아닙니다.
+
+## 현재 빌드와 실행
+
+Unity 6000.3.26f1/Android 모듈을 사용합니다. `tools/run-pipeline.ps1 -Operation Validate`로 장면·production 모델·manifest 템플릿 검사를 수행하고, `-Operation BuildApk`로 Android 빌드/Lint/원본 v2 인증서 및 APK 메타데이터를 검사합니다. Gradle 생성 후 `AndroidWallpaperBuild`가 `NativeAndroid/src`와 `res`를 복사하고 service/provider/설정 Activity를 등록합니다. Export에도 같은 처리를 적용합니다. 실제 Android 컴파일은 PC BuildApk 결과로 확인합니다. 새 NativeAndroid 모듈은 `tools/check-wallpaper-lint.ps1`로 unityLibrary Lint를 추가 확인합니다. 이 도구는 생성된 Java/리소스 SHA가 현재 소스와 같은지 먼저 확인하며 APK를 다시 만들지 않습니다. 이번 결과는 launcher 오류0/경고8, unityLibrary 오류0/경고14입니다.
+
+Editor 메뉴 **4. Build Signed Wallpaper APK**를 사용할 수 있습니다. APK는 `Builds/pixel-traffic-unity-prototype-0.5.0.apk`에 생성됩니다. 기존 `BuildActivityApk` 메서드 이름은 PowerShell 호출 호환용으로 유지하며 결과 앱은 라이브 배경화면입니다. 서명 환경 변수 및 PC runner 설정은 아래 초기 기록과 [자동화 안내](../docs/UNITY_AUTOMATION.md)를 참조합니다. 최신 안내가 아래 초기 0.1.0 기록보다 우선합니다.
+
+## 이전 기록 — 0.4.0 및 초기 설정
+## 이전 패치 — 신호·인도 보행·횡단 0.4.0 (2026-10-10 KST)
 
 차량 신호/stop line·앞차 간격과 인도 보행자를 연결합니다. 기본32명/폰 People +/-4로4~100명, 인도 무작위 목적지/화단·가로등 회피·최대12대기자리·양방향 zebra band를 사용합니다. 정적인 화단 edge를 공유하고 좁은 통로 양방향 비킴·회피 후 경로 재연결·첫 횡단 우선/만석 후 산책 재시도를 사용합니다. 실제 화단/soil은 인도 방향으로 맞춥니다. 차량/보행이 비운 뒤 다음 흐름을 시작하고 인원 감소 시 횡단 중인 사람은 인도에 도착한 뒤 빠집니다. Crossing-0.4.0/Generated/Crossing040은 이전 장면을 보존하며 동일prototype appID/기존 서명으로 업데이트합니다. PC compile·4/32/100명200/600/600초 production model·실제100rig/화단·GPU·Android BuildPlayer/Lint(errors0/warnings8)·다운로드 실제APK/원본v2서명 검증을 완료했습니다. 모든 사람이 최소1회 횡단했고223횡단/33신호주기를 확인했습니다. 실제 폰 결과는 아직 별도입니다. 최신 결과와 PowerShell은 [STATUS](../docs/STATUS.md)를 확인합니다. 실제 폰 FPS·발열·WallpaperService/기존 날씨·영구 설정 저장은 후속입니다.
 
