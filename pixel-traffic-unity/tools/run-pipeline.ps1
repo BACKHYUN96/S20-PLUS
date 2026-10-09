@@ -19,6 +19,9 @@ $previousJava = $env:JAVA_HOME
 $previousKeyPassword = $env:PIXEL_TRAFFIC_KEY_PASSWORD
 $previousStorePassword = $env:PIXEL_TRAFFIC_KEYSTORE_PASSWORD
 $previousAlias = $env:PIXEL_TRAFFIC_KEY_ALIAS
+$previousGradleHome = $env:GRADLE_USER_HOME
+$previousTemp = $env:TEMP
+$previousTmp = $env:TMP
 function Invoke-AndroidTool {
     param([string]$Tool, [string[]]$ToolArguments)
     $previousPreference = $ErrorActionPreference
@@ -38,6 +41,38 @@ try {
     . (Join-Path $PSScriptRoot 'unity-editor.ps1')
     $UnityExe = Get-PixelTrafficUnityEditor -ExplicitPath $UnityExe
     if ($Operation -eq 'BuildApk') {
+        if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) {
+            # Android Prefab's Windows batch file cannot reliably use a Unicode
+            # Gradle profile/temp path. Keep these build-only paths in ASCII.
+            $cacheRoot = $env:PIXEL_TRAFFIC_BUILD_CACHE
+            if (-not $cacheRoot) {
+                if ($env:RUNNER_TEMP) {
+                    $cacheRoot = Join-Path ([IO.Directory]::GetParent($env:RUNNER_TEMP).Parent.FullName) 'PixelTrafficBuildCache'
+                } else { $cacheRoot = Join-Path ([IO.Path]::GetPathRoot($projectRoot)) 'Unity/PixelTrafficBuildCache' }
+            }
+            $cacheRoot = [IO.Path]::GetFullPath($cacheRoot)
+            if ($cacheRoot -match '[^\x20-\x7e]') { throw 'PIXEL_TRAFFIC_BUILD_CACHE must use an ASCII Windows path.' }
+            $gradleHome = Join-Path $cacheRoot 'gradle'
+            $temporaryDirectory = Join-Path $cacheRoot 'temp'
+            New-Item -ItemType Directory -Path $gradleHome, $temporaryDirectory -Force | Out-Null
+            # Reuse downloaded dependencies without moving/deleting the user's cache.
+            $oldHome = $previousGradleHome
+            if (-not $oldHome) { $oldHome = Join-Path $env:USERPROFILE '.gradle' }
+            $oldModules = Join-Path $oldHome 'caches/modules-2'
+            $newModules = Join-Path $gradleHome 'caches/modules-2'
+            if ((Test-Path -LiteralPath $oldModules) -and -not (Test-Path -LiteralPath $newModules)) {
+                $preference = $ErrorActionPreference
+                try {
+                    $ErrorActionPreference = 'Continue'
+                    & robocopy.exe $oldModules $newModules /E /XF '*.lock' /NFL /NDL /NJH /NJS /R:1 /W:1 | Out-Null
+                    $copyExit = $LASTEXITCODE
+                } finally { $ErrorActionPreference = $preference }
+                if ($copyExit -ge 8) { throw 'Could not reuse the existing Gradle dependency cache.' }
+            }
+            $env:GRADLE_USER_HOME = $gradleHome
+            $env:TEMP = $temporaryDirectory
+            $env:TMP = $temporaryDirectory
+        }
         if ([string]::IsNullOrEmpty($env:PIXEL_TRAFFIC_KEY_PASSWORD)) { $env:PIXEL_TRAFFIC_KEY_PASSWORD = $null }
         # Optional cloud secret; a PC can instead keep its original key outside the checkout.
         if ($env:PIXEL_TRAFFIC_KEYSTORE_BASE64) {
@@ -135,4 +170,7 @@ try {
     $env:PIXEL_TRAFFIC_KEY_PASSWORD = $previousKeyPassword
     $env:PIXEL_TRAFFIC_KEYSTORE_PASSWORD = $previousStorePassword
     $env:PIXEL_TRAFFIC_KEY_ALIAS = $previousAlias
+    $env:GRADLE_USER_HOME = $previousGradleHome
+    $env:TEMP = $previousTemp
+    $env:TMP = $previousTmp
 }

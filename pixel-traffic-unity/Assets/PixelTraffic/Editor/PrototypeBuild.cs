@@ -45,8 +45,12 @@ namespace PixelTraffic.UnityPrototype.Editor
             string previousAlias = PlayerSettings.Android.keyaliasName;
             string previousStorePass = PlayerSettings.Android.keystorePass;
             string previousKeyPass = PlayerSettings.Android.keyaliasPass;
+            string previousGradleHome = AndroidExternalToolsSettings.Gradle.userHomePath;
             try
             {
+                string gradleHome = Environment.GetEnvironmentVariable("GRADLE_USER_HOME");
+                if (!string.IsNullOrWhiteSpace(gradleHome))
+                    AndroidExternalToolsSettings.Gradle.userHomePath = Path.GetFullPath(gradleHome);
                 EditorUserBuildSettings.exportAsGoogleAndroidProject = false;
                 EditorUserBuildSettings.buildAppBundle = false;
                 PlayerSettings.Android.useCustomKeystore = true;
@@ -67,6 +71,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 PlayerSettings.Android.keyaliasName = previousAlias;
                 PlayerSettings.Android.keystorePass = previousStorePass;
                 PlayerSettings.Android.keyaliasPass = previousKeyPass;
+                AndroidExternalToolsSettings.Gradle.userHomePath = previousGradleHome;
             }
         }
 
