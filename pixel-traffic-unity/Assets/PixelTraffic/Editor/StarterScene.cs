@@ -14,7 +14,7 @@ namespace PixelTraffic.UnityPrototype.Editor
     // Generated geometry stays in its own scene; existing scenes are never rebuilt in place.
     public static class StarterScene
     {
-        internal const string Generated = "Assets/PixelTraffic/Generated/Crossing040";
+        internal const string Generated = "Assets/PixelTraffic/Generated/Wallpaper050";
         private const string PipelinePath = Generated + "/MobileURP.asset";
         private static readonly Dictionary<string, Material> materials = new Dictionary<string, Material>();
 
@@ -142,7 +142,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         public static void ConfigurePlayer()
         {
             PlayerSettings.companyName = "BACKHYUN96";
-            PlayerSettings.productName = "Pixel Traffic Unity Prototype";
+            PlayerSettings.productName = "Pixel Traffic Unity";
             PlayerSettings.bundleVersion = StarterConfig.VersionName;
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
             PlayerSettings.colorSpace = ColorSpace.Linear;
@@ -153,7 +153,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevelAuto;
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
-            // Compatibility probe for a future native Service host uses the Activity entry point.
+            // Retain the Activity Java backend; the generated manifest hosts it in a WallpaperService.
             PlayerSettings.Android.applicationEntry = AndroidApplicationEntry.Activity;
         }
 
@@ -207,6 +207,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             Require(PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android) == StarterConfig.ExperimentAppId, "Experimental app ID changed.");
             TrafficFleet.Report traffic = TrafficFleet.Validate();
             StreetChecks.Report street = StreetChecks.Validate();
+            AndroidWallpaperBuild.ValidateTemplates();
             Require(Camera.main != null && Camera.main.farClipPlane > 120, "Portrait camera missing.");
             CityEnvironment.Report environment = CityEnvironment.Validate(Camera.main, pipeline);
             Require(PlayerSettings.bundleVersion == StarterConfig.VersionName &&

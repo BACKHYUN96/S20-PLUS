@@ -16,7 +16,7 @@ New-Item -ItemType Directory -Path $reports -Force | Out-Null
 $summary = [ordered]@{
     schemaVersion = 1; operation = $Operation; result = 'FAILED'
     startedUtc = [DateTime]::UtcNow.ToString('O'); finishedUtc = $null
-    wallpaper = $false
+    wallpaper = $true
 }
 $temporaryKey = $null
 $previousKey = $env:PIXEL_TRAFFIC_KEYSTORE
@@ -46,7 +46,7 @@ function Invoke-AndroidTool {
     return $toolOutput
 }
 try {
-    foreach ($reportName in @('scene-validation.json', 'apk-verification.json', 'android-build-result.txt', 'android-lint-result.json', 'verification-failure.json', 'android-lint.log', 'unity-failure.json')) {
+    foreach ($reportName in @('scene-validation.json', 'apk-verification.json', 'android-build-result.txt', 'android-lint-result.json', 'verification-failure.json', 'android-lint.log', 'unity-failure.json', 'wallpaper-build.json')) {
         $oldReport = Join-Path $reports $reportName
         if (Test-Path -LiteralPath $oldReport) { Remove-Item -LiteralPath $oldReport }
     }
@@ -193,12 +193,23 @@ try {
         if ($badging -notmatch "targetSdkVersion:'(\d+)'" -or [int]$Matches[1] -lt 29) {
             throw 'APK target SDK verification failed.'
         }
+        $verifiedTargetSdk = [int]$Matches[1]
+        $manifest = Invoke-AndroidTool $aapt @('dump', 'xmltree', $apk, 'AndroidManifest.xml')
+        if ($badging -notmatch "launchable-activity: name='com.s20plus.pixeltraffic.unitywallpaper.WallpaperSettingsActivity'" -or
+            $manifest -notmatch 'com.s20plus.pixeltraffic.unitywallpaper.PixelTrafficWallpaperService' -or
+            $manifest -notmatch 'android.permission.BIND_WALLPAPER' -or
+            $manifest -notmatch 'com.s20plus.pixeltraffic.unitywallpaper.WallpaperSettingsProvider' -or
+            $manifest -notmatch ':wallpaper') { throw 'Wallpaper launcher/service/provider manifest verification failed.' }
+        $wallpaperBuild = Get-Content -LiteralPath (Join-Path $reports 'wallpaper-build.json') -Raw | ConvertFrom-Json
+        if ($wallpaperBuild.version -ne $versionName -or $wallpaperBuild.result -notlike 'PASS*') { throw 'Wallpaper post-generation verification missing.' }
         $verification = [ordered]@{
             result = 'PASS'; version = $versionName; versionCode = $versionCode; minSdk = 29
-            targetSdk = [int]$Matches[1]; architecture = 'arm64-v8a'
+            targetSdk = $verifiedTargetSdk; architecture = 'arm64-v8a'
             certificateSha256 = $expectedCertificate; v2 = $true
             apkSha256 = (Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash.ToLowerInvariant()
-            bytes = (Get-Item -LiteralPath $apk).Length; wallpaper = $false
+            bytes = (Get-Item -LiteralPath $apk).Length; wallpaper = $true
+            launchableActivity = 'com.s20plus.pixeltraffic.unitywallpaper.WallpaperSettingsActivity'
+            deviceLifecycleTested = $false
         }
         $verification | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $reports 'apk-verification.json') -Encoding UTF8
         if ($env:GITHUB_ENV) { "PIXEL_TRAFFIC_APK_PATH=$apk" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding UTF8 }

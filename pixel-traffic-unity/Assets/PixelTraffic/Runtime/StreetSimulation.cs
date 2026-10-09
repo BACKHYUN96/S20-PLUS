@@ -13,6 +13,8 @@ namespace PixelTraffic.UnityPrototype
         private StreetModel model;
         private double accumulator;
         private bool paused,focused=true;
+        private bool wallpaperRuntime,skipNextDelta;
+        private float settingsAt;
         private StreetModel.Phase lastPhase=(StreetModel.Phase)(-1);
         private MaterialPropertyBlock lightBlock;
         public StreetModel Model => model;
@@ -22,7 +24,14 @@ namespace PixelTraffic.UnityPrototype
             vehicles=cars;walkers=views;vehicleLights=signals;walkLights=crossingSignals;
             foreach(var car in cars)car.Bind(this);ResetModel();ApplyViews();
         }
-        private void Awake(){Application.targetFrameRate=StarterConfig.TargetFps;ResetModel();}
+        private void Awake()
+        {
+            wallpaperRuntime=AndroidWallpaperBridge.IsWallpaper;
+            Application.runInBackground=wallpaperRuntime;
+            Application.targetFrameRate=wallpaperRuntime?AndroidWallpaperBridge.FrameRate:StarterConfig.TargetFps;
+            if(wallpaperRuntime)people=AndroidWallpaperBridge.Population(people);
+            ResetModel();
+        }
         public void ResetModel()
         {
             var cars=new StreetModel.Car[vehicles.Length];
@@ -34,11 +43,27 @@ namespace PixelTraffic.UnityPrototype
             }
             model=new StreetModel(people,cars);accumulator=0;lastPhase=(StreetModel.Phase)(-1);
         }
-        private void Update(){if(!paused&&(focused||Application.isEditor)){Advance(Math.Min(Time.deltaTime,.25));ApplyViews();}}
+        private void Update()
+        {
+            if(paused||(!focused&&!Application.isEditor&&!wallpaperRuntime))return;
+            if(wallpaperRuntime)
+            {
+                if(!AndroidWallpaperBridge.IsRendering)return;
+                if(Time.unscaledTime>=settingsAt)
+                {
+                    settingsAt=Time.unscaledTime+1;
+                    int count=AndroidWallpaperBridge.Population(people);
+                    if(count!=people)SetPeople(count);
+                    Application.targetFrameRate=AndroidWallpaperBridge.FrameRate;
+                }
+            }
+            if(skipNextDelta){skipNextDelta=false;ApplyViews();return;}
+            Advance(Math.Min(Time.deltaTime,.25));ApplyViews();
+        }
         public void Advance(double elapsed)
         {
             if(double.IsNaN(elapsed)||double.IsInfinity(elapsed)||elapsed<0)throw new ArgumentOutOfRangeException(nameof(elapsed));
-            if(paused||(!focused&&!Application.isEditor))return;
+            if(paused||(!focused&&!Application.isEditor&&!wallpaperRuntime))return;
             accumulator+=elapsed;
             while(accumulator+1e-7>=1d/30)
             {
@@ -71,10 +96,11 @@ namespace PixelTraffic.UnityPrototype
         }
         private void Tint(Renderer renderer,Color color){lightBlock.SetColor("_BaseColor",color);renderer.SetPropertyBlock(lightBlock);}
         public void SetPaused(bool value)=>paused=value;
-        private void OnApplicationPause(bool value)=>SetPaused(value);
+        private void OnApplicationPause(bool value){SetPaused(value);if(!value)skipNextDelta=true;}
         private void OnApplicationFocus(bool value)=>focused=value;
         private void OnGUI()
         {
+            if(wallpaperRuntime)return;
             Matrix4x4 previous=GUI.matrix;GUI.matrix=Matrix4x4.Scale(Vector3.one*(Screen.width/540f));
             GUI.Box(new Rect(344,12,184,80),"People: "+model.RequestedPeople);
             if(GUI.Button(new Rect(354,44,74,35),"- 4"))SetPeople(model.RequestedPeople-4);

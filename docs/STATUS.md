@@ -1,5 +1,19 @@
 # 현재 상태
 
+## 2026-10-10 — Unity 0.5.0 라이브 배경화면 호스트 구현 시작 (KST, 진행 중)
+
+사용자가0.4.0 적용 성공과 다음 단계 진행을 승인했다. 원격main 기준c5f1ea0571f0d146c9c586f77dcff65dabcf0de9을 확인했고 기존dirty native/index는 보존한다. 기존0.4 APK의 실제DEX에서 UnityPlayerForActivityOrService(Context),displayChanged(int,Surface),pause/resume/windowFocusChanged를 확인했다. Unity6.3 공식 라이브러리 설명 및 IPostGenerateGradleAndroidProject 설명과 Service resume 관련 Unity discussion을 대조했다.
+
+범위: 새NativeAndroid Java/리소스/SurfaceArbiterChecks, 새Editor/AndroidWallpaperBuild·Runtime/AndroidWallpaperBridge(.meta), 기존StreetSimulation/StarterConfig/StarterScene/PrototypeBuild, pipeline/workflow 검증 및 문서. StreetModel/SidewalkRoutes/차량·도시 geometry·원본 signing 설정은 유지한다. 별도Unityprototype appID를0.5.0/code5로 업데이트하고 새Wallpaper-0.5.0/Generated/Wallpaper050을 쓴다.
+
+기본 앱은 Android 설정 화면이며 시스템배경화면미리보기/적용으로 연결한다. UnityPlayerActivity는 비활성화해 두 번째 renderer를 만들지 않고 WallpaperService의단일Unity를 live/preview Engine이 공유한다. 서비스는 :wallpaper process로 분리하고 비공개 같은UIDContentProvider로 인원/절전설정을 읽어 process quit/설정수명주기 충돌을 줄인다. 인원4~100/기본32·15/30FPS목표는 자동저장되며 시스템절전도15FPS목표. 유효한visibleSurface만 선택/미리보기우선/hidden·screenOFFpause·surface generation/size재연결. C#는host가visible일때만업데이트하고첫resumeDelta를버려hidden시간catchup을하지않는다. 홈배경화면에는People OnGUI를표시하지않는다.
+
+현재 구현 단계. 클라우드 production selection/manifest XML정적·실제PC Unitycompile/장면/AndroidBuild/Lint/서명/APKmanifest 검증 예정. 실제S20+/S26 Ultra 홈/잠금/미리보기전환/숨김복귀/발열은 기기에서 확인해야 하며 PC/독립Java검사로대신하지 않는다. 원본 키가PC에정상등록되어있어첨부백업을다시복원하지않는다. 동일입력의무관한native검사는반복하지않는다.
+
+참고: https://docs.unity.com/en-us/engine/6000.3/manual/platform-specific/android/developing/unityasa-library · https://docs.unity.com/en-us/engine/6000.3/script-reference/unityeditor/android/ipostgenerategradleandroidproject/onpostgenerategradleandroidproject · https://discussions.unity.com/t/unityplayerforactivityorservice-instantiated-via-service/945528
+
+
+클라우드 JDK21로 실제 SurfaceArbiter를 컴파일/실행하여 visible/preview 우선·live fallback·화면OFF·invalid/zero-size·surface 교체/크기·1000회 생성/제거 검사 PASS. Android/Unity 실행 검증은 아직 아니다. APK targetSDK는 manifest 정규식 이후 캡처가 덮이지 않도록 먼저 저장한다.
 ## 2026-10-10 — Unity 0.4.0 신호·인도 보행·횡단 APK / 실제 Editor 렌더 전달 완료 (KST)
 
 사용자가0.3.0 적용 성공 뒤 다음 단계와 계속 진행을 승인하여 신호·차량 정차/재출발·인도 산책·횡단·군중 회피·폰4~100명 조절을 구현했다. 최종 source480020476c6e2984d15dc8f20de5ef5d77f04501/tag unity-apk-0.4.0-build1. [Windows main37960722841](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/37960722841)/job113922576563와 [APK37961277473](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/37961277473)/job113924438275가 success이다. 앞선 실패는 아래 이력에 유지하며 최종 통과로 덮어쓰지 않는다.

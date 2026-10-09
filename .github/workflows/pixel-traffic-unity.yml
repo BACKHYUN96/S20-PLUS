@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       operation:
-        description: Unity operation (APK is a separate Activity prototype)
+        description: Unity operation (APK is a separate wallpaper test app)
         required: true
         type: choice
         default: Validate
@@ -122,6 +122,7 @@ jobs:
             pixel-traffic-unity/Reports/scene-validation.json
             pixel-traffic-unity/Reports/apk-verification.json
             pixel-traffic-unity/Reports/android-build-result.txt
+            pixel-traffic-unity/Reports/wallpaper-build.json
             pixel-traffic-unity/Reports/android-lint-result.json
             pixel-traffic-unity/Reports/prior-build-failure.json
             pixel-traffic-unity/Reports/verification-failure.json

@@ -23,12 +23,12 @@ namespace PixelTraffic.UnityPrototype.Editor
             {
                 EditorUserBuildSettings.exportAsGoogleAndroidProject = true;
                 Build("Builds/AndroidExport", BuildOptions.Development);
-                Debug.Log("Android Gradle project exported. WallpaperService integration is the next step; this export is an Activity prototype.");
+                Debug.Log("Android Gradle project exported with the wallpaper service host; device lifecycle verification remains.");
             }
             finally { EditorUserBuildSettings.exportAsGoogleAndroidProject = previous; }
         }
 
-        [MenuItem("Pixel Traffic/4. Build Signed Activity APK")]
+        [MenuItem("Pixel Traffic/4. Build Signed Wallpaper APK")]
         public static void BuildActivityApk()
         {
             string keystore = RequiredEnvironment("PIXEL_TRAFFIC_KEYSTORE");
@@ -60,7 +60,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 PlayerSettings.Android.keyaliasPass = keyPassword;
                 string output = "Builds/pixel-traffic-unity-prototype-" + StarterConfig.VersionName + ".apk";
                 Build(output, BuildOptions.Development);
-                Debug.Log("Activity prototype APK built with original certificate. This is a separate test app, not a wallpaper or a 0.48 update: " + output);
+                Debug.Log("Wallpaper test APK built with original certificate; native 0.48 app remains separate: " + output);
             }
             finally
             {
@@ -87,7 +87,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             File.WriteAllText("Reports/android-build-result.txt", "Editor: " + Application.unityVersion +
                 "\nApp ID: " + StarterConfig.ExperimentAppId + "\nResult: " + report.summary.result +
                 "\nErrors: " + report.summary.totalErrors + "\nWarnings: " + report.summary.totalWarnings +
-                "\nOutput: " + output + "\nActivity prototype; no WallpaperService yet.\n");
+                "\nOutput: " + output + "\nWallpaperService host included; actual device lifecycle test pending.\n");
             if (report.summary.result != BuildResult.Succeeded)
                 throw new InvalidOperationException("Android build failed; inspect Reports/android-build-result.txt and Editor log.");
         }
