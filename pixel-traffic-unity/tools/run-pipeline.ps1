@@ -7,6 +7,11 @@ param(
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $reports = Join-Path $projectRoot 'Reports'
+$versionSource = Get-Content -LiteralPath (Join-Path $projectRoot 'Assets/PixelTraffic/Runtime/StarterConfig.cs') -Raw
+if ($versionSource -notmatch 'VersionName = "(\d+\.\d+\.\d+)";') { throw 'Prototype version name missing.' }
+$versionName = $Matches[1]
+if ($versionSource -notmatch 'VersionCode = ([1-9]\d*);') { throw 'Prototype version code missing.' }
+$versionCode = [int]$Matches[1]
 New-Item -ItemType Directory -Path $reports -Force | Out-Null
 $summary = [ordered]@{
     schemaVersion = 1; operation = $Operation; result = 'FAILED'
@@ -111,7 +116,7 @@ try {
                 $env:PIXEL_TRAFFIC_KEY_PASSWORD = $keyCredential.GetNetworkCredential().Password
             }
         }
-        $apk = Join-Path $projectRoot 'Builds/pixel-traffic-unity-prototype-0.1.0.apk'
+        $apk = Join-Path $projectRoot "Builds/pixel-traffic-unity-prototype-$versionName.apk"
         # Prevent a previous successful APK from masquerading as this run's output.
         if (Test-Path -LiteralPath $apk) { Remove-Item -LiteralPath $apk }
     }
@@ -179,7 +184,8 @@ try {
             throw 'APK v2/original signing certificate verification failed.'
         }
         $badging = Invoke-AndroidTool $aapt @('dump', 'badging', $apk)
-        if ($badging -notmatch "package: name='com\.s20plus\.pixeltraffic\.unityprototype' versionCode='1' versionName='0\.1\.0'" -or
+        $expectedVersion = [regex]::Escape($versionName)
+        if ($badging -notmatch "package: name='com\.s20plus\.pixeltraffic\.unityprototype' versionCode='$versionCode' versionName='$expectedVersion'" -or
             $badging -notmatch "(?m)^sdkVersion:'29'\s*$" -or
             $badging -notmatch "(?m)^native-code: 'arm64-v8a'\s*$") {
             throw 'APK app ID/version/min SDK/ARM64 verification failed.'
@@ -188,13 +194,14 @@ try {
             throw 'APK target SDK verification failed.'
         }
         $verification = [ordered]@{
-            result = 'PASS'; version = '0.1.0'; versionCode = 1; minSdk = 29
+            result = 'PASS'; version = $versionName; versionCode = $versionCode; minSdk = 29
             targetSdk = [int]$Matches[1]; architecture = 'arm64-v8a'
             certificateSha256 = $expectedCertificate; v2 = $true
             apkSha256 = (Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash.ToLowerInvariant()
             bytes = (Get-Item -LiteralPath $apk).Length; wallpaper = $false
         }
         $verification | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $reports 'apk-verification.json') -Encoding UTF8
+        if ($env:GITHUB_ENV) { "PIXEL_TRAFFIC_APK_PATH=$apk" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding UTF8 }
     }
     $summary.result = 'PASS'
 } finally {

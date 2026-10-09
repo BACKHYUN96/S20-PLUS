@@ -1,5 +1,13 @@
 # Pixel Traffic Unity — 첫 도로 프로젝트 0.1.0
 
+## 현재 패치 — 도시 배경·조명 0.2.0 (2026-10-09)
+
+0.1.0의 실제 폰 첫 화면 표시를 확인한 뒤 목표 시안의 거리 깊이·오후빛·도시 디테일을 구현합니다. 420m 도로와 넓은 지면, 먼 skyline/산 능선, 24개 건물의 창틀·차양·옥상 설비, 32가로수의 겹친 수관과 화단, 20가로등, mipmap 노면·석재 재질, 따뜻한 단일 태양 및 접지 그림자입니다. 차량 주행·차종 확장과 배경화면 연결은 후속 단계입니다.
+
+Unity6000.3.26f1/URP17.3.0, appID com.s20plus.pixeltraffic.unityprototype/0.2.0/code2/ARM64/min29/기존 서명을 유지합니다. 새 장면 City-0.2.0.unity와 Generated/City020 자산은 기존 FirstRoad와 분리합니다. 버전·APK 파일명/사후검사는 StarterConfig의 버전 상수를 사용합니다. 최신 실제 PC 빌드·Lint·서명 결과는 [현재 상태](../docs/STATUS.md)를 확인합니다. 이 항목을 작성할 때는 검사 실행 전이며 구현을 검사 통과로 간주하지 않습니다.
+
+`tools/run-unity.ps1 -Mode Capture`는 GPU를 사용하는 Editor camera PNG를 Reports에 저장합니다. 실제 Android 폰 스크린샷/FPS 테스트가 아니며 cloud runner에서 그래픽 장치가 없으면 캡처를 생략할 수 있습니다(`PIXEL_TRAFFIC_CAPTURE=false`). APK의 필수 build/Lint/cert 검사는 그대로 유지합니다. 앱 설치·실행은 [자동화 안내](../docs/UNITY_AUTOMATION.md)의 Unity SDK adb.exe 직접 호출 방식과 새 파일명을 사용합니다.
+
 ## Camera 컴파일 오류 수정 — 0.1.0 fix1 (2026-10-09)
 
 사용자 Safe Mode Console에서 `Camera`에 `AddComponent`가 없다는 CS1061 오류를 확인했습니다. 저장소 `StarterScene.cs` 78행에서 Camera 컴포넌트에 메서드를 호출한 것이 원인입니다. `camera.AddComponent<UniversalAdditionalCameraData>()`를 `camera.gameObject.AddComponent<UniversalAdditionalCameraData>()`로 수정했습니다. 같은 파일의 다른 AddComponent 호출은 GameObject를 대상으로 하고 있어 변경하지 않았습니다.

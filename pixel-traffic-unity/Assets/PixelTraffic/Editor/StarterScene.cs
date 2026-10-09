@@ -14,7 +14,7 @@ namespace PixelTraffic.UnityPrototype.Editor
     // Generated geometry stays in its own scene; existing scenes are never rebuilt in place.
     public static class StarterScene
     {
-        private const string Generated = "Assets/PixelTraffic/Generated";
+        internal const string Generated = "Assets/PixelTraffic/Generated/City020";
         private const string PipelinePath = Generated + "/MobileURP.asset";
         private static readonly Dictionary<string, Material> materials = new Dictionary<string, Material>();
 
@@ -56,64 +56,39 @@ namespace PixelTraffic.UnityPrototype.Editor
             ConfigurePlayer();
             Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             RenderSettings.ambientMode = AmbientMode.Trilight;
-            RenderSettings.ambientSkyColor = new Color(.60f, .74f, .90f);
-            RenderSettings.ambientEquatorColor = new Color(.39f, .43f, .49f);
-            RenderSettings.ambientGroundColor = new Color(.20f, .21f, .23f);
+            RenderSettings.ambientSkyColor = new Color(.68f, .75f, .83f);
+            RenderSettings.ambientEquatorColor = new Color(.43f, .46f, .49f);
+            RenderSettings.ambientGroundColor = new Color(.25f, .24f, .22f);
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Linear;
-            RenderSettings.fogColor = new Color(.59f, .75f, .88f);
-            RenderSettings.fogStartDistance = 100;
-            RenderSettings.fogEndDistance = 190;
+            RenderSettings.fogColor = new Color(.72f, .78f, .81f);
+            RenderSettings.fogStartDistance = 130;
+            RenderSettings.fogEndDistance = 360;
 
             var camera = new GameObject("Portrait Camera").AddComponent<Camera>();
             camera.tag = "MainCamera";
-            camera.transform.position = new Vector3(0, 28, -28);
-            camera.transform.LookAt(new Vector3(0, 0, 22));
-            camera.fieldOfView = 44;
+            camera.transform.position = new Vector3(0, 26, -32);
+            camera.transform.LookAt(new Vector3(0, 0, 28));
+            camera.fieldOfView = 50;
             camera.nearClipPlane = .3f;
-            camera.farClipPlane = 220;
+            camera.farClipPlane = 500;
             camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = new Color(.38f, .66f, .88f);
+            camera.backgroundColor = new Color(.65f, .77f, .86f);
             camera.allowHDR = false;
             camera.gameObject.AddComponent<UniversalAdditionalCameraData>();
 
             var sun = new GameObject("Afternoon Sun").AddComponent<Light>();
             sun.type = LightType.Directional;
-            sun.color = new Color(1, .91f, .77f);
-            sun.intensity = 1.6f;
+            sun.color = new Color(1, .88f, .70f);
+            sun.intensity = 1.35f;
             sun.shadows = LightShadows.Soft;
-            sun.transform.rotation = Quaternion.Euler(48, -35, 0);
+            sun.shadowStrength = .82f;
+            sun.transform.rotation = Quaternion.Euler(43, -38, 0);
             RenderSettings.sun = sun;
 
             Transform road = new GameObject("Road and Sidewalks").transform;
-            Material asphalt = Surface("Asphalt", new Color(.16f, .18f, .22f));
-            AddAsphaltTexture(asphalt);
-            Box("Road", road, new Vector3(0, -.12f, 50), new Vector3(StarterConfig.RoadWidth, .24f, 140), asphalt);
-            Material paving = Surface("Paving", new Color(.72f, .65f, .53f));
-            Material curb = Surface("Curb", new Color(.79f, .79f, .73f));
-            foreach (float side in new[] { -1f, 1f })
-            {
-                Box("Sidewalk", road, new Vector3(side * 8.4f, .08f, 50), new Vector3(4, .16f, 140), paving);
-                Box("Curb", road, new Vector3(side * 6.52f, .13f, 50), new Vector3(.24f, .26f, 140), curb);
-            }
-            Material yellow = Surface("Road Yellow", new Color(.94f, .66f, .06f));
-            Material white = Surface("Road White", new Color(.89f, .89f, .83f));
-            foreach (float x in new[] { -.14f, .14f })
-                Box("Centre Line", road, new Vector3(x, .012f, 50), new Vector3(.12f, .018f, 140), yellow);
-            foreach (float x in new[] { -3.2f, 3.2f })
-                for (float z = -15; z < 116; z += 9)
-                    Box("Lane Dash", road, new Vector3(x, .012f, z), new Vector3(.14f, .018f, 3.4f), white);
-            // Stripes run along the boulevard; the full crossing runs across the four lanes.
-            for (int i = 0; i < 12; i++)
-                Box("Zebra Stripe", road, new Vector3(-5.9f + i * 1.07f, .022f, 10), new Vector3(.64f, .018f, 4), white);
-
             Transform scenery = new GameObject("Scenery").transform;
-            for (int i = 0; i < 8; i++)
-                foreach (float side in new[] { -1f, 1f })
-                    Tree(scenery, side * 8.5f, 4 + i * 14, i);
-            for (int i = 0; i < 6; i++)
-                foreach (float side in new[] { -1f, 1f })
-                    Building(scenery, side * 14, 4 + i * 20, i);
+            CityEnvironment.Create(road, scenery);
 
             CreateVehicle();
             EditorSceneManager.SaveScene(scene, StarterConfig.ScenePath);
@@ -138,12 +113,21 @@ namespace PixelTraffic.UnityPrototype.Editor
                 pipeline.renderScale = 1;
                 pipeline.msaaSampleCount = 2;
                 pipeline.supportsHDR = false;
-                pipeline.shadowDistance = 55;
+                pipeline.shadowDistance = 70;
                 pipeline.shadowCascadeCount = 2;
-                pipeline.mainLightShadowmapResolution = 1024;
+                pipeline.mainLightShadowmapResolution = 2048;
                 pipeline.useSRPBatcher = true;
                 AssetDatabase.CreateAsset(pipeline, PipelinePath);
             }
+            // URP 17.3 exposes these flags as getters; set its serialized asset fields.
+            var settings = new SerializedObject(pipeline);
+            settings.FindProperty("m_MainLightShadowsSupported").boolValue = true;
+            settings.FindProperty("m_SoftShadowsSupported").boolValue = true;
+            settings.ApplyModifiedPropertiesWithoutUndo();
+            pipeline.shadowDepthBias = .45f;
+            pipeline.shadowNormalBias = .35f;
+            pipeline.softShadowQuality = SoftShadowQuality.Low;
+            EditorUtility.SetDirty(pipeline);
             GraphicsSettings.defaultRenderPipeline = pipeline;
             int previousQuality = QualitySettings.GetQualityLevel();
             for (int i = 0; i < QualitySettings.names.Length; i++)
@@ -158,12 +142,12 @@ namespace PixelTraffic.UnityPrototype.Editor
         {
             PlayerSettings.companyName = "BACKHYUN96";
             PlayerSettings.productName = "Pixel Traffic Unity Prototype";
-            PlayerSettings.bundleVersion = "0.1.0";
+            PlayerSettings.bundleVersion = StarterConfig.VersionName;
             PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
             PlayerSettings.colorSpace = ColorSpace.Linear;
             PlayerSettings.runInBackground = false;
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, StarterConfig.ExperimentAppId);
-            PlayerSettings.Android.bundleVersionCode = 1;
+            PlayerSettings.Android.bundleVersionCode = StarterConfig.VersionCode;
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel29;
             PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevelAuto;
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
@@ -172,7 +156,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             PlayerSettings.Android.applicationEntry = AndroidApplicationEntry.Activity;
         }
 
-        private static Material Surface(string name, Color color, float metallic = 0, float smoothness = .25f)
+        internal static Material Surface(string name, Color color, float metallic = 0, float smoothness = .25f)
         {
             if (materials.TryGetValue(name, out Material existing)) return existing;
             string path = Generated + "/" + name.Replace(" ", "") + ".mat";
@@ -182,6 +166,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Shader shader = Shader.Find("Universal Render Pipeline/Lit");
                 if (shader == null) throw new InvalidOperationException("URP Lit shader missing; wait for Package Manager import.");
                 material = new Material(shader) { name = name };
+                material.enableInstancing = true;
                 material.SetColor("_BaseColor", color);
                 material.SetFloat("_Metallic", metallic);
                 material.SetFloat("_Smoothness", smoothness);
@@ -191,30 +176,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             return material;
         }
 
-        private static void AddAsphaltTexture(Material material)
-        {
-            const string path = Generated + "/AsphaltPixels.asset";
-            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
-            if (texture == null)
-            {
-                texture = new Texture2D(32, 32, TextureFormat.RGB24, true) { name = "Asphalt Pixels", filterMode = FilterMode.Point, wrapMode = TextureWrapMode.Repeat };
-                var random = new System.Random(48);
-                var pixels = new Color[32 * 32];
-                for (int i = 0; i < pixels.Length; i++)
-                {
-                    float shade = .72f + (float)random.NextDouble() * .28f;
-                    pixels[i] = new Color(shade, shade, shade);
-                }
-                texture.SetPixels(pixels);
-                texture.Apply(true, false);
-                AssetDatabase.CreateAsset(texture, path);
-            }
-            material.SetTexture("_BaseMap", texture);
-            material.SetTextureScale("_BaseMap", new Vector2(4, 35));
-            EditorUtility.SetDirty(material);
-        }
-
-        private static GameObject Part(string name, Transform parent, PrimitiveType type, Vector3 position, Vector3 scale, Material material)
+        internal static GameObject Part(string name, Transform parent, PrimitiveType type, Vector3 position, Vector3 scale, Material material)
         {
             GameObject part = GameObject.CreatePrimitive(type);
             part.name = name;
@@ -227,33 +189,8 @@ namespace PixelTraffic.UnityPrototype.Editor
             return part;
         }
 
-        private static GameObject Box(string name, Transform parent, Vector3 position, Vector3 scale, Material material)
+        internal static GameObject Box(string name, Transform parent, Vector3 position, Vector3 scale, Material material)
             => Part(name, parent, PrimitiveType.Cube, position, scale, material);
-
-        private static void Tree(Transform parent, float x, float z, int index)
-        {
-            Transform root = new GameObject("Tree").transform;
-            root.SetParent(parent, false);
-            root.localPosition = new Vector3(x, .16f, z);
-            Part("Trunk", root, PrimitiveType.Cylinder, new Vector3(0, 1.75f, 0), new Vector3(.16f, 1.75f, .16f), Surface("Bark", new Color(.30f, .20f, .12f)));
-            for (int i = 0; i < 3; i++)
-                Part("Canopy", root, PrimitiveType.Sphere, new Vector3((i - 1) * .65f, 3.6f + (i % 2) * .6f, 0), new Vector3(2.5f, 2.6f, 2.3f),
-                    Surface(index % 2 == 0 ? "Leaf Light" : "Leaf Dark", index % 2 == 0 ? new Color(.23f, .48f, .12f) : new Color(.12f, .33f, .10f)));
-        }
-
-        private static void Building(Transform parent, float x, float z, int index)
-        {
-            float height = 10 + index % 3 * 4;
-            Transform root = new GameObject("Building").transform;
-            root.SetParent(parent, false);
-            root.localPosition = new Vector3(x, .16f, z);
-            Box("Facade", root, new Vector3(0, height / 2, 0), new Vector3(6.5f, height, 12), Surface("Facade " + index % 3, new Color(.63f + .06f * (index % 3), .66f, .64f)));
-            Box("Roof", root, new Vector3(0, height + .12f, 0), new Vector3(6.8f, .24f, 12.3f), Surface("Roof", new Color(.33f, .36f, .39f)));
-            float streetSide = x > 0 ? -3.27f : 3.27f;
-            for (int floor = 0; floor < 3; floor++)
-                for (int column = 0; column < 3; column++)
-                    Box("Window", root, new Vector3(streetSide, 2.3f + floor * 2.8f, -3.4f + column * 3.4f), new Vector3(.045f, 1.55f, 1.7f), Surface("Window", new Color(.14f, .29f, .36f), .2f, .65f));
-        }
 
         private static void CreateVehicle()
         {
@@ -325,12 +262,16 @@ namespace PixelTraffic.UnityPrototype.Editor
             Require(bounds.min.x > left && bounds.max.x < right, "Whole vehicle extends outside its lane.");
             Require(bounds.min.y >= -.01f && bounds.size.y > 1, "Vehicle ground/height incorrect.");
             Require(Camera.main != null && Camera.main.farClipPlane > 120, "Portrait camera missing.");
+            CityEnvironment.Report environment = CityEnvironment.Validate(Camera.main, pipeline);
+            Require(PlayerSettings.bundleVersion == StarterConfig.VersionName &&
+                PlayerSettings.Android.bundleVersionCode == StarterConfig.VersionCode, "APK version differs from source configuration.");
             CheckMotion();
             Directory.CreateDirectory("Reports");
             File.WriteAllText("Reports/scene-validation.json", JsonUtility.ToJson(new ValidationReport {
                 editor = Application.unityVersion, applicationId = StarterConfig.ExperimentAppId,
                 utc = DateTime.UtcNow.ToString("O"), vehicleWidth = bounds.size.x, vehicleHeight = bounds.size.y,
                 vehicleLength = bounds.size.z, wheelPivots = car.Wheels.Length,
+                version = StarterConfig.VersionName, environment = environment,
                 result = "PASS: real scene geometry, material, lane bounds and straight motion; not an Android/device test"
             }, true));
             Debug.Log("PASS: first scene geometry and motion. Reports/scene-validation.json");
@@ -361,7 +302,8 @@ namespace PixelTraffic.UnityPrototype.Editor
         [Serializable]
         private sealed class ValidationReport
         {
-            public string editor, applicationId, utc, result;
+            public string editor, applicationId, utc, result, version;
+            public CityEnvironment.Report environment;
             public float vehicleWidth, vehicleHeight, vehicleLength;
             public int wheelPivots;
         }

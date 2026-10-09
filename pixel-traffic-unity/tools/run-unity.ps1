@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('Open', 'Prepare', 'Validate', 'ExportAndroid', 'BuildApk')]
+    [ValidateSet('Open', 'Prepare', 'Validate', 'ExportAndroid', 'BuildApk', 'Capture')]
     [string]$Mode = 'Open',
     [string]$UnityExe
 )
@@ -18,8 +18,13 @@ if ($Mode -ne 'Open') {
         Validate = 'PixelTraffic.UnityPrototype.Editor.StarterScene.PrepareBatch'
         ExportAndroid = 'PixelTraffic.UnityPrototype.Editor.PrototypeBuild.ExportAndroidProject'
         BuildApk = 'PixelTraffic.UnityPrototype.Editor.PrototypeBuild.BuildActivityApk'
+        Capture = 'PixelTraffic.UnityPrototype.Editor.CityPreview.CaptureBatch'
     }
-    $unityArguments += @('-batchmode', '-nographics', '-quit', '-executeMethod', $methods[$Mode])
+    $unityArguments += @('-batchmode', '-executeMethod', $methods[$Mode])
+    if ($Mode -eq 'Capture') {
+        # CaptureBatch waits for shaders and explicitly exits after its render.
+        if ([Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT) { $unityArguments += '-force-d3d11' }
+    } else { $unityArguments += @('-nographics', '-quit') }
     if ($Mode -eq 'ExportAndroid' -or $Mode -eq 'BuildApk') {
         $unityArguments += @('-buildTarget', 'Android')
     }
@@ -43,7 +48,12 @@ if ($Mode -ne 'Open') {
     if ($null -eq $unityProcess) { throw 'Could not start Unity Editor.' }
     try {
         Write-Host "Unity $Mode running (PID $($unityProcess.Id)). Log: $logPath"
-        $unityProcess.WaitForExit()
+        if ($Mode -eq 'Capture') {
+            if (-not $unityProcess.WaitForExit(180000)) {
+                $unityProcess.Kill()
+                throw 'Unity preview exceeded three minutes; only this Capture process was stopped.'
+            }
+        } else { $unityProcess.WaitForExit() }
         $unityExitCode = $unityProcess.ExitCode
     } finally { $unityProcess.Dispose() }
     if ($unityExitCode -ne 0) { throw "Unity $Mode failed (exit $unityExitCode). See $logPath" }

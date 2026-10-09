@@ -96,6 +96,22 @@ jobs:
             if ($parseErrors.Count) { throw "PowerShell syntax errors in $($script.Name): $parseErrors" }
           }
           ./pixel-traffic-unity/tools/run-pipeline.ps1 -Operation $env:PIXEL_TRAFFIC_OPERATION
+      - name: Capture a real portrait Editor preview when graphics are available
+        if: success() && vars.PIXEL_TRAFFIC_CAPTURE != 'false' && (inputs.operation == 'BuildApk' || startsWith(github.ref, 'refs/tags/unity-apk-'))
+        continue-on-error: true
+        env:
+          UNITY_EDITOR_PATH: ${{ vars.UNITY_EDITOR_PATH }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          try {
+            ./pixel-traffic-unity/tools/run-unity.ps1 -Mode Capture
+          } catch {
+            $log = './pixel-traffic-unity/Reports/unity-Capture.log'
+            if (Test-Path -LiteralPath $log) {
+              ./pixel-traffic-unity/tools/collect-build-failure.ps1 -LogPath $log -OutputPath './pixel-traffic-unity/Reports/preview-failure.json'
+            }
+            throw
+          }
       - name: Upload reports (raw Editor logs and credentials stay out of artifacts)
         if: always()
         uses: actions/upload-artifact@v4
@@ -110,6 +126,9 @@ jobs:
             pixel-traffic-unity/Reports/prior-build-failure.json
             pixel-traffic-unity/Reports/verification-failure.json
             pixel-traffic-unity/Reports/prior-lint-failure.json
+            pixel-traffic-unity/Reports/preview-result.json
+            pixel-traffic-unity/Reports/preview-failure.json
+            pixel-traffic-unity/Reports/city-preview-*.png
           if-no-files-found: warn
           retention-days: 7
       - name: Upload verified Activity APK
@@ -117,6 +136,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: unity-activity-apk-${{ github.run_id }}
-          path: pixel-traffic-unity/Builds/pixel-traffic-unity-prototype-0.1.0.apk
+          path: ${{ env.PIXEL_TRAFFIC_APK_PATH }}
           if-no-files-found: error
           retention-days: 7

@@ -58,7 +58,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 PlayerSettings.Android.keystorePass = password;
                 PlayerSettings.Android.keyaliasName = alias;
                 PlayerSettings.Android.keyaliasPass = keyPassword;
-                const string output = "Builds/pixel-traffic-unity-prototype-0.1.0.apk";
+                string output = "Builds/pixel-traffic-unity-prototype-" + StarterConfig.VersionName + ".apk";
                 Build(output, BuildOptions.Development);
                 Debug.Log("Activity prototype APK built with original certificate. This is a separate test app, not a wallpaper or a 0.48 update: " + output);
             }
