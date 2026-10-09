@@ -11,6 +11,7 @@ namespace PixelTraffic.UnityPrototype.Editor
     public static class CityPreview
     {
         private static double started;
+        private static int warmupFrames;
 
         // A real URP camera render on the runner's GPU, not an AI-generated mockup.
         // This is an Editor preview; it does not assert Android device performance.
@@ -23,6 +24,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     throw new InvalidOperationException("Preview needs a graphics device; do not use -nographics.");
                 EditorSceneManager.OpenScene(StarterConfig.ScenePath);
                 started = EditorApplication.timeSinceStartup;
+                warmupFrames = 0;
                 EditorApplication.update += CaptureWhenReady;
                 EditorApplication.QueuePlayerLoopUpdate();
             }
@@ -37,6 +39,24 @@ namespace PixelTraffic.UnityPrototype.Editor
             {
                 EditorApplication.QueuePlayerLoopUpdate();
                 return;
+            }
+            if (warmupFrames < 3)
+            {
+                try
+                {
+                    Camera warmCamera = Camera.main;
+                    var warmTarget = RenderTexture.GetTemporary(540, 1200, 24, RenderTextureFormat.ARGB32);
+                    try
+                    {
+                        warmCamera.aspect = .45f;
+                        RenderPipeline.SubmitRenderRequest(warmCamera, new UniversalRenderPipeline.SingleCameraRequest { destination = warmTarget });
+                    }
+                    finally { RenderTexture.ReleaseTemporary(warmTarget); }
+                    warmupFrames++;
+                    EditorApplication.QueuePlayerLoopUpdate();
+                    return;
+                }
+                catch (Exception exception) { Fail(exception); return; }
             }
             EditorApplication.update -= CaptureWhenReady;
             RenderTexture target = null;
@@ -68,10 +88,35 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Directory.CreateDirectory("Reports");
                 string output = "Reports/city-preview-" + StarterConfig.VersionName + ".png";
                 File.WriteAllBytes(output, image.EncodeToPNG());
+                string[] names = { "Asphalt", "Road White", "Road Yellow", "Vehicle Blue", "Leaves 0", "Leaves 1", "Leaves 2" };
+                var colors = new string[names.Length];
+                for (int i = 0; i < names.Length; i++)
+                {
+                    Material material = AssetDatabase.LoadAssetAtPath<Material>(StarterScene.Generated + "/" + names[i].Replace(" ", "") + ".mat");
+                    colors[i] = names[i] + ": " + material.GetColor("_BaseColor").ToString("F3");
+                }
+                var pipeline = (UniversalRenderPipelineAsset)GraphicsSettings.currentRenderPipeline;
+                bool oldBatcher = pipeline.useSRPBatcher;
+                bool oldGraphicsBatcher = GraphicsSettings.useScriptableRenderPipelineBatching;
+                try
+                {
+                    pipeline.useSRPBatcher = false;
+                    GraphicsSettings.useScriptableRenderPipelineBatching = false;
+                    RenderPipeline.SubmitRenderRequest(camera, request);
+                    RenderTexture.active = target;
+                    image.ReadPixels(new Rect(0, 0, width, height), 0, 0); image.Apply();
+                    File.WriteAllBytes("Reports/city-preview-" + StarterConfig.VersionName + "-batcher-diagnostic.png", image.EncodeToPNG());
+                }
+                finally
+                {
+                    pipeline.useSRPBatcher = oldBatcher;
+                    GraphicsSettings.useScriptableRenderPipelineBatching = oldGraphicsBatcher;
+                }
                 File.WriteAllText("Reports/preview-result.json", JsonUtility.ToJson(new Report {
                     result = "PASS", version = StarterConfig.VersionName, editor = Application.unityVersion,
                     graphicsApi = SystemInfo.graphicsDeviceType.ToString(), width = width, height = height,
                     image = output, source = "Unity Editor URP camera; not a phone screenshot or FPS test"
+                    , materialColors = colors
                 }, true));
                 Debug.Log("PASS: real city camera preview saved: " + output);
             }
@@ -101,6 +146,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         {
             public string result, version, editor, graphicsApi, image, source;
             public int width, height;
+            public string[] materialColors;
         }
     }
 }
