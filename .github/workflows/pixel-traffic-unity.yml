@@ -31,11 +31,12 @@ jobs:
     # Later, point this variable to a provisioned Windows/Linux cloud runner.
     runs-on: ${{ fromJSON(vars.PIXEL_TRAFFIC_RUNNER_LABELS || '["self-hosted","Windows","X64","pixel-traffic-unity"]') }}
     timeout-minutes: 60
+    defaults:
+      run:
+        shell: ${{ vars.PIXEL_TRAFFIC_RUNNER_SHELL || 'powershell' }}
     steps:
       - uses: actions/checkout@v4
       - name: Validate or build with the shared entry point
-        # steps.shell cannot use the runner context. Configure pwsh for Linux.
-        shell: ${{ vars.PIXEL_TRAFFIC_RUNNER_SHELL || 'powershell' }}
         env:
           UNITY_EDITOR_PATH: ${{ vars.UNITY_EDITOR_PATH }}
           UNITY_ANDROID_SDK_PATH: ${{ vars.UNITY_ANDROID_SDK_PATH }}
