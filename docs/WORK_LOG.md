@@ -1,5 +1,9 @@
 # 작업 이력
 
+## 2026-10-10 — Unity host Lint 실행 경로 보완 (KST, 진행 중)
+
+직접 GitHub API workflow_dispatch 요청이 환경 proxy의403으로 거부되었다. API를 우회하지 않고 허용된 Git 게시/태그 실행 경로를 사용한다. unity-wallpaper-lint workflow에unity-host-lint-* 태그 실행을 추가한다. 기존unity-apk-* workflow와 분리되어 APK/장면검사를중복실행하지않는다. 동일NativeJava/리소스인기존생성프로젝트만Lint한다. 실제결과대기.
+
 ## 2026-10-10 — Unity 0.5.0 APK 완료 / host 모듈 Lint 추가 확인 (KST, 진행 중)
 
 source76a6360cbf0c9f864f967919cfb54af801517c6c/tagunity-apk-0.5.0-build1, BuildApk38002257912/job114062852173 success. BuildPlayer errors0/warnings0, launcher Lint errors0/warnings8. 다운로드 APK29517587bytes SHA256d22ba8bce7d0a6c3f1849835c634bc5fdd228ebc7e92fa25a6437a852c1cfe04. 실제aapt/apksigner로0.5.0/code5/ARM64/min29/target36/원본v2cert/SettingsActivity launcher/BIND_WALLPAPER service/:wallpaper/metadata/privateprovider/UnityActivitydisabled를 대조했다. 실제 폰 홈 수명주기는 미검증.
