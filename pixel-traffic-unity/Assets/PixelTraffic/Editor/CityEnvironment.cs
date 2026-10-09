@@ -111,8 +111,10 @@ namespace PixelTraffic.UnityPrototype.Editor
             Color[] greens = { new Color(.30f, .48f, .095f), new Color(.38f, .53f, .12f), new Color(.23f, .40f, .08f) };
             leaves.GetComponent<MeshRenderer>().sharedMaterial = Mat("Leaves " + index % 3, greens[index % 3]);
             Material planter = Mat("Planter Stone", new Color(.57f, .54f, .44f));
-            Box("Tree Bed", root, new Vector3(0, .1f, 0), new Vector3(2.2f, .2f, 2.2f), planter);
-            Box("Soil", root, new Vector3(0, .205f, 0), new Vector3(1.94f, .015f, 1.94f), Mat("Soil", new Color(.23f, .20f, .12f)));
+            // Keep planted beds aligned with the sidewalk while the tree canopy retains its varied yaw.
+            Quaternion bedRotation=Quaternion.Inverse(root.localRotation);
+            Box("Tree Bed", root, new Vector3(0, .1f, 0), new Vector3(2.2f, .2f, 2.2f), planter).transform.localRotation=bedRotation;
+            Box("Soil", root, new Vector3(0, .205f, 0), new Vector3(1.94f, .015f, 1.94f), Mat("Soil", new Color(.23f, .20f, .12f))).transform.localRotation=bedRotation;
         }
 
         private static Mesh CanopyMesh()

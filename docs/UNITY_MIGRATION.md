@@ -1,5 +1,11 @@
 # Pixel Traffic — Unity 전환 준비
 
+## 2026-10-10 — Unity 0.4.0 전체 보행 모의 통과 / 실제 화단 yaw 불일치 수정 (진행 중, KST)
+
+- Windows37960186067/source92e99ccbb702447fb344f3d3fa5654d7c8c9f9b1에서4/32/100명200/600/600초의 모든 사람 진행/횡단·신호/차량 안전 및 실제 controller15/30/60/120Hz/pause 검사를 지나 실제100rig/화단 대조에서 Actual tree bed differs from foot navigation으로 실패했다. 전체 Validate가 통과한 것은 아니다.
+- 실제 CityEnvironment.Tree는 root yaw=index*47을 나무뿐 아니라 정사각 화단/soil에도 상속하고 있었다. 따라서 보행의2.2m축정렬 경계와 실제 회전 화단 renderer bounds가 달랐다. Bed/Soil에 root yaw의 역회전을 적용하여 세계 인도 방향에 맞춘다. 나무/가지/수관의 다양한 방향·모든 크기/위치/mesh/material 수는 유지한다.
+- 동일 실제 scene/모의/예산/GPU 검사를 재실행한 뒤 APK를 만든다. APK 아직 미생성. 이전의 도시 geometry 무변경 설명은 화단/soil 방향 보정에 대해 정정한다.
+
 ## 2026-10-10 — Unity 0.4.0 좁은 외측 통로의 양방향 보행 (진행 중, KST)
 
 - Windows37959569564/source1d479ef29a2b61c3b51e31945b9fec93f95f2525에서 4/32명 통과,100명 중99명 횡단. 미횡단 id69는(10.03,-12.19)→(10.71,3.05) 이동 중, 화단 외측 통로에서 북/남향 사람들과 같은 중앙 경로를 사용하고 있었다. 먼 화단 단독 경로 문제는 재발하지 않았다.
