@@ -16,7 +16,7 @@ namespace PixelTraffic.UnityPrototype
         public sealed class Person
         {
             public int side,slot=-1,crossings,pathCount,pathCursor;public bool active;
-            public Vector2 position,goal,velocity;public Activity activity;
+            public Vector2 position,goal,velocity,detour;public Activity activity;public float detourSeconds;
             public float speed,cooldown,walkDistance,waitingTime;
             public uint random;public readonly int[] path=new int[600];
         }
@@ -234,10 +234,29 @@ namespace PixelTraffic.UnityPrototype
         }
         private void Move(int i,Vector2 goal,bool crossing)
         {
-            Person p=People[i];Vector2 difference=goal-p.position;float distance=difference.magnitude;if(distance<.001f)return;
+            Person p=People[i];
+            if(!crossing&&p.detourSeconds>0)
+            {
+                p.detourSeconds-=Dt;
+                if(Vector2.Distance(p.position,p.detour)<.10f)p.detourSeconds=0;
+                else goal=p.detour;
+            }
+            Vector2 difference=goal-p.position;float distance=difference.magnitude;if(distance<.001f)return;
             Vector2 forward=difference/distance;float step=Mathf.Min(distance,p.speed*Dt);
             // Prefer each walker's right side. Opposing walkers choose opposite world sides.
             Vector2 right=new Vector2(forward.y,-forward.x);
+            if(!crossing&&p.detourSeconds<=0&&!Free(i,p.position+forward*step,false))
+            {
+                bool personAhead=false;
+                for(int j=0;j<People.Length;j++)if(j!=i&&People[j].active&&(People[j].position-p.position).sqrMagnitude<.85f*.85f&&Vector2.Dot(People[j].position-p.position,forward)>0)personAhead=true;
+                if(personAhead)for(int side=0;side<2;side++)
+                {
+                    Vector2 waypoint=p.position+right*(side==0?.65f:-.65f)-forward*.15f;
+                    if(!SidewalkRoutes.SegmentAllowed(p.position,waypoint))continue;
+                    p.detour=waypoint;p.detourSeconds=3;
+                    difference=waypoint-p.position;distance=difference.magnitude;forward=difference/distance;right=new Vector2(forward.y,-forward.x);step=Mathf.Min(distance,p.speed*Dt);break;
+                }
+            }
             for(int attempt=0;attempt<7;attempt++)
             {
                 Vector2 direction=forward;
