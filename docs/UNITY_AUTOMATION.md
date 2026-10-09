@@ -1,5 +1,15 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-09 — GitHub → 사용자 PC Unity 검사·결과 공유 성공
+
+[실제 성공 실행 37914772887](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/37914772887)은 main 53263e2ab1a7f148d94bf5425b99605f788839e7에서 completed/success입니다. Windows self-hosted runner의 checkout, 공통 Validate 및 보고서 업로드가 모두 success이며 APK 단계는 Validate 작업이므로 skipped입니다. Unity 실행은 사용자 PC에서 수행됐고 이 클라우드에 Editor를 설치한 결과가 아닙니다. runner 창과 PC가 켜져 있어야 후속 작업을 받습니다. 별도 GPT 플러그인은 필요하지 않습니다.
+
+보고서 artifact11608622499를 다운로드해 ZIP CRC와 두 JSON 원본을 직접 확인했습니다. pipeline-result.json은 operation Validate/result PASS/wallpaper false, 09:59:31.6753513Z→10:00:55.4538723Z(약84초)입니다. scene-validation.json은 Editor6000.3.26f1, 실제 장면 geometry/material/lane bounds/straight motion PASS, 차량 폭2.130m/높이1.550m/길이4.300m/바퀴pivot4개를 기록합니다. 이 수치는 장면 검사 결과이며 APK/실제 기기 검사가 아닙니다. 보고서 ZIP710bytes, SHA2569a2fd21c60468b3cb227577df0ff22fab465002961a8c1b40caf5428e3e1253f, 보관 만료2026-10-16입니다. 원본 Editor 로그/키/비밀번호는 artifact에 없습니다.
+
+PR #1(main e08955c) 게시 이후 workflow 표현식 오류 두 번과 PowerShell 정책 오류를 각각 수정했고 최종 workflow는 actionlint1.7.7 exit0 및 실제 PC 성공으로 확인했습니다. 이전 배포 fix1의 README 외 Unity/공통 pipeline20파일을 byte 비교해 그대로임을 확인했고 관련 없는 Android 검사/빌드는 반복하지 않았습니다. 실제 local index에는 staged 변경이 없고 누적 native 작업을 보존했습니다. 원격 main native 소스는 기존0.29.0이며 클라우드 누적0.48.0 native 변경은 이번 Unity 게시에 포함하지 않았습니다.
+
+완료: Unity source/main 게시, PC 작업 배정, Unity batch Validate, GitHub 보고서 공유. 남음: 기존 키를 사용할 PC 서명 환경 준비, Activity APK 실제 빌드·서명/metadata 확인 및 S20+/S26 Ultra 설치, WallpaperService 통합과 시안 품질 향상. 이번에는 APK나 자동 화면 캡처를 만들지 않았습니다. 앞으로 main Unity 변경은 자동 Validate, BuildApk는 수동 선택입니다. Linux runner 전환 시 준비된 Editor/라이선스/Android 환경과 라벨을 지정하고 PIXEL_TRAFFIC_RUNNER_SHELL=pwsh로 변경합니다.
+
 ## 2026-10-09 — PC 작업 수신 확인 / PowerShell 프로세스 정책 수정
 
 main baa6e1c64cc77536ee34d2851d04468ccddbb803의 실행 37914607324에서 실제 Windows PC가 unity job을 수신했고 checkout에 성공했습니다. 로그 작업 경로는 D:\Unity\actions-runner\_work\S20-PLUS\S20-PLUS입니다. 추가 runner 라벨이 일치해 작업이 배정된 사실도 확인했습니다. Unity 실행 전 GitHub 임시 .ps1 호출이 PSSecurityException/scripts disabled로 종료돼 보고서는 생성되지 않았습니다. PC 전체 ExecutionPolicy를 변경하지 않고 기본 shell 호출에 -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "{0}"를 지정해 해당 프로세스에만 적용합니다. 사용자 이전 로컬 Validate도 같은 실행 옵션을 사용했습니다. Linux 이전은 PIXEL_TRAFFIC_RUNNER_SHELL=pwsh로 설정합니다.
@@ -71,7 +81,7 @@ Unity를 못 찾으면 같은 명령에 `-UnityExe "실제 6000.3.26f1 Editor\Un
 
 ## GitHub에 PC 연결
 
-1. 저장소에 `.github/workflows/pixel-traffic-unity.yml`과 위 도구·Unity 소스를 함께 저장해야 합니다. 현재 클라우드 파일은 미커밋/미푸시 상태입니다. main에 설정이 들어가기 전에는 Actions 메뉴에 나타나지 않습니다.
+1. `.github/workflows/pixel-traffic-unity.yml`과 Unity 소스는 main에 게시됐고 첫 PC Validate/보고서 공유가 성공했습니다. Actions → Pixel Traffic Unity에서 실행과 결과를 확인합니다. 아래 등록 단계는 새 PC를 연결할 때의 절차입니다.
 2. [저장소 runner 설정](https://github.com/BACKHYUN96/S20-PLUS/settings/actions/runners)에서 New self-hosted runner → Windows → X64를 선택하고 GitHub가 표시하는 다운로드/등록 명령을 네 PC에서 실행합니다. 등록 토큰은 GitHub 화면에서 PC에 직접 사용합니다.
 3. 등록 중 추가 라벨 `pixel-traffic-unity`를 붙입니다. 기본 self-hosted/Windows/X64와 함께 네 개가 필요합니다. 초기에는 Unity를 활성화한 동일 Windows 사용자로 runner의 run.cmd를 실행해둡니다. 서비스 계정 실행은 라이선스와 환경변수 접근을 별도로 확인한 뒤 사용합니다.
 4. 저장소 Settings → Secrets and variables → Actions의 Variables에 `UNITY_EDITOR_PATH`를 실제 Editor 경로로 설정합니다. Android SDK를 따로 사용하는 경우 `UNITY_ANDROID_SDK_PATH`도 설정합니다.
@@ -94,7 +104,7 @@ Actions에서도 BuildApk를 선택할 수 있습니다. Unity가 빌드하기 �
 
 ## 나중에 클라우드로 변경
 
-- **자체 Windows/Linux 클라우드 runner:** 같은 Editor/Android 모듈/사용 가능한 라이선스/스크립트 실행 환경을 준비합니다. GitHub Actions Variable `PIXEL_TRAFFIC_RUNNER_LABELS`를 새 서버의 라벨 JSON 배열로 바꾸면 됩니다. 예: `["self-hosted","Linux","X64","pixel-traffic-cloud"]`. `UNITY_EDITOR_PATH`와 필요시 SDK 경로도 바꿉니다. 호스팅 runner를 택할 때도 Unity 설치/활성화 단계를 별도로 추가해야 하며 라벨 변경만으로 Unity가 생기지는 않습니다.
+- **자체 Windows/Linux 클라우드 runner:** 같은 Editor/Android 모듈/사용 가능한 라이선스/스크립트 실행 환경을 준비합니다. GitHub Actions Variable `PIXEL_TRAFFIC_RUNNER_LABELS`를 새 서버의 라벨 JSON 배열로 바꾸면 됩니다. 예: `["self-hosted","Linux","X64","pixel-traffic-cloud"]`. `PIXEL_TRAFFIC_RUNNER_SHELL`은 Linux에서 `pwsh`로 설정하고 `UNITY_EDITOR_PATH`와 필요시 SDK 경로도 바꿉니다. 호스팅 runner를 택할 때도 Unity 설치/활성화 단계를 별도로 추가해야 하며 라벨 변경만으로 Unity가 생기지는 않습니다.
 - **클라우드의 원본 키:** 로컬 파일 경로 대신 Actions Secret `PIXEL_TRAFFIC_KEYSTORE_BASE64`를 사용할 수 있습니다. 이 값은 원본 키의 인코딩이며 암호화 대체가 아닙니다. Secret에만 넣고 코드/로그로 공유하지 않습니다. 공통 스크립트는 temp 파일로 복원하고 finally에서 지웁니다. 기존 인증서 검사는 유지합니다.
 - **Unity Build Automation 서비스:** Git 저장소와 하위 폴더, 지원 Editor 버전, Android·서명 설정을 연결합니다. GitHub Actions 실행 설정 대신 서비스 설정과 장면 생성/build hook 어댑터가 필요합니다. 공통 Unity 소스·Editor 검사/빌드 메서드는 재사용할 수 있습니다. 서비스에서의 실제 버전 지원·요금·키 연결·결과 API는 당시 확인합니다.
 
