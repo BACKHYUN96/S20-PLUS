@@ -1,5 +1,13 @@
 # 새 채팅 인수인계 — 픽셀 트래픽 0.29.0
 
+## 2026-10-10 — Unity 0.5.1 횡단보도 안 차선 제거 시작 (KST, 진행 중)
+
+사용자가0.5.0 실제폰 적용 성공을 확인했고, 횡단보도 사이 중앙선/흰색차선만 지워달라고 요청했다. 다음 기능은 추천만 요청했으므로 시간대/조명 기능을 구현하지 않는다. 원격main85166199a0c0c4771618a10c53e52fa42e44b4a0 확인. 실제index와 누적native변경을 보존한다.
+
+범위는 CityEnvironment.cs의 도로표시 생성/기존 장면검사 및 StarterConfig.cs·StarterScene.cs 버전/새장면 경로3파일과 기록이다. 원인은 중앙선을 도로전체 길이로,흰dash를횡단보도와관계없이 생성한 것. 횡단보도z=8~12m내에서만 표시를clip하고 바깥표시/12zebra/stopline/도시·차량·사람·배경화면/설정/서명을 유지한다. 새Wallpaper-0.5.1/Generated/Wallpaper051과 code6으로 기존장면을보존한다. 기존 CityEnvironment.Validate에서 실제12stripe의renderer bounds와CentreLine/LaneDash renderer bounds 비중첩을확인한다. 새독립테스트/무관한native·host API검사를추가하지않는다.
+
+실제PC compile/장면/Editor PNG→같은source APK build/launcherLint/cert/다운로드메타데이터를 확인할예정. NativeAndroid8소스/리소스와host코드가0.5.0에서동일하면 이미통과한libraryLint를중복실행하지않고SHA일치와기존결과를근거로남긴다. 실제폰0.5.1 보정표시는 전달후확인한다. 다음추천은낮·노을·야간시간대와가로등/창문/차량라이트이며이번에는구현하지않는다.
+
 ## 2026-10-10 — Unity 0.5.0 라이브 배경화면 APK 전달 / PC 검증 완료 (KST)
 
 사용자가 Unity0.4.0 적용 성공과 다음 단계 진행을 확인했다. 이번0.5.0은 도시·차량·신호·인도 보행을 Android 라이브 배경화면으로 연결하고 인원4~100명/기본32명·절전 설정을 자동 저장한다. 별도prototype appID `com.s20plus.pixeltraffic.unityprototype`, 원본 서명, 기존native0.48.0 앱은 유지한다. 실제0.5.0 폰 홈 화면 적용 결과는 아직 확인 대기다.

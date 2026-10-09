@@ -35,13 +35,24 @@ namespace PixelTraffic.UnityPrototype.Editor
             }
             Material yellow = Mat("Road Yellow", new Color(.96f, .66f, .08f));
             Material white = Mat("Road White", new Color(.88f, .88f, .82f));
+            float crossingStart = StarterConfig.CrossingZ - 2, crossingEnd = StarterConfig.CrossingZ + 2;
+            void Marking(string name, float x, float start, float end, float width, Material material)
+            {
+                // Keep road markings outside the zebra crossing, including gaps between its stripes.
+                void Segment(float a, float b)
+                {
+                    if (b > a) Box(name, road, new Vector3(x, .012f, (a + b) * .5f), new Vector3(width, .018f, b - a), material);
+                }
+                if (start < crossingStart) Segment(start, Mathf.Min(end, crossingStart));
+                if (end > crossingEnd) Segment(Mathf.Max(start, crossingEnd), end);
+            }
             foreach (float x in new[] { -.14f, .14f })
-                Box("Centre Line", road, new Vector3(x, .012f, centre), new Vector3(.12f, .018f, length), yellow);
+                Marking("Centre Line", x, RoadStart, RoadEnd, .12f, yellow);
             foreach (float x in new[] { -3.2f, 3.2f })
                 for (float z = RoadStart + 3; z < RoadEnd - 3; z += 9)
-                    Box("Lane Dash", road, new Vector3(x, .012f, z), new Vector3(.14f, .018f, 3.4f), white);
+                    Marking("Lane Dash", x, z - 1.7f, z + 1.7f, .14f, white);
             for (int i = 0; i < 12; i++)
-                Box("Zebra Stripe", road, new Vector3(-5.9f + i * 1.07f, .022f, 10), new Vector3(.64f, .018f, 4), white);
+                Box("Zebra Stripe", road, new Vector3(-5.9f + i * 1.07f, .022f, StarterConfig.CrossingZ), new Vector3(.64f, .018f, 4), white);
             for (int i = 0; i < 4; i++)
                 Cylinder("Manhole", road, new Vector3(i % 2 == 0 ? -1.6f : 4.8f, .005f, 24 + i * 34), new Vector3(.7f, .004f, .7f), Mat("Iron", new Color(.17f, .18f, .18f), .15f));
 
@@ -262,6 +273,17 @@ namespace PixelTraffic.UnityPrototype.Editor
             Need(RenderSettings.sun!=null&&RenderSettings.sun.color.r>RenderSettings.sun.color.b,"Warm afternoon sun missing.");
             Need(RenderSettings.fog&&RenderSettings.fogEndDistance<camera.farClipPlane,"Distant haze outside camera coverage.");
             var renderers=UnityEngine.Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None);
+            Bounds crossing = default; int stripes = 0, markings = 0;
+            foreach (var renderer in renderers)
+                if (renderer.name == "Zebra Stripe") { if (stripes++ == 0) crossing = renderer.bounds; else crossing.Encapsulate(renderer.bounds); }
+            Need(stripes == 12, "Zebra crossing stripes missing.");
+            foreach (var renderer in renderers)
+                if (renderer.name == "Centre Line" || renderer.name == "Lane Dash")
+                {
+                    Bounds bounds = renderer.bounds;
+                    Need(bounds.max.z <= crossing.min.z + .0001f || bounds.min.z >= crossing.max.z - .0001f, "Road marking overlaps the zebra crossing: " + renderer.name);
+                    markings++;
+                }
             var materials=new HashSet<Material>();int triangles=0,trees=0,buildings=0,lamps=0,towers=0;
             foreach(var filter in UnityEngine.Object.FindObjectsByType<MeshFilter>(FindObjectsSortMode.None)) triangles+=filter.sharedMesh.triangles.Length/3;
             foreach(var skin in UnityEngine.Object.FindObjectsByType<SkinnedMeshRenderer>(FindObjectsSortMode.None)) triangles+=skin.sharedMesh.triangles.Length/3;
@@ -277,13 +299,14 @@ namespace PixelTraffic.UnityPrototype.Editor
                 var texture=AssetDatabase.LoadAssetAtPath<Texture2D>(StarterScene.Generated+"/"+name+".asset");
                 Need(texture!=null&&texture.mipmapCount>1&&texture.filterMode==FilterMode.Trilinear,"Surface loses mipmap filtering at distance.");
             }
-            return new Report {roadLength=road.bounds.size.z,coveredPortraitRays=covered,trees=trees,buildings=buildings,streetLamps=lamps,skylineTowers=towers,triangles=triangles,renderers=renderers.Length,materials=materials.Count,softShadows=pipeline.supportsSoftShadows};
+            return new Report {roadLength=road.bounds.size.z,coveredPortraitRays=covered,trees=trees,buildings=buildings,streetLamps=lamps,skylineTowers=towers,triangles=triangles,renderers=renderers.Length,materials=materials.Count,softShadows=pipeline.supportsSoftShadows,crossingStripes=stripes,roadMarkingsOutsideCrossing=markings};
         }
 
         [Serializable] public sealed class Report
         {
             public float roadLength;
             public int coveredPortraitRays,trees,buildings,streetLamps,skylineTowers,triangles,renderers,materials;
+            public int crossingStripes, roadMarkingsOutsideCrossing;
             public bool softShadows;
         }
     }
