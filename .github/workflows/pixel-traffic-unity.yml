@@ -1,0 +1,65 @@
+name: Pixel Traffic Unity
+
+# Run validated main changes on the connected PC; no pull-request trigger.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'pixel-traffic-unity/**'
+      - '.github/workflows/pixel-traffic-unity.yml'
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Unity operation (APK is a separate Activity prototype)
+        required: true
+        type: choice
+        default: Validate
+        options:
+          - Validate
+          - BuildApk
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pixel-traffic-unity
+  cancel-in-progress: false
+
+jobs:
+  unity:
+    if: github.ref == 'refs/heads/main'
+    # Later, point this variable to a provisioned Windows/Linux cloud runner.
+    runs-on: ${{ fromJSON(vars.PIXEL_TRAFFIC_RUNNER_LABELS || '["self-hosted","Windows","X64","pixel-traffic-unity"]') }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate or build with the shared entry point
+        shell: ${{ runner.os == 'Windows' && 'powershell' || 'pwsh' }}
+        env:
+          UNITY_EDITOR_PATH: ${{ vars.UNITY_EDITOR_PATH }}
+          UNITY_ANDROID_SDK_PATH: ${{ vars.UNITY_ANDROID_SDK_PATH }}
+          PIXEL_TRAFFIC_OPERATION: ${{ inputs.operation || 'Validate' }}
+          PIXEL_TRAFFIC_KEYSTORE_BASE64: ${{ secrets.PIXEL_TRAFFIC_KEYSTORE_BASE64 }}
+          PIXEL_TRAFFIC_KEYSTORE_PASSWORD: ${{ secrets.PIXEL_TRAFFIC_KEYSTORE_PASSWORD }}
+          PIXEL_TRAFFIC_KEY_PASSWORD: ${{ secrets.PIXEL_TRAFFIC_KEY_PASSWORD }}
+        run: ./pixel-traffic-unity/tools/run-pipeline.ps1 -Operation $env:PIXEL_TRAFFIC_OPERATION
+      - name: Upload reports (raw Editor logs and credentials stay out of artifacts)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-reports-${{ github.run_id }}
+          path: |
+            pixel-traffic-unity/Reports/pipeline-result.json
+            pixel-traffic-unity/Reports/scene-validation.json
+            pixel-traffic-unity/Reports/apk-verification.json
+            pixel-traffic-unity/Reports/android-build-result.txt
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Upload verified Activity APK
+        if: success() && inputs.operation == 'BuildApk'
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-activity-apk-${{ github.run_id }}
+          path: pixel-traffic-unity/Builds/pixel-traffic-unity-prototype-0.1.0.apk
+          if-no-files-found: error
+          retention-days: 7

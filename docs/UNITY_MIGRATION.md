@@ -1,0 +1,225 @@
+# Pixel Traffic — Unity 전환 준비
+
+## PC runner 연결 확인 / GitHub 소스 게시·첫 자동 검사 진행 (2026-10-09)
+
+사용자 화면에서 runner2.337.0 Connected to GitHub / Listening for Jobs를 확인했습니다. PC 로컬 Validate completed에 이어 원격 source/workflow 게시를 진행합니다. main은 effa3c1998fd0a758c648ad0d466cf97d57e77a4이며 Unity source/workflow가 없어 새 관련 파일과 선택 문서만 추가합니다. 기존 0.29→0.48 누적 Android 작업/로컬 index/checkout은 보존합니다. main Unity 변경은 자동 Validate로 연결하며 PR 자동 실행은 두지 않습니다.
+
+GitHub API 직접 네트워크는 proxy403, connector의 runner admin endpoint 조회는 지원되지 않았습니다. 우회하지 않고 허용된 Git HTTPS fetch로 최신 main을 확보했습니다. 사용자 연결 화면을 근거로 진행하며 라벨/실제 job 결과는 첫 Actions 작업에서 확인합니다. 파일 게시·PR·main 반영·작업 결과는 실제 수행 뒤 이력에 구분해 기록합니다.
+
+## 수정 실행기 PC 정상 완료 / GitHub runner 등록 단계 (2026-10-09)
+
+사용자 Windows 재실행 화면에서 `Unity Validate running (PID …)` 후 `Unity Validate completed`와 prompt 복귀를 확인했습니다. 앞선 로그의 실제 장면 PASS/return code 0에 이어 수정 실행기의 프로세스 대기/종료 판정도 PC에서 동작했습니다. pipeline-result.json 원본/내용은 아직 받지 않았으므로 파일 내용까지 직접 확인했다고 기록하지 않습니다. 기존 성공 입력은 클라우드에서 반복 검사하지 않습니다.
+
+GitHub app의 읽기 조회로 저장소 BACKHYUN96/S20-PLUS의 main/public/admin 권한을 확인했습니다. main의 `.github/workflows/pixel-traffic-unity.yml` 및 `pixel-traffic-unity/ProjectSettings/ProjectVersion.txt`는 각각 404로 미등록입니다. 따라서 아직 Actions workflow 실행을 안내하지 않고 PC runner 등록부터 진행합니다. 이번에는 branch/commit/PR/push/merge를 수행하지 않았습니다.
+
+등록은 저장소 Settings → Actions → Runners → New self-hosted runner → Windows/X64입니다. GitHub가 표시한 Download/Configure 명령을 본인 PC에서 실행합니다. 추가 라벨은 `pixel-traffic-unity`, work folder는 기본 `_work`, 초기 서비스 등록은 N으로 사용자 세션에서 시작합니다. 마지막에 `.\run.cmd`로 실행하고 `Listening for Jobs`/GitHub Idle 상태를 확인합니다. 실제 등록 완료 화면을 받기 전까지 connected로 기록하지 않습니다. 등록 토큰은 본인 PC에서 직접 사용하고 성공 상태만 공유합니다.
+
+이후 workflow와 Unity source를 GitHub에 반영하고 실제 main/Validate 작업 및 artifact를 확인해야 합니다. 현재 로컬 PC 검사 성공, GitHub source 게시, runner 연결, 원격 작업 성공, APK 생성은 서로 다른 단계입니다. APK/기기/WallpaperService 연결은 아직 미완료입니다.
+
+## 사용자 PC 실제 batch 검사 PASS / return code 0 확인 (2026-10-09)
+
+후속 로그 화면에서 FirstRoad 생성/저장, PrepareBatch→Validate, `PASS: first scene geometry and motion. Reports/scene-validation.json`, `Batchmode quit successfully invoked`, `Exiting batchmode successfully now`, `Application will terminate with return code 0`을 확인했습니다. 따라서 Unity batch 검사 자체는 성공했고 이전 실행기 FAILED 표시가 잘못됐음을 확정했습니다. 로그 원본 파일/JSON은 받지 않았고 화면 관측으로 구분합니다.
+
+수정된 run-unity.ps1 파일 하나만 사용자 automation 프로젝트의 tools에서 교체하고, 새 프로세스 대기/ExitCode 처리와 pipeline-result.json의 PASS 표시를 확인하는 재실행을 안내합니다. 이는 앱 기능의 중복 검사가 아니라 변경된 실행기 종료 처리 확인입니다. Unity 코드/패키지/서명·기존 앱은 이번에 바꾸지 않습니다. 수정 실행기의 실제 Windows 실행, GitHub runner 접속, Activity APK 빌드와 WallpaperService 연결은 아직 미완료입니다.
+
+## Windows 첫 batch 실행 — 빈 종료 코드 수정 (2026-10-09)
+
+사용자 PowerShell에 `Unity Validate failed (exit )`가 표시됐습니다. run-unity.ps1이 `$LASTEXITCODE`를 빈 값으로 읽고 이를 0과 다르다고 판단한 것은 확인됐지만, 실제 Unity가 검사를 통과했는지/실패했는지는 사용자 PC의 `Reports/unity-Validate.log`를 받아야 확정할 수 있습니다. 직전 Unity 프로세스가 아직 import/검사를 진행 중일 수도 있어 로그 확인 전 무조건 재실행하지 않습니다.
+
+수정은 GUI 프로그램 직접 호출 후 LASTEXITCODE를 읽는 부분을 ProcessStartInfo/Process.Start→WaitForExit→해당 Process.ExitCode로 바꾸는 것입니다. Windows PowerShell5.1은 공백/한글/quote/마지막 backslash를 보존하는 인자 문자열을 만들고 PowerShell7은 ArgumentList를 사용합니다. 같은 프로세스 종료를 기다려 pipeline의 서명 환경 복원/임시 키 삭제가 빌드보다 먼저 실행되지 않도록 합니다. Open 모드는 기존 동작을 유지합니다.
+
+현재 PC 로그 확인 명령(Windows PowerShell):
+
+```powershell
+Get-Process Unity -ErrorAction SilentlyContinue | Select-Object Id, CPU
+Get-Content -LiteralPath "D:\Unity\PixelTraffic-Automation\pixel-traffic-unity\Reports\unity-Validate.log" -Tail 60
+```
+
+첫 줄에 프로세스가 나오면 다른 Editor일 수도 있으므로 임의 종료하지 않습니다. 로그/활성 프로젝트를 대조한 뒤 해당 검사 프로세스 종료 또는 종료된 결과를 확인합니다. 수정 `run-unity.ps1`은 기존 automation 프로젝트의 tools에 같은 파일명으로 교체하고 기존 helper/pipeline을 유지합니다. 실제 종료 코드가 0이 아니면 그때 출력된 숫자와 Unity 로그의 원인을 확인합니다.
+
+클라우드에는 PowerShell/Unity가 없어 수정의 Windows 실행은 미검증입니다. 신규 유료 서비스/runner 등록/원격 push/앱 코드 변경은 하지 않습니다.
+
+## PC에서 시작하는 이식 가능한 자동 빌드 설정 준비 (2026-10-09)
+
+[자동 빌드 설정 배포 ZIP](/workspace/artifacts/pixel-traffic-unity-pc-automation-0.1.0.zip): 23파일, YAML/문서 링크·ZIP CRC/source 일치 및 이전 도구/README 외 17파일 보존을 확인했습니다. PowerShell/Unity 기능 실행 검증은 아직 PC에서 필요합니다.
+
+사용자가 PC 활용 후 필요에 따라 완전 클라우드로 변경 가능한 구성을 요청했습니다. 같은 Unity Editor 메서드를 호출하는 공통 PowerShell pipeline과 수동/main GitHub Actions workflow를 준비했습니다. 정확한 Editor 경로는 helper/환경변수에서 찾고 신규 체크아웃 Validate도 장면 생성 후 검사합니다. APK 빌드에는 기존 key/cert, v2/패키지/버전/SDK/ARM64 검증 후 artifact 업로드를 추가했습니다. 임시 cloud key 파일은 finally에서 삭제하며 원본 로그/키는 artifact에 넣지 않습니다.
+
+자체 Windows/Linux runner로 이동할 때 runner 라벨·Unity/SDK 경로·사용 가능한 라이선스·서명 환경을 바꾸고 공통 소스와 검사를 재사용합니다. Unity Build Automation 서비스로 옮길 때는 서비스 설정과 생성 장면 hook 어댑터가 별도로 필요합니다. 라벨만 변경하면 Unity/라이선스가 자동 설치되는 것으로 설명하지 않습니다. [PC 등록/실행/전환](UNITY_AUTOMATION.md).
+
+현재는 파일 준비 단계입니다. Git 커밋/푸시·runner 등록·PC batch/Android 빌드·새 APK 생성·클라우드 서비스 가입/설치/키 업로드는 하지 않았습니다. 정적 설정/파일 일치 검사를 기능 실행과 구분하고 캡처는 선택 작업으로 남깁니다.
+
+## GitHub 연동 Unity 빌드 서버 선택 / 정적 화면 선호 (2026-10-09)
+
+사용자는 주행 영상/시차 캡처까지 필요하지 않고 폰에서 보이는 정도의 정적 화면이면 충분하며, 어려우면 직접 설치해 확인해도 된다고 알려주었습니다. 이 요구를 반영해 캡처는 선택 작업으로 두고 별도 서버를 먼저 생성하지 않습니다. 서버의 세로 Game 뷰 이미지는 미리보기이며 실제 스마트폰/라이브 배경화면 캡처는 기기에서 확보해야 합니다.
+
+Unity 프로젝트의 Assets/.meta/Packages/ProjectSettings/소스는 기존 GitHub 저장소의 pixel-traffic-unity 폴더로 버전 관리할 수 있습니다. 현재 클라우드 작업은 누적 로컬 미커밋/미푸시 상태라 GitHub에서 Unity 빌드가 이미 동작한다고 설명하지 않습니다. Library/Temp/빌드 결과/키는 source control에 넣지 않으며 APK 등 결과는 빌드 artifact로 공유합니다.
+
+공식 문서를 확인한 두 방식:
+
+1. 사용자 Windows PC를 GitHub Actions self-hosted runner로 등록합니다. 저장소 Settings → Actions → Runners → New self-hosted runner에서 Windows/아키텍처에 맞는 안내를 본인 PC에서 실행하고 runner를 켜둡니다. 워크플로가 승인된 코드의 checkout → 정확한 Unity/Android/라이선스 환경 → 장면 생성/검사 → 기존 키 서명 APK → artifact 업로드를 수행하도록 준비할 수 있습니다. Unity 창 수동 조작은 줄고 PC는 켜져 있어야 합니다. 현재 runner/workflow/결과 업로드는 미구성이고 실제 batch/서명 Unity 빌드도 미검증입니다.
+2. Unity Dashboard의 DevOps → Build Automation에서 GitHub 저장소·브랜치·project subfolder(pixel-traffic-unity)·지원 Unity 버전·Android/서명 설정을 연결합니다. Unity 서비스가 변경을 감지해 클라우드 빌드하고 결과 다운로드 링크를 제공합니다. 정확한 6000.3.26f1 지원, 계정 요금/사용 조건과 생성 장면 hook을 설정 전에 확인해야 합니다. Personal Editor 무료 사용과 클라우드 빌드 무료 여부를 동일시하지 않고 이번 조사에서는 요금/서비스 가입을 확정하지 않습니다. 일반 빌드 서비스가 자동으로 실제 폰 화면을 촬영하거나 이 채팅에 이미지를 전달하는 것으로 설명하지 않습니다.
+
+추천은 이미 Unity를 설치한 Windows PC를 활용하는 self-hosted 방식으로 실제 APK 자동 빌드부터 검증하는 것입니다. 사용자가 아직 방식 선택/등록을 완료한 것은 아닙니다. 스크린샷은 선택 단계로 남기고, 기존 WallpaperService 연결 미완료를 APK 자동화와 구분합니다.
+
+공식 근거: [Unity Build Automation](https://docs.unity.com/en-us/build-automation), [빌드 설정](https://docs.unity.com/en-us/build-automation/basic-build-configuration/overview), [GitHub self-hosted runner](https://docs.github.com/en/actions/concepts/runners/self-hosted-runners), [runner 등록](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/add-runners).
+
+## 자동 실행 스크린샷 / 플러그인 필요 여부 (2026-10-09)
+
+사용자는 클라우드 개발 후 가동 화면을 찍어 전달받는 흐름과 GPT 플러그인 필요 여부를 질문했습니다. `plugin-management` 스킬을 읽고 Unity 및 데스크톱 원격 제어/스크린샷 키워드로 플러그인을 검색했습니다. 반환 항목 중 Unity Editor 실행이나 현재 사용자 Windows Unity를 직접 제어하고 이 채팅으로 자동 캡처 전달하는 기능은 확인하지 못했습니다. 설치/권한 변경/서비스 생성은 하지 않았습니다. GitHub 연결은 검색 결과에서 installed로 표시되지만 빌드 runner/Unity/GPU/라이선스/이미지 자동 공유는 별도로 연결되지 않았습니다.
+
+필수 GPT 플러그인은 없습니다. 로컬 Unity에서 실제 Play 실행 후 PNG를 자동 저장하도록 스크립트를 구현할 수 있습니다. 이는 기존 batch 검사/빌드와 별도의 캡처 기능이며 현재 starter에 캡처 모드는 없습니다. 실제 렌더 캡처에는 그래픽 렌더링이 가능한 실행이 필요하므로 현재 batch 모드의 `-nographics`를 그대로 쓰면 안 됩니다. 단일 정적 장면 스크린샷만으로 움직임을 확인한 것으로 기록하지 않으며, 주행 확인에는 시차를 둔 여러 프레임 또는 영상과 실행 로그가 필요합니다.
+
+현재 가능한 전달 흐름은 클라우드 소스/에셋 개발 → 사용자 PC 자동 실행/검사/촬영 스크립트 → 로컬 결과 파일 저장 → 사용자 이미지 첨부 → 내가 결과를 확인하고 수정하는 방식입니다. 사용자 PC의 저장 PNG를 이 채팅으로 직접 읽거나 자동 전송할 연결은 없습니다. 내가 작업 후 사용자 조작 없이 실제 Unity 화면을 캡처해 바로 전달하려면 접근 가능한 별도 Unity/그래픽 실행 환경과 결과 공유 연결이 갖춰져야 합니다. 현재 자동 캡처/자동 공유를 구현/검증한 것으로 주장하지 않습니다.
+
+다음 구현 후보는 실행·검사·시차별 캡처·로그 저장을 묶는 로컬 도구입니다. 이번 질문 응답에서는 설계/기록만 갱신하고 Unity 소스/ZIP/APK 변경이나 새 실행을 하지 않았습니다.
+
+## 첫 장면 렌더·검사 PASS / 클라우드 작업 범위 (2026-10-09)
+
+사용자가 FirstRoad Game 화면을 전달했습니다. 도로/보도/나무·건물/차량이 표시되고 Console에 `PASS: first scene geometry and motion. Reports/scene-validation.json`이 나타납니다. 해당 시점 Console 오류 0/경고 11이며 URP 패키지 셰이더 형 변환 경고가 표시됩니다. Reports JSON 파일 자체는 받지 않았습니다. Play 버튼은 눌리지 않은 상태이고 18:9 Landscape 선택이라 실제 주행/세로 구도/기기 성능은 아직 검증하지 않았습니다.
+
+사용자는 Unity를 직접 열지 않고 클라우드에서 작업할 수 있는지 문의했습니다. 현재 클라우드 PATH의 Unity/unity-editor/unityhub와 알려진 설치 경로에서 실행 가능한 Editor를 확인하지 못했고, 현재 callable tools에도 Unity 실행/사용자 PC 제어 도구가 없습니다. 네 PC에서 Unity를 직접 조작하는 연결도 없습니다. 소스·절차적 3D 형상·에셋·Android 연결 코드 개발과 패키징은 클라우드에서 진행할 수 있지만 실제 Unity 컴파일/렌더/APK 빌드에는 Editor·Android 모듈·해당 환경에서 사용 가능한 라이선스가 필요합니다. 이전 Registry 403 이후 이번에는 대용량 설치/우회/라이선스 이전을 시도하지 않았습니다.
+
+현재 가능한 자동화 후보는 이미 제공한 `tools/run-unity.ps1`의 Prepare/Validate/ExportAndroid/BuildApk 모드입니다. 사용자 PC Editor 창을 닫고 PowerShell로 실행하면 로컬 Unity가 batch로 실행/종료하도록 구현되어 있습니다. GUI 수동 조작은 줄일 수 있으나 클라우드 실행이나 원격 제어는 아닙니다. 실제 Windows batch 실행은 아직 확인하지 않았고 APK 모드는 별도의 기존 서명 환경변수/인증서 검사를 요구합니다. 완전 클라우드 빌드 서버 구성/요금·계정 설정은 현재 미구성입니다.
+
+이번에는 관측/가능 범위 문서만 갱신했습니다. 소스/ZIP/APK를 바꾸거나 통과한 검사를 반복하지 않았습니다. 다음은 사용자 작업을 줄이는 전달/자동화 흐름을 정하고 이후 시안의 차량/환경과 WallpaperService 연결을 단계별로 개발하는 것입니다.
+
+## 사용자 PC 일반 Editor 열림 확인 (2026-10-09)
+
+Camera 수정 명령 안내 후 사용자 화면에서 Unity 6.3 LTS(6000.3.26f1), Android 대상, 일반 Scene/Hierarchy/Project 뷰와 상단 Pixel Traffic 메뉴를 확인했습니다. Safe Mode 배너는 사라졌습니다. 이는 사용자 PC 일반 Editor 진입의 관측이며 클라우드 C# 컴파일 실행이나 장면 검사 PASS의 근거로 기록하지 않습니다.
+
+현재 장면은 Untitled이며 Main Camera/Directional Light만 있습니다. Ctrl+R은 새 화면을 생성하는 명령이 아니므로 도로가 생기지 않은 상태 자체는 오류가 아닙니다. 상단 Pixel Traffic → 1. Prepare First Scene으로 FirstRoad를 생성하고, 2. Validate First Scene의 Console PASS를 확인한 뒤 Game 9:16/Play로 첫 주행을 확인합니다. 화면 하단 Input Manager deprecated 경고는 현재 도로 생성 단계의 중단 오류로 보지 않으며 이 단계에서 입력 패키지를 추가하지 않습니다.
+
+이번 범위는 관측/진행 문서 4개 갱신입니다. Unity 소스/패키지/ZIP/APK를 변경하지 않았고 통과한 ZIP/정적 검사나 기존 Android 검사를 반복하지 않았습니다. 장면 렌더/검증 및 APK/실기기 결과는 아직 대기입니다.
+
+## Camera 컴파일 오류 수정 — 0.1.0 fix1 (2026-10-09)
+
+사용자 Safe Mode Console에서 `Camera`에 `AddComponent`가 없다는 CS1061 오류를 확인했습니다. 저장소 `StarterScene.cs` 78행에서 Camera 컴포넌트에 메서드를 호출한 것이 원인입니다. `camera.AddComponent<UniversalAdditionalCameraData>()`를 `camera.gameObject.AddComponent<UniversalAdditionalCameraData>()`로 수정했습니다. 같은 파일의 다른 AddComponent 호출은 GameObject를 대상으로 하고 있어 변경하지 않았습니다.
+
+기존 프로젝트에는 아래 PowerShell을 실행해 한 줄만 수정합니다. 현재 Unity 창을 열어둬도 저장 후 재컴파일됩니다. `.cs.bak`은 C# 스크립트로 컴파일되지 않는 원본 백업이며 기존 `.meta`/GUID와 나머지 로컬 코드는 유지합니다. 프로젝트 폴더를 다른 위치에 풀었다면 첫 줄의 경로를 실제 위치에 맞춥니다.
+
+```powershell
+$sceneFile = "D:\Unity\Projects\pixel-traffic-unity\Assets\PixelTraffic\Editor\StarterScene.cs"
+$sceneCode = Get-Content -LiteralPath $sceneFile -Raw -ErrorAction Stop
+if ($sceneCode.Contains("camera.AddComponent<UniversalAdditionalCameraData>();")) {
+    Copy-Item -LiteralPath $sceneFile -Destination "$sceneFile.bak" -ErrorAction Stop
+    $sceneCode = $sceneCode.Replace("camera.AddComponent<UniversalAdditionalCameraData>();", "camera.gameObject.AddComponent<UniversalAdditionalCameraData>();")
+    [System.IO.File]::WriteAllText($sceneFile, $sceneCode, [System.Text.UTF8Encoding]::new($false))
+}
+```
+
+오류가 사라지면 자동으로 정상 모드에 진입하는지 확인하고, 안전 모드가 남아 있으면 `Exit Safe Mode`를 누릅니다. 이후 Prepare First Scene → Validate First Scene → Play를 재개합니다. 다른 빨간 오류가 남으면 첫 오류 상세를 확인합니다. 정상 import/Play는 사용자 결과를 받기 전까지 확인 대기입니다.
+
+수정본 전체 ZIP은 `/workspace/artifacts/pixel-traffic-unity-starter-0.1.0-fix1.zip`이며, 원래 ZIP은 이전 전달 기록으로 보존합니다. 버전/패키지/서명/기존 Android 앱 입력은 바꾸지 않습니다. 클라우드에서는 단일 소스 수정 및 ZIP 일치만 검사하며 Unity C# 컴파일/Windows 명령 실행을 대신하지 않습니다.
+
+## 첫 Editor 열기 — 컴파일 오류 / Safe Mode (2026-10-09)
+
+사용자가 프로젝트 열기 과정에서 `The project you are opening contains compilation errors` / `Enter Safe Mode?` 창을 전달했습니다. 첫 실제 import가 오류 상태임을 기록하며, 기존 클라우드 정적 검사를 Unity 컴파일 성공으로 해석하지 않습니다. 오류 상세(Console/Editor.log)는 아직 받지 못해 C# API/참조/패키지 중 원인을 확정하지 않았습니다.
+
+`Enter Safe Mode`를 선택합니다. 안전 모드에서 Console 창의 첫 빨간 오류를 클릭하고 하단 상세(오류 코드·파일명·행 번호·메시지)를 확보합니다. Console이 보이지 않으면 `Window > General > Console`로 엽니다. `Ignore`로 진행하거나 프로젝트/Library/패키지를 임의 삭제하지 않습니다. 실제 오류에 맞춰 영향 파일만 수정한 뒤 재컴파일·정상 import·장면 검사/Play를 재개합니다.
+
+이번 확인은 전달한 네 C# 소스와 최신 문서/Git 상태 읽기에 한정했습니다. 원인을 확정할 새 근거가 없어 코드·manifest·전달 ZIP은 그대로이며, 기존 Android 빌드나 통과한 정적 검사를 반복하지 않았습니다. 클라우드에는 Unity Editor가 없어 실제 재현/수정 검증은 수행하지 않았습니다.
+
+## Windows ZIP 경로 오류 해결 (2026-10-09)
+
+사용자PowerShell화면에서Expand-Archive가 `C:\Users\김백현\Desktop\AI\pixel-traffic-unity-starter-0.1.0.zip`을찾지못해ArchiveCmdletPathNotFound오류가났습니다. 실제다운로드위치/파일명은미확인입니다. 이오류는프로젝트압축해제전단계로Unity컴파일문제의근거가아닙니다. 새Unity검증이나정상import로기록하지않습니다.
+
+전달ZIP은현재클라우드에존재합니다. 사용자는ZIP을다운로드한뒤파일선택창에서실제파일을선택하면Downloads/다른폴더·자동번호붙은파일명도처리할수있습니다. 코드실행은사용자WindowsPowerShell에서하며클라우드Windows실행검증은하지않았습니다. `-Force`를쓰지않아기존같은파일을덮어쓰지않습니다.
+
+```powershell
+Add-Type -AssemblyName System.Windows.Forms
+$starterZipPicker = New-Object System.Windows.Forms.OpenFileDialog
+$starterZipPicker.Title = "다운로드한 Unity 프로젝트 ZIP 선택"
+$starterZipPicker.Filter = "ZIP 파일 (*.zip)|*.zip"
+if ($starterZipPicker.ShowDialog() -eq "OK") {
+    Expand-Archive -LiteralPath $starterZipPicker.FileName -DestinationPath "D:\Unity\Projects"
+}
+```
+
+선택취소시해제하지않습니다. 선택할파일이없으면먼저전달ZIP을다운로드합니다. 완료후 `D:\Unity\Projects\pixel-traffic-unity`를Hub에서추가합니다. 기존프로젝트가있는경우다른새폴더에풀며병합/덮어쓰기를하지않습니다.
+
+## 첫 소스 프로젝트 0.1.0 전달 (2026-10-09)
+
+사용자가6.3설치완료를보고하고Hub Personal활성화화면을첨부했습니다. 화면의활성화날짜는2026-09-10입니다. 설치/활성화준비를기록하고Editor6000.3.26f1/URP17.3.0을기준으로별도프로젝트 `pixel-traffic-unity`를작성했습니다. 이전미설치/활성화미확인항목은당시의준비기록입니다.
+
+[사용자 PC에서 열기·검증·Windows 도구](../pixel-traffic-unity/README.md), [진행 상태](STATUS.md).
+
+- [다운로드ZIP](/workspace/artifacts/pixel-traffic-unity-starter-0.1.0.zip)
+- [검증 메타데이터](/workspace/artifacts/pixel-traffic-unity-starter-0.1.0-verification.json)
+
+이번구현은실제3Dprimitive/재질을쓰는도로·보도·나무·건물·차량1대·바퀴와직선loop입니다. 목표시안은ReferencePNG로포함하고runtime자산으로사용하지않습니다. 첫화면은엔진/형상확인용이며브랜드차량·도시전체시안의완성품이아닙니다. 장면/URP/Pointfilter asphalt texture를Editor메뉴로만생성하고기존장면을덮어쓰지않습니다. 0시간/loopovershoot/여러wrap·15/30/60/120Hz 위상/invalidtime·실제차체axis/lane전체외곽/바퀴/접지·material검사를실제Editor에서실행할수있게넣었습니다.
+
+Android export/빌드입력은실험앱ID·min29·ARM64·IL2CPP·Activity entry입니다. WallpaperService가아직없어서일반앱의render와Gradleexport부터확인합니다. 실제export의UnityPlayerAPI/수명주기를확인후Surface연결을추가하는순서로세분화했습니다. APK는환경변수의기존키를keytoolDER인증서SHA로확인후빌드하고서명설정을복원합니다. 키/패스워드/라이선스/새APK는소스ZIP에없습니다. cert검사/Android빌드는실제PC에서미실행입니다.
+
+이클라우드에는Editor가없습니다. 공식URP17.3문서의버전/공개CreateAPI·Activity설정을확인하고정적리뷰/패키징검사를수행했습니다. Registry접속403때프록시를우회하지않고추가설치를중단했습니다. 실제C#컴파일/import/Render·Unity검사/Android빌드·기기FPS/발열은확인대기이며성공을주장하지않습니다. 기존0.48소스/자산/키는보존했습니다. 아래는이전준비/설계기록입니다.
+
+## 현재 단계 (2026-10-09)
+
+사용자는 생성된3D시안을 목표로 Unity 전환을 승인했고, 구현 전에 사용자가 준비하면 좋은 사항을 먼저 안내해 달라고 요청했습니다. 이 문서는 준비·검증 순서이며 구현 완료를 뜻하지 않습니다. 정식 앱은0.48.0입니다.
+
+목표 이미지: `/workspace/artifacts/pixel-traffic-unity-3d-concept-01.png`(941×1672RGB, SHA256 `be226486c4e611ecef59db79193748d59df83b923abb6f231005f7f8dc16486a`). 생성형 콘셉트이며 실제Unity렌더/성능 결과가 아닙니다. 높은카메라·4차선·서울강변/산·픽셀풍을 유지하고차량·건물·나무/보행자·그림자를3D오브젝트로통일합니다.
+
+## Unity 6.6 설치 상태·무료 라이선스 확인 (2026-10-09)
+
+사용자 Hub 화면에서 Unity6.6(6000.6.5f1)의설치완료와 Unity6.3LTS(6000.3.26f1)의진행중상태를확인했습니다. Editor실행/Android모듈/라이선스활성화까지검증한것은아닙니다.
+
+공식[지원안내](https://unity.com/releases/unity-6/support)와[6.6발표](https://discussions.unity.com/t/unity-6-6-is-now-available/1735357)를확인했습니다.6.6은새기능/플랫폼지원·성능개선이포함된Supported Update이며정식제작용이고LTS와같은QA/지원수준을받습니다.지원기간은다음릴리스까지입니다.6.3LTS는2027년12월까지지원됩니다.6.6을불안정한시험버전으로분류하지않습니다.이번프로젝트는라이브배경화면네이티브연결의재현성과기준버전유지를위해6000.3.26f1을계속사용하는설계판단입니다.더높은버전번호가목표그림의퀄리티를보장하지않으며기기성능차이는아직측정하지않았습니다.
+
+[UnityPersonal공식안내](https://unity.com/products/unity-personal):개인/소규모조직은최근12개월관련매출과조달자금의자격기준(미화20만달러미만등)을충족하면무료사용/상업개발이가능합니다.개인은Unity관련프로젝트매출,사업체는전체매출/자금등신청자유형의규정을따릅니다.사용자개인의재무자격충족여부를조사/확정하지않고조건부로안내합니다.무료계획은Editor버전6.3/6.6선택과별개이며유료에셋/추가서비스는별도입니다.본인계정의Hub설정→라이선스에서Personal상태를확인하도록안내합니다.기존앱과Unity6.3설치를유지하고6.6을삭제할필요는없습니다.
+
+## Editor 버전·모듈 선택 확인 (2026-10-09)
+
+사용자설치화면에서Unity6.3LTS **6000.3.26f1**과Android Build Support·OpenJDK·Android SDK & NDK Tools의체크상태를확인했습니다. 프로젝트Editor기준은6000.3.26f1로정합니다. 화면은설치모듈선택단계이며다운로드/설치완료·Editor실행/라이선스·Android빌드검증완료를뜻하지않습니다. 디스크사용가능549.44GB/표시된필수19.03GB로현재선택의공간은충분합니다. VisualStudioCommunity2026도체크됐으며C#편집용선택사항입니다.
+
+이선택으로설치를진행한뒤Hub목록에해당버전이설치됨으로나오는지확인합니다. 이후Unity프로젝트는같은버전의URP기준으로준비하고라이브배경화면연결검증을이어갑니다. 기존상단/하단의버전미확정기록은이항목이전준비단계의사실입니다.
+
+## Unity Hub 설치 확인 (2026-10-09)
+
+사용자가Windows의 `D:\Unity\Unity Hub`에설치했다고보고했고설정→정보화면에서UnityHub3.22.2가정상실행되는것을확인했습니다. 경로는사용자보고이며클라우드에서Windows파일을직접검사한결과는아닙니다. screenshot의Hub버전은Editor버전과다릅니다. Editor설치완료·정확한6000.3.xf1번호·Android Build Support/SDK&NDK/OpenJDK·라이선스상태는아직확인하지않았습니다.
+
+다음확인: 설정창을닫고Hub메인화면의설치(Installs)목록에서Unity6.3LTS Editor항목/버전을확인합니다. Editor가없으면Editor설치(Install Editor)를진행하고Android모듈을함께선택합니다. 설치된Editor의모듈은해당항목메뉴에서확인/추가합니다. Hub설정창왼쪽의설치는설치경로설정이므로메인Editor목록과구분합니다.
+
+## 사용자 PC 확인 (2026-10-09)
+
+사용자가CPU Intel Core i9-14900K/RAM64GB/GPU RTX4070SUPER,Unity미설치를알려주었습니다. 이번모바일URP개발/Editor작업에충분한구성으로판단하며기기FPS결과를뜻하지않습니다. UnityHub→6.3LTS Editor와Android모듈설치를안내합니다. Editor정확한patch번호·라이선스활성화/모듈완료·디스크여유는아직확인하지않았습니다. 본인PC에서계정인증을진행하고완료후6000.3.xf1 버전을알려주면프로젝트버전을맞춥니다.
+
+## 사용자 준비
+
+1. 사용할Windows PC의CPU/RAM/GPU와SSD여유공간, Unity설치여부를 알려줍니다. Editor설치가이미있다면 정확한버전(6000.x.yf1)도 함께 확인합니다. 새하드웨어구매는 사양확인후 판단합니다.
+2. [Unity Hub](https://unity.com/download)를설치하고본인Unity계정으로로그인/사용조건에맞는라이선스를활성화합니다. 새설치는Unity6.3 LTS를기본후보로하며Hub에서제공되는패치버전을확인후프로젝트/빌드버전을고정합니다. 기존설치를확인하기전에대용량Editor를중복설치하지않습니다.
+3. Editor설치시Android Build Support·Android SDK & NDK Tools·OpenJDK를함께설치합니다. 기존Java앱의클라우드JDK21/SDK경로를Unity에그대로강제하지않고Editor가지원하는의존성을사용합니다. [공식Android준비](https://docs.unity3d.com/6000.3/Documentation/Manual/android-sdksetup.html).
+4. S20+/S26 Ultra의USB디버깅과PC연결을준비합니다. 현재앱의프리셋파일내보내기를통해설정을백업할수있습니다. 기존0.48APK/서명백업을보관하며키를공개저장소에넣지않습니다.
+
+초기검증은기본3D도형/간단모델로진행합니다. 브랜드차량등의완성형3D모델은현재관련프로젝트에확인되지않았고별도제작/확보가필요합니다. 유료에셋/벽지플러그인은기술검증과사용자선택전구매하지않습니다. 시안에가까운차량디자인은참고PNG만으로자동완성되지않습니다.
+
+## 환경에서 확인한 사실
+
+- `/workspace/S20-PLUS/pixel-traffic`는Android Java/Canvas앱입니다. `TrafficWallpaperService`가WallpaperService.Engine/SurfaceHolder/화면가시성·SCREEN_ON/OFF/절전모드와미리보기를관리합니다. Unity장면을만드는것과Android라이브배경화면으로연결하는것은별도작업입니다.
+- `wallpaper_settings`와`saved_presets` SharedPreferences가현재설정/프리셋저장소입니다. 추후같은앱ID·키로업데이트할때이저장소와필드의읽기/이전이필요합니다.
+- PATH의Unity/unity-editor/unityhub와`/opt/Unity*`,`/opt/unity*`,`/workspace/toolchains/*unity*`에서Editor를확인하지못했습니다. 숨겨진모든위치를전수검색한결과는아닙니다. 현재Editor컴파일/렌더/Android export를실행할수있는환경은확보되지않았습니다. 소스/설계준비와실제Unity검증을구분합니다.
+
+## 권장 첫 검증: 라이브 배경화면 연결
+
+최초목표는최종도시전체가아니라작은3D장면을배경화면으로표시하는기술검증입니다. URP로도로한구간·차량하나·카메라/조명을준비한뒤Android호스트와연결합니다.
+
+[Unity as a Library의공식제한](https://docs.unity3d.com/6000.3/Documentation/Manual/UnityasaLibrary.html)은호스트의수명주기에따른미지원시나리오,Android의전체화면렌더링/단일runtime를명시합니다. 문서는WallpaperService에대한완성된연결을보장하지않습니다. 현재앱의설정미리보기·배경화면미리보기·적용된배경화면의Surface전환/공존과renderthread연결을먼저검증해야합니다. 필요한Android네이티브연결/플러그인방식은검증후결정하며동작을미리보장하지않습니다.
+
+검증항목: 홈화면표시/실제배경화면미리보기,화면꺼짐/잠금·해제·다른앱으로숨김과복귀,Surface재생성/회전,설정화면과배경화면충돌,반복복귀의검은화면/메모리누적,숨김시렌더중단,30FPS목표의기기별진단/발열/배터리. 성능은목표이며측정완료가아닙니다. 초기실험빌드는기존0.48을덮지않는별도앱ID로만들고정식전환때기존`com.s20plus.pixeltraffic`·키/저장설정을유지합니다.
+
+## 이후 순서
+
+1. Editor/Android의존성버전고정과작은3D장면·라이브배경화면연결검증.
+2. 시안과같은카메라·4차선·차량3D오브젝트/공통조명·가림/LOD·품질단계.
+3. 기존Traffic/신호/차간거리·안전외곽을C#로이전하고차량수/길이·양방향정차검증.
+4. 보행자4–100/보행영역·장애물·충돌회피/횡단을이전.
+5. 낮/밤·비/눈/비바람/신문·나무·안개,설정·프리셋/진단·기존서명/업데이트 검증.
+
+첫Editor버전은사용자설치정보확인후고정합니다. 기존정식앱의소스/자산을대량교체하지않고새Unity프로젝트입력·검사를별도관리합니다. 관련검사만선택하고통과한동일입력은반복하지않습니다. 구현/검사/기기결과는WORK_LOG/STATUS/HANDOFF에단계별기록합니다.
+
+## 공식 근거 확인일: 2026-10-09
+
+- [Unity6릴리스](https://unity.com/releases/unity-6):6.3LTS제공/지원기간확인. 설치할patch번호는미확정입니다.
+- [Android환경](https://docs.unity3d.com/6000.3/Documentation/Manual/android-sdksetup.html):BuildSupport/SDK/NDK/JDK필요.
+- [UnityasLibrary](https://docs.unity3d.com/6000.3/Documentation/Manual/UnityasaLibrary.html):네이티브통합가능성과runtime/렌더링제한.
+
+본준비조사에서는Unity프로젝트/플러그인설치·라이선스활성화·3D자산구매/앱컴파일·새APK생성을수행하지않았습니다. 실제앱입력68개SHA는0.48최종검증과동일합니다.

@@ -1,5 +1,13 @@
 # 새 채팅 인수인계 — 픽셀 트래픽 0.29.0
 
+## 2026-10-09 — Unity PC 자동 검사 연결
+
+사용자 Windows PC에서 수정 실행기의 `Unity Validate completed` 및 GitHub runner 2.337.0의 `Connected to GitHub` / `Listening for Jobs`를 화면으로 확인했습니다. Unity 6000.3.26f1 프로젝트와 공통 PowerShell pipeline을 `pixel-traffic-unity/`에 추가하고 main의 Unity 관련 변경을 자동 Validate에 연결합니다. main 수동 Validate/BuildApk도 지원하며 PR 코드는 자동 실행하지 않습니다. runner 라벨은 self-hosted/Windows/X64/pixel-traffic-unity입니다.
+
+이번 게시 범위는 Unity 프로젝트·workflow·관련 문서입니다. 기존 native Android 앱 변경은 포함하지 않습니다. workflow의 main 제한·Validate 기본값·보고서 허용 목록 및 source 제외 항목을 정적으로 확인했습니다. 실제 첫 GitHub Actions 작업은 main 반영 후 확인해야 합니다. Unity APK·기기 실행·WallpaperService 연결·자동 캡처는 아직 검증하지 않았습니다. 기존 인증서 검증 후 APK를 공유하도록 구성했고 키/암호/원본 로그는 게시하지 않습니다.
+
+[PC 실행과 결과 확인](UNITY_AUTOMATION.md), [전환 과정](UNITY_MIGRATION.md). GitHub source 게시, main 반영, Actions 성공은 각각 실제 결과를 따로 기록합니다.
+
 기준일: 2026-10-07. 저장소: https://github.com/BACKHYUN96/S20-PLUS . 앱 패키지 `com.s20plus.pixeltraffic`, versionCode 29/versionName 0.29.0, minSdk 29/targetSdk 35. 소스 체크포인트 태그는 `pixel-traffic-v0.29.0`이며 커밋은 `82c5cbdcdaf17d408565b26addf01411792a3f73`입니다. 이 소스와 태그의 GitHub 보존을 확인했습니다. 이후 인수인계 완료 문서는 main에 추가합니다. [STATUS](STATUS.md)의 최신 항목을 확인하세요.
 
 ## 새 채팅에 붙여 넣기

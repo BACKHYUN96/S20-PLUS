@@ -1,0 +1,91 @@
+[CmdletBinding()]
+param(
+    [ValidateSet('Validate', 'BuildApk')]
+    [string]$Operation = 'Validate',
+    [string]$UnityExe
+)
+$ErrorActionPreference = 'Stop'
+$projectRoot = Split-Path -Parent $PSScriptRoot
+$reports = Join-Path $projectRoot 'Reports'
+New-Item -ItemType Directory -Path $reports -Force | Out-Null
+$summary = [ordered]@{
+    schemaVersion = 1; operation = $Operation; result = 'FAILED'
+    startedUtc = [DateTime]::UtcNow.ToString('O'); finishedUtc = $null
+    wallpaper = $false
+}
+$temporaryKey = $null
+$previousKey = $env:PIXEL_TRAFFIC_KEYSTORE
+$previousJava = $env:JAVA_HOME
+$previousKeyPassword = $env:PIXEL_TRAFFIC_KEY_PASSWORD
+function Invoke-AndroidTool {
+    param([string]$Tool, [string[]]$ToolArguments)
+    $toolOutput = & $Tool @ToolArguments 2>&1 | Out-String
+    if ($LASTEXITCODE -ne 0) { throw "Android verification tool failed: $(Split-Path -Leaf $Tool)" }
+    return $toolOutput
+}
+try {
+    foreach ($reportName in @('scene-validation.json', 'apk-verification.json', 'android-build-result.txt')) {
+        $oldReport = Join-Path $reports $reportName
+        if (Test-Path -LiteralPath $oldReport) { Remove-Item -LiteralPath $oldReport }
+    }
+    . (Join-Path $PSScriptRoot 'unity-editor.ps1')
+    $UnityExe = Get-PixelTrafficUnityEditor -ExplicitPath $UnityExe
+    if ($Operation -eq 'BuildApk') {
+        if ([string]::IsNullOrEmpty($env:PIXEL_TRAFFIC_KEY_PASSWORD)) { $env:PIXEL_TRAFFIC_KEY_PASSWORD = $null }
+        # Optional cloud secret; a PC can instead keep its original key outside the checkout.
+        if ($env:PIXEL_TRAFFIC_KEYSTORE_BASE64) {
+            $temporaryKey = Join-Path ([IO.Path]::GetTempPath()) ("pixel-traffic-signing-" + [Guid]::NewGuid().ToString('N') + '.keystore')
+            [IO.File]::WriteAllBytes($temporaryKey, [Convert]::FromBase64String($env:PIXEL_TRAFFIC_KEYSTORE_BASE64))
+            $env:PIXEL_TRAFFIC_KEYSTORE = $temporaryKey
+        }
+        $apk = Join-Path $projectRoot 'Builds/pixel-traffic-unity-prototype-0.1.0.apk'
+        # Prevent a previous successful APK from masquerading as this run's output.
+        if (Test-Path -LiteralPath $apk) { Remove-Item -LiteralPath $apk }
+    }
+    & (Join-Path $PSScriptRoot 'run-unity.ps1') -Mode $Operation -UnityExe $UnityExe
+    if ($Operation -eq 'BuildApk') {
+        $editorDirectory = Split-Path -Parent $UnityExe
+        $androidPlayer = Join-Path $editorDirectory 'Data/PlaybackEngines/AndroidPlayer'
+        $sdk = $env:UNITY_ANDROID_SDK_PATH
+        if (-not $sdk) { $sdk = Join-Path $androidPlayer 'SDK' }
+        $env:JAVA_HOME = Join-Path $androidPlayer 'OpenJDK'
+        $buildTools = Get-ChildItem -LiteralPath (Join-Path $sdk 'build-tools') -Directory |
+            Where-Object { $_.Name -match '^\d+\.\d+\.\d+$' } |
+            Sort-Object { [version]$_.Name } -Descending | Select-Object -First 1
+        if (-not $buildTools) { throw 'Android SDK build-tools not found.' }
+        $onWindows = [Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT
+        $signer = Join-Path $buildTools.FullName $(if ($onWindows) { 'apksigner.bat' } else { 'apksigner' })
+        $aapt = Join-Path $buildTools.FullName $(if ($onWindows) { 'aapt.exe' } else { 'aapt' })
+        $signature = Invoke-AndroidTool $signer @('verify', '--verbose', '--print-certs', $apk)
+        $expectedCertificate = 'a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6'
+        if ($signature -notmatch 'Verified using v2 scheme[^\r\n]*true' -or
+            $signature -notmatch "Signer #1 certificate SHA-256 digest: $expectedCertificate") {
+            throw 'APK v2/original signing certificate verification failed.'
+        }
+        $badging = Invoke-AndroidTool $aapt @('dump', 'badging', $apk)
+        if ($badging -notmatch "package: name='com\.s20plus\.pixeltraffic\.unityprototype' versionCode='1' versionName='0\.1\.0'" -or
+            $badging -notmatch "(?m)^sdkVersion:'29'\s*$" -or
+            $badging -notmatch "(?m)^native-code: 'arm64-v8a'\s*$") {
+            throw 'APK app ID/version/min SDK/ARM64 verification failed.'
+        }
+        if ($badging -notmatch "targetSdkVersion:'(\d+)'" -or [int]$Matches[1] -lt 29) {
+            throw 'APK target SDK verification failed.'
+        }
+        $verification = [ordered]@{
+            result = 'PASS'; version = '0.1.0'; versionCode = 1; minSdk = 29
+            targetSdk = [int]$Matches[1]; architecture = 'arm64-v8a'
+            certificateSha256 = $expectedCertificate; v2 = $true
+            apkSha256 = (Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash.ToLowerInvariant()
+            bytes = (Get-Item -LiteralPath $apk).Length; wallpaper = $false
+        }
+        $verification | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $reports 'apk-verification.json') -Encoding UTF8
+    }
+    $summary.result = 'PASS'
+} finally {
+    $summary.finishedUtc = [DateTime]::UtcNow.ToString('O')
+    $summary | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $reports 'pipeline-result.json') -Encoding UTF8
+    if ($temporaryKey -and (Test-Path -LiteralPath $temporaryKey)) { Remove-Item -LiteralPath $temporaryKey -Force }
+    $env:PIXEL_TRAFFIC_KEYSTORE = $previousKey
+    $env:JAVA_HOME = $previousJava
+    $env:PIXEL_TRAFFIC_KEY_PASSWORD = $previousKeyPassword
+}
