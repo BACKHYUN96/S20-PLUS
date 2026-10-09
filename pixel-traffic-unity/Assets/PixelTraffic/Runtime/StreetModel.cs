@@ -182,7 +182,10 @@ namespace PixelTraffic.UnityPrototype
         private void MovePerson(int i)
         {
             Person p=People[i];if(!p.active)return;p.velocity=Vector2.zero;p.cooldown-=Dt;
-            if(p.activity==Activity.Roam&&p.cooldown<=0)Reserve(i);
+            if(p.activity==Activity.Roam&&p.cooldown<=0&&!Reserve(i))
+            {
+                p.cooldown=8+Random(p)*12;Roam(p);
+            }
             if(p.activity==Activity.Approach||p.activity==Activity.Wait)p.waitingTime+=Dt;
             if(p.activity==Activity.Wait)
             {
