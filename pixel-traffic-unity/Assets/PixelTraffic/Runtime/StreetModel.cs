@@ -88,6 +88,8 @@ namespace PixelTraffic.UnityPrototype
         private void Roam(Person p)
         {
             int row=Mathf.Clamp(Mathf.RoundToInt((p.position.y+28)/.45f)+(Random(p)<.5f?-1:1)*(25+(int)(Random(p)*55)),1,398);
+            if(p.cooldown>0&&p.crossings>0&&Mathf.Abs(p.position.y-StarterConfig.CrossingZ)<24)
+                row=Mathf.Clamp(Mathf.RoundToInt((p.position.y+28)/.45f)+(p.position.y<StarterConfig.CrossingZ?-1:1)*(55+(int)(Random(p)*30)),1,398);
             if(p.cooldown<=0)row=Mathf.Clamp(Mathf.RoundToInt((StarterConfig.CrossingZ-24+Random(p)*48+28)/.45f),1,398);
             int columns=SidewalkRoutes.Columns;int col=(int)(Random(p)*columns),node=row*columns+col;
             for(int trial=0;trial<columns&&!Routes.IsOpen(node);trial++)node=row*columns+(col+trial+1)%columns;
@@ -183,10 +185,14 @@ namespace PixelTraffic.UnityPrototype
         }
         private void MovePerson(int i)
         {
-            Person p=People[i];if(!p.active)return;p.velocity=Vector2.zero;p.cooldown-=Dt;p.retrySeconds-=Dt;
+            Person p=People[i];if(!p.active)return;p.velocity=Vector2.zero;
+            bool seekingStarts=p.cooldown>0&&p.cooldown<=Dt;p.cooldown-=Dt;p.retrySeconds-=Dt;
+            if(seekingStarts&&p.activity==Activity.Roam)Roam(p);
             if(p.activity==Activity.Roam&&p.cooldown<=0&&p.retrySeconds<=0&&Mathf.Abs(p.position.y-StarterConfig.CrossingZ)<=18&&!Reserve(i))
             {
-                p.retrySeconds=8+Random(p)*12;Roam(p);
+                p.retrySeconds=8+Random(p)*12;
+                if(p.crossings>0)p.cooldown=45+Random(p)*60;
+                Roam(p);
             }
             if(p.activity==Activity.Approach||p.activity==Activity.Wait)p.waitingTime+=Dt;
             if(p.activity==Activity.Wait)

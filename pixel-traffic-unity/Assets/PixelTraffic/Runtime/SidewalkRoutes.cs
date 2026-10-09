@@ -10,11 +10,18 @@ namespace PixelTraffic.UnityPrototype
         private const int Rows = 401;
         private readonly bool[] open = new bool[Columns * Rows];
         private readonly int[] seen = new int[Columns * Rows], previous = new int[Columns * Rows], queue = new int[Columns * Rows];
+        private readonly byte[] links=new byte[Columns*Rows];
         private int stamp;
         public int Count => open.Length;
         public SidewalkRoutes()
         {
             for(int i=0;i<open.Length;i++)open[i]=Allowed(Node(i,1));
+            // Static obstacle edges are checked once, then shared by all pedestrian searches.
+            for(int i=0;i<open.Length;i++)if(open[i])
+            {
+                if(i%Columns<Columns-1&&open[i+1]&&SegmentAllowed(Node(i,1),Node(i+1,1))){links[i]|=2;links[i+1]|=1;}
+                if(i+Columns<open.Length&&open[i+Columns]&&SegmentAllowed(Node(i,1),Node(i+Columns,1))){links[i]|=8;links[i+Columns]|=4;}
+            }
         }
         public Vector2 Node(int index,int side) => new Vector2(side*(6.80f+.355f*(index%Columns)),-28+.45f*(index/Columns));
         public bool IsOpen(int index) => open[index];
@@ -50,12 +57,12 @@ namespace PixelTraffic.UnityPrototype
             stamp++;int read=0,write=0;queue[write++]=start;seen[start]=stamp;previous[start]=-1;
             while(read<write&&seen[end]!=stamp)
             {
-                int n=queue[read++],col=n%Columns,row=n/Columns;
+                int n=queue[read++];
                 void Add(int v)
                 {
-                    if(open[v]&&seen[v]!=stamp&&SegmentAllowed(Node(n,side),Node(v,side))) {seen[v]=stamp;previous[v]=n;queue[write++]=v;}
+                    if(seen[v]!=stamp) {seen[v]=stamp;previous[v]=n;queue[write++]=v;}
                 }
-                if(col>0)Add(n-1);if(col<Columns-1)Add(n+1);if(row>0)Add(n-Columns);if(row<Rows-1)Add(n+Columns);
+                if((links[n]&1)!=0)Add(n-1);if((links[n]&2)!=0)Add(n+1);if((links[n]&4)!=0)Add(n-Columns);if((links[n]&8)!=0)Add(n+Columns);
             }
             if(seen[end]!=stamp)return 0;
             int count=0;for(int n=end;n>=0&&count<path.Length;n=previous[n])path[count++]=n;
