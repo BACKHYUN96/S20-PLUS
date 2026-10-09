@@ -182,7 +182,7 @@ namespace PixelTraffic.UnityPrototype
         private void MovePerson(int i)
         {
             Person p=People[i];if(!p.active)return;p.velocity=Vector2.zero;p.cooldown-=Dt;
-            if(p.activity==Activity.Roam&&p.cooldown<=0&&!Reserve(i))
+            if(p.activity==Activity.Roam&&p.cooldown<=0&&Mathf.Abs(p.position.y-StarterConfig.CrossingZ)<=45&&!Reserve(i))
             {
                 p.cooldown=8+Random(p)*12;Roam(p);
             }
