@@ -23,6 +23,8 @@ namespace PixelTraffic.UnityPrototype.Editor
                 if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null)
                     throw new InvalidOperationException("Preview needs a graphics device; do not use -nographics.");
                 EditorSceneManager.OpenScene(StarterConfig.ScenePath);
+                var street = UnityEngine.Object.FindFirstObjectByType<StreetSimulation>();
+                if (street != null) { street.ResetModel(); street.Advance(30); street.ApplyViews(); }
                 started = EditorApplication.timeSinceStartup;
                 warmupFrames = 0;
                 EditorApplication.update += CaptureWhenReady;

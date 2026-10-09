@@ -14,7 +14,7 @@ namespace PixelTraffic.UnityPrototype
         private double accumulator;
         private bool paused,focused=true;
         private StreetModel.Phase lastPhase=(StreetModel.Phase)(-1);
-        private readonly MaterialPropertyBlock lightBlock=new MaterialPropertyBlock();
+        private MaterialPropertyBlock lightBlock;
         public StreetModel Model => model;
         public WalkerView[] Walkers => walkers;
         public void Configure(PrototypeDrive[] cars,WalkerView[] views,Renderer[] signals,Renderer[] crossingSignals)
@@ -48,6 +48,7 @@ namespace PixelTraffic.UnityPrototype
         }
         public void ApplyViews()
         {
+            if(lightBlock==null)lightBlock=new MaterialPropertyBlock();
             for(int i=0;i<walkers.Length;i++)
             {
                 var p=model.People[i];var v=walkers[i];if(v.root.gameObject.activeSelf!=p.active)v.root.gameObject.SetActive(p.active);if(!p.active)continue;
