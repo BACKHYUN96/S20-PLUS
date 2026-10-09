@@ -26,7 +26,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             float minimumPeople=float.MaxValue,minimumCars=float.MaxValue;int completed=0,cycles=0;var populations=new List<int>();
             foreach(int count in new[]{4,32,100})
             {
-                var model=Create(count);int ticks=count==100?18000:count==32?9000:6000;
+                var model=Create(count);int ticks=count==4?6000:18000;
                 int[] crossingCounts=new int[100];float[] firstDistances=new float[100];Vector2[] previous=new Vector2[100];StreetModel.Activity[] activities=new StreetModel.Activity[100];
                 for(int step=0;step<ticks;step++)
                 {
@@ -96,7 +96,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     Need(view.root.GetComponent<SkinnedMeshRenderer>().sharedMesh!=null&&view.limbs.Length==4,"Human rig incomplete.");
                     Vector3 foot=view.root.position;foreach(var bed in treeBeds)Need(foot.x<bed.min.x-.15f||foot.x>bed.max.x+.15f||foot.z<bed.min.z-.15f||foot.z>bed.max.z+.15f,"Actual tree bed differs from foot navigation.");
                 }
-                return new Report {result="PASS: actual runtime signal/following/crossing/avoidance,4/32/100 populations,600sec max,clock/pause and actual100-rig budget; device test pending",populations=populations.ToArray(),minimumFootDistance=minimumPeople,minimumBumperGap=minimumCars,crossings=completed,signalCycles=cycles,maxPopulationBudget=budget};
+                return new Report {result="PASS: actual runtime signal/following/crossing/avoidance,4/32/100 populations,600sec max,clock/pause and actual100-rig budget; device test pending",populations=populations.ToArray(),simulatedSeconds=new[]{200,600,600},minimumFootDistance=minimumPeople,minimumBumperGap=minimumCars,crossings=completed,signalCycles=cycles,maxPopulationBudget=budget};
             }
             finally
             {
@@ -119,7 +119,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         private static void Need(bool value,string message){if(!value)throw new InvalidOperationException(message);}
         [Serializable] internal sealed class Report
         {
-            public string result;public int[] populations;public float minimumFootDistance,minimumBumperGap;public int crossings,signalCycles;
+            public string result;public int[] populations,simulatedSeconds;public float minimumFootDistance,minimumBumperGap;public int crossings,signalCycles;
             public CityEnvironment.Report maxPopulationBudget;
         }
     }
