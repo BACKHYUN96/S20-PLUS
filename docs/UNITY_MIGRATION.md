@@ -1,5 +1,9 @@
 # Pixel Traffic — Unity 전환 준비
 
+## 2026-10-10 — Unity 0.6.0 추가 조명 API 컴파일 수정 / 재검사 대기 (KST)
+
+source2197d37c5f30f9158829c5b4cfeb514c6130357c의 PC Validate38005928444/job114074595963에서 StarterScene.cs117의 CS0200으로 실패했다. URP17.3 additionalLightsRenderingMode는 읽기 전용이므로 기존 shadow 필드처럼 SerializedObject의 m_AdditionalLightsRenderingMode를 PerPixel로 설정한다. maxAdditionalLightsCount4 setter는 컴파일 오류가 없다. 실패 보고서 artifact11651540790/2081bytes ZIP SHA256 e01a92e45f31971413a0f0031eece7800890da2bea654203c3bb261a50cff75b/CRC를 확인했다. 동반 Licensing 로그는 entitlement 해결 후 실제 C# 컴파일까지 진행했으므로 실패 원인으로 판단하지 않는다. 변경은 StarterScene.cs 하나와 진행 문서이며 실제 재검사 결과는 다음 기록에 추가한다.
+
 ## 2026-10-10 — Unity 0.6.0 시간대·날씨 자연스러운 전환 구현 / 실제 검사 대기 (KST)
 
 사용자가 0.5.1 실제 폰 적용 성공을 확인하고 다음 패치로 기존 앱과 같은 부드러운 시간대·날씨 변경을 요청했다. base d1d64e74b85db701647d4678dfbfd95c3bfecadd에서 0.6.0/code7을 구현한다. 아직 실제 Unity/Android 검사 결과를 완료로 기록하지 않는다.

@@ -114,7 +114,6 @@ namespace PixelTraffic.UnityPrototype.Editor
                 pipeline = UniversalRenderPipelineAsset.Create(renderer);
                 pipeline.renderScale = 1;
                 pipeline.msaaSampleCount = 2;
-                pipeline.additionalLightsRenderingMode = LightRenderingMode.PerPixel;
                 pipeline.maxAdditionalLightsCount = 4;
                 pipeline.supportsHDR = false;
                 pipeline.shadowDistance = 70;
@@ -125,6 +124,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             }
             // URP 17.3 exposes these flags as getters; set its serialized asset fields.
             var settings = new SerializedObject(pipeline);
+            settings.FindProperty("m_AdditionalLightsRenderingMode").intValue = (int)LightRenderingMode.PerPixel;
             settings.FindProperty("m_MainLightShadowsSupported").boolValue = true;
             settings.FindProperty("m_SoftShadowsSupported").boolValue = true;
             settings.FindProperty("m_SoftShadowQuality").intValue = (int)SoftShadowQuality.Low;
