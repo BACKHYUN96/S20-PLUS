@@ -62,7 +62,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
                 for(int i=0;i<count;i++)
                 {
-                    var p=model.People[i];Need(p.walkDistance-firstDistances[i]>1,"Pedestrian remains permanently stuck.");
+                    var p=model.People[i];Need(p.walkDistance-firstDistances[i]>1,"Pedestrian stuck: count="+count+" id="+i+" phase="+model.Signal+" time="+model.PhaseSeconds+" cycles="+model.Cycles+" activity="+p.activity+" pos="+p.position+" goal="+p.goal+" path="+p.pathCursor+"/"+p.pathCount+" wait="+p.waitingTime+" "+CarSummary(model));
                     Need(p.crossings>0,"A person never gets through a green crossing: "+count+"/"+i+" "+p.activity+" "+p.position+" path "+p.pathCursor+"/"+p.pathCount);
                     crossingCounts[i]=p.crossings;completed+=p.crossings;
                 }
