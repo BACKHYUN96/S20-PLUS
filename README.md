@@ -1,6 +1,6 @@
 # S20+
 
-Unity 전환 프로젝트와 PC 자동 검사는 [Unity 안내](pixel-traffic-unity/README.md) 및 [자동 검사 설정](docs/UNITY_AUTOMATION.md)을 참조합니다. Unity는 별도 Activity 시제품이며 기존 Android 라이브 배경화면 이전은 진행 중입니다.
+Unity 테스트 APK **0.1.0**의 PC 자동 빌드·Android Lint·기존 서명 검증을 완료했습니다. [Unity 안내](pixel-traffic-unity/README.md)와 [최신 설치·검증 결과](docs/UNITY_AUTOMATION.md)를 참조합니다. 별도 Activity 시제품이며 실제 휴대폰 확인과 Android 라이브 배경화면 연결은 다음 단계입니다.
 
 루팅된 Samsung Galaxy S20+ 관련 앱과 도구의 개발 작업 공간입니다.
 
