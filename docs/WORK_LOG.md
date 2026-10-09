@@ -1,5 +1,13 @@
 # 작업 이력
 
+## 2026-10-09 — Unity PC 자동 검사 연결
+
+사용자 Windows PC에서 수정 실행기의 `Unity Validate completed` 및 GitHub runner 2.337.0의 `Connected to GitHub` / `Listening for Jobs`를 화면으로 확인했습니다. Unity 6000.3.26f1 프로젝트와 공통 PowerShell pipeline을 `pixel-traffic-unity/`에 추가하고 main의 Unity 관련 변경을 자동 Validate에 연결합니다. main 수동 Validate/BuildApk도 지원하며 PR 코드는 자동 실행하지 않습니다. runner 라벨은 self-hosted/Windows/X64/pixel-traffic-unity입니다.
+
+이번 게시 범위는 Unity 프로젝트·workflow·관련 문서입니다. 기존 native Android 앱 변경은 포함하지 않습니다. workflow의 main 제한·Validate 기본값·보고서 허용 목록 및 source 제외 항목을 정적으로 확인했습니다. 실제 첫 GitHub Actions 작업은 main 반영 후 확인해야 합니다. Unity APK·기기 실행·WallpaperService 연결·자동 캡처는 아직 검증하지 않았습니다. 기존 인증서 검증 후 APK를 공유하도록 구성했고 키/암호/원본 로그는 게시하지 않습니다.
+
+[PC 실행과 결과 확인](UNITY_AUTOMATION.md), [전환 과정](UNITY_MIGRATION.md). GitHub source 게시, main 반영, Actions 성공은 각각 실제 결과를 따로 기록합니다.
+
 ## 2026-10-07 — 사용자 공개키 수신·실제 백업 암호화와 복원 명령 준비
 
 - 사용자가 기존 준비 명령의 PowerShell 실행 화면을 보냈고, 이후 정확한 RSAKeyValue XML을 텍스트로 전달했습니다. 스크린샷을 추측 전사하지 않고 정확한 공개키 입력을 사용했습니다. 공개 modulus 256bytes/2048비트·exponent 65537을 확인했습니다. 개인 전송키는 사용자 PC의 DPAPI 파일에 있으며 클라우드에 없습니다.

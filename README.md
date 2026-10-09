@@ -1,5 +1,7 @@
 # S20+
 
+Unity 전환 프로젝트와 PC 자동 검사는 [Unity 안내](pixel-traffic-unity/README.md) 및 [자동 검사 설정](docs/UNITY_AUTOMATION.md)을 참조합니다. Unity는 별도 Activity 시제품이며 기존 Android 라이브 배경화면 이전은 진행 중입니다.
+
 루팅된 Samsung Galaxy S20+ 관련 앱과 도구의 개발 작업 공간입니다.
 
 현재 전달 버전은 **픽셀 트래픽 0.29.0**입니다. 같은 차종·같은 거리의 차량 크기를 차선 공통으로 맞추고, 반대 방향 차량에도 진행 방향의 전조등 비춤을 추가했습니다. 후미등 가시성도 보강했습니다. 작업 재개 시 [최신 상태](docs/STATUS.md)와 [패치 작업 안내](docs/PATCH_GUIDE.md)를 먼저 읽고 관련 파일·검사만 선택합니다. 이전 버전 기록은 아래에 보존합니다.
