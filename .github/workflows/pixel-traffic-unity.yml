@@ -36,7 +36,30 @@ jobs:
       run:
         shell: ${{ vars.PIXEL_TRAFFIC_RUNNER_SHELL || 'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "{0}"' }}
     steps:
+      - name: Preserve a failed build log for redacted diagnosis
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $previousReport = './pixel-traffic-unity/Reports/pipeline-result.json'
+          if (Test-Path -LiteralPath $previousReport) {
+            $previous = Get-Content -LiteralPath $previousReport -Raw | ConvertFrom-Json
+            if ($previous.operation -eq 'BuildApk' -and $previous.result -eq 'FAILED') {
+              $log = './pixel-traffic-unity/Reports/unity-BuildApk.log'
+              if (Test-Path -LiteralPath $log) {
+                Copy-Item -LiteralPath $log -Destination (Join-Path $env:RUNNER_TEMP 'pixel-traffic-prior-build.log')
+              }
+            }
+          }
       - uses: actions/checkout@v4
+      - name: Extract errors from the previous build without sharing the raw log
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $log = Join-Path $env:RUNNER_TEMP 'pixel-traffic-prior-build.log'
+          if (Test-Path -LiteralPath $log) {
+            New-Item -ItemType Directory './pixel-traffic-unity/Reports' -Force | Out-Null
+            try {
+              ./pixel-traffic-unity/tools/collect-build-failure.ps1 -LogPath $log -OutputPath './pixel-traffic-unity/Reports/prior-build-failure.json'
+            } finally { Remove-Item -LiteralPath $log -Force }
+          }
       - name: Require APK tag to point to the current main
         if: startsWith(github.ref, 'refs/tags/unity-apk-')
         run: |
@@ -73,6 +96,7 @@ jobs:
             pixel-traffic-unity/Reports/apk-verification.json
             pixel-traffic-unity/Reports/android-build-result.txt
             pixel-traffic-unity/Reports/android-lint-result.json
+            pixel-traffic-unity/Reports/prior-build-failure.json
           if-no-files-found: warn
           retention-days: 7
       - name: Upload verified Activity APK
