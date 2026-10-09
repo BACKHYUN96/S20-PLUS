@@ -1,5 +1,15 @@
 # 작은 패치 작업 안내
 
+## Unity 차량·왕복 교통 0.3.0 범위와 검사
+
+| 변경 대상 | 관련 파일 | 필수 확인 |
+| --- | --- | --- |
+| metre 차체·경사 유리/지붕·램프·회전 wheels | Editor/VehicleGeometry.cs, TrafficFleet.cs | 실제24대 renderer bounds·접지·unit scale·차선/거리별 모델 크기 일치·SUV/스포츠 높이·mesh/material budget·실제 GPU PNG |
+| 양방향 고정 lane·wrap·pause | Runtime/PrototypeDrive.cs, Editor/TrafficFleet.Validate | 실제 Step 15/30/60/120Hz를 독립 위치 oracle와 대조·600초 같은 lane 모든 bumper gap·wheel角/거리·wrap overshoot/multi-loop·pause/resume·invalid time |
+| 버전·실제 APK | StarterConfig.cs 및 기존 build/pipeline | main compile/scene PASS 후 같은 commit tag, BuildPlayer/Lint errors0/원본 v2 cert/code3/version0.3.0/ARM64/min/target/hash·다운로드 ZIP/실제 APK 대조 |
+
+0.2.0의 도시·조명·shader/mipmap/18portrait rays와 기존120000triangles/2400renderers/48materials 예산을 유지합니다. 합쳐진 mesh/material는 생성/로드 때만 만들고 root scale1·4wheel/차종shared mesh를 유지합니다. 재등장 때 객체 생성/도로폭 맞춤 비균일 scaling을 넣지 않습니다. 실제 GPU 렌더는 Editor 카메라 결과이며 폰 FPS·발열과 구분합니다. 신호/사람/추월/차선 변경·라이브 배경화면 연결은 별도 패치입니다. 관련 input이 바뀌지 않았다면 native 검사/이미 통과한 Unity build를 반복하지 않습니다. docs-only 결과 업데이트는 source 검사를 다시 시작하지 않습니다.
+
 ## Unity 도시·조명 패치의 범위와 검사
 
 | 변경 대상 | 관련 파일 | 필수 확인 |

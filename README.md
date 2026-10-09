@@ -1,6 +1,6 @@
 # S20+
 
-Unity 도시 배경·조명 테스트 APK **0.2.0**의 PC 빌드·Android Lint·기존 서명과 실제 Editor 렌더 검증을 완료했습니다. 0.1.0 실제 폰 실행도 확인했습니다. [최신 설치·검증 결과](docs/UNITY_AUTOMATION.md)와 [Unity 소스 안내](pixel-traffic-unity/README.md)를 참조합니다. 0.2.0 폰 확인과 Android 라이브 배경화면 연결은 다음 단계입니다.
+Unity **0.3.0 차량·양방향 교통 테스트 APK**를 전달했습니다. 3D 기본형4종·4차선24대, 실제 PC 컴파일/10분 교통·장면/Editor 렌더·Android 빌드/Lint·기존 v2 서명 검증을 완료했습니다. [최신 설치·검증 결과](docs/UNITY_AUTOMATION.md)와 [Unity 소스 안내](pixel-traffic-unity/README.md)를 확인합니다. 실제 폰 FPS·발열과 Android 라이브 배경화면 연결은 별도 확인입니다.
 
 루팅된 Samsung Galaxy S20+ 관련 앱과 도구의 개발 작업 공간입니다.
 
