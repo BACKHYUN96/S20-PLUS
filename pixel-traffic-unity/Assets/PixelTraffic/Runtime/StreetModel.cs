@@ -83,14 +83,15 @@ namespace PixelTraffic.UnityPrototype
         private void Path(Person p,Vector2 goal)
         {
             p.goal=goal;p.pathCount=Routes.Find(p.position,goal,p.side,p.path);p.pathCursor=0;
+            if(p.pathCount>1&&SidewalkRoutes.SegmentAllowed(p.position,Routes.Node(p.path[1],p.side)))p.pathCursor=1;
         }
         private void Roam(Person p)
         {
             int row=Mathf.Clamp(Mathf.RoundToInt((p.position.y+28)/.45f)+(Random(p)<.5f?-1:1)*(25+(int)(Random(p)*55)),1,398);
             if(p.cooldown<=0)row=Mathf.Clamp(Mathf.RoundToInt((StarterConfig.CrossingZ-28+Random(p)*64+28)/.45f),1,398);
-            int col=(int)(Random(p)*10),node=row*10+col;
-            for(int trial=0;trial<10&&!Routes.IsOpen(node);trial++)node=row*10+(col+trial+1)%10;
-            if(!Routes.IsOpen(node))node=row*10;
+            int columns=SidewalkRoutes.Columns;int col=(int)(Random(p)*columns),node=row*columns+col;
+            for(int trial=0;trial<columns&&!Routes.IsOpen(node);trial++)node=row*columns+(col+trial+1)%columns;
+            if(!Routes.IsOpen(node))node=row*columns;
             Path(p,Routes.Node(node,p.side));
         }
         private Vector2 SlotPoint(Person p) => new Vector2(p.side*(7.02f+.45f*(p.slot/2)),StarterConfig.CrossingZ+(p.side<0?-1.2f:.4f)+.8f*(p.slot%2));
@@ -207,6 +208,8 @@ namespace PixelTraffic.UnityPrototype
             }
             Vector2 target=p.goal;
             while(p.pathCursor<p.pathCount&&Vector2.Distance(p.position,Routes.Node(p.path[p.pathCursor],p.side))<.12f)p.pathCursor++;
+            for(int look=0;look<3&&p.pathCursor+1<p.pathCount;look++)
+            { if(!SidewalkRoutes.SegmentAllowed(p.position,Routes.Node(p.path[p.pathCursor+1],p.side)))break;p.pathCursor++; }
             if(p.pathCursor<p.pathCount)target=Routes.Node(p.path[p.pathCursor],p.side);
             Move(i,target,false);
             if(Vector2.Distance(p.position,p.goal)<.14f)

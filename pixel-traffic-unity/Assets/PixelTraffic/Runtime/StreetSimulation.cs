@@ -52,7 +52,9 @@ namespace PixelTraffic.UnityPrototype
             for(int i=0;i<walkers.Length;i++)
             {
                 var p=model.People[i];var v=walkers[i];if(v.root.gameObject.activeSelf!=p.active)v.root.gameObject.SetActive(p.active);if(!p.active)continue;
-                float ground=Mathf.Clamp01((Mathf.Abs(p.position.x)-6.4f)/.35f)*.16f;
+                float x=Mathf.Abs(p.position.x);
+                float ground=Mathf.Clamp01((x-6.4f)/.35f)*.16f;
+                ground=Mathf.Lerp(ground,.06f,Mathf.Clamp01((x-10.36f)/.12f));
                 v.root.position=new Vector3(p.position.x,ground,p.position.y);
                 if(p.velocity.sqrMagnitude>.001f)v.root.rotation=Quaternion.LookRotation(new Vector3(p.velocity.x,0,p.velocity.y));
                 float angle=Mathf.Sin(p.walkDistance*8)*20*(p.velocity.sqrMagnitude>.01f?1:0);
