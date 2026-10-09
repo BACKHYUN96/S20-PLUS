@@ -146,9 +146,13 @@ try {
         [xml]$lintReport = Get-Content -LiteralPath $lintXml -Raw
         $lintErrors = @($lintReport.issues.issue | Where-Object { $_.severity -in @('Fatal', 'Error') }).Count
         $lintWarnings = @($lintReport.issues.issue | Where-Object { $_.severity -eq 'Warning' }).Count
-        if ($lintErrors -ne 0) { throw 'Android Lint reported errors; APK will not be published.' }
-        [ordered]@{ result = 'PASS'; errors = $lintErrors; warnings = $lintWarnings; task = ':launcher:lintDebug' } |
+        [ordered]@{ result = $(if ($lintErrors -eq 0) { 'PASS' } else { 'FAILED' }); errors = $lintErrors; warnings = $lintWarnings; task = ':launcher:lintDebug' } |
             ConvertTo-Json | Set-Content -LiteralPath (Join-Path $reports 'android-lint-result.json') -Encoding UTF8
+        if ($lintErrors -ne 0) {
+            & (Join-Path $PSScriptRoot 'collect-build-failure.ps1') -LogPath $lintXml `
+                -OutputPath (Join-Path $reports 'verification-failure.json') -SourceRevision $env:GITHUB_SHA
+            throw 'Android Lint reported errors; APK will not be published.'
+        }
         $buildTools = Get-ChildItem -LiteralPath (Join-Path $sdk 'build-tools') -Directory |
             Where-Object { $_.Name -match '^\d+\.\d+\.\d+$' } |
             Sort-Object { [version]$_.Name } -Descending | Select-Object -First 1

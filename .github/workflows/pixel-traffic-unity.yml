@@ -47,6 +47,10 @@ jobs:
               if (Test-Path -LiteralPath $log) {
                 Copy-Item -LiteralPath $log -Destination (Join-Path $env:RUNNER_TEMP 'pixel-traffic-prior-build.log')
               }
+              $lint = './pixel-traffic-unity/Library/Bee/Android/Prj/IL2CPP/Gradle/launcher/build/reports/lint-results-debug.xml'
+              if (Test-Path -LiteralPath $lint) {
+                Copy-Item -LiteralPath $lint -Destination (Join-Path $env:RUNNER_TEMP 'pixel-traffic-prior-lint.xml')
+              }
             }
           }
       - uses: actions/checkout@v4
@@ -59,6 +63,13 @@ jobs:
             try {
               ./pixel-traffic-unity/tools/collect-build-failure.ps1 -LogPath $log -OutputPath './pixel-traffic-unity/Reports/prior-build-failure.json'
             } finally { Remove-Item -LiteralPath $log -Force }
+          }
+          $lint = Join-Path $env:RUNNER_TEMP 'pixel-traffic-prior-lint.xml'
+          if (Test-Path -LiteralPath $lint) {
+            New-Item -ItemType Directory './pixel-traffic-unity/Reports' -Force | Out-Null
+            try {
+              ./pixel-traffic-unity/tools/collect-build-failure.ps1 -LogPath $lint -OutputPath './pixel-traffic-unity/Reports/prior-lint-failure.json'
+            } finally { Remove-Item -LiteralPath $lint -Force }
           }
       - name: Require APK tag to point to the current main
         if: startsWith(github.ref, 'refs/tags/unity-apk-')
@@ -98,6 +109,7 @@ jobs:
             pixel-traffic-unity/Reports/android-lint-result.json
             pixel-traffic-unity/Reports/prior-build-failure.json
             pixel-traffic-unity/Reports/verification-failure.json
+            pixel-traffic-unity/Reports/prior-lint-failure.json
           if-no-files-found: warn
           retention-days: 7
       - name: Upload verified Activity APK
