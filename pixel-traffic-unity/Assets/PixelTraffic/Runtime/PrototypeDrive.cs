@@ -3,49 +3,79 @@ using UnityEngine;
 
 namespace PixelTraffic.UnityPrototype
 {
-    // One straight-lane visual probe, not a port of the production traffic simulation.
+    // Fixed-lane visual traffic. No overtaking or crossings until signals/people are ported.
     public sealed class PrototypeDrive : MonoBehaviour
     {
         [SerializeField] private Transform[] wheels = Array.Empty<Transform>();
-        private bool paused;
-        private bool focused = true;
-        private float laneX;
-        private const float WheelRadius = .32f;
+        [SerializeField] private int lane;
+        [SerializeField] private float speed = StarterConfig.SpeedMetresPerSecond;
+        [SerializeField] private float wheelRadius = .32f;
+        [SerializeField] private string model;
+        private bool paused, focused = true, initialized;
+        private double routePosition;
 
         public Transform[] Wheels { get => wheels; set => wheels = value; }
+        public int Lane => lane;
+        public int Direction => lane < 2 ? -1 : 1;
+        public float Speed => speed;
+        public float WheelRadius => wheelRadius;
+        public string Model => model;
+        public float LaneX => (lane - 1.5f) * StarterConfig.LaneWidth;
+
+        public void Configure(int laneIndex, float metresPerSecond, float radius, string modelName)
+        {
+            if (laneIndex < 0 || laneIndex > 3 || metresPerSecond <= 0 || radius <= 0)
+                throw new ArgumentOutOfRangeException(nameof(laneIndex));
+            lane = laneIndex; speed = metresPerSecond; wheelRadius = radius; model = modelName;
+            ResetPosition(transform.position.z);
+        }
 
         private void Awake()
         {
-            laneX = transform.position.x;
             Application.targetFrameRate = StarterConfig.TargetFps;
+            ResetPosition(transform.position.z);
         }
 
-        private void Update()
+        private void Update() => Step(Time.deltaTime);
+
+        public void ResetPosition(float z)
+        {
+            routePosition = z;
+            initialized = true;
+            transform.position = new Vector3(LaneX, 0, z);
+            transform.rotation = Quaternion.Euler(0, Direction < 0 ? 180 : 0, 0);
+        }
+
+        // Used by Update and scene validation: pause does not accumulate catch-up time.
+        public void Step(float elapsed)
         {
             if (paused || (!focused && !Application.isEditor)) return;
-            float elapsed = Time.deltaTime;
-            Vector3 position = transform.position;
-            position.z = Advance(position.z, elapsed);
-            position.x = laneX;
-            transform.position = position;
-            float degrees = StarterConfig.SpeedMetresPerSecond * elapsed / WheelRadius * Mathf.Rad2Deg;
+            if (!initialized) ResetPosition(transform.position.z);
+            routePosition = Advance(routePosition, elapsed, Direction, speed);
+            transform.position = new Vector3(LaneX, 0, (float)routePosition);
+            float degrees = speed * elapsed / wheelRadius * Mathf.Rad2Deg;
             foreach (Transform wheel in wheels)
                 if (wheel != null) wheel.Rotate(Vector3.right, degrees, Space.Self);
         }
 
         public static float Advance(float position, float elapsed)
+            => (float)Advance(position, elapsed, -1, StarterConfig.SpeedMetresPerSecond);
+
+        public static double Advance(double position, double elapsed, int direction, double metresPerSecond)
         {
-            if (float.IsNaN(position) || float.IsInfinity(position))
-                throw new ArgumentOutOfRangeException(nameof(position));
-            if (float.IsNaN(elapsed) || float.IsInfinity(elapsed) || elapsed < 0)
+            if (double.IsNaN(position) || double.IsInfinity(position) || double.IsNaN(elapsed) ||
+                double.IsInfinity(elapsed) || elapsed < 0 || metresPerSecond <= 0 ||
+                double.IsNaN(metresPerSecond) || double.IsInfinity(metresPerSecond) || Math.Abs(direction) != 1)
                 throw new ArgumentOutOfRangeException(nameof(elapsed));
             if (elapsed == 0) return position;
-            float span = StarterConfig.RouteEnd - StarterConfig.RouteStart;
-            return StarterConfig.RouteStart + Mathf.Repeat(
-                position - StarterConfig.RouteStart - StarterConfig.SpeedMetresPerSecond * elapsed, span);
+            double span = StarterConfig.RouteEnd - StarterConfig.RouteStart;
+            double phase = (position - StarterConfig.RouteStart + direction * metresPerSecond * elapsed) % span;
+            if (phase < 0) phase += span;
+            return StarterConfig.RouteStart + phase;
         }
 
-        private void OnApplicationPause(bool value) => paused = value;
+        public void SetPaused(bool value) => paused = value;
+        private void OnApplicationPause(bool value) => SetPaused(value);
         private void OnApplicationFocus(bool value) => focused = value;
     }
 }

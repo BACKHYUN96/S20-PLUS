@@ -14,7 +14,7 @@ namespace PixelTraffic.UnityPrototype.Editor
     // Generated geometry stays in its own scene; existing scenes are never rebuilt in place.
     public static class StarterScene
     {
-        internal const string Generated = "Assets/PixelTraffic/Generated/City020";
+        internal const string Generated = "Assets/PixelTraffic/Generated/Traffic030";
         private const string PipelinePath = Generated + "/MobileURP.asset";
         private static readonly Dictionary<string, Material> materials = new Dictionary<string, Material>();
 
@@ -26,7 +26,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             if (File.Exists(StarterConfig.ScenePath))
             {
                 EditorSceneManager.OpenScene(StarterConfig.ScenePath);
-                Debug.Log("Existing FirstRoad opened; geometry and user edits preserved.");
+                Debug.Log("Existing traffic scene opened; geometry and user edits preserved.");
                 return;
             }
             CreateScene();
@@ -90,11 +90,11 @@ namespace PixelTraffic.UnityPrototype.Editor
             Transform scenery = new GameObject("Scenery").transform;
             CityEnvironment.Create(road, scenery);
 
-            CreateVehicle();
+            TrafficFleet.Create();
             EditorSceneManager.SaveScene(scene, StarterConfig.ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(StarterConfig.ScenePath, true) };
             AssetDatabase.SaveAssets();
-            Debug.Log("FirstRoad saved. Set Game view to 9:16, then press Play. This is a starter scene, not the final city or live wallpaper.");
+            Debug.Log("Traffic scene saved. Set Game view to 9:20, then press Play. This is an Activity prototype; live wallpaper integration is pending.");
         }
 
         private static void ConfigurePipeline()
@@ -192,45 +192,6 @@ namespace PixelTraffic.UnityPrototype.Editor
         internal static GameObject Box(string name, Transform parent, Vector3 position, Vector3 scale, Material material)
             => Part(name, parent, PrimitiveType.Cube, position, scale, material);
 
-        private static void CreateVehicle()
-        {
-            Transform root = new GameObject("Prototype Vehicle").transform;
-            root.position = new Vector3(StarterConfig.LaneCenter, 0, 24);
-            root.rotation = Quaternion.Euler(0, 180, 0);
-            Material paint = Surface("Vehicle Blue", new Color(.07f, .24f, .60f), .45f, .55f);
-            Material glass = Surface("Vehicle Glass", new Color(.06f, .14f, .21f), .3f, .8f);
-            Material trim = Surface("Vehicle Trim", new Color(.045f, .05f, .06f));
-            Material chrome = Surface("Vehicle Metal", new Color(.63f, .67f, .70f), .7f, .6f);
-            Box("Lower Body", root, new Vector3(0, .55f, 0), new Vector3(1.80f, .40f, 4.20f), paint);
-            Box("Hood", root, new Vector3(0, .83f, 1.22f), new Vector3(1.72f, .24f, 1.43f), paint);
-            Box("Trunk", root, new Vector3(0, .83f, -1.62f), new Vector3(1.72f, .24f, .75f), paint);
-            Box("Cabin", root, new Vector3(0, 1.14f, -.32f), new Vector3(1.48f, .60f, 1.70f), glass);
-            Box("Roof", root, new Vector3(0, 1.49f, -.35f), new Vector3(1.51f, .12f, 1.40f), paint);
-            Box("Front Bumper", root, new Vector3(0, .46f, 2.11f), new Vector3(1.68f, .18f, .08f), trim);
-            Box("Grille", root, new Vector3(0, .71f, 2.12f), new Vector3(.70f, .20f, .055f), trim);
-            Box("Rear Bumper", root, new Vector3(0, .46f, -2.11f), new Vector3(1.68f, .18f, .08f), trim);
-            var wheels = new List<Transform>();
-            foreach (float side in new[] { -1f, 1f })
-            {
-                Box("Mirror", root, new Vector3(side * .97f, 1.08f, .52f), new Vector3(.19f, .13f, .30f), paint);
-                Box("Headlamp", root, new Vector3(side * .61f, .80f, 2.12f), new Vector3(.34f, .13f, .06f), Surface("Headlamp", new Color(.97f, .94f, .79f)));
-                Box("Tail Lamp", root, new Vector3(side * .63f, .80f, -2.12f), new Vector3(.34f, .13f, .06f), Surface("Tail Lamp", new Color(.66f, .04f, .025f)));
-                Box("B Pillar", root, new Vector3(side * .75f, 1.19f, -.35f), new Vector3(.06f, .55f, .10f), trim);
-                foreach (float z in new[] { -1.32f, 1.32f })
-                {
-                    Transform wheel = new GameObject("Wheel").transform;
-                    wheel.SetParent(root, false);
-                    wheel.localPosition = new Vector3(side * .87f, .32f, z);
-                    var tyre = Part("Tyre", wheel, PrimitiveType.Cylinder, Vector3.zero, new Vector3(.64f, .105f, .64f), trim);
-                    tyre.transform.localRotation = Quaternion.Euler(0, 0, 90);
-                    var rim = Part("Rim", wheel, PrimitiveType.Cylinder, new Vector3(side * .11f, 0, 0), new Vector3(.40f, .015f, .40f), chrome);
-                    rim.transform.localRotation = Quaternion.Euler(0, 0, 90);
-                    wheels.Add(wheel);
-                }
-            }
-            root.gameObject.AddComponent<PrototypeDrive>().Wheels = wheels.ToArray();
-        }
-
         [MenuItem("Pixel Traffic/2. Validate First Scene")]
         public static void Validate()
         {
@@ -243,55 +204,19 @@ namespace PixelTraffic.UnityPrototype.Editor
             Require(pipeline != null, "URP asset not assigned.");
             Require(pipeline.scriptableRenderer != null, "URP renderer not available.");
             Require(PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android) == StarterConfig.ExperimentAppId, "Experimental app ID changed.");
-            var vehicles = UnityEngine.Object.FindObjectsByType<PrototypeDrive>(FindObjectsSortMode.None);
-            Require(vehicles.Length == 1, "Exactly one moving vehicle is required for this probe.");
-            PrototypeDrive car = vehicles[0];
-            Require(car.Wheels.Length == 4, "Four wheel pivots missing.");
-            Require(Vector3.Dot(car.transform.forward, Vector3.back) > .999f, "Vehicle axis is not straight along its lane.");
-            Require(Mathf.Abs(car.transform.position.x - StarterConfig.LaneCenter) < .001f, "Vehicle lane changed.");
-            var renderers = car.GetComponentsInChildren<Renderer>();
-            Require(renderers.Length > 0, "Vehicle has no geometry.");
-            Bounds bounds = renderers[0].bounds;
-            foreach (Renderer renderer in renderers)
-            {
-                bounds.Encapsulate(renderer.bounds);
-                Require(renderer.sharedMaterial != null && renderer.sharedMaterial.shader.name == "Universal Render Pipeline/Lit", "Vehicle material missing or outside URP.");
-            }
-            float left = StarterConfig.LaneCenter - StarterConfig.LaneWidth / 2;
-            float right = StarterConfig.LaneCenter + StarterConfig.LaneWidth / 2;
-            Require(bounds.min.x > left && bounds.max.x < right, "Whole vehicle extends outside its lane.");
-            Require(bounds.min.y >= -.01f && bounds.size.y > 1, "Vehicle ground/height incorrect.");
+            TrafficFleet.Report traffic = TrafficFleet.Validate();
             Require(Camera.main != null && Camera.main.farClipPlane > 120, "Portrait camera missing.");
             CityEnvironment.Report environment = CityEnvironment.Validate(Camera.main, pipeline);
             Require(PlayerSettings.bundleVersion == StarterConfig.VersionName &&
                 PlayerSettings.Android.bundleVersionCode == StarterConfig.VersionCode, "APK version differs from source configuration.");
-            CheckMotion();
             Directory.CreateDirectory("Reports");
             File.WriteAllText("Reports/scene-validation.json", JsonUtility.ToJson(new ValidationReport {
                 editor = Application.unityVersion, applicationId = StarterConfig.ExperimentAppId,
-                utc = DateTime.UtcNow.ToString("O"), vehicleWidth = bounds.size.x, vehicleHeight = bounds.size.y,
-                vehicleLength = bounds.size.z, wheelPivots = car.Wheels.Length,
+                utc = DateTime.UtcNow.ToString("O"), traffic = traffic,
                 version = StarterConfig.VersionName, environment = environment,
-                result = "PASS: real scene geometry, material, lane bounds and straight motion; not an Android/device test"
+                result = "PASS: actual city and two-way fleet geometry, material, lane bounds, motion, wrap, wheels and lifecycle; not an Android/device test"
             }, true));
-            Debug.Log("PASS: first scene geometry and motion. Reports/scene-validation.json");
-        }
-
-        private static void CheckMotion()
-        {
-            Require(PrototypeDrive.Advance(20, 0) == 20, "Paused time moves vehicle.");
-            Require(Mathf.Abs(PrototypeDrive.Advance(20, 1) - 14) < .0001f, "Speed not six metres per second.");
-            Require(Mathf.Abs(PrototypeDrive.Advance(StarterConfig.RouteStart, 1) - 84) < .0001f, "Wrap loses overshoot.");
-            Require(Mathf.Abs(PrototypeDrive.Advance(20, 34) - 20) < .0001f, "Multiple loops lose phase.");
-            foreach (int fps in new[] { 15, 30, 60, 120 })
-            {
-                float position = 24;
-                for (int i = 0; i < fps * 20; i++) position = PrototypeDrive.Advance(position, 1f / fps);
-                Require(Mathf.Abs(position - PrototypeDrive.Advance(24, 20)) < .02f, "Frame rate changes route phase.");
-            }
-            bool rejected = false;
-            try { PrototypeDrive.Advance(24, float.NaN); } catch (ArgumentOutOfRangeException) { rejected = true; }
-            Require(rejected, "Invalid time accepted.");
+            Debug.Log("PASS: city and two-way traffic geometry and motion. Reports/scene-validation.json");
         }
 
         private static void Require(bool condition, string message)
@@ -304,8 +229,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         {
             public string editor, applicationId, utc, result, version;
             public CityEnvironment.Report environment;
-            public float vehicleWidth, vehicleHeight, vehicleLength;
-            public int wheelPivots;
+            public TrafficFleet.Report traffic;
         }
     }
 }

@@ -3,16 +3,17 @@ namespace PixelTraffic.UnityPrototype
     public static class StarterConfig
     {
         public const string EditorVersion = "6000.3.26f1";
-        public const string VersionName = "0.2.0";
-        public const int VersionCode = 2;
-        public const string ScenePath = "Assets/PixelTraffic/Scenes/City-0.2.0.unity";
+        public const string VersionName = "0.3.0";
+        public const int VersionCode = 3;
+        public const string ScenePath = "Assets/PixelTraffic/Scenes/Traffic-0.3.0.unity";
         public const string ExperimentAppId = "com.s20plus.pixeltraffic.unityprototype";
         public const string ReleaseAppId = "com.s20plus.pixeltraffic";
         public const float LaneWidth = 3.2f;
         public const float RoadWidth = LaneWidth * 4;
         public const float LaneCenter = -LaneWidth * 1.5f;
-        public const float RouteStart = -12;
-        public const float RouteEnd = 90;
+        public const float RouteStart = -55;
+        public const float RouteEnd = 255;
+        public const int VehiclesPerLane = 6;
         public const float SpeedMetresPerSecond = 6;
         public const int TargetFps = 30;
     }
