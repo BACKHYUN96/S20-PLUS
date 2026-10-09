@@ -56,7 +56,11 @@ if ($Mode -ne 'Open') {
         } else { $unityProcess.WaitForExit() }
         $unityExitCode = $unityProcess.ExitCode
     } finally { $unityProcess.Dispose() }
-    if ($unityExitCode -ne 0) { throw "Unity $Mode failed (exit $unityExitCode). See $logPath" }
+    if ($unityExitCode -ne 0) {
+        & (Join-Path $PSScriptRoot 'collect-build-failure.ps1') -LogPath $logPath `
+            -OutputPath (Join-Path (Join-Path $projectRoot 'Reports') 'unity-failure.json') -SourceRevision $env:GITHUB_SHA
+        throw "Unity $Mode failed (exit $unityExitCode). See $logPath"
+    }
     Write-Host "Unity $Mode completed. Log: $logPath"
 } else {
     & $UnityExe @unityArguments

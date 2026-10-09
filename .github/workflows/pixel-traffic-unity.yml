@@ -42,8 +42,8 @@ jobs:
           $previousReport = './pixel-traffic-unity/Reports/pipeline-result.json'
           if (Test-Path -LiteralPath $previousReport) {
             $previous = Get-Content -LiteralPath $previousReport -Raw | ConvertFrom-Json
-            if ($previous.operation -eq 'BuildApk' -and $previous.result -eq 'FAILED') {
-              $log = './pixel-traffic-unity/Reports/unity-BuildApk.log'
+            if ($previous.operation -in @('BuildApk', 'Validate') -and $previous.result -eq 'FAILED') {
+              $log = "./pixel-traffic-unity/Reports/unity-$($previous.operation).log"
               if (Test-Path -LiteralPath $log) {
                 Copy-Item -LiteralPath $log -Destination (Join-Path $env:RUNNER_TEMP 'pixel-traffic-prior-build.log')
               }
@@ -128,6 +128,7 @@ jobs:
             pixel-traffic-unity/Reports/prior-lint-failure.json
             pixel-traffic-unity/Reports/preview-result.json
             pixel-traffic-unity/Reports/preview-failure.json
+            pixel-traffic-unity/Reports/unity-failure.json
             pixel-traffic-unity/Reports/city-preview-*.png
           if-no-files-found: warn
           retention-days: 7

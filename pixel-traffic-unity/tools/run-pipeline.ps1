@@ -46,7 +46,7 @@ function Invoke-AndroidTool {
     return $toolOutput
 }
 try {
-    foreach ($reportName in @('scene-validation.json', 'apk-verification.json', 'android-build-result.txt', 'android-lint-result.json', 'verification-failure.json', 'android-lint.log')) {
+    foreach ($reportName in @('scene-validation.json', 'apk-verification.json', 'android-build-result.txt', 'android-lint-result.json', 'verification-failure.json', 'android-lint.log', 'unity-failure.json')) {
         $oldReport = Join-Path $reports $reportName
         if (Test-Path -LiteralPath $oldReport) { Remove-Item -LiteralPath $oldReport }
     }

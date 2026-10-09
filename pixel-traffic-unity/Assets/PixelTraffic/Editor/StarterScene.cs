@@ -123,10 +123,10 @@ namespace PixelTraffic.UnityPrototype.Editor
             var settings = new SerializedObject(pipeline);
             settings.FindProperty("m_MainLightShadowsSupported").boolValue = true;
             settings.FindProperty("m_SoftShadowsSupported").boolValue = true;
+            settings.FindProperty("m_SoftShadowQuality").intValue = (int)SoftShadowQuality.Low;
             settings.ApplyModifiedPropertiesWithoutUndo();
             pipeline.shadowDepthBias = .45f;
             pipeline.shadowNormalBias = .35f;
-            pipeline.softShadowQuality = SoftShadowQuality.Low;
             EditorUtility.SetDirty(pipeline);
             GraphicsSettings.defaultRenderPipeline = pipeline;
             int previousQuality = QualitySettings.GetQualityLevel();
