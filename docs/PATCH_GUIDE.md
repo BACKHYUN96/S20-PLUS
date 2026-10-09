@@ -1,5 +1,16 @@
 # 작은 패치 작업 안내
 
+## Unity 신호·인도 보행 0.4.0 범위와 검사
+
+| 변경 대상 | 관련 파일 | 필수 확인 |
+| --- | --- | --- |
+| 공통30Hz 신호·차량 정차/재출발 | Runtime/StreetModel.cs, StreetSimulation.cs, PrototypeDrive.cs | 실제 production model 신호 복귀·보행 신호 시 road 비움·1.8m bumper gap·15/30/60/120Hz·pause |
+| 인도/상점 앞 통로·화단/가로등 회피·자연스러운 횡단·인원 조절 | Runtime/SidewalkRoutes.cs, StreetModel.cs, StreetSimulation.cs | 4/32/100명200/600/600초·모든 사람 진행/횡단·연속0.40m 발 분리·실제 화단 bounds·최대12명 대기·감소 시 횡단자 안전 복귀 |
+| 공유3D 사람·신호·실제 미리보기 | Editor/StreetScene.cs, StreetChecks.cs, CityPreview.cs, CityEnvironment.cs | 실제100rig·4limbs·공유mesh/palette·기존120000triangle/2400renderer/48material 예산·30초 model pose 실제 GPU PNG |
+| 버전·APK | StarterConfig.cs 및 기존 build/pipeline | main 검사 후 같은 source tag·BuildPlayer/Lint errors0·기존v2 cert·0.4.0/code4/ARM64/min/target/hash·다운로드 실제APK 대조 |
+
+검사는 기존0.3 교통 geometry/자유 주행 및0.2 도시 조건과 새 production model을 함께 확인합니다. 기본32명, 버튼4~100명, 대기 중에는 다른 보행을 계속합니다. 장애물에 갇힌 사람을 순간 이동하거나 테스트 인원을 숨겨 통과시키지 않습니다. 실제 폰 FPS/발열·날씨·라이브 배경화면 연결·설정 영구 저장은 후속이며 Editor 결과와 구분합니다. 결과 문서만 변경하면 같은 source 검사를 반복하지 않습니다.
+
 ## Unity 차량·왕복 교통 0.3.0 범위와 검사
 
 | 변경 대상 | 관련 파일 | 필수 확인 |

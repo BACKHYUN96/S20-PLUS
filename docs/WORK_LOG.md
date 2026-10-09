@@ -1,5 +1,35 @@
 # 작업 이력
 
+## 2026-10-10 — Unity 0.4.0 신호·인도 보행·횡단 APK / 실제 Editor 렌더 전달 완료 (KST)
+
+사용자가0.3.0 적용 성공 뒤 다음 단계와 계속 진행을 승인하여 신호·차량 정차/재출발·인도 산책·횡단·군중 회피·폰4~100명 조절을 구현했다. 최종 source480020476c6e2984d15dc8f20de5ef5d77f04501/tag unity-apk-0.4.0-build1. [Windows main37960722841](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/37960722841)/job113922576563와 [APK37961277473](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/37961277473)/job113924438275가 success이다. 앞선 실패는 아래 이력에 유지하며 최종 통과로 덮어쓰지 않는다.
+
+범위: Runtime/StarterConfig·PrototypeDrive·신규StreetModel/SidewalkRoutes/StreetSimulation(.meta), Editor/StarterScene·CityEnvironment·CityPreview·신규StreetScene/StreetChecks(.meta), Unity README와 관련 기록. 신규Crossing-0.4.0.unity/Generated/Crossing040은 이전 장면을 보존한다. 24차량/4차선·실제metre 크기·원본geometry·30FPS 목표와 원본 서명을 유지했다. 같은30Hz 시계가 신호/차량/사람을 관리하며 앞차 간격·황색에서 이미 진입 중인 차량·도로 비움·보행 신규 입장·횡단 완료 후 차량 재시작을 처리한다. wheels는 실제 이동거리만큼 회전하고 pause/focus 숨김 동안 시간을 따라잡지 않는다.
+
+기본32명, 폰 오른쪽 People의 +/-4 버튼으로4~100명을 조절한다. 인원 감소 시 횡단 중 사람은 인도 도착 뒤 빠진다. 설정은 앱 재실행 시32명으로 돌아오며 영구 저장은 후속이다. 100개 사람 rig를 풀로 생성하고8개 공유 mesh/단일 palette material·머리/옷/피부색·높이 변형·4limb 보행을 사용한다. 재생 중 자산/사람을 매번 생성하지 않는다. 실제 인도와 비어 있는 상점 앞 포장 통로를 걷고 화단·가로등·신호 기둥·건물 경계를 피한다. 발 분리 목표0.40m/연속 이동으로 몸을 겹치거나 순간 이동하지 않는다. 최대12명만 횡단 자리를 예약하며 만석이면 산책 후 재시도한다. 횡단 의도와 재시도 시간을 분리하고18m 이내 접근자·첫 횡단 우선·이미 건넌 사람의 바깥 산책으로 정체를 분산한다. 좁은 외측 통로는 오른쪽 두 흐름으로 비켜 지나가며 회피 후 경유점이 막히면 최대1초 주기로 현재 발에서 안전한 경로를 재연결한다. 고정 장애물 edge는 최초에 계산해 BFS가 공유한다.
+
+최종 실제 production model4/32/100명200/600/600초 검사: 모든 사람 후반 이동·최소1회 횡단, 총223횡단/33신호주기, minimumFootDistance0.3999990523m/minimumBumperGap1.7999997139m, 신규 입장 신호·횡단 band·보행 신호 차량 비움·최대12대기·감소 후4명 안전 복귀 PASS. 실제 runtime controller15/30/60/120Hz90초 비교·pause도PASS. 실제100개 rig/화단 bounds와 기존 도시18portrait rays·420m road·32trees/24buildings/20lamps/26skyline·차량24대 geometry/600초 자유 주행 조건도PASS. 최대100명115768triangles/2207renderers/43materials, 기본32명106792/2139/43로 기존120000/2400/48 예산 안이다. 이는 실제 폰 FPS·발열 측정이 아니다.
+
+개발 과정에서 PC가 검출한 MaterialPropertyBlock의 MonoBehaviour field 초기화 오류, 정지선 부동소수 modulo 오류, 좁은 통로 경유점/회피 반복, 앞사람 뒤에서 이른 Cross 전환, 우회 후 zebra band 복귀 누락, 만석 분산이 먼 사람의 횡단 의도를 취소하는 문제를 수정했다. 반복 횡단자와 처음 접근자의 흐름 및 회피 후 실제 위치에서의 경로 재연결도 보완했다. 32명300초 검사에서 마지막 사람의 늦은 도착을 확인해600초로 확대했으며 각 사람의 실제 횡단/이동·안전 조건을 유지했다. 100명600초와4명200초는 유지했다. 전체 모의 통과 뒤 실제 화단 검사에서 root yaw=index*47이 bed/soil에도 상속되어 보행 경계와 달랐음을 검출했다. Bed/Soil만 역회전하여 세계 인도 방향에 맞췄고 나무/수관의 다양한 방향·크기/위치/mesh 수를 유지했다. 이전 도시 geometry 무변경 설명은 이 방향 보정에 대해 정정한다. 각 실패의 source/run/진단과 수정은 아래 WORK_LOG 이력에 기록했고 관련 입력을 바꾼 경우만 PC 검사를 다시 수행했다. 검사 인원을 숨기거나 순간 이동해 통과시키지 않았다.
+
+PC BuildPlayer Succeeded/Errors0/Warnings0, BuildApk2026-10-10 01:44:41~01:49:22 KST PASS. Android :launcher:lintDebug Errors0/Warnings8/PASS. 실제 내려받은 APK version0.4.0/code4/appID com.s20plus.pixeltraffic.unityprototype/min29/target36/ARM64·v2 원본 인증서 SHA256a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6가 일치한다. APK29494030bytes/SHA256ddc3bf374caa08586e62aa68e3d8a4cb009d90e397a98218f2cc1abe59423548. APK artifact11631985656 ZIP28536399bytes/SHA25656eb805d7e009f6cd038bb3546a7d866d60fd159a7dfb71840e878f8c661fa15, report artifact11631019956 ZIP1197847bytes/SHA2568f156f5d602ae0dd2fe201de6e8ad795cf32fae101dd983f0f97aa1230596aa6의 GitHub digest/CRC와 APK apksigner/aapt/CRC/il2cpp/launchableActivity 대조PASS. 기존 PC DPAPI 서명을 재사용했고 키·암호·원본 로그는 공유하지 않았다.
+
+같은 source의 실제 warmed Direct3D11 Editor camera540×1200 PNG를 열어 정차 차량/신호/횡단 중 사람/인도 보행/화단을 확인했다. 최종 PNG SHA256c23fd5a2f95c176d9d3660ebc23aea0111ae0080602cf9d051c866e35c6b1f3a. production model30초 pose를 캡처했고 AI 시안/폰 screenshot/주행 FPS로 표기하지 않는다. People OnGUI 패널은 카메라 PNG에 포함되지 않으며 실제 앱에서 표시한다.
+
+APK: /workspace/artifacts/pixel-traffic-unity-prototype-0.4.0.apk. 실제 Editor PNG: /workspace/artifacts/city-preview-0.4.0.png. 검증: /workspace/artifacts/unity-prototype-0.4.0-download-verification.json, PC 보고서: /workspace/artifacts/unity-prototype-0.4.0-reports/, source/build/capture37개 입력 manifest: /workspace/artifacts/unity-0.4.0-source-manifest.json. 다음 환경에서 로컬 존재를 가정하지 않고 해당 run artifacts를 확보한다(보관7일). 기존 Unity prototype0.3.0을 업데이트하며 native0.48 앱과 공존한다. 아래 명령은 사용자 최신 집 PC 폴더 기준이며 사용자 PC에서 실행한다.
+
+```powershell
+$unityAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $unityAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.4.0.apk"
+if ($LASTEXITCODE -eq 0) {
+    & $unityAdb shell am start -W -n "com.s20plus.pixeltraffic.unityprototype/com.unity3d.player.UnityPlayerActivity"
+}
+```
+
+미검증/후속:0.4.0 실제 S20+/S26 Ultra의 외형·4/32/100명 FPS/발열·장시간·숨김/복귀, WallpaperService 연결, 날씨·기존 전체 차종 이전·설정 영구 저장. 사용자0.3.0 적용 성공을0.4.0 기기 검증으로 간주하지 않는다. 현재 Activity 시제품이며 목표 시안 완성으로 표기하지 않는다. 다음은 실제 두 기기의 기본32명/최대100명 성능을 확인하고 Android 라이브 배경화면 연결 또는 보행자/거리 외형 보완으로 이어간다.
+
+클라우드에 Unity를 새로 설치하지 않고 기존 PC runner/SDK/JDK/캐시/자산/키 설정을 재사용했다. 기본 shell의 proxy 접근 실패는 허용된 추가 network 실행으로 처리했다. 누적 dirty native 파일·실제 index를 보존하고 원격main 기반 임시 index로 Unity 범위/문서만 게시했다. APK/GPU 검증 뒤 변경은 결과Markdown8개뿐이며 docs-only commit의 [skip ci]로 동일 source 검사를 반복하지 않는다. 소스 검증·APK tag·최종 문서 게시 상태를 별도로 확인한다.
+
 ## 2026-10-10 — Unity 0.4.0 전체 보행 모의 통과 / 실제 화단 yaw 불일치 수정 (진행 중, KST)
 
 - Windows37960186067/source92e99ccbb702447fb344f3d3fa5654d7c8c9f9b1에서4/32/100명200/600/600초의 모든 사람 진행/횡단·신호/차량 안전 및 실제 controller15/30/60/120Hz/pause 검사를 지나 실제100rig/화단 대조에서 Actual tree bed differs from foot navigation으로 실패했다. 전체 Validate가 통과한 것은 아니다.

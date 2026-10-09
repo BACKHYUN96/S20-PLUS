@@ -1,14 +1,14 @@
-# Pixel Traffic Unity — 3D 차량·양방향 교통 0.3.0
+# Pixel Traffic Unity — 신호·인도 보행·횡단 0.4.0
 
-## 진행 패치 — 신호·인도 보행·횡단 0.4.0
+## 현재 패치 — 신호·인도 보행·횡단 0.4.0 (2026-10-10 KST)
 
-차량 신호/stop line·앞차 간격과 인도 보행자를 연결합니다. 기본32명/폰 People +/-4로4~100명, 인도 무작위 목적지/화단·가로등 회피·최대12대기자리·양방향 zebra band를 사용합니다. 차량/보행이 비운 뒤 다음 흐름을 시작하고 인원 감소 시 횡단 중인 사람은 인도에 도착한 뒤 빠집니다. Crossing-0.4.0/Generated/Crossing040은 이전 장면을 보존하며 동일prototype appID/기존 서명으로 업데이트합니다. 현재 PC compile/production model/실제 scene·GPU/Android/Lint/서명 검사를 진행합니다. 최신 결과와 PowerShell은 [STATUS](../docs/STATUS.md)를 확인합니다. 실제 폰 FPS·발열·WallpapaperService/기존 날씨·영구 설정 저장은 후속입니다.
+차량 신호/stop line·앞차 간격과 인도 보행자를 연결합니다. 기본32명/폰 People +/-4로4~100명, 인도 무작위 목적지/화단·가로등 회피·최대12대기자리·양방향 zebra band를 사용합니다. 정적인 화단 edge를 공유하고 좁은 통로 양방향 비킴·회피 후 경로 재연결·첫 횡단 우선/만석 후 산책 재시도를 사용합니다. 실제 화단/soil은 인도 방향으로 맞춥니다. 차량/보행이 비운 뒤 다음 흐름을 시작하고 인원 감소 시 횡단 중인 사람은 인도에 도착한 뒤 빠집니다. Crossing-0.4.0/Generated/Crossing040은 이전 장면을 보존하며 동일prototype appID/기존 서명으로 업데이트합니다. PC compile·4/32/100명200/600/600초 production model·실제100rig/화단·GPU·Android BuildPlayer/Lint(errors0/warnings8)·다운로드 실제APK/원본v2서명 검증을 완료했습니다. 모든 사람이 최소1회 횡단했고223횡단/33신호주기를 확인했습니다. 실제 폰 결과는 아직 별도입니다. 최신 결과와 PowerShell은 [STATUS](../docs/STATUS.md)를 확인합니다. 실제 폰 FPS·발열·WallpaperService/기존 날씨·영구 설정 저장은 후속입니다.
 
-## 현재 패치 — 3D 차량·양방향 교통 0.3.0 (2026-10-09)
+## 이전 패치 — 3D 차량·양방향 교통 0.3.0 (2026-10-09)
 
 세단·스포츠 쿠페·SUV·택시의 경사진 차체/유리·앞뒤 램프·회전하는4바퀴를 실제 metre 단위로 생성합니다. 차선별 root scale1로 폭/높이를 압축하지 않습니다. 4차선×6대=24대, 왼쪽은 다가오고 오른쪽은 멀어지며 고정 lane별 속도/순환간격을 유지합니다. 차체 mesh는4모델이 재사용하고 재등장 때 새 객체를 생성하지 않습니다.
 
-Traffic-0.3.0.unity/Generated/Traffic030 장면·자산은 이전 버전을 보존합니다. prototype appID/기존 서명으로0.2.0을 업데이트하며 native 앱0.48.0과 공존합니다. PC compile/scene·10분 교통 검사·실제 Editor 렌더·BuildApk/Lint(errors0/warnings8)·기존v2서명 검증을 완료했습니다. 최신 결과와 설치 명령은 [STATUS](../docs/STATUS.md), [자동 빌드 안내](../docs/UNITY_AUTOMATION.md)를 확인합니다. 실제 폰 FPS/발열·신호/군중/날씨·라이브 배경화면 연결은 별도 후속입니다.
+Traffic-0.3.0.unity/Generated/Traffic030 장면·자산은 이전 버전을 보존합니다. prototype appID/기존 서명으로0.2.0을 업데이트하며 native 앱0.48.0과 공존합니다. PC compile/scene·10분 교통 검사·실제 Editor 렌더·BuildApk/Lint(errors0/warnings8)·기존v2서명 검증을 완료했습니다. 최신 결과와 설치 명령은 [STATUS](../docs/STATUS.md), [자동 빌드 안내](../docs/UNITY_AUTOMATION.md)를 확인합니다. 이전0.3.0 시점의 후속 목록은 신호/군중/날씨·라이브 배경화면 연결이었으며 신호/군중은 위0.4.0에 반영했습니다. 실제 폰 FPS/발열·날씨·라이브 배경화면 연결은 후속입니다.
 
 ## 이전 패치 — 도시 배경·조명 0.2.0 (2026-10-09)
 

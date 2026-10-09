@@ -1,6 +1,6 @@
 # S20+
 
-Unity **0.3.0 차량·양방향 교통 테스트 APK**를 전달했습니다. 3D 기본형4종·4차선24대, 실제 PC 컴파일/10분 교통·장면/Editor 렌더·Android 빌드/Lint·기존 v2 서명 검증을 완료했습니다. [최신 설치·검증 결과](docs/UNITY_AUTOMATION.md)와 [Unity 소스 안내](pixel-traffic-unity/README.md)를 확인합니다. 실제 폰 FPS·발열과 Android 라이브 배경화면 연결은 별도 확인입니다.
+Unity 신호·인도 보행 테스트 APK **0.4.0**를 전달했습니다. 차량 신호/정차·자연스러운 인도 산책/횡단·군중 회피와 폰4~100명 조절을 구현했고, 실제 PC 장면/모의·Editor 렌더·Android 빌드/Lint·기존v2서명 검증을 완료했습니다. [최신 설치·검증 결과](docs/UNITY_AUTOMATION.md)와 [Unity 소스 안내](pixel-traffic-unity/README.md)를 확인합니다. 실제 폰 FPS·발열·라이브 배경화면 연결은 후속입니다.
 
 루팅된 Samsung Galaxy S20+ 관련 앱과 도구의 개발 작업 공간입니다.
 
