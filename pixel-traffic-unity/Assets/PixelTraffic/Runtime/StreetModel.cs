@@ -187,15 +187,15 @@ namespace PixelTraffic.UnityPrototype
             if(p.activity==Activity.Wait)
             {
                 if(!CanEnter)return;
-                Vector2 start=new Vector2(p.side*7.02f,p.position.y);
+                Vector2 start=new Vector2(p.side*7.02f,SlotPoint(p).y);
                 // Back rows cannot enter through waiting front rows. Move to the curb using avoidance first.
-                if(Mathf.Abs(p.position.x)>7.10f){Move(i,start,false);return;}
+                if(Mathf.Abs(p.position.x)>7.10f||Mathf.Abs(p.position.y-start.y)>.06f){Move(i,start,false);return;}
                 bool free=true;
                 foreach(var other in People)if(other.active&&other.activity==Activity.Cross&&Mathf.Abs(other.position.y-p.position.y)<.3f&&Vector2.Distance(other.position,p.position)<.70f)free=false;
                 Vector2 entry=new Vector2(p.side*6.30f,p.position.y);
                 for(int j=0;j<People.Length;j++)if(j!=i&&People[j].active&&SegmentDistanceSquared(p.position,entry,People[j].position)<Separation*Separation)free=false;
                 if(!free)return;
-                Release(i);p.activity=Activity.Cross;p.goal=new Vector2(-p.side*7.06f,p.position.y);
+                Release(i);p.detourSeconds=0;p.activity=Activity.Cross;p.goal=new Vector2(-p.side*7.06f,p.position.y);
             }
             if(p.activity==Activity.Cross)
             {

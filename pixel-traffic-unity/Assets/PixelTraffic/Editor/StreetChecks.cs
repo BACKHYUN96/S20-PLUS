@@ -39,7 +39,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                         Need(Vector2.Distance(previous[i],p.position)<=p.speed*StreetModel.Dt+.0001f,"Walker teleports.");
                         if(p.activity==StreetModel.Activity.Cross)
                         {
-                            Need(p.position.y>=8.2f&&p.position.y<=11.8f,"Walker leaves zebra stripes.");
+                            Need(p.position.y>=8.2f&&p.position.y<=11.8f,"Walker leaves zebra stripes: count="+count+" tick="+step+" id="+i+" pos="+p.position);
                             if(activities[i]!=StreetModel.Activity.Cross)Need(model.CanEnter,"New pedestrian enters after green admission.");
                         }
                         else Need(SidewalkRoutes.Allowed(p.position),"Walker walks through curb/tree bed/lamp/building.");
