@@ -32,7 +32,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 {
                     for(int i=0;i<count;i++){previous[i]=model.People[i].position;activities[i]=model.People[i].activity;}
                     model.Tick();
-                    if(model.CanEnter||model.Signal==StreetModel.Phase.PedestrianClearance)Need(!model.RoadOccupied(),"Vehicle enters occupied pedestrian phase.");
+                    if(model.CanEnter||model.Signal==StreetModel.Phase.PedestrianClearance)Need(!model.RoadOccupied(),"Vehicle enters pedestrian phase: count "+count+" tick "+step+" phase "+model.Signal+" "+CarSummary(model));
                     for(int i=0;i<count;i++)
                     {
                         var p=model.People[i];Need(p.active,"Population unexpectedly removed.");
@@ -103,6 +103,10 @@ namespace PixelTraffic.UnityPrototype.Editor
                 controller.SetPaused(false);for(int i=0;i<drives.Length;i++){drives[i].ResetPosition(poses[i].z);for(int n=0;n<4;n++)drives[i].Wheels[n].localRotation=wheels[i][n];}
                 controller.ResetModel();controller.ApplyViews();
             }
+        }
+        private static string CarSummary(StreetModel model)
+        {
+            string result="";foreach(var c in model.Cars)if(Math.Abs(c.z-StarterConfig.CrossingZ)<6)result+="lane="+c.lane+" z="+c.z.ToString("F7")+" speed="+c.speed+" committed="+c.committed+"; ";return result;
         }
         private static void Need(bool value,string message){if(!value)throw new InvalidOperationException(message);}
         [Serializable] internal sealed class Report

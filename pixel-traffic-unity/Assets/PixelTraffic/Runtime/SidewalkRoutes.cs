@@ -22,7 +22,7 @@ namespace PixelTraffic.UnityPrototype
             float x=Mathf.Abs(p.x);
             if(x<6.79f||x>10.22f||p.y< -28.1f||p.y>152.1f)return false;
             for(int i=0;i<16;i++)if(Mathf.Abs(x-8.6f)<1.1f+Radius&&Mathf.Abs(p.y-(-24+i*13))<1.1f+Radius)return false;
-            for(int i=0;i<10;i++)if(new Vector2(x-7.1f,p.y-(-15+i*20)).sqrMagnitude<.27f*.27f)return false;
+            for(int i=0;i<10;i++)if(new Vector2(x-7.1f,p.y-(-15+i*20)).sqrMagnitude<.34f*.34f)return false;
             // Added signal poles stand on the outer sidewalk edge.
             if(new Vector2(x-10.08f,p.y-7.0f).sqrMagnitude<.29f*.29f||new Vector2(x-10.08f,p.y-13.0f).sqrMagnitude<.29f*.29f)return false;
             return true;

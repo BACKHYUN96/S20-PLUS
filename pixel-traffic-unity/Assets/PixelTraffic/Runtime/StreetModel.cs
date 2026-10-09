@@ -162,13 +162,17 @@ namespace PixelTraffic.UnityPrototype
                 }
                 if(Signal!=Phase.VehicleGreen&&!car.committed)
                 {
-                    double distance=car.Direction*(StopCenter(car)-oldZ[i]);distance=(distance%span+span)%span;
+                    double distance=car.Direction*(StopCenter(car)-oldZ[i]);
+                    if(distance<0&&distance>-.001)distance=0; // Round-off at a stop line is not a completed route loop.
+                    distance=(distance%span+span)%span;
                     room=Mathf.Min(room,(float)distance);
                 }
                 float target=Mathf.Min(car.cruise,Mathf.Sqrt(Mathf.Max(0,6.8f*room)));
                 car.speed=Mathf.MoveTowards(car.speed,target,(target>car.speed?1.8f:3.4f)*Dt);
                 float travel=Mathf.Min(car.speed*Dt,Mathf.Max(0,room));if(travel<.0005f){travel=0;car.speed=0;}
                 double next=oldZ[i]+car.Direction*travel;
+                if(Signal!=Phase.VehicleGreen&&!car.committed&&Math.Abs(next-StopCenter(car))<.001)
+                { next=StopCenter(car);travel=Mathf.Max(0,(float)(car.Direction*(next-oldZ[i])));car.speed=0; }
                 next=StarterConfig.RouteStart+((next-StarterConfig.RouteStart)%span+span)%span;
                 car.distance=travel;car.z=next;
                 if(car.committed&&car.Direction*(car.z-StarterConfig.CrossingZ)>5+car.length/2)car.committed=false;
