@@ -4,6 +4,7 @@ name: Pixel Traffic Unity
 on:
   push:
     branches: [main]
+    tags: ['unity-apk-*']
     paths:
       - 'pixel-traffic-unity/**'
       - '.github/workflows/pixel-traffic-unity.yml'
@@ -27,7 +28,7 @@ concurrency:
 
 jobs:
   unity:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/unity-apk-')
     # Later, point this variable to a provisioned Windows/Linux cloud runner.
     runs-on: ${{ fromJSON(vars.PIXEL_TRAFFIC_RUNNER_LABELS || '["self-hosted","Windows","X64","pixel-traffic-unity"]') }}
     timeout-minutes: 60
@@ -36,15 +37,31 @@ jobs:
         shell: ${{ vars.PIXEL_TRAFFIC_RUNNER_SHELL || 'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "{0}"' }}
     steps:
       - uses: actions/checkout@v4
+      - name: Require APK tag to point to the current main
+        if: startsWith(github.ref, 'refs/tags/unity-apk-')
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git fetch --no-tags --depth=1 origin main
+          if ($LASTEXITCODE -ne 0) { throw 'Could not verify the main revision.' }
+          $headCommit = git rev-parse HEAD
+          $mainCommit = git rev-parse FETCH_HEAD
+          if ($headCommit -ne $mainCommit) { throw 'APK tags must point to current main; build stopped.' }
       - name: Validate or build with the shared entry point
         env:
           UNITY_EDITOR_PATH: ${{ vars.UNITY_EDITOR_PATH }}
           UNITY_ANDROID_SDK_PATH: ${{ vars.UNITY_ANDROID_SDK_PATH }}
-          PIXEL_TRAFFIC_OPERATION: ${{ inputs.operation || 'Validate' }}
+          PIXEL_TRAFFIC_OPERATION: ${{ inputs.operation || (startsWith(github.ref, 'refs/tags/unity-apk-') && 'BuildApk' || 'Validate') }}
           PIXEL_TRAFFIC_KEYSTORE_BASE64: ${{ secrets.PIXEL_TRAFFIC_KEYSTORE_BASE64 }}
           PIXEL_TRAFFIC_KEYSTORE_PASSWORD: ${{ secrets.PIXEL_TRAFFIC_KEYSTORE_PASSWORD }}
           PIXEL_TRAFFIC_KEY_PASSWORD: ${{ secrets.PIXEL_TRAFFIC_KEY_PASSWORD }}
-        run: ./pixel-traffic-unity/tools/run-pipeline.ps1 -Operation $env:PIXEL_TRAFFIC_OPERATION
+        run: |
+          $ErrorActionPreference = 'Stop'
+          foreach ($script in Get-ChildItem './pixel-traffic-unity/tools/*.ps1') {
+            $tokens = $null; $parseErrors = $null
+            [Management.Automation.Language.Parser]::ParseFile($script.FullName, [ref]$tokens, [ref]$parseErrors) | Out-Null
+            if ($parseErrors.Count) { throw "PowerShell syntax errors in $($script.Name): $parseErrors" }
+          }
+          ./pixel-traffic-unity/tools/run-pipeline.ps1 -Operation $env:PIXEL_TRAFFIC_OPERATION
       - name: Upload reports (raw Editor logs and credentials stay out of artifacts)
         if: always()
         uses: actions/upload-artifact@v4
@@ -55,10 +72,11 @@ jobs:
             pixel-traffic-unity/Reports/scene-validation.json
             pixel-traffic-unity/Reports/apk-verification.json
             pixel-traffic-unity/Reports/android-build-result.txt
+            pixel-traffic-unity/Reports/android-lint-result.json
           if-no-files-found: warn
           retention-days: 7
       - name: Upload verified Activity APK
-        if: success() && inputs.operation == 'BuildApk'
+        if: success() && (inputs.operation == 'BuildApk' || startsWith(github.ref, 'refs/tags/unity-apk-'))
         uses: actions/upload-artifact@v4
         with:
           name: unity-activity-apk-${{ github.run_id }}

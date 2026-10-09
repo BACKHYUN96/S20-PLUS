@@ -17,14 +17,21 @@ $temporaryKey = $null
 $previousKey = $env:PIXEL_TRAFFIC_KEYSTORE
 $previousJava = $env:JAVA_HOME
 $previousKeyPassword = $env:PIXEL_TRAFFIC_KEY_PASSWORD
+$previousStorePassword = $env:PIXEL_TRAFFIC_KEYSTORE_PASSWORD
+$previousAlias = $env:PIXEL_TRAFFIC_KEY_ALIAS
 function Invoke-AndroidTool {
     param([string]$Tool, [string[]]$ToolArguments)
-    $toolOutput = & $Tool @ToolArguments 2>&1 | Out-String
-    if ($LASTEXITCODE -ne 0) { throw "Android verification tool failed: $(Split-Path -Leaf $Tool)" }
+    $previousPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        $toolOutput = & $Tool @ToolArguments 2>&1 | Out-String
+        $toolExit = $LASTEXITCODE
+    } finally { $ErrorActionPreference = $previousPreference }
+    if ($toolExit -ne 0) { throw "Android verification tool failed: $(Split-Path -Leaf $Tool)" }
     return $toolOutput
 }
 try {
-    foreach ($reportName in @('scene-validation.json', 'apk-verification.json', 'android-build-result.txt')) {
+    foreach ($reportName in @('scene-validation.json', 'apk-verification.json', 'android-build-result.txt', 'android-lint-result.json')) {
         $oldReport = Join-Path $reports $reportName
         if (Test-Path -LiteralPath $oldReport) { Remove-Item -LiteralPath $oldReport }
     }
@@ -37,6 +44,30 @@ try {
             $temporaryKey = Join-Path ([IO.Path]::GetTempPath()) ("pixel-traffic-signing-" + [Guid]::NewGuid().ToString('N') + '.keystore')
             [IO.File]::WriteAllBytes($temporaryKey, [Convert]::FromBase64String($env:PIXEL_TRAFFIC_KEYSTORE_BASE64))
             $env:PIXEL_TRAFFIC_KEYSTORE = $temporaryKey
+        } elseif (-not $env:PIXEL_TRAFFIC_KEYSTORE -or -not $env:PIXEL_TRAFFIC_KEYSTORE_PASSWORD) {
+            # Actions' empty secret env entries hide inherited runner passwords.
+            # Read the one-time DPAPI setup instead; no secrets enter the checkout.
+            if ([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT) {
+                throw 'Configure the original signing key and password in this runner environment.'
+            }
+            $signingDirectory = Join-Path $env:LOCALAPPDATA 'PixelTraffic/Signing'
+            $localKey = Join-Path $signingDirectory 'debug.keystore'
+            $storeCredential = Import-Clixml -LiteralPath (Join-Path $signingDirectory 'store-credential.xml')
+            $keyCredential = Import-Clixml -LiteralPath (Join-Path $signingDirectory 'key-credential.xml')
+            if ($storeCredential -isnot [Management.Automation.PSCredential] -or
+                $keyCredential -isnot [Management.Automation.PSCredential] -or
+                (Get-FileHash -LiteralPath $localKey -Algorithm SHA256).Hash.ToLowerInvariant() -ne
+                    '6e3050b987c1baa866c2c98cab3853bc4eee2fe05c6d1f778d3ad6eeece2b66c') {
+                throw 'Local encrypted signing setup is invalid; original key required.'
+            }
+            if (-not $env:PIXEL_TRAFFIC_KEYSTORE) { $env:PIXEL_TRAFFIC_KEYSTORE = $localKey }
+            if (-not $env:PIXEL_TRAFFIC_KEYSTORE_PASSWORD) {
+                $env:PIXEL_TRAFFIC_KEYSTORE_PASSWORD = $storeCredential.GetNetworkCredential().Password
+            }
+            if (-not $env:PIXEL_TRAFFIC_KEY_ALIAS) { $env:PIXEL_TRAFFIC_KEY_ALIAS = $storeCredential.UserName }
+            if (-not $env:PIXEL_TRAFFIC_KEY_PASSWORD) {
+                $env:PIXEL_TRAFFIC_KEY_PASSWORD = $keyCredential.GetNetworkCredential().Password
+            }
         }
         $apk = Join-Path $projectRoot 'Builds/pixel-traffic-unity-prototype-0.1.0.apk'
         # Prevent a previous successful APK from masquerading as this run's output.
@@ -49,11 +80,25 @@ try {
         $sdk = $env:UNITY_ANDROID_SDK_PATH
         if (-not $sdk) { $sdk = Join-Path $androidPlayer 'SDK' }
         $env:JAVA_HOME = Join-Path $androidPlayer 'OpenJDK'
+        $gradleProject = Join-Path $projectRoot 'Library/Bee/Android/Prj/IL2CPP/Gradle'
+        if (-not (Test-Path -LiteralPath (Join-Path $gradleProject 'launcher/build.gradle'))) {
+            throw 'Generated Unity Android Gradle project missing; Lint cannot run.'
+        }
+        $onWindows = [Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT
+        $gradle = Join-Path $androidPlayer $(if ($onWindows) { 'Tools/gradle/bin/gradle.bat' } else { 'Tools/gradle/bin/gradle' })
+        $lintOutput = Invoke-AndroidTool $gradle @('--no-daemon', '-p', $gradleProject, ':launcher:lintDebug')
+        $lintOutput | Set-Content -LiteralPath (Join-Path $reports 'android-lint.log') -Encoding UTF8
+        $lintXml = Join-Path $gradleProject 'launcher/build/reports/lint-results-debug.xml'
+        [xml]$lintReport = Get-Content -LiteralPath $lintXml -Raw
+        $lintErrors = @($lintReport.issues.issue | Where-Object { $_.severity -in @('Fatal', 'Error') }).Count
+        $lintWarnings = @($lintReport.issues.issue | Where-Object { $_.severity -eq 'Warning' }).Count
+        if ($lintErrors -ne 0) { throw 'Android Lint reported errors; APK will not be published.' }
+        [ordered]@{ result = 'PASS'; errors = $lintErrors; warnings = $lintWarnings; task = ':launcher:lintDebug' } |
+            ConvertTo-Json | Set-Content -LiteralPath (Join-Path $reports 'android-lint-result.json') -Encoding UTF8
         $buildTools = Get-ChildItem -LiteralPath (Join-Path $sdk 'build-tools') -Directory |
             Where-Object { $_.Name -match '^\d+\.\d+\.\d+$' } |
             Sort-Object { [version]$_.Name } -Descending | Select-Object -First 1
         if (-not $buildTools) { throw 'Android SDK build-tools not found.' }
-        $onWindows = [Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT
         $signer = Join-Path $buildTools.FullName $(if ($onWindows) { 'apksigner.bat' } else { 'apksigner' })
         $aapt = Join-Path $buildTools.FullName $(if ($onWindows) { 'aapt.exe' } else { 'aapt' })
         $signature = Invoke-AndroidTool $signer @('verify', '--verbose', '--print-certs', $apk)
@@ -88,4 +133,6 @@ try {
     $env:PIXEL_TRAFFIC_KEYSTORE = $previousKey
     $env:JAVA_HOME = $previousJava
     $env:PIXEL_TRAFFIC_KEY_PASSWORD = $previousKeyPassword
+    $env:PIXEL_TRAFFIC_KEYSTORE_PASSWORD = $previousStorePassword
+    $env:PIXEL_TRAFFIC_KEY_ALIAS = $previousAlias
 }
