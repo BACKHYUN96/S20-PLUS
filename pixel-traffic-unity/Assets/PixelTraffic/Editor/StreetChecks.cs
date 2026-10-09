@@ -62,7 +62,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
                 for(int i=0;i<count;i++)
                 {
-                    var p=model.People[i];Need(p.walkDistance-firstDistances[i]>1,"Pedestrian stuck: count="+count+" id="+i+" phase="+model.Signal+" time="+model.PhaseSeconds+" cycles="+model.Cycles+" activity="+p.activity+" pos="+p.position+" goal="+p.goal+" path="+p.pathCursor+"/"+p.pathCount+" wait="+p.waitingTime+" "+CarSummary(model));
+                    var p=model.People[i];Need(p.walkDistance-firstDistances[i]>1,"Pedestrian stuck: count="+count+" id="+i+" phase="+model.Signal+" time="+model.PhaseSeconds+" cycles="+model.Cycles+" activity="+p.activity+" pos="+p.position+" goal="+p.goal+" path="+p.pathCursor+"/"+p.pathCount+" wait="+p.waitingTime+" "+PeopleSummary(model,i)+" "+CarSummary(model));
                     Need(p.crossings>0,"A person never gets through a green crossing: "+count+"/"+i+" "+p.activity+" "+p.position+" path "+p.pathCursor+"/"+p.pathCount);
                     crossingCounts[i]=p.crossings;completed+=p.crossings;
                 }
@@ -103,6 +103,10 @@ namespace PixelTraffic.UnityPrototype.Editor
                 controller.SetPaused(false);for(int i=0;i<drives.Length;i++){drives[i].ResetPosition(poses[i].z);for(int n=0;n<4;n++)drives[i].Wheels[n].localRotation=wheels[i][n];}
                 controller.ResetModel();controller.ApplyViews();
             }
+        }
+        private static string PeopleSummary(StreetModel model,int index)
+        {
+            string result="nearby: ";foreach(var p in model.People)if(p.active&&Vector2.Distance(p.position,model.People[index].position)<3)result+="id="+Array.IndexOf(model.People,p)+" side="+p.side+" slot="+p.slot+" activity="+p.activity+" pos="+p.position+" goal="+p.goal+" crossings="+p.crossings+"; ";return result;
         }
         private static string CarSummary(StreetModel model)
         {
