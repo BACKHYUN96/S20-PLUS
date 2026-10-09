@@ -17,7 +17,7 @@ namespace PixelTraffic.UnityPrototype
         {
             public int side,slot=-1,crossings,pathCount,pathCursor;public bool active;
             public Vector2 position,goal,velocity,detour;public Activity activity;public float detourSeconds;
-            public float speed,cooldown,retrySeconds,walkDistance,waitingTime;
+            public float speed,cooldown,retrySeconds,routeRepairSeconds,walkDistance,waitingTime;
             public uint random;public readonly int[] path=new int[600];
         }
         public const float Dt=1f/30, Separation=.40f;
@@ -186,7 +186,7 @@ namespace PixelTraffic.UnityPrototype
         private void MovePerson(int i)
         {
             Person p=People[i];if(!p.active)return;p.velocity=Vector2.zero;
-            bool seekingStarts=p.cooldown>0&&p.cooldown<=Dt;p.cooldown-=Dt;p.retrySeconds-=Dt;
+            bool seekingStarts=p.cooldown>0&&p.cooldown<=Dt;p.cooldown-=Dt;p.retrySeconds-=Dt;p.routeRepairSeconds-=Dt;
             if(seekingStarts&&p.activity==Activity.Roam)Roam(p);
             if(p.activity==Activity.Roam&&p.cooldown<=0&&p.retrySeconds<=0&&Mathf.Abs(p.position.y-StarterConfig.CrossingZ)<=18&&!Reserve(i))
             {
@@ -224,6 +224,11 @@ namespace PixelTraffic.UnityPrototype
             for(int look=0;look<3&&p.pathCursor+1<p.pathCount;look++)
             { Vector2 ahead=Routes.Node(p.path[p.pathCursor+1],p.side);if((ahead-p.position).sqrMagnitude>4||!SidewalkRoutes.SegmentAllowed(p.position,ahead))break;p.pathCursor++; }
             if(p.pathCursor<p.pathCount)target=Routes.Node(p.path[p.pathCursor],p.side);
+            if(p.routeRepairSeconds<=0&&!SidewalkRoutes.SegmentAllowed(p.position,target))
+            {
+                Path(p,p.goal);p.routeRepairSeconds=1;
+                if(p.pathCursor<p.pathCount)target=Routes.Node(p.path[p.pathCursor],p.side);else target=p.goal;
+            }
             Move(i,target,false);
             if(Vector2.Distance(p.position,p.goal)<.14f)
             {

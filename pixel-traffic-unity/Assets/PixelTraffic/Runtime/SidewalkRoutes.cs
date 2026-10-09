@@ -49,6 +49,13 @@ namespace PixelTraffic.UnityPrototype
                 float d=(Node(i,side)-p).sqrMagnitude;
                 if(d<best){best=d;result=i;}
             }
+            if(result>=0&&SegmentAllowed(p,Node(result,side)))return result;
+            best=float.MaxValue;result=-1;
+            for(int i=0;i<open.Length;i++)if(open[i])
+            {
+                float d=(Node(i,side)-p).sqrMagnitude;
+                if(d<best&&SegmentAllowed(p,Node(i,side))){best=d;result=i;}
+            }
             return result;
         }
         public int Find(Vector2 from,Vector2 to,int side,int[] path)
