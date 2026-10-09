@@ -192,6 +192,8 @@ namespace PixelTraffic.UnityPrototype
                 if(Mathf.Abs(p.position.x)>7.10f){Move(i,start,false);return;}
                 bool free=true;
                 foreach(var other in People)if(other.active&&other.activity==Activity.Cross&&Mathf.Abs(other.position.y-p.position.y)<.3f&&Vector2.Distance(other.position,p.position)<.70f)free=false;
+                Vector2 entry=new Vector2(p.side*6.30f,p.position.y);
+                for(int j=0;j<People.Length;j++)if(j!=i&&People[j].active&&SegmentDistanceSquared(p.position,entry,People[j].position)<Separation*Separation)free=false;
                 if(!free)return;
                 Release(i);p.activity=Activity.Cross;p.goal=new Vector2(-p.side*7.06f,p.position.y);
             }
@@ -209,7 +211,7 @@ namespace PixelTraffic.UnityPrototype
             Vector2 target=p.goal;
             while(p.pathCursor<p.pathCount&&Vector2.Distance(p.position,Routes.Node(p.path[p.pathCursor],p.side))<.12f)p.pathCursor++;
             for(int look=0;look<3&&p.pathCursor+1<p.pathCount;look++)
-            { if(!SidewalkRoutes.SegmentAllowed(p.position,Routes.Node(p.path[p.pathCursor+1],p.side)))break;p.pathCursor++; }
+            { Vector2 ahead=Routes.Node(p.path[p.pathCursor+1],p.side);if((ahead-p.position).sqrMagnitude>4||!SidewalkRoutes.SegmentAllowed(p.position,ahead))break;p.pathCursor++; }
             if(p.pathCursor<p.pathCount)target=Routes.Node(p.path[p.pathCursor],p.side);
             Move(i,target,false);
             if(Vector2.Distance(p.position,p.goal)<.14f)
