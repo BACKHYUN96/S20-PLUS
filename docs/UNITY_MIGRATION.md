@@ -1,5 +1,14 @@
 # Pixel Traffic — Unity 전환 준비
 
+## 2026-10-10 — Unity 0.13.0 가로수·외벽·옥상 디테일 구현, 실제 검증 대기
+
+사용자가 0.12.0의 실제 폰 적용 성공을 확인하고 다음 패치를 승인했다. 이번은 앞서 추천한 가로수 수관과 건물 외벽·옥상 디테일이다. **0.13.0/code14**, `Scenery-0.13.0.unity`/`Generated/Scenery0130`. 변경10 Unity 소스/meta: StarterConfig/StarterScene/CityEnvironment/CityPreview와 신규 FoliageScene/ArchitectureScene/SceneryChecks 및meta3개. 기존 카메라·원경·차량/차선변경·보행/신호·시간/날씨·NativeAndroid host/서명 설정은 유지한다. Drive/Colab는 사용자 지시대로 나중에 PC에서 재개하며 메일/Drive 작업을 하지 않는다.
+
+- 가로수32그루에 둥근형/수직형/퍼지는형3종 공유 수관과 서로 다른 잎 색을 넣는다. 기존8clump/640tri 대신5clump/400tri의 변형된 부드러운 메시를 사용한다. 반복 경계를 연결한 공유256×256 잎 색Texture·mip/trilinear를 넣고 opaque Lit를 유지하여 alpha 잎 층/새 실시간 조명을 추가하지 않는다. 기존32수관 wind/lifecycle 연결을 유지한다.
+- 건물24개 외벽을 큰 콘크리트 패널/옅은 얼룩으로 바꾸고 모서리 pilaster·상부 띠·양 끝 옥상 난간, 건물당2개 발코니/난간(총48개), 기존 환기장치의 slit·옥상 출입실/일부 안테나,12개 옥상 화단 foliage를 추가한다. building당 stone/metal/plaster3 merged mesh와 기존 재질을 재사용하여 작은 난간마다 renderer/material을 만들지 않는다. 기존창문480개/상가24개·실제조명4개를 유지한다. 보행 높이/건물 간격/옥상 footprint를 실제 geometry로 검사한다.
+- SceneryChecks는 실제3종수형/UV/normal/finite/winding·opaque공유 texture·32나무/24건물/12garden·보행/옥상 clearance·예산을 검사한다. 기존 기후 검사가32수관 바람/숨김과18시간/날씨·노을 전환을 확인한다. Capture에3종나무낮/밤/비바람·외벽낮/밤/옥상8개확대가추가되어 총51PNG를준비한다. 임시카메라는저장하지않는다.
+- 98build input SHA와 기존12host 입력 불변을 확인했다. 실제 Windows Validate/새 GPU 렌더·최대100우산 geometry budget·Android BuildPlayer/Lint/서명 APK/공개 HTTP 검증은 아직 실행 대기다. 예상/코드상 비용과 실제 관측 결과를 구분한다. 폰0.13 외형/FPS·발열은 추후 설치 후 확인한다. 실제 검증·보정·서명 빌드까지 이번 작업에서 진행한다.
+
 ## 2026-10-10 — Unity 0.12.0 원경 패치: 실제 렌더·서명 APK 검증 및 모바일 전달 완료
 
 사용자가 실제 폰0.11.0 적용 성공을 확인하고 원경 패치를 승인했다. **0.12.0/code13**, `Landscape-0.12.0.unity`/`Generated/Landscape0120`, `pixel-traffic-unity-prototype-0.12.0.apk`. 0.11 카메라 위치(1.4,14,-37)/target(-4.9,1,68)/44°FOV와 교통·보행·횡단보도/차량 등화·세 번 깜빡임/안전 차선변경을 유지한다. 시안 원본은 사용자 첨부6650.jpg이며 이 환경의 임시 첨부 경로에만 존재하므로 새 환경에서는 재확보가 필요할 수 있다.

@@ -59,9 +59,8 @@ namespace PixelTraffic.UnityPrototype.Editor
             for (int i = 0; i < 4; i++)
                 Cylinder("Manhole", road, new Vector3(i % 2 == 0 ? -1.6f : 4.8f, .005f, 24 + i * 34), new Vector3(.7f, .004f, .7f), Mat("Iron", new Color(.17f, .18f, .18f), .15f));
 
-            Mesh canopy = CanopyMesh();
             for (int i = 0; i < 16; i++)
-                foreach (float side in new[] { -1f, 1f }) Tree(scenery, canopy, side * 8.6f, -24 + i * 13, i);
+                foreach (float side in new[] { -1f, 1f }) Tree(scenery, FoliageScene.Canopy(i%3), side * 8.6f, -24 + i * 13, i);
             for (int i = 0; i < 12; i++)
                 foreach (float side in new[] { -1f, 1f }) Building(scenery, side * 14.1f, -22 + i * 17, i);
             for (int i = 0; i < 10; i++)
@@ -92,8 +91,8 @@ namespace PixelTraffic.UnityPrototype.Editor
                         if (style == 1)
                             shade = x % 32 < 2 || y % 32 < 2 ? .63f : .87f + ((x / 32 + y / 32 * 3) % 5) * .023f;
                         else if (style == 2)
-                            shade = y % 32 < 2 || (x + (y / 32 % 2) * 16) % 32 < 1 ? .70f : .87f + broad * .11f;
-                        pixels[y * size + x] = new Color(shade, shade, shade);
+                            shade = 1;
+                        pixels[y * size + x] = style==2 ? ArchitectureScene.MasonryPixel(x,y,size) : new Color(shade, shade, shade);
                     }
                 texture.SetPixels(pixels);
                 texture.Apply(true, false);
@@ -122,8 +121,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             leaves.transform.SetParent(root, false);
             leaves.transform.localScale = Vector3.one * (.87f + index % 3 * .065f);
             leaves.GetComponent<MeshFilter>().sharedMesh = canopy;
-            Color[] greens = { new Color(.30f, .48f, .095f), new Color(.38f, .53f, .12f), new Color(.23f, .40f, .08f) };
-            leaves.GetComponent<MeshRenderer>().sharedMaterial = Mat("Leaves " + index % 3, greens[index % 3]);
+            leaves.GetComponent<MeshRenderer>().sharedMaterial = FoliageScene.Leaves(index%3);
             Material planter = Mat("Planter Stone", new Color(.57f, .54f, .44f));
             // Keep planted beds aligned with the sidewalk while the tree canopy retains its varied yaw.
             Quaternion bedRotation=Quaternion.Inverse(root.localRotation);
@@ -131,54 +129,14 @@ namespace PixelTraffic.UnityPrototype.Editor
             Box("Soil", root, new Vector3(0, .205f, 0), new Vector3(1.94f, .015f, 1.94f), Mat("Soil", new Color(.23f, .20f, .12f))).transform.localRotation=bedRotation;
         }
 
-        private static Mesh CanopyMesh()
-        {
-            string path = StarterScene.Generated + "/LayeredCanopy.asset";
-            Mesh existing = AssetDatabase.LoadAssetAtPath<Mesh>(path);
-            if (existing != null) return existing;
-            float t = (1 + Mathf.Sqrt(5)) / 2;
-            var unit = new List<Vector3> {
-                new Vector3(-1,t,0),new Vector3(1,t,0),new Vector3(-1,-t,0),new Vector3(1,-t,0),
-                new Vector3(0,-1,t),new Vector3(0,1,t),new Vector3(0,-1,-t),new Vector3(0,1,-t),
-                new Vector3(t,0,-1),new Vector3(t,0,1),new Vector3(-t,0,-1),new Vector3(-t,0,1)
-            };
-            for (int i = 0; i < unit.Count; i++) unit[i] = unit[i].normalized;
-            int[] faces = {0,11,5,0,5,1,0,1,7,0,7,10,0,10,11,1,5,9,5,11,4,11,10,2,10,7,6,7,1,8,3,9,4,3,4,2,3,2,6,3,6,8,3,8,9,4,9,5,2,4,11,6,2,10,8,6,7,9,8,1};
-            var midpoints = new Dictionary<long, int>();
-            int Mid(int a, int b)
-            {
-                long key = ((long)Math.Min(a, b) << 32) | (uint)Math.Max(a, b);
-                if (!midpoints.TryGetValue(key, out int value)) { value = unit.Count; unit.Add((unit[a] + unit[b]).normalized); midpoints.Add(key, value); }
-                return value;
-            }
-            var refined = new List<int>();
-            for (int i = 0; i < faces.Length; i += 3)
-            {
-                int a = faces[i], b = faces[i + 1], c = faces[i + 2], ab = Mid(a, b), bc = Mid(b, c), ca = Mid(c, a);
-                refined.AddRange(new[] {a,ab,ca,b,bc,ab,c,ca,bc,ab,bc,ca});
-            }
-            Vector3[] clusters = {new Vector3(0,5.5f,0),new Vector3(-1.3f,4.6f,.2f),new Vector3(1.3f,4.6f,-.2f),new Vector3(0,4.5f,1.2f),new Vector3(0,4.5f,-1.2f),new Vector3(-.7f,5.5f,.8f),new Vector3(.8f,5.6f,-.7f),new Vector3(0,4.3f,0)};
-            var vertices = new List<Vector3>(); var triangles = new List<int>();
-            for (int clump = 0; clump < clusters.Length; clump++)
-            {
-                int offset = vertices.Count;
-                foreach (Vector3 v in unit) vertices.Add(clusters[clump] + Vector3.Scale(v, new Vector3(1.5f, 1.35f, 1.45f)));
-                foreach (int index in refined) triangles.Add(offset + index);
-            }
-            var mesh = new Mesh { name = "Layered Tree Canopy" };
-            mesh.SetVertices(vertices); mesh.SetTriangles(triangles, 0); mesh.RecalculateNormals(); mesh.RecalculateBounds();
-            AssetDatabase.CreateAsset(mesh, path);
-            return mesh;
-        }
-
         private static void Building(Transform parent, float x, float z, int index)
         {
             int floors = 4 + index % 3; float height = floors * 2.8f + 1.2f;
             Transform root = new GameObject("City Building").transform;
             root.SetParent(parent, false); root.localPosition = new Vector3(x, .16f, z);
-            Color[] colors = {new Color(.77f,.72f,.62f),new Color(.69f,.68f,.63f),new Color(.79f,.74f,.65f)};
+            Color[] colors = {new Color(.80f,.79f,.70f),new Color(.75f,.77f,.70f),new Color(.83f,.78f,.69f)};
             Material facade = Mat("Facade " + index % 3, colors[index % 3]);
-            Texture(facade, "Masonry", 2, new Vector2(5, floors * 2));
+            Texture(facade, "Masonry", 2, new Vector2(2, floors*.65f));
             Box("Facade", root, new Vector3(0, height / 2, 0), new Vector3(6.5f, height, 14), facade);
             float streetSide = x > 0 ? -3.28f : 3.28f;
             Material stone = Mat("Architectural Trim", new Color(.76f,.75f,.68f));
@@ -202,6 +160,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             Box("Roof Equipment", root, new Vector3(1,height + .65f,1.6f), new Vector3(1.5f,1.1f,2.3f), Mat("Roof Equipment",new Color(.45f,.46f,.42f)));
             if (index % 2 == 0)
                 Cylinder("Water Tank",root,new Vector3(-1,height + 1.1f,-3),new Vector3(1.4f,1.0f,1.4f),Mat("Tank",new Color(.46f,.49f,.48f),.35f));
+            ArchitectureScene.Details(root,index,height,streetSide,stone,frame,facade);
         }
 
         private static void StreetLamp(Transform parent, float x, float z)
