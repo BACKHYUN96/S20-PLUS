@@ -11,7 +11,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         {
             var meshes=new HashSet<Mesh>();var materials=new HashSet<Material>();
             var gardenMaterials=new List<Material>();
-            int trees=0,buildings=0,gardens=0,checkedVertices=0,architectureTriangles=0;
+            int trees=0,buildings=0,gardens=0,balconies=0,railPosts=0,checkedVertices=0,architectureTriangles=0;
             Texture2D leafTexture=null;
             foreach(var root in UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
             {
@@ -43,6 +43,21 @@ namespace PixelTraffic.UnityPrototype.Editor
                     if(name=="Balcony Metalwork")Need(mesh.bounds.min.y>3.3f,"Balcony railings enter pedestrian head height.");
                     Need(detail.GetComponent<MeshRenderer>().sharedMaterial!=null,"Building detail lacks material.");
                 }
+                // Count actual slabs and their standing posts in the merged meshes.
+                // A nonempty metal mesh alone could otherwise pass with only roof slats.
+                var slabs=Boxes(root.Find("Facade Stonework").GetComponent<MeshFilter>().sharedMesh);
+                var metalParts=Boxes(root.Find("Balcony Metalwork").GetComponent<MeshFilter>().sharedMesh);
+                int localBalconies=0;
+                foreach(Bounds slab in slabs)
+                {
+                    if(slab.size.y>.18f||slab.size.x<.65f||slab.size.z<1.8f||slab.center.y<3||slab.center.y>10)continue;
+                    int posts=0;
+                    foreach(Bounds post in metalParts)
+                        if(post.size.y>.6f&&post.size.x<.08f&&post.size.z<.08f&&post.center.z>slab.min.z&&post.center.z<slab.max.z&&Mathf.Abs(post.min.y-slab.max.y)<.06f&&Mathf.Abs(post.center.x-slab.center.x)<slab.extents.x+.03f)posts++;
+                    Need(posts>=4,"Actual balcony has no complete standing railing.");
+                    localBalconies++;railPosts+=posts;
+                }
+                Need(localBalconies==2,"Two actual balconies missing from facade mesh.");balconies+=localBalconies;
                 Transform garden=root.Find("Roof Garden");
                 if(garden!=null)
                 {
@@ -72,7 +87,19 @@ namespace PixelTraffic.UnityPrototype.Editor
             CityEnvironment.Report budget=CityEnvironment.Validate(Camera.main,pipeline);
             Need(budget.triangles<110000,"Base scenery consumed the reserved full-population budget.");
             Need(UnityEngine.Object.FindFirstObjectByType<CityClimate>().AdditionalLights==4,"Architectural details add realtime lights.");
-            return new Report{result="PASS: actual distinct opaque foliage, shared mip texture, merged facade/roof meshes, normals/UV/winding and pedestrian/roof clearance; weather/wind checked by ClimateChecks; device performance unmeasured",trees=trees,species=meshes.Count,buildings=buildings,balconies=buildings*2,roofGardens=gardens,canopyTrianglesPerTree=shapes[0].triangles.Length/3,architectureTriangles=architectureTriangles,checkedVertices=checkedVertices,leafTextureSize=leafTexture.width,leafTextureContrast=maximum-minimum};
+            return new Report{result="PASS: actual distinct opaque foliage, shared mip texture, merged facade/roof meshes, actual slabs/rail posts, normals/UV/winding and pedestrian/roof clearance; weather/wind checked by ClimateChecks; device performance unmeasured",trees=trees,species=meshes.Count,buildings=buildings,balconies=balconies,balconyRailPosts=railPosts,roofGardens=gardens,canopyTrianglesPerTree=shapes[0].triangles.Length/3,architectureTriangles=architectureTriangles,checkedVertices=checkedVertices,leafTextureSize=leafTexture.width,leafTextureContrast=maximum-minimum};
+        }
+
+        static List<Bounds> Boxes(Mesh mesh)
+        {
+            Vector3[] v=mesh.vertices;Need(v.Length%24==0,"Merged solid mesh has incomplete faces.");
+            var result=new List<Bounds>();
+            for(int start=0;start<v.Length;start+=24)
+            {
+                var bounds=new Bounds(v[start],Vector3.zero);
+                for(int i=1;i<24;i++)bounds.Encapsulate(v[start+i]);result.Add(bounds);
+            }
+            return result;
         }
 
         static void Geometry(Mesh mesh,ref int count)
@@ -96,7 +123,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         [Serializable] internal sealed class Report
         {
             public string result;
-            public int trees,species,buildings,balconies,roofGardens,canopyTrianglesPerTree,architectureTriangles,checkedVertices,leafTextureSize;
+            public int trees,species,buildings,balconies,balconyRailPosts,roofGardens,canopyTrianglesPerTree,architectureTriangles,checkedVertices,leafTextureSize;
             public float leafTextureContrast;
         }
     }

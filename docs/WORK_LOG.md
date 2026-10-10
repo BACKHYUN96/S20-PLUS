@@ -1,5 +1,11 @@
 # 작업 이력
 
+## 2026-10-10 — Unity 0.13.0 첫 실제 검증·GPU 확인, 발코니 실체 검사 강화
+
+source646020f9 / Validate38038675998(job114174391564) 및 실제 GPU51PNG PASS. artifact11665420067의20,392,603bytes/digest7bc3ff9c52f6a18994b6fe6ad2f87a19ada466d126cf5e994c5131cee87b1c4e/CRC/source를 확인했다. 실제 전체 낮·둥근 나무·외벽·옥상 사진에서 잎 무늬와 수형, 석재 테두리·발코니, 옥상 slit/난간/화단/안테나를 관찰했다. 기본107334tri/1383renderer/43material,100우산 최대118710/1551/43으로 기존 strict120000/2400/48을 유지했다. 수관은 실제400tri/32나무/3종·공유256잎 texture contrast.3294, 건물24/옥상garden12·architecture8352tri이다.
+
+첫 결과의 발코니 통계는 buildings×2에서 계산했으므로 이를 실제 geometry 검사로 강화했다. SceneryChecks가 merged mesh의 slab bounds를 세고, 각 slab에 최소4개의 실제 standing rail post가 정렬되어 있는지 검사한다. 옥상 slat만 있어도 빈 난간 검사에 통과하는 일을 막는다. 새소스에서 발코니48개·실제 난간post와 기존 장면 검사/GPU를 다시 확인한 뒤 동일source 서명 APK를 빌드한다. geometry/재질/runtime/native source는 바꾸지 않았다. 0.12 실제폰 성공과 Drive 보류는 유지한다.
+
 ## 2026-10-10 — Unity 0.13.0 가로수·외벽·옥상 디테일 구현, 실제 검증 대기
 
 사용자가 0.12.0의 실제 폰 적용 성공을 확인하고 다음 패치를 승인했다. 이번은 앞서 추천한 가로수 수관과 건물 외벽·옥상 디테일이다. **0.13.0/code14**, `Scenery-0.13.0.unity`/`Generated/Scenery0130`. 변경10 Unity 소스/meta: StarterConfig/StarterScene/CityEnvironment/CityPreview와 신규 FoliageScene/ArchitectureScene/SceneryChecks 및meta3개. 기존 카메라·원경·차량/차선변경·보행/신호·시간/날씨·NativeAndroid host/서명 설정은 유지한다. Drive/Colab는 사용자 지시대로 나중에 PC에서 재개하며 메일/Drive 작업을 하지 않는다.
