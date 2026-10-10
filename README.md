@@ -1,6 +1,6 @@
 # S20+
 
-Unity 라이브 배경화면 **0.12.0**을 전달했습니다. 시안 구도를 유지하며 하늘·움직이는 구름·겹치는 산·강과 다리·맞은편 도시를 추가하고 기존 날씨와 낮→노을→밤 전환에 연결했습니다. 실제 PC Unity 검사·GPU43PNG·Android 빌드/Lint·원본 v2서명 APK 및 공개 HTTP/SHA를 확인했습니다. [모바일 APK 다운로드](https://github.com/BACKHYUN96/S20-PLUS/raw/d513f037b9592bf747bfededf3fdcc5ed1150b20/pixel-traffic-unity-prototype-0.12.0.apk), [실제 Unity 화면](https://github.com/BACKHYUN96/S20-PLUS/raw/d513f037b9592bf747bfededf3fdcc5ed1150b20/landscape-preview.png), [설치·검증 기록](docs/UNITY_AUTOMATION.md). 최대100우산 예산은117318tri/1467renderer/43material로 감소했습니다. 폰0.11 적용 성공은 사용자 확인, 폰0.12 외형/성능은 확인 대기입니다. Drive 전달 구성은 나중에 PC에서 재개합니다.
+Unity 라이브 배경화면 **0.13.0**을 전달했습니다. 가로수 수형3종·공유 잎 무늬, 건물 외벽/발코니·옥상 환기구/난간/화단을 추가하고 기존 시안 카메라·원경·시간/날씨/교통을 유지합니다. 실제 Unity 검사·GPU51PNG·Android 빌드/Lint·원본 v2서명 APK 및 공개HTTP/SHA를 확인했습니다. [모바일 APK 다운로드](https://github.com/BACKHYUN96/S20-PLUS/raw/cb1522d10644096f540e24714d8e486098c57dcc/pixel-traffic-unity-prototype-0.13.0.apk), [실제 Unity 화면](https://github.com/BACKHYUN96/S20-PLUS/raw/cb1522d10644096f540e24714d8e486098c57dcc/scenery-preview.png), [설치·검증 기록](docs/UNITY_AUTOMATION.md). 100우산 예산118710tri/1551renderer/43material을 확인했습니다. 폰0.12 적용 성공은 사용자 확인, 폰0.13 외형/성능은 확인 대기입니다. Drive 구성은 나중에 PC에서 재개합니다.
 
 루팅된 Samsung Galaxy S20+ 관련 앱과 도구의 개발 작업 공간입니다.
 

@@ -1,5 +1,13 @@
 # 작은 패치 작업 안내
 
+## Unity 0.13.0 — 가로수·외벽·옥상 (2026-10-10)
+
+- 범위10source/meta: StarterConfig/StarterScene/CityEnvironment/CityPreview 및 FoliageScene/ArchitectureScene/SceneryChecks+meta3. Scenery0130/code14,98build입력; 기존 카메라·원경/traffic/light/lane/NativeAndroid 유지.
+- 3종 opaque 수관400tri/shared256texture32나무와24건물의3 merged detail mesh/12옥상shrub. 실제48slab/192standing post, topology·finiteUV/unitnormals/winding·보행/roof clearance·실제wind/lifecycle/18기후/기존traffic 검사. 기본107334/1383/43,100우산118710/1551/43; 기존120000/2400/48 strict 유지.
+- 첫Validate38038675998과GPU51에서 외형 관찰 후 slab/post 실체 검사를 보강했다. 최종Validate38039103702,source1196faea4f345eb0e039be1d27b839f5998a2305와51PNG(기존43+수형/건축8확대); 임시camera는저장하지않으며Editor사진은폰FPS검사가아니다.
+- Editor촬영-only 보정sourceabe19eb7eff5e5260c7f3d88423830081595aba6/Validate38039712854에서 Effects.Advance(0)·맑음 rain/snow OFF·51PNG 확인. APKsource와97입력동일/capture1개변경을구분한다.
+- implementation source1196faea4f345eb0e039be1d27b839f5998a2305 APKtag0.13.0-build1/BuildApk38039430522, 실제BuildPlayer0errors21warnings/launcherLint0errors8warnings/다운로드v2cert/code14/manifest/SHA. 12host입력불변으로hostLint380083782070errors10warnings재사용. APK/PNG 일회성downloadbranch의공개HTTP/SHA검증; docs-only에는같은검사를반복하지않음. 폰0.13 확인대기,Drive보류.
+
 ## Unity 0.12.0 — 하늘·산·강·도시 원경 (2026-10-10)
 
 - 변경13 Unity소스/meta: StarterConfig/CityClimate/StarterScene/CityEnvironment/CityPreview와 신규 DistantBackdrop/DistantScene/DistantChecks/Distant.shader +meta4개. Landscape0120/code13,92build입력; NativeAndroid12host 입력/카메라/기존traffic/light/lane변경 유지.

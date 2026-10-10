@@ -1,5 +1,26 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-10 — Unity 0.13.0 가로수·외벽·옥상: 실제 검증·서명 APK 및 모바일 전달 완료
+
+사용자가 **0.12.0 실제 폰 적용 성공**을 확인하고 다음 패치를 승인했다. 이번 전달은 **0.13.0/code14**, `Scenery-0.13.0.unity`/`Generated/Scenery0130`, `pixel-traffic-unity-prototype-0.13.0.apk`. 시안 카메라(1.4,14,-37)/target(-4.9,1,68)/44°FOV, 하늘·산·강/원경·24차량/보행/신호·시간/날씨/노을 경유·기존 전조등/브레이크등/깜빡이 세 번/안전 차선변경을 유지한다.
+
+- **가로수:** 32그루의 수관을 둥근형·수직형·퍼지는형 3종 공유 메시와 서로 다른 잎 색으로 바꿨다. 기존8clump/640tri에서5clump/400tri로 줄이고 실루엣을 변형했다. 공유256×256 잎 texture는 반복 경계를 연결한 잎 색/음영 무늬와 mip/trilinear를 사용한다. opaque Lit 및 기존32수관의 비바람 흔들림/숨김 정지를 유지한다. 투명 잎 카드/추가 실시간 light를 넣지 않았다. 옥상12개에60tri 공유 shrub과 기존 잎 재질을 재사용한다.
+- **건물:** 24개 외벽을 큰 콘크리트 패널·옅은 얼룩과 밝은 석재색으로 바꾸고 모서리/상부 테두리를 넣었다. **실제 발코니48개/standing rail post192개**와 끝 옥상 난간·환기구 slit·출입실/일부 안테나·옥상 화단을 넣었다. 각 건물의 stone/metal/plaster3 merged mesh와 기존 재질을 재사용한다. 기존480개 창문/상가24개·실제 조명4개를 유지한다. 새 architecture mesh 합계8352tri이며 건물/보행 높이와 옥상 footprint를 검사했다.
+- **예산:** 실제 기본 **107334tri/1383renderer/43material**, 최대100우산 **118710tri/1551renderer/43material**. 기존 strict <120000/<2400/<48은 그대로이며 수관 단순화로 건물 추가 비용을 확보했다. 이 수치는 geometry/material 예산이며 실제 폰 FPS/발열 개선을 측정한 값은 아니다.
+- **검증 과정:** 첫 source646020f9e2818b98d4dd16c4d9dbd56802562508 / Validate38038675998과 GPU51PNG PASS 후 전체낮·수형3종·외벽/옥상·밤·비바람 실제 사진을 관찰했다. 첫 발코니 통계의 buildings×2 계산을 실제 merged slab/post bounds 검사로 보강하여, 옥상 slit만 있어도 빈 난간 검사를 통과하는 일을 막았다. 최종 source **`1196faea4f345eb0e039be1d27b839f5998a2305`**, Validate [38039103702](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38039103702)에서 실제48slab/192post를 확인하고 같은 source tag `unity-apk-0.13.0-build1`로 BuildApk [38039430522](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38039430522) PASS. 새3수형/공유 opaque texture/finite UV·unit normals·winding/보행·옥상 clearance 검사, 기존18시간/날씨·15/30/60/120Hz 노을/숨김·wind/보행/600초차량/차선변경 검사 PASS.
+- **촬영 보정:** 야간 나무 확대에서 이전 비바람 빗줄기가 남는 Editor Snap/readback 문제를 발견했다. capture-only source `abe19eb7eff5e5260c7f3d88423830081595aba6` / Validate+GPU [38039712854](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38039712854)에서 Effects.Advance(0)로 현재 날씨 visibility와 임시camera billboard를 갱신하고 맑음의 실제 rain/snow renderer OFF를 검사했다. active clock/전환값은 움직이지 않는다. APK는 검증된1196faea source를 사용한다. Editor 촬영파일1개 외 Runtime·shader·geometry generator/config·NativeAndroid/빌드도구 등97/98입력이 같은지 확인하여 변경 없는Android빌드는반복하지않았다. 공개 PNG는 보정된 capture source에서 가져온다.
+- **실제 이미지:** Editor6000.3.26f1/Direct3D11 **51PNG**. 기존43장과3수형낮/둥근나무밤·비바람/건축낮·밤·옥상8장. 임시 확대카메라를 복원하고 장면에 저장하지 않았다. 새 날씨/야간 사진에서 기존빛과 바람을 확인했다. Editor GPU 그림은 실제 휴대폰 홈 화면이나 성능 검사와 구분한다.
+- **Android/APK:** 실제 BuildPlayer Succeeded/오류0/경고21, launcher Lint 오류0/경고8. APKsource의98입력과capture source의98입력 SHA·97개동일/EditorCapture1개변경·12unchanged NativeAndroid/Bridge/host 입력을 확인하여 기존 unityLibrary Lint run38008378207 오류0/경고10을 재사용한다. artifact digest/bytes/ZIP CRC와 실제 다운로드 APK CRC/SHA, SDK apksigner/aapt의 원본 v2 cert `a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6`/version0.13.0/code14/min29/target36/ARM64, 설정 Activity launcher/BIND_WALLPAPER 별도process서비스/meta/private provider/비활성 Unity Activity를 검증했다. APK **29966435bytes**, SHA256 `7a8e3a55999289272865eaf1da6af3e9791020b24a686ddd450667f30188b776`.
+- **전달:** [모바일 APK](https://github.com/BACKHYUN96/S20-PLUS/raw/cb1522d10644096f540e24714d8e486098c57dcc/pixel-traffic-unity-prototype-0.13.0.apk), [실제 Unity 화면](https://github.com/BACKHYUN96/S20-PLUS/raw/cb1522d10644096f540e24714d8e486098c57dcc/scenery-preview.png). 일회성 `downloads/unity-0.13.0` branch `cb1522d10644096f540e24714d8e486098c57dcc`에는 APK/PNG만2파일, source main에는 APK/지속 release workflow/contents:write를 추가하지 않았다. 로그인 없는 공개HTTP200의 전체 파일 크기/SHA가 검증 APK/PNG와 같음을 확인했다. WORK 작업파일 응답 오류가 있으면 일반https링크를 크롬/삼성인터넷에서 연다.
+- **보존/다음:** Unity10source/meta와 관련8문서만 게시했다. 기존 native 앱/사용자 dirty파일·실제index와97개 동일테스트입력·별도로검증한EditorCapture1개입력을유지했다. 실제폰0.13 외형·홈/잠금/복귀/재부팅·FPS/발열은 설치 후 확인한다. 다음 추천은 시안의 전경에 보이는 버스·박스트럭의 3D 모델 추가이며 차량 길이/안전간격/예산도 함께 검증해야 한다. Drive/Colab 작업은 사용자 지시대로 나중에 PC Drive 탐색기 설치 후 재개하며 이번에는 Drive 업로드/메일을 하지 않는다. 시안6650.jpg는 임시 첨부이며 새 환경에서는 재확보가 필요할 수 있다.
+
+집 PC에서 최신 다운로드 폴더에 APK를 저장한 뒤 업데이트 설치:
+
+```powershell
+$unityAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $unityAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.13.0.apk"
+```
+
 ## 2026-10-10 — Unity 0.13.0 확대 촬영의 날씨 잔상 보정
 
 최종 implementation source1196faea / Validate38039103702는 실제48slab/192railpost·기존 검사와GPU51PNG PASS이며 동일source APKtag0.13.0-build1/BuildApk38039430522가진행중이다. 야간 나무 확대사진에서 이전 비바람의빗줄기가 남아있음을 발견했다. Editor Preview는 시간/날씨를 Snap하지만 Runtime ClimateEffects 갱신은 매프레임 Advance에서 수행되므로 readback직전엔 이전particle renderer상태가남을수있었다. CityPreview.CaptureState에서 Effects.Advance(0,currentRain,currentSnow,currentWind,currentTarget)를 호출해 시계/전환값을 움직이지않고 현재weathervisibility와임시camera billboard를 갱신한다. 맑음에서 실제 Rain/Snow renderer가꺼졌는지검사한다.
