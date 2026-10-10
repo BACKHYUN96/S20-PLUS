@@ -1,5 +1,11 @@
 # 작업 이력
 
+## 2026-10-10 — Unity 0.9.0 실제 렌더에서 간판 반전 발견·수정
+
+source47cdcc68a3657100c74e0431ea9da8b72e65829a의 실제Validate38017177473/job114109948455는scene/previewPASS,artifact11656294283/12496027bytes/SHA681d21462d39c674e1d8a1e481c7212308ba469bbea7c90460f79cb6548e5b0b이다. 기본108258tri/1275renderer/47material,최대100우산119634/1443/47로예산PASS. 24건물/480창문(302lit,178dark,180warm,61cool),매장3종8개씩/16실제전환/15·30·60·120Hz 및기존차량/보행/날씨검사PASS.
+
+실제상가낮/밤6장관찰에서글자가좌우반전됨을확인했다. 기존UV검사가 잘못된카메라right방향 가정을공유했으므로PASS를시각확인으로대체하지않았다. FrontageScene의좌우UVflip을반대로고치고FrontageChecks를카메라forward/up cross제품으로검사하게수정했다. CityPreview의카메라를낮고반대쪽도로로옮겨Cafe간판나무가림을줄인다. 변경3소스만재게시하며실제폰camera나거리geometry를바꾸지않는다. 최종같은source Unity재검사/PNG관찰전에는APK태그를만들지않는다.
+
 ## 2026-10-10 — Unity 0.9.0 상가·창문 조명 구현 / 원격 게시 승인 확인·Windows 검증 시작
 
 - 사용자가 이번 수정본을 BACKHYUN96/S20-PLUS main에 게시하고 연결된 PC의 자동 검증·실제 화면 캡처·서명 APK 빌드까지 진행하도록 명시 승인했다. 직전 main/기능 브랜치 push는 자동 승인 검토에 차단됐으며 실행되지 않았다.

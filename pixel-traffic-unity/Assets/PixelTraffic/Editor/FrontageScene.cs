@@ -180,7 +180,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 indices.AddRange(flip?new[]{n,n+2,n+1,n,n+3,n+2}:new[]{n,n+1,n+2,n,n+2,n+3});
             }
             internal void Plane(float x,float bottom,float top,float start,float end,Rect rect,float outward)
-            {Quad(new Vector3(x,bottom,start),new Vector3(x,bottom,end),new Vector3(x,top,end),new Vector3(x,top,start),rect,Vector3.right*outward,outward>0);}
+            {Quad(new Vector3(x,bottom,start),new Vector3(x,bottom,end),new Vector3(x,top,end),new Vector3(x,top,start),rect,Vector3.right*outward,outward<0);}
             internal void Box(Vector3 centre,Vector3 size)
             {
                 Vector3 h=size*.5f;Vector3[] p={new Vector3(-h.x,-h.y,-h.z),new Vector3(h.x,-h.y,-h.z),new Vector3(h.x,h.y,-h.z),new Vector3(-h.x,h.y,-h.z),new Vector3(-h.x,-h.y,h.z),new Vector3(h.x,-h.y,h.z),new Vector3(h.x,h.y,h.z),new Vector3(-h.x,h.y,h.z)};

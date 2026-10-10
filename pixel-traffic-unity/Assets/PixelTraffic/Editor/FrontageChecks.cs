@@ -32,7 +32,10 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Vector2 sign=(store.uv[12]+store.uv[14])*.5f;int style=Mathf.FloorToInt(sign.x*4);Need(style>=0&&style<3,"Shop style UV invalid.");styles[style]++;
                 // Text reads from either sidewalk: UV increases toward the viewer's right.
                 float outward=Mathf.Sign(glass.localPosition.x+mesh.bounds.center.x);
-                Need((store.uv[13].x-store.uv[12].x)*outward<0,"Shop sign is mirrored on one side of the road.");
+                // Viewer right is cross(camera up, forward toward the building).
+                Vector3 viewerRight=Vector3.Cross(Vector3.up,-Vector3.right*outward);
+                Vector3 signEdge=store.vertices[13]-store.vertices[12];
+                Need((store.uv[13].x-store.uv[12].x)*Vector3.Dot(signEdge,viewerRight)>0,"Shop sign is mirrored on one side of the road.");
                 foreach(Vector3 vertex in store.vertices)
                 {
                     Vector3 world=root.TransformPoint(vertex);Need(world.y>2.5f||Mathf.Abs(world.x)>10.6f,"Low shop geometry blocks the pedestrian route.");

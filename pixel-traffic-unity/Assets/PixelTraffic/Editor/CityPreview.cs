@@ -172,8 +172,8 @@ namespace PixelTraffic.UnityPrototype.Editor
                     for(int style=0;style<3;style++)
                     {
                         float z=-22+style*17;
-                        camera.transform.position=new Vector3(-3,3.4f,z-3.8f);
-                        camera.transform.LookAt(new Vector3(-10.75f,1.8f,z));
+                        camera.transform.position=new Vector3(-4,2.2f,z+3.8f);
+                        camera.transform.LookAt(new Vector3(-10.75f,1.65f,z));
                         foreach(int theme in new[]{0,2})
                         {
                             climate.Preview(theme,0);
