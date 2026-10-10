@@ -141,6 +141,12 @@ namespace PixelTraffic.UnityPrototype.Editor
                     landscapeClimate.Preview(theme,0);landscapePreviews.Add(CaptureState(camera,request,target,image,"landscape-"+new[]{"day","sunset","night"}[theme]));
                 }
                 landscapeClimate.Preview(0,5);landscapePreviews.Add(CaptureState(camera,request,target,image,"landscape-storm"));
+                landscapeClimate.Preview(0,4);landscapePreviews.Add(CaptureState(camera,request,target,image,"landscape-fog"));
+                camera.transform.position=new Vector3(-20,32,288);camera.transform.LookAt(new Vector3(-20,20,364));camera.fieldOfView=60;
+                landscapeClimate.Preview(0,0);landscapePreviews.Add(CaptureState(camera,request,target,image,"river-day"));
+                landscapeClimate.Preview(2,0);landscapePreviews.Add(CaptureState(camera,request,target,image,"river-night"));
+                for(int i=0;i<60;i++)landscapeClimate.Advance(.1,true);
+                landscapePreviews.Add(CaptureState(camera,request,target,image,"river-motion"));
                 camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);camera.fieldOfView=roadFov;landscapeClimate.Preview(0,0);
                 var sceneryPreviews=new System.Collections.Generic.List<string>();
                 var sceneryTarget=new RenderTexture(960,720,24,RenderTextureFormat.ARGB32){antiAliasing=2};sceneryTarget.Create();

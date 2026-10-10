@@ -1,5 +1,11 @@
 # 현재 상태
 
+## 2026-10-11 — Unity 0.16.0 강·도시·산 원경 보강 진행 중
+
+사용자는 폰0.15.0 적용 성공을 확인하고 시안의 강·다리·스카이라인·산 배경 보강을 승인했다. 기존0.11 원경 기반을 재사용해 산3층의 높이/봉우리를 분리하고,34개 건물과첨탑/12개 강변 저층군·양안, 실제 깊이65m를가진 stylized 강 표면과 물에잠기지않는 다리·11램프를 구현한다. 단일공유불투명shader/material과기존active clock을 유지하고 밤건물·교각램프 아래월드좌표 반사,노을 반짝임,비/눈/안개 흐림을 보강한다. 새실시간Light/반사카메라/물리collider를추가하지않는다. 기존차량/보행/정류장/서명/host/workflow는유지한다.
+
+변경7파일: Editor DistantScene/DistantChecks/CityEnvironment/CityPreview/StarterScene,Runtime StarterConfig,Shaders Distant.shader. 별도RiverCity-0.16.0.unity/GeneratedRiverCity0160/code17. 초기geometry/runtime 검사와실제GPU사진71장,같은source의Android빌드/Lint/원본v2서명은 아직 대기다. 단순source검토를실제Unity/폰검증으로보고하지않는다. 최대100+8우산strict120000tri/2400renderer/48material예산을유지하며새물깊이/다리clearance/11lamp/산층검사와안개·강낮/밤/6초motion촬영4장을추가한다. 이전285파일/index/status와110입력기준을기록했다. Drive는PC설치후재개하며폰0.16/FPS·발열은추후사용자확인이다.
+
 ## 2026-10-10 — Unity 0.15.0 정류장·승하차·비상깜빡이: 실제 검증·서명 APK 전달 완료
 
 사용자는 폰 **0.14.0 적용 성공**을 확인했다. 이번 **0.15.0/code16**은 양측 정류장 표지·쉼터·벤치, 별도 8명 승객 pool, 버스의 실제 우측 문 opening/공유 sliding panels를 추가한다. 장면 `BusStops-0.15.0.unity`, generated `BusStops0150`. 정차 후 .8초 문 열림→하차/순차 승차→최소8초 대기 및 이동 승객 완료→.8초 문 닫힘이다. **승하차와 문 닫힘 중 양쪽 비상깜빡이**를 고정30Hz의9tick ON/9tick OFF로 켠다. 하차 승객은 같은 정차 방문에서 즉시 재승차하지 않는다. 버스의 다음 방문과15초 cooldown을 지난 뒤 pool을 다음 승객으로 재사용한다. 승객은 기존 보행자/쉼터/벤치/기둥과 발 간격을 지키고 우산을 접고 탑승한다.

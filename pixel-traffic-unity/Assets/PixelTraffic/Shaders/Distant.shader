@@ -48,7 +48,7 @@ Shader "PixelTraffic/Distant"
                     color=lerp(low,high,pow(elevation,.65));
                     float2 p=uv*float2(10,15)-float2(_Motion.y,0);
                     float n=Noise(p)*.58+Noise(p*2.1)*.28+Noise(p*4.2)*.14;
-                    float mass=smoothstep(.53-cloud*.16,.67-cloud*.16,n);
+                    float mass=smoothstep(.54-cloud*.16,.63-cloud*.16,n);
                     float3 clouds=float3(.97,.98,1)*day+float3(.91,.66,.56)*dusk+float3(.12,.16,.27)*night;
                     clouds*=1-cloud*.28;color=lerp(color,clouds,mass*.94);
                     float2 starUV=uv*float2(140,180);
@@ -59,19 +59,19 @@ Shader "PixelTraffic/Distant"
                 else if(kind<1.5)
                 {
                     float far=i.color.y;
-                    float3 green=lerp(float3(.16,.36,.23),float3(.39,.58,.72),far);
+                    float3 green=lerp(float3(.10,.29,.21),float3(.20,.43,.67),far);
                     // Shared world coordinates keep terrain noise continuous between ridge strips.
                     float2 terrain=i.positionWS.xy*float2(.065,.11);
                     float shade=.79+Noise(terrain+i.color.z)*.15+Noise(terrain*2.3)*.06;
                     color=(green*day+lerp(float3(.34,.34,.30),float3(.49,.43,.53),far)*dusk+float3(.035,.07,.12)*night)*shade;
                     color=lerp(color,float3(.84,.87,.9)*(day+dusk*.65+night*.19),snow*smoothstep(48,80,i.positionWS.y)*.62);
-                    color=lerp(color,_HazeColor.rgb,saturate(.09+far*.13+fog*.84+rain*.26));
+                    color=lerp(color,_HazeColor.rgb,saturate(.06+far*.11+fog*.84+rain*.26));
                 }
                 else if(kind<2.5)
                 {
                     float seed=i.color.z;
-                    float light=.58+.42*saturate(dot(normalize(i.normalWS),normalize(float3(-.5,.7,-.5))));
-                    color=lerp(float3(.39,.53,.63),float3(.65,.73,.76),seed)*light*(day+dusk*.68+night*.17);
+                    float light=.52+.48*saturate(dot(normalize(i.normalWS),normalize(float3(-.5,.7,-.5))));
+                    color=lerp(float3(.32,.48,.61),float3(.72,.78,.80),Hash(float2(seed*83,3)))*light*(day+dusk*.68+night*.17);
                     float2 grid=uv*float2(5,max(3,i.color.y));float2 cell=frac(grid);
                     float window=step(.18,cell.x)*step(cell.x,.73)*step(.22,cell.y)*step(cell.y,.74);
                     color=lerp(color,float3(.22,.40,.51)*(day+dusk*.5+night*.1),window*.72);
@@ -87,16 +87,38 @@ Shader "PixelTraffic/Distant"
                     float ripples=sin(uv.y*250+uv.x*39+distortion+_Motion.x*.65)+sin(uv.y*590-uv.x*67-distortion-_Motion.x*.43)*.38;
                     float glints=smoothstep(.88,1.33,ripples)*smoothstep(.32,.72,Noise(uv*float2(170,210)));
                     float ribbon=exp(-abs(uv.x-.65)*(5+uv.y*8));
-                    color+=glints*(.14+ribbon*.55)*(float3(.64,.82,.95)*day+float3(1,.56,.25)*dusk);
-                    float cityReflection=pow(saturate(sin(uv.x*150)*.5+.5),16)*(.4+.6*uv.y)*smoothstep(.1,1.1,ripples);
-                    color+=cityReflection*float3(.85,.61,.29)*night*.6;
+                    color+=glints*(.14+ribbon*.55)*(float3(.64,.82,.95)*day+float3(1,.56,.25)*dusk)*(1-cloud*.72);
+                    // World-space reflections sit below the authored ten-metre tower
+                    // spacing and bridge lamps. One local cell, no lights/reflection camera.
+                    float reflectedX=i.positionWS.x+sin(uv.y*81+_Motion.x*.38)*.5;
+                    float towerCell=floor((reflectedX+170)/10);
+                    float towerX=-165+towerCell*10;
+                    float seed=towerCell/34;
+                    float height=towerCell==20?66:12+fmod(towerCell*19,31);
+                    float cityRibbon=exp(-abs(reflectedX-towerX)*1.2)*step(0,towerCell)*step(towerCell,33);
+                    float lengthFade=smoothstep(.08,.38+height*.002,uv.y);
+                    float3 lamp=lerp(float3(1,.69,.27),float3(.46,.79,1),step(.66,Hash(float2(seed*71,seed*71))));
+                    color+=cityRibbon*lengthFade*smoothstep(-.35,1.2,ripples)*lamp*(night*.52+dusk*.14)*(1-cloud*.65);
+                    float bridgeX=-115+round((reflectedX+115)/23)*23;
+                    float bridgeRibbon=exp(-abs(reflectedX-bridgeX)*1.6)*step(abs(bridgeX),116);
+                    color+=bridgeRibbon*smoothstep(-.45,1.1,ripples)*(1-smoothstep(.40,.58,uv.y))*float3(1,.64,.26)*(night*.33+dusk*.08);
                     color=lerp(color,_HazeColor.rgb,saturate(.08+fog*.86+rain*.22+snow*.22));
+                }
+                else if(kind<4.5)
+                {
+                    color=float3(.58,.63,.64)*(day+dusk*.67+night*.2);
+                    color=lerp(color,_HazeColor.rgb,saturate(.12+fog*.84+rain*.23));
+                }
+                else if(kind<5.5)
+                {
+                    color=lerp(float3(.28,.37,.34),float3(.10,.31,.17),i.color.y)*(day+dusk*.65+night*.16);
+                    color=lerp(color,float3(.84,.87,.9)*(day+dusk*.65+night*.19),snow*.65);
+                    color=lerp(color,_HazeColor.rgb,saturate(.12+fog*.86+rain*.26));
                 }
                 else
                 {
-                    color=float3(.58,.63,.64)*(day+dusk*.67+night*.2);
-                    color+=float3(1,.69,.31)*step(.96,frac(uv.x*30))*(night*.6+dusk*.2);
-                    color=lerp(color,_HazeColor.rgb,saturate(.12+fog*.84+rain*.23));
+                    color=float3(.35,.37,.36)*day+float3(1,.64,.26)*(dusk*.6+night*.95);
+                    color=lerp(color,_HazeColor.rgb,saturate(.09+fog*.83+rain*.25));
                 }
                 return half4(color,1);
             }

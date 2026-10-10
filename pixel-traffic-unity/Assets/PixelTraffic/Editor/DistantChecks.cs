@@ -11,7 +11,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         {
             var distant=UnityEngine.Object.FindFirstObjectByType<DistantBackdrop>();Need(distant!=null,"Distant controller missing.");
             var root=GameObject.Find("Distant Skyline");var filters=root.GetComponentsInChildren<MeshFilter>();
-            Need(filters.Length==7,"Sky, three mountains, city, river and bridge meshes missing.");int triangles=0;
+            Need(filters.Length==8,"Sky, three mountains, city, river, banks and bridge meshes missing.");int triangles=0;
             foreach(var filter in filters)
             {
                 Mesh mesh=filter.sharedMesh;Need(mesh!=null&&mesh.vertexCount>0,"Distant mesh missing.");
@@ -21,6 +21,20 @@ namespace PixelTraffic.UnityPrototype.Editor
                 for(int i=0;i<indices.Length;i+=3)Need(Vector3.Cross(vertices[indices[i+1]]-vertices[indices[i]],vertices[indices[i+2]]-vertices[indices[i]]).sqrMagnitude>.0000001f,"Degenerate distant triangle.");
             }
             Need(triangles<1800,"Distant mesh budget exceeded.");
+            Need(root.GetComponentsInChildren<Light>().Length==0&&root.GetComponentsInChildren<Collider>().Length==0,"Distant scenery adds realtime lights or traffic obstacles.");
+            foreach(var renderer in root.GetComponentsInChildren<Renderer>())
+                Need(renderer.shadowCastingMode==UnityEngine.Rendering.ShadowCastingMode.Off&&!renderer.receiveShadows,"Distant geometry adds shadow work.");
+            Mesh riverMesh=GameObject.Find("Reference River").GetComponent<MeshFilter>().sharedMesh;
+            Need(riverMesh.bounds.size.z>60&&riverMesh.bounds.min.y==8&&riverMesh.bounds.max.y==25,"River lost actual depth or near/far banks.");
+            float surfaceY=8+(362-330)*17f/65;
+            Need(24.8f-1.3f/2-surfaceY>7,"Bridge deck is submerged or occluded by an upright river sheet.");
+            Mesh bridgeMesh=GameObject.Find("Reference Bridge").GetComponent<MeshFilter>().sharedMesh;
+            int lampVertices=0;foreach(var color in bridgeMesh.colors)if(color.r==6)lampVertices++;
+            Need(lampVertices==11*4,"Bridge does not have eleven authored opaque lamp faces.");
+            Mesh ridge0=GameObject.Find("Distant Ridge 0").GetComponent<MeshFilter>().sharedMesh;
+            Mesh ridge1=GameObject.Find("Distant Ridge 1").GetComponent<MeshFilter>().sharedMesh;
+            Mesh ridge2=GameObject.Find("Distant Ridge 2").GetComponent<MeshFilter>().sharedMesh;
+            Need(ridge1.bounds.max.y>ridge0.bounds.max.y+15&&ridge2.bounds.max.y>ridge1.bounds.max.y+15,"Mountain layers collapse to one silhouette.");
             var cylinder=AssetDatabase.LoadAssetAtPath<Mesh>(StarterScene.Generated+"/StreetCylinder.asset");
             Need(cylinder!=null&&cylinder.triangles.Length/3==64&&cylinder.bounds.size==new Vector3(1,2,1),"Street cylinder changed dimensions or budget.");
             var climate=UnityEngine.Object.FindFirstObjectByType<CityClimate>();climate.Initialize();climate.Preview(0,0);
@@ -70,13 +84,14 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
             }finally{camera.aspect=oldAspect;}
             climate.Preview(0,0);
-            return new Report{result="PASS: distant geometry, one runtime material, saved endpoints, directional sunset, hidden clock, retarget and portrait composition; actual GPU preview/device test separate",meshCount=filters.Length,triangles=triangles,streetCylinderTriangles=64,combinations=combinations,frameRates=rates,transitionFrames=transitionFrames,compositionSamples=compositionSamples,maxThemeFrameJump=maxJump,hiddenFrames=100};
+            return new Report{result="PASS: river depth and unsubmerged bridge, authored lamps, three ridge silhouettes, one runtime material, saved endpoints, directional sunset, hidden clock, retarget and portrait composition; actual GPU preview/device test separate",meshCount=filters.Length,triangles=triangles,streetCylinderTriangles=64,combinations=combinations,frameRates=rates,transitionFrames=transitionFrames,compositionSamples=compositionSamples,maxThemeFrameJump=maxJump,hiddenFrames=100,bridgeLampCount=11,riverDepth=riverMesh.bounds.size.z,bridgeDeckClearance=24.8f-1.3f/2-surfaceY};
         }
         private static void Need(bool ok,string why){if(!ok)throw new InvalidOperationException(why);}
         [Serializable] internal sealed class Report
         {
             public string result;public int meshCount,triangles,streetCylinderTriangles,combinations,transitionFrames,compositionSamples,hiddenFrames;
             public int[] frameRates;public float maxThemeFrameJump;
+            public int bridgeLampCount;public float riverDepth,bridgeDeckClearance;
         }
     }
 }

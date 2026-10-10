@@ -39,6 +39,20 @@ namespace PixelTraffic.UnityPrototype.Editor
                 obj.GetComponent<MeshFilter>().sharedMesh=mesh;var renderer=obj.GetComponent<MeshRenderer>();renderer.sharedMaterial=material;renderer.shadowCastingMode=ShadowCastingMode.Off;renderer.receiveShadows=false;return renderer;
             }
         }
+        // Shared authored layout also locates reflection ribbons; the shader never invents
+        // unrelated night lights on a separate screen-space grid.
+        internal const int TowerCount=34;
+        internal const float BridgeZ=362;
+        internal const float BridgeDeckY=24.8f;
+        internal static float TowerX(int i)=>-165+i*10;
+        internal static float TowerHeight(int i)=>i==20?66:12+(i*19%31);
+        internal static float RidgeHeight(float x,int layer)
+        {
+            float centre=layer==0?-42:layer==1?42:-83;
+            float peak=layer==0?27:layer==1?47:62;
+            return 31+layer*5+peak*Mathf.Exp(-Mathf.Pow((x-centre)/(layer==0?62:88),2))
+                +Mathf.Sin(x*.048f+layer*2)*5+Mathf.Sin(x*.13f+layer)*2.2f;
+        }
         internal static void Create(Transform scenery)
         {
             var shader=Shader.Find("PixelTraffic/Distant");if(shader==null)throw new InvalidOperationException("Distant shader missing.");
@@ -50,35 +64,58 @@ namespace PixelTraffic.UnityPrototype.Editor
             for(int layer=0;layer<3;layer++)
             {
                 var mountain=new Geometry();float z=425+layer*18;
-                for(int i=0;i<48;i++)
+                for(int i=0;i<64;i++)
                 {
-                    float x=-240+i*10,x2=x+10;
-                    float Height(float value)=>38+layer*9+24*Mathf.Exp(-Mathf.Pow((value+42)/74,2))+Mathf.Sin(value*.032f+layer)*5+Mathf.Sin(value*.11f)*1.6f;
-                    mountain.Quad(new Vector3(x,14,z),new Vector3(x,Height(x),z),new Vector3(x2,Height(x2),z),new Vector3(x2,14,z),new Color(1,layer*.43f,layer*.7f,1));
+                    float x=-240+i*7.5f,x2=x+7.5f;
+                    mountain.Quad(new Vector3(x,14,z),new Vector3(x,RidgeHeight(x,layer),z),new Vector3(x2,RidgeHeight(x2,layer),z),new Vector3(x2,14,z),new Color(1,layer*.43f,layer*.7f,1));
                 }
                 views.Add(mountain.Save("Distant Ridge "+layer,root,material));
             }
             var city=new Geometry();
-            for(int i=0;i<26;i++)
+            for(int i=0;i<TowerCount;i++)
             {
-                float x=-132+i*10.5f,z=402+i%3*6,height=13+i*17%27;
-                if(i==21)height=66;
-                new GameObject("Skyline Tower").transform.SetParent(root,false);
-                city.Box(new Vector3(x,20+height*.5f,z),new Vector3(6+i%4,height,8+i%3*2),new Color(2,height/2.4f,(i%7)/7f,1));
+                float x=TowerX(i),z=402+i%3*6,height=TowerHeight(i),seed=i/(float)TowerCount;
+                var marker=new GameObject("Skyline Tower").transform;marker.SetParent(root,false);marker.localPosition=new Vector3(x,20,z);
+                city.Box(new Vector3(x,20+height*.5f,z),new Vector3(5+i%4,height,7+i%3*2),new Color(2,height/2.4f,seed,1));
                 city.Box(new Vector3(x,20+height+.6f,z),new Vector3(3,1.2f,4),new Color(4,0,0,1));
+                if(i==20)
+                {
+                    city.Box(new Vector3(x,20+height+4,z),new Vector3(2.3f,7,3),new Color(2,3,seed,1));
+                    city.Box(new Vector3(x,20+height+10,z),new Vector3(.35f,8,.35f),new Color(4,0,0,1));
+                }
             }
             // A small summit landmark, using the same opaque material and no realtime light.
-            city.Box(new Vector3(-42,70,422),new Vector3(.75f,14,.75f),new Color(4,0,0,1));
-            city.Box(new Vector3(-42,74,422),new Vector3(4.1f,1.3f,3.2f),new Color(4,0,0,1));
-            city.Box(new Vector3(-42,82,422),new Vector3(.22f,9,.22f),new Color(4,0,0,1));
+            float summit=RidgeHeight(-42,0);
+            city.Box(new Vector3(-42,summit+7,422),new Vector3(.75f,14,.75f),new Color(4,0,0,1));
+            city.Box(new Vector3(-42,summit+11,422),new Vector3(4.1f,1.3f,3.2f),new Color(4,0,0,1));
+            city.Box(new Vector3(-42,summit+19,422),new Vector3(.22f,9,.22f),new Color(4,0,0,1));
             views.Add(city.Save("Opposite River City",root,material));
             var water=new Geometry();
-            water.Quad(new Vector3(-220,8,372),new Vector3(-220,25,372),new Vector3(220,25,372),new Vector3(220,8,372),new Color(3,0,0,1));
+            // A depth-spanning, gently raised stylized river, rather than an upright
+            // sheet in front of the bridge. Its near/far banks retain portrait framing.
+            water.Quad(new Vector3(-220,8,330),new Vector3(-220,25,395),new Vector3(220,25,395),new Vector3(220,8,330),new Color(3,0,0,1));
             views.Add(water.Save("Reference River",root,material));
+            var bank=new Geometry();
+            bank.Box(new Vector3(0,7.3f,325),new Vector3(360,1.4f,4),new Color(5,0,0,1));
+            bank.Box(new Vector3(0,25.6f,397),new Vector3(360,1.2f,3),new Color(5,0,0,1));
+            for(int i=0;i<12;i++)
+            {
+                float x=-100+i*18;
+                bank.Box(new Vector3(x,5,314+i%3),new Vector3(10,5+i%4,6),new Color(2,3,i/12f,1));
+                bank.Quad(new Vector3(x-6,7.8f,319),new Vector3(x-6,9.3f,319),new Vector3(x+6,9.3f,319),new Vector3(x+6,7.8f,319),new Color(5,1,0,1));
+            }
+            views.Add(bank.Save("River Banks",root,material));
             var bridge=new Geometry();
-            bridge.Box(new Vector3(0,25.5f,384),new Vector3(250,1.1f,6),new Color(4,0,0,1));
-            bridge.Box(new Vector3(0,27.4f,384),new Vector3(250,.22f,6.2f),new Color(4,0,0,1));
-            for(int i=0;i<11;i++)bridge.Box(new Vector3(-115+i*23,17,384),new Vector3(1.7f,17,3.2f),new Color(4,0,0,1));
+            bridge.Box(new Vector3(0,BridgeDeckY,BridgeZ),new Vector3(250,1.3f,6),new Color(4,0,0,1));
+            foreach(float z in new[]{BridgeZ-3.1f,BridgeZ+3.1f})
+                bridge.Box(new Vector3(0,BridgeDeckY+1.2f,z),new Vector3(250,.28f,.22f),new Color(4,0,0,1));
+            for(int i=0;i<11;i++)
+            {
+                float x=-115+i*23;
+                bridge.Box(new Vector3(x,18,BridgeZ),new Vector3(1.9f,12,3.2f),new Color(4,0,0,1));
+                bridge.Box(new Vector3(x,23.1f,BridgeZ),new Vector3(6,1.3f,4),new Color(4,0,0,1));
+                bridge.Quad(new Vector3(x-.325f,BridgeDeckY+1.425f,BridgeZ-3.2f),new Vector3(x-.325f,BridgeDeckY+1.775f,BridgeZ-3.2f),new Vector3(x+.325f,BridgeDeckY+1.775f,BridgeZ-3.2f),new Vector3(x+.325f,BridgeDeckY+1.425f,BridgeZ-3.2f),new Color(6,0,0,1));
+            }
             views.Add(bridge.Save("Reference Bridge",root,material));
             root.gameObject.AddComponent<DistantBackdrop>().Configure(material,views.ToArray());
         }
