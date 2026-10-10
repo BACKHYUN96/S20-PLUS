@@ -29,7 +29,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     for(int n=0;n<indices.Length;n+=3)
                         Need(Vector3.Cross(vertices[indices[n+1]]-vertices[indices[n]],vertices[indices[n+2]]-vertices[indices[n]]).sqrMagnitude>1e-14f,"Collapsed vehicle face.");
                     checkedVertices+=vertices.Length;
-                    if(filter.name=="Sculpted Body" || filter.name=="Tyre")
+                    if((filter.name=="Sculpted Body"&&car.Model!="CityBus"&&car.Model!="BoxTruck") || filter.name=="Tyre")
                     {
                         // Across duplicated vertices on a curved seam, shading normals agree.
                         int smooth=0;
@@ -53,10 +53,10 @@ namespace PixelTraffic.UnityPrototype.Editor
                     Mesh body=car.transform.Find("Sculpted Body").GetComponent<MeshFilter>().sharedMesh;
                     float expected=car.Model=="Suv" ? 1.84f : car.Model=="SportCoupe" ? 1.28f : 1.49f;
                     bool crown=false;foreach(Vector3 v in body.vertices)if(Mathf.Abs(v.x)<.001f&&Mathf.Abs(v.y-expected)<.001f)crown=true;
-                    Need(crown,"Crowned roof silhouette missing.");
+                    if(car.Model!="CityBus"&&car.Model!="BoxTruck")Need(crown,"Crowned roof silhouette missing.");
                 }
             }
-            Need(models.Count==4&&cars.Length==24,"Detail fleet incomplete.");
+            Need(models.Count==6&&cars.Length==24,"Detail fleet incomplete.");
             // Previous mesh formula: 48,600 fleet triangles. Preserve the city budget,
             // including all 100 open umbrellas (previous city total: 118,914).
             Need(fleetTriangles<49686,"Vehicle detail exhausts the city triangle budget.");

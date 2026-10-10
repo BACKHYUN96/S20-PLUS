@@ -45,10 +45,10 @@ namespace PixelTraffic.UnityPrototype
             for(int i=0;i<cars.Length;i++)
             {
                 var vehicle=vehicles[i];vehicle.gameObject.SetActive(true);vehicle.ResetPosition(vehicle.transform.position.z);Bounds bounds=vehicle.BodyBounds();
-                cars[i]=new StreetModel.Car {lane=vehicle.Lane,z=vehicle.transform.position.z,cruise=vehicle.Speed,speed=vehicle.Speed,length=bounds.size.z};
+                cars[i]=new StreetModel.Car {lane=vehicle.Lane,z=vehicle.transform.position.z,cruise=vehicle.Speed,speed=vehicle.Speed,length=bounds.size.z,width=bounds.size.x,height=bounds.size.y};
             }
             model=new StreetModel(people,cars);
-            portraitCamera=Camera.main;if(portraitCamera!=null){GeometryUtility.CalculateFrustumPlanes(portraitCamera,viewPlanes);model.Visible=Visible;}
+            portraitCamera=Camera.main;if(portraitCamera!=null){GeometryUtility.CalculateFrustumPlanes(portraitCamera,viewPlanes);model.Visible=Visible;model.VisibleVehicle=VisibleVehicle;}
             accumulator=0;lastPhase=(StreetModel.Phase)(-1);
         }
         private void Update()
@@ -87,6 +87,8 @@ namespace PixelTraffic.UnityPrototype
             }
             if(spray!=null)spray.Advance((float)elapsed,model,climate!=null&&climate.WeatherBlend!=null?climate.RainGain:0);
         }
+        private bool VisibleVehicle(Vector2 point,Vector3 size)
+            =>GeometryUtility.TestPlanesAABB(viewPlanes,new Bounds(new Vector3(point.x,size.y*.5f,point.y),size+Vector3.one*.4f));
         private bool Visible(Vector2 point)
             =>GeometryUtility.TestPlanesAABB(viewPlanes,new Bounds(new Vector3(point.x,1.2f,point.y),new Vector3(3,3.2f,6)));
         public void ApplyViews()

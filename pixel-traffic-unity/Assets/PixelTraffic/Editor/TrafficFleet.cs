@@ -11,11 +11,23 @@ namespace PixelTraffic.UnityPrototype.Editor
         private static readonly float[] speeds = {6.0f,7.0f,6.5f,5.8f};
         private static readonly float[] offsets = {17,34,9,26};
 
+        // Bus/truck traffic favours the outer lanes; both directions still retain all four cars.
+        internal static VehicleGeometry.Kind KindFor(int lane,int index)
+        {
+            if(lane<0||lane>3||index<0||index>=StarterConfig.VehiclesPerLane)
+                throw new ArgumentOutOfRangeException(nameof(lane));
+            if(lane==0&&(index==1||index==4)||lane==3&&index==3||lane==2&&index==2)
+                return VehicleGeometry.Kind.CityBus;
+            if(lane==3&&(index==1||index==4)||lane==0&&index==3||lane==1&&index==2)
+                return VehicleGeometry.Kind.BoxTruck;
+            return (VehicleGeometry.Kind)((lane+index+2)%4);
+        }
+
         internal static void Create()
         {
             var fleet = new GameObject("Two Way Traffic").transform;
-            var shapes = new VehicleGeometry.Shape[4];
-            for(int i=0;i<4;i++) shapes[i]=VehicleGeometry.Build((VehicleGeometry.Kind)i);
+            var shapes = new VehicleGeometry.Shape[6];
+            for(int i=0;i<shapes.Length;i++) shapes[i]=VehicleGeometry.Build((VehicleGeometry.Kind)i);
             Material blue = StarterScene.Surface("Vehicle Blue",new Color(.07f,.24f,.60f),.55f,.68f);
             Material red = StarterScene.Surface("Vehicle Red",new Color(.58f,.035f,.025f),.45f,.65f);
             Material silver = StarterScene.Surface("Vehicle Silver",new Color(.58f,.64f,.69f),.60f,.63f);
@@ -27,17 +39,20 @@ namespace PixelTraffic.UnityPrototype.Editor
             Material metal = StarterScene.Surface("Vehicle Metal",new Color(.63f,.67f,.70f),.78f,.73f);
             Material head = StarterScene.Surface("Headlamp",new Color(.97f,.94f,.79f),.1f,.6f);
             Material tail = StarterScene.Surface("Tail Lamp",new Color(.66f,.04f,.025f),.1f,.6f);
+            Material truckWhite=StarterScene.Surface("Truck White",new Color(.93f,.94f,.92f),.20f,.55f);
             Material[] paints={blue,red,silver,pearl};
             for(int lane=0;lane<4;lane++) for(int index=0;index<StarterConfig.VehiclesPerLane;index++)
             {
-                int kind=(lane+index+2)%4;
+                int kind=(int)KindFor(lane,index);
                 VehicleGeometry.Shape shape=shapes[kind];
                 Transform root=new GameObject(((VehicleGeometry.Kind)kind)+" Lane "+lane+" #"+index).transform;
                 root.SetParent(fleet,false);
                 float span=StarterConfig.RouteEnd-StarterConfig.RouteStart;
                 float z=StarterConfig.RouteStart+offsets[lane]+index*span/StarterConfig.VehiclesPerLane;
                 root.position=new Vector3((lane-1.5f)*StarterConfig.LaneWidth,0,z);
-                Material paint=kind==3?yellow:paints[(lane+index)%paints.Length];
+                Material paint=kind==(int)VehicleGeometry.Kind.Taxi?yellow:
+                    kind==(int)VehicleGeometry.Kind.CityBus?blue:
+                    kind==(int)VehicleGeometry.Kind.BoxTruck?truckWhite:paints[(lane+index)%paints.Length];
                 MeshPart("Sculpted Body",root,shape.paint,paint);
                 MeshPart("Sloped Windows",root,shape.glass,glass);
                 MeshPart("Grille and Trim",root,shape.trim,trim);
@@ -45,10 +60,10 @@ namespace PixelTraffic.UnityPrototype.Editor
                 MeshPart("Front Lamps",root,shape.head,head);
                 MeshPart("Rear Lamps",root,shape.tail,tail);
                 var wheels=new List<Transform>();
-                foreach(float side in new[]{-1f,1f}) foreach(float wheelZ in new[]{-shape.axle,shape.axle})
+                foreach(float side in new[]{-1f,1f}) foreach(float wheelZ in new[]{shape.rearAxle,shape.frontAxle})
                 {
                     Transform wheel=new GameObject("Wheel").transform;wheel.SetParent(root,false);
-                    wheel.localPosition=new Vector3(side*(kind == 2 ? .94f : kind == 1 ? .93f : .90f),shape.radius,wheelZ);
+                    wheel.localPosition=new Vector3(side*shape.wheelX,shape.radius,wheelZ);
                     MeshPart("Tyre",wheel,shape.tyre,trim);MeshPart("Five Spoke Rim",wheel,shape.rim,metal);wheels.Add(wheel);
                 }
                 var drive=root.gameObject.AddComponent<PrototypeDrive>();
@@ -106,8 +121,13 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
                 Need(bounds.min.x>car.LaneX-StarterConfig.LaneWidth/2&&bounds.max.x<car.LaneX+StarterConfig.LaneWidth/2,"Vehicle exceeds its own lane.");
                 Need(Mathf.Abs(bounds.min.y)<.001f,"Tyre contact floats or penetrates the road.");
-                Need(bounds.size.x>2&&bounds.size.x<2.4f&&bounds.size.z>4.4f&&bounds.size.z<5.1f,"Vehicle metres changed or compressed.");
-                Need(bounds.size.y>1.20f&&bounds.size.y<2,"Vehicle height compressed.");
+                if(car.Model=="CityBus")
+                    Need(bounds.size.x>2.6f&&bounds.size.x<2.9f&&bounds.size.z>10.5f&&bounds.size.z<10.8f&&bounds.size.y>3.2f&&bounds.size.y<3.5f,"Bus dimensions compressed or lane-exceeding.");
+                else if(car.Model=="BoxTruck")
+                    Need(bounds.size.x>2.5f&&bounds.size.x<2.9f&&bounds.size.z>7.3f&&bounds.size.z<7.6f&&bounds.size.y>3.3f&&bounds.size.y<3.5f,"Truck dimensions compressed or lane-exceeding.");
+                else
+                {Need(bounds.size.x>2&&bounds.size.x<2.4f&&bounds.size.z>4.4f&&bounds.size.z<5.1f,"Vehicle metres changed or compressed.");
+                 Need(bounds.size.y>1.20f&&bounds.size.y<2,"Vehicle height compressed.");}
                 Need(car.GetComponentsInChildren<Collider>().Length==0,"Visual fleet unexpectedly adds physics cost.");
                 for(int n=0;n<4;n++)
                 {
@@ -123,7 +143,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             }
             for(int lane=0;lane<4;lane++)Need(counts[lane]==StarterConfig.VehiclesPerLane,"Missing lane traffic.");
             Need(visible>=6,"Camera does not show sufficient two-way traffic.");
-            Need(models.Count==4&&models["Suv"].height>models["Sedan"].height+.30f&&models["SportCoupe"].height<models["Sedan"].height-.15f,"Model height differences lost.");
+            Need(models.Count==6&&models["Suv"].height>models["Sedan"].height+.30f&&models["SportCoupe"].height<models["Sedan"].height-.15f,"Model height differences lost.");
             float minimumGap=float.MaxValue;
             try
             {

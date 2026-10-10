@@ -28,7 +28,7 @@ namespace PixelTraffic.UnityPrototype
         bool Context(StreetModel model,StreetModel.Car car)
         {
             return car.active&&model.Signal==StreetModel.Phase.VehicleGreen&&model.PhaseSeconds<12&&model.DrivingPace>.85f&&car.speed>2&&
-                Math.Abs(car.z-StarterConfig.CrossingZ)>50&&car.z>StarterConfig.RouteStart+22&&car.z<StarterConfig.RouteEnd-22;
+                Math.Abs(car.z-StarterConfig.CrossingZ)>50+car.SafetyLength/2&&car.z>StarterConfig.RouteStart+22+car.SafetyLength/2&&car.z<StarterConfig.RouteEnd-22-car.SafetyLength/2;
         }
         public bool Request(StreetModel model,int index)
         {
@@ -44,9 +44,10 @@ namespace PixelTraffic.UnityPrototype
             var car=cars[index];
             for(int j=0;j<cars.Length;j++)if(j!=index&&cars[j].active&&cars[j].Occupies(car.targetLane))
             {
-                double gap=SignedAhead(car,cars[j]);float half=(car.length+cars[j].length)*.5f;
-                float front=half+2.2f+car.speed*1.2f+Mathf.Max(0,car.speed-cars[j].speed)*4.8f;
-                float rear=half+2.2f+cars[j].speed*1.5f+Mathf.Max(0,cars[j].speed-car.speed)*4.8f;
+                double gap=SignedAhead(car,cars[j]);float half=(car.SafetyLength+cars[j].SafetyLength)*.5f;
+                float horizon=(BlinkTicks+car.MergeDuration)*StreetModel.Dt;
+                float front=half+2.2f+car.speed*1.2f+Mathf.Max(0,car.speed-cars[j].speed)*horizon;
+                float rear=half+2.2f+cars[j].speed*1.5f+Mathf.Max(0,cars[j].speed-car.speed)*horizon;
                 if(gap>=0?gap<front:-gap<rear)return false;
             }
             return true;
@@ -61,7 +62,7 @@ namespace PixelTraffic.UnityPrototype
                 if(car.maneuver==Stage.Merging)
                 {
                     car.mergeTicks++;
-                    if(car.mergeTicks>=MergeTicks)
+                    if(car.mergeTicks>=car.MergeDuration)
                     {car.lane=car.targetLane;car.targetLane=-1;car.maneuver=Stage.Idle;car.nextChangeTick=model.ActiveTicks+(28+i*7%33)*30;Completed++;}
                     continue;
                 }
@@ -78,7 +79,7 @@ namespace PixelTraffic.UnityPrototype
                     {
                         // Odometers distinguish a real rear pass from a wrapped signed-distance jump.
                         double gap=rearPassAt[i,j]+cars[j].totalDistance-car.totalDistance;
-                        if(!cars[j].active||!cars[j].Occupies(car.targetLane)||gap>(car.length+cars[j].length)*.5f+2.2f)car.rearMask&=~(1u<<j);
+                        if(!cars[j].active||!cars[j].Occupies(car.targetLane)||gap>(car.SafetyLength+cars[j].SafetyLength)*.5f+2.2f)car.rearMask&=~(1u<<j);
                     }
                     if(car.rearMask==0&&Context(model,car)&&!Busy(car)&&SafeGap(i))
                     {car.maneuver=Stage.Signaling;car.signalTicks=0;car.blinks=1;}
@@ -94,7 +95,7 @@ namespace PixelTraffic.UnityPrototype
                     if(car.signalTicks<BlinkTicks&&car.signalTicks%18==0)car.blinks++;
                     if(car.signalTicks>=BlinkTicks)
                     {
-                        if(car.blinks==3&&car.rearMask==0&&SafeGap(i)&&Math.Abs(car.z-StarterConfig.CrossingZ)>18)
+                        if(car.blinks==3&&car.rearMask==0&&SafeGap(i)&&Math.Abs(car.z-StarterConfig.CrossingZ)>18+car.SafetyLength/2)
                         {car.maneuver=Stage.Merging;car.mergeTicks=0;}
                         else Cancel(car,model.ActiveTicks);
                     }
@@ -107,9 +108,16 @@ namespace PixelTraffic.UnityPrototype
         public static int IndicatorSide(StreetModel.Car car)=>car.targetLane<0?0:Math.Sign(car.targetLane-car.lane)*car.Direction;
         public static float Yaw(StreetModel.Car car)
         {
-            if(car.maneuver!=Stage.Merging)return 0;float t=car.mergeTicks/(float)MergeTicks;
-            float lateral=(car.targetLane-car.lane)*StarterConfig.LaneWidth*6*t*(1-t)/3;
-            return Mathf.Clamp(Mathf.Atan2(lateral,Mathf.Max(2,car.speed))*Mathf.Rad2Deg*car.Direction,-8,8);
+            if(car.maneuver!=Stage.Merging)return 0;float t=car.mergeTicks/(float)car.MergeDuration;
+            float lateral=(car.targetLane-car.lane)*StarterConfig.LaneWidth*6*t*(1-t)/(car.MergeDuration*StreetModel.Dt);
+            float desired=Mathf.Clamp(Mathf.Atan2(lateral,Mathf.Max(2,car.speed))*Mathf.Rad2Deg*car.Direction,-8,8);
+            // A slowing long vehicle must keep its rotated corners within its half of the road.
+            float room=car.Direction<0?Mathf.Min(car.X+StarterConfig.RoadWidth/2,-car.X):Mathf.Min(car.X,StarterConfig.RoadWidth/2-car.X);
+            float low=0,high=Mathf.Abs(desired)*Mathf.Deg2Rad;
+            if((car.width*Mathf.Cos(high)+car.length*Mathf.Sin(high))/2<=room-.015f)return desired;
+            for(int n=0;n<12;n++)
+            {float mid=(low+high)/2;if((car.width*Mathf.Cos(mid)+car.length*Mathf.Sin(mid))/2<=room-.015f)low=mid;else high=mid;}
+            return Mathf.Sign(desired)*low*Mathf.Rad2Deg;
         }
     }
 }

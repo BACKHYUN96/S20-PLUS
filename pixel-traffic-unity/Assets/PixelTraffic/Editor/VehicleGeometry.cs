@@ -8,15 +8,16 @@ namespace PixelTraffic.UnityPrototype.Editor
     // Authored metre-scale meshes. Perspective is supplied by the camera, never by lane scaling.
     internal static class VehicleGeometry
     {
-        internal enum Kind { Sedan, SportCoupe, Suv, Taxi }
+        internal enum Kind { Sedan, SportCoupe, Suv, Taxi, CityBus, BoxTruck }
         internal sealed class Shape
         {
             public Mesh paint, glass, trim, metal, head, tail, tyre, rim;
-            public float radius, axle;
+            public float radius, axle, wheelX, frontAxle, rearAxle, lampX, frontLampY, rearLampY;
         }
 
         internal static Shape Build(Kind kind)
         {
+            if(kind==Kind.CityBus||kind==Kind.BoxTruck) return HeavyVehicleGeometry.Build(kind);
             bool suv = kind == Kind.Suv, sport = kind == Kind.SportCoupe;
             float half = suv ? .96f : sport ? .95f : .92f;
             float length = suv ? 4.90f : sport ? 4.48f : 4.58f;
@@ -153,10 +154,14 @@ namespace PixelTraffic.UnityPrototype.Editor
             string prefix = kind.ToString();
             return new Shape { paint=paint.Save(prefix+"Paint",55),glass=glass.Save(prefix+"Glass"),trim=trim.Save(prefix+"Trim"),
                 metal=metal.Save(prefix+"Metal"),head=head.Save(prefix+"Head"),tail=tail.Save(prefix+"Tail"),
-                tyre=tyre.Save(prefix+"Tyre",65),rim=rim.Save(prefix+"Rim"),radius=radius,axle=axle };
+                tyre=tyre.Save(prefix+"Tyre",65),rim=rim.Save(prefix+"Rim"),radius=radius,axle=axle,
+                wheelX=suv?.94f:sport?.93f:.90f,frontAxle=axle,rearAxle=-axle,lampX=.78f,
+                frontLampY=headCenter(belt),rearLampY=belt*.78f };
         }
 
-        private sealed class Builder
+        private static float headCenter(float belt) => belt*.77f;
+
+        internal sealed class Builder
         {
             private readonly List<Vector3> vertices = new List<Vector3>();
             private readonly List<int> indices = new List<int>();

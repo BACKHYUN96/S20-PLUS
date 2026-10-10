@@ -1,5 +1,15 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-10 — Unity 0.14.0 버스·박스 트럭 구현, 실제 검증 대기
+
+사용자가0.13.0실제폰적용성공을확인하고3D버스/박스트럭패치를승인했다.0.14.0/code15,HeavyTraffic-0.14.0.unity/Generated/HeavyTraffic0140. 차량24대/6perlane에서파란CityBus4·흰BoxTruck4·기존승용차16을혼합하고시안카메라·나무/건축·시간/날씨/노을·보행/신호·NativeAndroid를유지한다.
+
+- 버스는10.6m대칭body/옆창·승차문·앞뒤창/그릴·거울·옥상AC,트럭은7.4m분리cab/cargo/뒤중앙doorseam·lockingbars·hinges·bumper를실제mesh로생성한다. 8공유mesh/material4wheelpivots와차량당17renderer계약을유지한다. 기존bodymetres/opaqueglass64finish/등화재질을재사용하며트럭white공유재질1개만추가한다. 실제triangles/materialbudget은PC검증전이므로추정과구분한다.
+- 실제길이·폭·높이를model에전달하고8°회전의보수적앞뒤envelope로following/stop/횡단보도clearance/재진입/차선변경안전거리를계산한다. 승용차3초/긴차량6초smoothmerge,깜빡이3pulse1.8초/관측뒤차60m모두추월대기/마지막gap재검사를유지하며느려진차의회전corners도중앙선/curb바깥으로나가지않게한다. 보행viewport와차량전체boundsviewport를분리해긴차의뒤쪽이아직보이는데날씨로사라지는일을막는다.
+- 실제6종24fleet메트르/axle/contact·대칭body·front/rearlamps·cargo2locks/6hinges·buswindows/AC·normal/UV/winding·sharedmesh검사, 실제mixedfleet600초/긴차rearpass·6초merge·slowcorners검사를추가한다(실제보고서수치로정정예정). 기존18기후·15/30/60/120Hz·보행/100우산budget검사유지. 실제촬영은기존51+두heavy앞/뒤낮·밤8=59PNG로준비하며임시camera/pose는저장하지않는다.
+- 변경17source/meta,102buildinputSHA를기록했다. 이전12host입력불변이면실제hostLint38008378207을재사용한다. 실제Unity/캡처/AndroidBuildPlayer·launcherLint/원본서명·공개APK직접주소검증은대기이며실행하지않은PASS를주장하지않는다. 이전촬영보정Effects.Advance(0)는유지한다. 폰0.14외형/FPS·발열/lifecycle는설치후확인한다.
+- 기존dirty native/user파일/index보존,별도worktree없음. Drive/메일·지속releaseworkflow는추가하지않으며APK는검증후기존일회성publicdownload방식으로전달한다. 사용자가0.13직접주소다운로드와적용성공을확인했다. 초기병렬작업자는사용량한도로그만둔뒤본담당자가생성/통합/검증을계속수행했다.
+
 ## 2026-10-10 — Unity 0.13.0 가로수·외벽·옥상: 실제 검증·서명 APK 및 모바일 전달 완료
 
 사용자가 **0.12.0 실제 폰 적용 성공**을 확인하고 다음 패치를 승인했다. 이번 전달은 **0.13.0/code14**, `Scenery-0.13.0.unity`/`Generated/Scenery0130`, `pixel-traffic-unity-prototype-0.13.0.apk`. 시안 카메라(1.4,14,-37)/target(-4.9,1,68)/44°FOV, 하늘·산·강/원경·24차량/보행/신호·시간/날씨/노을 경유·기존 전조등/브레이크등/깜빡이 세 번/안전 차선변경을 유지한다.

@@ -10,18 +10,17 @@ namespace PixelTraffic.UnityPrototype.Editor
         internal static void Attach(Transform root,VehicleGeometry.Shape shape,Material lamp,string model)
         {
             float front=shape.head.bounds.max.z+.0005f,rear=shape.tail.bounds.min.z-.0005f;
-            float frontY=shape.tail.bounds.center.y;
-            Renderer l=Part(root,"Left Turn Signals",Signal(model+"LeftSignals",-1,front,rear,frontY),lamp);
-            Renderer r=Part(root,"Right Turn Signals",Signal(model+"RightSignals",1,front,rear,frontY),lamp);
+            Renderer l=Part(root,"Left Turn Signals",Signal(model+"LeftSignals",-1,front,rear,shape.lampX,shape.frontLampY,shape.rearLampY),lamp);
+            Renderer r=Part(root,"Right Turn Signals",Signal(model+"RightSignals",1,front,rear,shape.lampX,shape.frontLampY,shape.rearLampY),lamp);
             Renderer b=Part(root,"Headlight Road Beams",Beam(model+"RoadBeams",front),lamp);b.enabled=false;
             root.gameObject.AddComponent<VehicleLighting>().Configure(root.Find("Front Lamps").GetComponent<Renderer>(),root.Find("Rear Lamps").GetComponent<Renderer>(),l,r,b);
         }
-        static Mesh Signal(string name,float side,float front,float rear,float y)
+        static Mesh Signal(string name,float side,float front,float rear,float lampX,float frontY,float rearY)
         {
             var p=new List<Vector3>();var uv=new List<Vector2>();var t=new List<int>();
-            void Face(float z,Vector3 normal)
-            {float x=side*.78f;Quad(p,uv,t,new Vector3(x-.055f,y-.025f,z),new Vector3(x+.055f,y-.025f,z),new Vector3(x+.055f,y+.025f,z),new Vector3(x-.055f,y+.025f,z),normal);}
-            Face(front,Vector3.forward);Face(rear,Vector3.back);return Save(name,p,uv,t);
+            void Face(float z,float y,Vector3 normal)
+            {float x=side*(lampX+.06f);Quad(p,uv,t,new Vector3(x-.045f,y-.025f,z),new Vector3(x+.045f,y-.025f,z),new Vector3(x+.045f,y+.025f,z),new Vector3(x-.045f,y+.025f,z),normal);}
+            Face(front,frontY,Vector3.forward);Face(rear,rearY,Vector3.back);return Save(name,p,uv,t);
         }
         static Mesh Beam(string name,float front)
         {

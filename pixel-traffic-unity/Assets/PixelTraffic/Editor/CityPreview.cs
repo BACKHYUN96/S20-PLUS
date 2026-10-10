@@ -215,6 +215,40 @@ namespace PixelTraffic.UnityPrototype.Editor
                     }
                     selected.transform.position=new Vector3(selected.LaneX,0,200);
                 }
+                var heavyPreviews=new System.Collections.Generic.List<string>();
+                // Straight front/rear elevations with full-length roof silhouettes. These poses are
+                // temporary; the stored scene and phone camera are never changed by capture.
+                var heavyTarget=new RenderTexture(720,960,24,RenderTextureFormat.ARGB32){antiAliasing=2};heavyTarget.Create();
+                var heavyImage=new Texture2D(720,960,TextureFormat.RGB24,false);
+                var savedActive=new bool[originalCars.Length];for(int i=0;i<originalCars.Length;i++)savedActive[i]=originalCars[i].gameObject.activeSelf;
+                try
+                {
+                    camera.aspect=.75f;camera.fieldOfView=45;
+                    var heavyRequest=new UniversalRenderPipeline.SingleCameraRequest{destination=heavyTarget};
+                    foreach(string model in new[]{"CityBus","BoxTruck"})
+                    {
+                        PrototypeDrive selected=null;foreach(var car in originalCars)if(car.Model==model&&selected==null)selected=car;
+                        if(selected==null)throw new InvalidOperationException("Missing heavy capture model "+model);
+                        foreach(var car in originalCars)car.gameObject.SetActive(car==selected);
+                        selected.transform.SetPositionAndRotation(new Vector3(0,0,90),Quaternion.identity);
+                        foreach(int theme in new[]{0,2})foreach(bool rear in new[]{false,true})
+                        {
+                            climate.Preview(theme,0);detailStreet.ApplyViews();
+                            selected.Lighting.Apply(new StreetModel.Car{lane=2,active=true,braking=rear&&theme==2},theme==2?1:0,0);
+                            float distance=model=="CityBus"?17:14;
+                            camera.transform.position=new Vector3(0,model=="CityBus"?7.4f:6.6f,90+(rear?-distance:distance));
+                            camera.transform.LookAt(new Vector3(0,1.55f,90));
+                            heavyPreviews.Add(CaptureState(camera,heavyRequest,heavyTarget,heavyImage,"heavy-"+model+(rear?"-rear":"-front")+(theme==0?"-day":"-night")));
+                        }
+                        selected.ResetPosition(originalZ[Array.IndexOf(originalCars,selected)]);
+                    }
+                }
+                finally
+                {
+                    for(int i=0;i<originalCars.Length;i++)originalCars[i].gameObject.SetActive(savedActive[i]);
+                    heavyTarget.Release();UnityEngine.Object.DestroyImmediate(heavyTarget);UnityEngine.Object.DestroyImmediate(heavyImage);
+                    camera.aspect=.45f;camera.fieldOfView=roadFov;climate.Preview(0,0);detailStreet.ApplyViews();
+                }
                 var frontagePreviews=new System.Collections.Generic.List<string>();
                 var frontageTarget=new RenderTexture(960,540,24,RenderTextureFormat.ARGB32){antiAliasing=2};frontageTarget.Create();
                 var frontageImage=new Texture2D(960,540,TextureFormat.RGB24,false);
@@ -260,7 +294,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     {
                         var car=cars[tracked];
                         if(captured==1&&car.maneuver==LaneChanges.Stage.Merging){captured=2;drivingPreviews.Add(CaptureState(camera,request,target,image,"lane-change-start"));}
-                        else if(captured==2&&car.maneuver==LaneChanges.Stage.Merging&&car.mergeTicks==45){captured=3;drivingPreviews.Add(CaptureState(camera,request,target,image,"lane-change-mid"));}
+                        else if(captured==2&&car.maneuver==LaneChanges.Stage.Merging&&car.mergeTicks==car.MergeDuration/2){captured=3;drivingPreviews.Add(CaptureState(camera,request,target,image,"lane-change-mid"));}
                         else if(captured==3&&car.maneuver==LaneChanges.Stage.Idle){captured=4;drivingPreviews.Add(CaptureState(camera,request,target,image,"lane-change-complete"));}
                         else if(captured==1&&car.maneuver==LaneChanges.Stage.Idle){tracked=-1;captured=0;drivingPreviews.RemoveAt(drivingPreviews.Count-1);}
                     }
@@ -270,7 +304,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     result = "PASS", version = StarterConfig.VersionName, editor = Application.unityVersion,
                     graphicsApi = SystemInfo.graphicsDeviceType.ToString(), width = width, height = height,
                     image = output, source = "Unity Editor URP camera; not a phone screenshot or FPS test"
-                    , materialColors = colors, climateImages = previews.ToArray(), vehicleImages = vehiclePreviews.ToArray(),frontageImages=frontagePreviews.ToArray(),drivingImages=drivingPreviews.ToArray(),cameraImages=cameraPreviews.ToArray(),landscapeImages=landscapePreviews.ToArray(),sceneryImages=sceneryPreviews.ToArray()
+                    , materialColors = colors, climateImages = previews.ToArray(), vehicleImages = vehiclePreviews.ToArray(),frontageImages=frontagePreviews.ToArray(),drivingImages=drivingPreviews.ToArray(),cameraImages=cameraPreviews.ToArray(),landscapeImages=landscapePreviews.ToArray(),sceneryImages=sceneryPreviews.ToArray(),heavyImages=heavyPreviews.ToArray()
                 }, true));
                 Debug.Log("PASS: real city camera preview saved: " + output);
             }
@@ -317,7 +351,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         {
             public string result, version, editor, graphicsApi, image, source;
             public int width, height;
-            public string[] materialColors, climateImages, vehicleImages,frontageImages,drivingImages,cameraImages,landscapeImages,sceneryImages;
+            public string[] materialColors, climateImages, vehicleImages,frontageImages,drivingImages,cameraImages,landscapeImages,sceneryImages,heavyImages;
         }
     }
 }

@@ -17,11 +17,11 @@ namespace PixelTraffic.UnityPrototype.Editor
             {
                 poses[i]=drives[i].transform.position;wheels[i]=new Quaternion[4];for(int n=0;n<4;n++)wheels[i][n]=drives[i].Wheels[n].localRotation;
                 Bounds bounds=drives[i].BodyBounds();
-                definitions[i]=new StreetModel.Car {lane=drives[i].Lane,z=poses[i].z,cruise=drives[i].Speed,speed=drives[i].Speed,length=bounds.size.z};
+                definitions[i]=new StreetModel.Car {lane=drives[i].Lane,z=poses[i].z,cruise=drives[i].Speed,speed=drives[i].Speed,length=bounds.size.z,width=bounds.size.x,height=bounds.size.y};
             }
             StreetModel Create(int count)
             {
-                var cars=new StreetModel.Car[definitions.Length];for(int i=0;i<cars.Length;i++){var c=definitions[i];cars[i]=new StreetModel.Car {lane=c.lane,z=c.z,cruise=c.cruise,speed=c.speed,length=c.length};}return new StreetModel(count,cars);
+                var cars=new StreetModel.Car[definitions.Length];for(int i=0;i<cars.Length;i++){var c=definitions[i];cars[i]=new StreetModel.Car {lane=c.lane,z=c.z,cruise=c.cruise,speed=c.speed,length=c.length,width=c.width,height=c.height};}return new StreetModel(count,cars);
             }
             float minimumPeople=float.MaxValue,minimumCars=float.MaxValue;int completed=0,cycles=0;var populations=new List<int>();
             foreach(int count in new[]{4,32,100})

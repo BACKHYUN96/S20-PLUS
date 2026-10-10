@@ -19,9 +19,11 @@ namespace PixelTraffic.UnityPrototype.Editor
                 for(int i=0;i<cars.Length;i++)
                 {
                     Bounds b=drives[i].BodyBounds();
-                    cars[i]=new StreetModel.Car {lane=drives[i].Lane,z=drives[i].transform.position.z,cruise=drives[i].Speed,speed=drives[i].Speed,length=b.size.z};
+                    cars[i]=new StreetModel.Car {lane=drives[i].Lane,z=drives[i].transform.position.z,cruise=drives[i].Speed,speed=drives[i].Speed,length=b.size.z,width=b.size.x,height=b.size.y};
                 }
-                var model=new StreetModel(count,cars){Visible=Visible};
+                bool VehicleVisible(Vector2 p,Vector3 size)=>GeometryUtility.TestPlanesAABB(planes,new Bounds(new Vector3(p.x,size.y*.5f,p.y),size+Vector3.one*.4f));
+                bool ActualVisible(StreetModel.Car car,double z)=>GeometryUtility.TestPlanesAABB(planes,new Bounds(new Vector3(car.X,car.height*.5f,(float)z),new Vector3(car.width,car.height,car.length)));
+                var model=new StreetModel(count,cars){Visible=Visible,VisibleVehicle=VehicleVisible};
                 var oldActive=new bool[100];var oldPos=new Vector2[100];var oldActivity=new StreetModel.Activity[100];
                 var oldCars=new bool[cars.Length];var oldZ=new double[cars.Length];
                 for(int tick=0;tick<30*810;tick++)
@@ -53,8 +55,8 @@ namespace PixelTraffic.UnityPrototype.Editor
                     }
                     for(int i=0;i<cars.Length;i++)
                     {
-                        if(oldCars[i]&&!cars[i].active)Need(!Visible(new Vector2((cars[i].lane-1.5f)*3.2f,(float)oldZ[i])),"Car disappears inside viewport.");
-                        if(!oldCars[i]&&cars[i].active)Need(!Visible(new Vector2((cars[i].lane-1.5f)*3.2f,(float)cars[i].z)),"Car reappears inside viewport.");
+                        if(oldCars[i]&&!cars[i].active)Need(!ActualVisible(cars[i],oldZ[i]),"Car disappears inside viewport.");
+                        if(!oldCars[i]&&cars[i].active)Need(!ActualVisible(cars[i],cars[i].z),"Car reappears inside viewport.");
                         if(tick%10!=0||!cars[i].active)continue;
                         for(int j=i+1;j<cars.Length;j++)if(cars[j].active&&LaneChanges.SharesLane(cars[j],cars[i]))
                         {
