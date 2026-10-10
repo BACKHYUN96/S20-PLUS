@@ -11,7 +11,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             var street=UnityEngine.Object.FindFirstObjectByType<StreetSimulation>();
             var drives=UnityEngine.Object.FindObjectsByType<PrototypeDrive>(FindObjectsSortMode.None);Array.Sort(drives,(a,b)=>string.CompareOrdinal(a.name,b.name));
             var planes=GeometryUtility.CalculateFrustumPlanes(Camera.main);
-            bool Visible(Vector2 p)=>GeometryUtility.TestPlanesAABB(planes,new Bounds(new Vector3(p.x,1.2f,p.y),new Vector3(2.2f,3.2f,2.2f)));
+            bool Visible(Vector2 p)=>GeometryUtility.TestPlanesAABB(planes,new Bounds(new Vector3(p.x,1.2f,p.y),new Vector3(3,3.2f,6)));
             float minimumFeet=float.MaxValue,minimumGap=float.MaxValue;int departures=0,arrivals=0;
             foreach(int count in new[]{4,32,100})
             {

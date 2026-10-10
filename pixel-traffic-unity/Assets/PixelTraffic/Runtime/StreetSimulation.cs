@@ -88,7 +88,7 @@ namespace PixelTraffic.UnityPrototype
             if(spray!=null)spray.Advance((float)elapsed,model,climate!=null&&climate.WeatherBlend!=null?climate.RainGain:0);
         }
         private bool Visible(Vector2 point)
-            =>GeometryUtility.TestPlanesAABB(viewPlanes,new Bounds(new Vector3(point.x,1.2f,point.y),new Vector3(2.2f,3.2f,2.2f)));
+            =>GeometryUtility.TestPlanesAABB(viewPlanes,new Bounds(new Vector3(point.x,1.2f,point.y),new Vector3(3,3.2f,6)));
         public void ApplyViews()
         {
             if(lightBlock==null)lightBlock=new MaterialPropertyBlock();

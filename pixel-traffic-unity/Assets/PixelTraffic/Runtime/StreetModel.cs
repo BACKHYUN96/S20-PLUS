@@ -124,6 +124,7 @@ namespace PixelTraffic.UnityPrototype
             foreach(var car in Cars)if(!car.active&&car.rank<WeatherCarsPerLane)
             {
                 double entry=StarterConfig.RouteStart+.05;bool free=true;
+                if(Visible(new Vector2((car.lane-1.5f)*StarterConfig.LaneWidth,(float)entry)))continue;
                 double span=StarterConfig.RouteEnd-StarterConfig.RouteStart;
                 foreach(var other in Cars)if(other.active&&other.lane==car.lane)
                 {
