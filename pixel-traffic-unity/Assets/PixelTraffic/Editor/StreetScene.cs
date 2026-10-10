@@ -23,7 +23,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 var skin=person.gameObject.AddComponent<SkinnedMeshRenderer>();skin.sharedMesh=meshes[i%8];skin.sharedMaterial=palette;skin.bones=bones;skin.rootBone=person;
                 skin.quality=SkinQuality.Bone1;skin.localBounds=new Bounds(new Vector3(0,.9f,0),new Vector3(1.2f,2.4f,1.3f));
                 skin.lightProbeUsage=LightProbeUsage.Off;skin.reflectionProbeUsage=ReflectionProbeUsage.Off;
-                Transform umbrella=new GameObject("Umbrella").transform;umbrella.SetParent(person,false);umbrella.localPosition=new Vector3(.14f,1.0f,.12f);
+                Transform umbrella=new GameObject("Umbrella").transform;umbrella.SetParent(person,false);umbrella.localPosition=new Vector3(.14f,1.0f,.32f);
                 umbrella.gameObject.AddComponent<MeshFilter>().sharedMesh=umbrellaMesh;
                 var umbrellaRenderer=umbrella.gameObject.AddComponent<MeshRenderer>();umbrellaRenderer.sharedMaterial=palette;
                 umbrellaRenderer.lightProbeUsage=LightProbeUsage.Off;umbrellaRenderer.reflectionProbeUsage=ReflectionProbeUsage.Off;

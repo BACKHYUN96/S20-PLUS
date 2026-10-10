@@ -1,5 +1,9 @@
 # 작업 이력
 
+## 2026-10-10 — Unity 0.7.0 우산 예산 검사 준비·손 위치 보정 (검사 중)
+
+실제 첫 검사38010587500는 진행 중이며 아직 성공/실패를 판정하지 않는다. 검토에서 우산100개 예산 검사가 바로 직전 비 상태에서 이미 퇴장한 사람의 pool 상태를 이어받을 수 있음을 확인했다. 실제 게임의 날씨 퇴장 조건을 무시하지 않고 이 예산 검사만 새 StreetModel을 준비한 뒤100명 모두 활성화해 최악 예산을 측정한다. 기존 별도810초×4/32/100 weather drain/recovery/viewport/collision 검사를 그대로 유지하고 비바람 감속도 실제 Car.speed≤cruise×0.6으로 확인한다. 우산 shaft의 시작을 올린 오른손 z위치0.32m로 맞춘다. 후속 source를 실제 PC 검사/렌더한 뒤 전달한다.
+
 ## 2026-10-10 — Unity 0.7.0 화면 밖 퇴장·재등장 경계 보강 (검사 중)
 
 첫 sourceb8ac7743f8c88f74134a3893657be5888e48ec50의 실제 Validate38010587500/job114089410451가 진행 중이다. 검토 중 사람 중심 bounds를 자동차에도 사용하는 공통 판정이 차체 앞뒤를 충분히 덮지 않는 것을 확인했다. 자동차 길이5.1m와 우산을 모두 덮는 보수적인3×3.2×6m bounds로 StreetSimulation과 WeatherLifeChecks를 맞추고 차량 재진입도 같은 viewport 밖인지 확인한다. source 결과를 전달 전에 다시 검사한다. 기존 순환도로 wrap은 유지하고 날씨로 active를 끄는 시점은 실제 bounds가 viewport 밖일 때만이다. 우산은8면 canopy 양면16tri+shaft8tri=24tri 공유 mesh100개, 물보라는96quad/192tri의 단일 mesh이며 기존 Lamp Pool alpha 재질/texture를 공유한다.

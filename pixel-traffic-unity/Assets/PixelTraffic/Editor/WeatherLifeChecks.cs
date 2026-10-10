@@ -38,6 +38,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     for(int i=0;i<100;i++){oldActive[i]=model.People[i].active;oldPos[i]=model.People[i].position;oldActivity[i]=model.People[i].activity;}
                     for(int i=0;i<cars.Length;i++){oldCars[i]=cars[i].active;oldZ[i]=cars[i].z;}
                     model.Tick();
+                    if(tick>30*28&&tick<30*625)foreach(var car in cars)if(car.active)Need(car.speed<=car.cruise*.6f+.001f,"Storm does not reduce cruising speed.");
                     Need(!(model.CanEnter||model.Signal==StreetModel.Phase.PedestrianClearance)||!model.RoadOccupied(),"Weather breaks pedestrian clearance.");
                     for(int i=0;i<100;i++)
                     {
@@ -71,7 +72,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             Need(street.Spray.Capacity==96&&street.Spray.EmittingVehicles>0,"Moving rain vehicles produce no bounded spray.");
             foreach(var car in street.Model.Cars)car.speed=0;
             street.Spray.Advance(.1f,street.Model,1);Need(street.Spray.EmittingVehicles==0&&!GameObject.Find("Tyre Spray Pool").GetComponent<Renderer>().enabled,"Stopped cars still spray.");
-            street.Model.SetWeather(1,1,1,1);street.Model.SetPopulation(100);street.ApplyViews();int umbrellas=0;
+            street.ResetModel();street.Model.SetWeather(1,1,1,1);street.Model.SetPopulation(100);street.ApplyViews();int umbrellas=0;
             foreach(var walker in street.Walkers){Need(walker.umbrella!=null&&walker.umbrella.gameObject.activeInHierarchy,"Rain walker lacks umbrella.");umbrellas++;}
             var pipeline=(UniversalRenderPipelineAsset)UnityEngine.Rendering.GraphicsSettings.defaultRenderPipeline;
             CityEnvironment.Report budget=CityEnvironment.Validate(Camera.main,pipeline);
