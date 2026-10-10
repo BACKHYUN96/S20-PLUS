@@ -67,8 +67,8 @@ namespace PixelTraffic.UnityPrototype.Editor
 
             var camera = new GameObject("Portrait Camera").AddComponent<Camera>();
             camera.tag = "MainCamera";
-            camera.transform.position = new Vector3(3.2f, 14, -37);
-            camera.transform.LookAt(new Vector3(-3.1f, 1, 68));
+            camera.transform.position = new Vector3(1.4f, 14, -37);
+            camera.transform.LookAt(new Vector3(-4.9f, 1, 68));
             camera.fieldOfView = 44;
             camera.nearClipPlane = .3f;
             camera.farClipPlane = 500;

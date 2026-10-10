@@ -252,7 +252,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             Renderer road = GameObject.Find("Road").GetComponent<Renderer>();
             Renderer ground = GameObject.Find("City Ground").GetComponent<Renderer>();
             Need(road.bounds.min.z < -60 && road.bounds.max.z > 350,"Boulevard still ends inside the city view.");
-            int covered = 0,skyRays=0;float vanishingX=0,horizonY=0,crossingY=0; float oldAspect = camera.aspect;
+            int covered = 0,skyRays=0;float vanishingX=0,horizonY=0,crossingY=0,foregroundX=0; float oldAspect = camera.aspect;
             try
             {
                 foreach (float aspect in new[] {9f/20,9f/16})
@@ -262,7 +262,9 @@ namespace PixelTraffic.UnityPrototype.Editor
                     Vector3 vanishing=camera.WorldToViewportPoint(new Vector3(0,0,100000));
                     Vector3 crossingPoint=camera.WorldToViewportPoint(new Vector3(0,0,10));
                     Need(vanishing.x>.60f&&vanishing.x<.73f&&vanishing.y>.60f&&vanishing.y<.70f,"Road vanishing point lacks reference offset/sky room.");
-                    Need(crossingPoint.x>.3f&&crossingPoint.x<.7f&&crossingPoint.y>.22f&&crossingPoint.y<.36f,"Crossing leaves the lower-middle reference composition.");
+                    Need(crossingPoint.x>.53f&&crossingPoint.x<.68f&&crossingPoint.y>.22f&&crossingPoint.y<.36f,"Crossing leaves the lower-middle reference composition.");
+                    Vector3 foreground=camera.WorldToViewportPoint(new Vector3(0,0,-11));
+                    Need(foreground.x>.47f&&foreground.x<.59f,"Foreground centre line tilts too far away from reference centre.");foregroundX=foreground.x;
                     vanishingX=vanishing.x;horizonY=vanishing.y;crossingY=crossingPoint.y;
                     foreach(float x in new[]{.02f,.5f,.98f})
                     {
@@ -309,12 +311,12 @@ namespace PixelTraffic.UnityPrototype.Editor
                 var texture=AssetDatabase.LoadAssetAtPath<Texture2D>(StarterScene.Generated+"/"+name+".asset");
                 Need(texture!=null&&texture.mipmapCount>1&&texture.filterMode==FilterMode.Trilinear,"Surface loses mipmap filtering at distance.");
             }
-            return new Report {roadLength=road.bounds.size.z,coveredPortraitRays=covered,skyPortraitRays=skyRays,roadVanishingX=vanishingX,horizonY=horizonY,crossingViewportY=crossingY,trees=trees,buildings=buildings,streetLamps=lamps,skylineTowers=towers,triangles=triangles,renderers=renderers.Length,materials=materials.Count,softShadows=pipeline.supportsSoftShadows,crossingStripes=stripes,roadMarkingsOutsideCrossing=markings};
+            return new Report {roadLength=road.bounds.size.z,coveredPortraitRays=covered,skyPortraitRays=skyRays,roadVanishingX=vanishingX,horizonY=horizonY,crossingViewportY=crossingY,foregroundCentreX=foregroundX,trees=trees,buildings=buildings,streetLamps=lamps,skylineTowers=towers,triangles=triangles,renderers=renderers.Length,materials=materials.Count,softShadows=pipeline.supportsSoftShadows,crossingStripes=stripes,roadMarkingsOutsideCrossing=markings};
         }
 
         [Serializable] public sealed class Report
         {
-            public float roadLength,roadVanishingX,horizonY,crossingViewportY;
+            public float roadLength,roadVanishingX,horizonY,crossingViewportY,foregroundCentreX;
             public int coveredPortraitRays,skyPortraitRays,trees,buildings,streetLamps,skylineTowers,triangles,renderers,materials;
             public int crossingStripes, roadMarkingsOutsideCrossing;
             public bool softShadows;
