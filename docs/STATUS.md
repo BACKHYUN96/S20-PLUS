@@ -1,5 +1,53 @@
 # 현재 상태
 
+## 2026-10-10 — Unity 0.10.0 카메라·차량 등화·안전한 차선 변경 APK 전달 완료
+
+사용자가 요청한 카메라 구도 변경, 전조등·브레이크등, 간헐적인 깜빡이3회 후 차선 변경을 **0.10.0/code11**에 적용했다. 이전 명시 승인에 따라 main 게시와 연결된 Windows PC의 검증·GPU 캡처·서명 APK 빌드를 실행했다.
+
+### 구현과 동작
+
+- 카메라 위치를(0,26,-32)→(-1.2,20.5,-27), 시선 목표를(0,0,28)→(0,1.6,23), FOV50→44로 바꿔 도로/차량/건물을 낮고 가까운 세로 구도로 담는다. 원래 시안 파일을 이번 작업환경에서 확보하지 못해 픽셀 단위 일치를 주장하지 않는다. 일부 상가는 수관에 여전히 가려진다. 다음 시야 개선은 나무 배치/수관 크기를 따로 다듬어야 한다.
+- 24대에 기존 전후 램프의 공유 재질과 MaterialPropertyBlock을 활용한다. 야간/노을/흐린 날 전조등이 기존4초 시간전환을 따라 밝아지고, 제동/정차 시 브레이크등이 강해진다. 차량별 새 실제 Light 없이 기존 Atmosphere 재질의 도로 light pool을 사용한다. 추가3renderer/12tri/car, 전체288tri이며 새 재질은 없다. 투명 도로 빛은 차량 충돌/추종용 BodyBounds에서 제외한다.
+- 같은 방향의 인접 차선만 변경한다. 목표 차선의 뒤60m 관측 범위 차량을 개별 odometer로 추적해 모두 앞서 나갈 때까지 현재 차선에서 기다리고72%속도로 양보한다. 대기 중 새 뒤차도 추적하며 앞뒤 거리·속도 차를 고려한다. 뒤차가 느리거나 간격이 없으면 기다리거나 취소/재시도한다. 310m loop의 단순 signed-distance wrap을 실제 추월로 오인하지 않는다.
+- 안전거리 확보 후0.3초on/0.3초off를3회, 총1.8초 표시한 다음3초 smoothstep으로 차선을 변경한다. 깜빡이 중 뒤차가 새로60m 안에 들어오면 취소한다. 시작 직전 앞뒤 간격을 다시 확인하고 깜빡이/변경 중 두 차선을 예약해 주변 차가 추종한다. 50m 내 횡단보도·신호 종료 직전·비바람에서는 새 변경을 시작하지 않는다. 차량 yaw±8°와 앞바퀴 조향/회전을 함께 반영하며 같은30Hz 모델을 사용한다.
+- 소스/meta19파일, build inputs84개: StarterConfig/PrototypeDrive/StreetModel/StreetSimulation, TrafficFleet/StarterScene/ClimateScene/CityPreview/StreetChecks/WeatherLifeChecks/VehicleDetailChecks 및 신규 LaneChanges/VehicleLighting/DrivingScene/DrivingChecks와meta4개. Driving-0.10.0.unity/Generated/Driving0100. 원본 Android 앱 변경·서명/NativeAndroid/bridge는 유지했다.
+
+### 실제 검사와 한계
+
+| 검사 | 실제 결과 |
+| --- | --- |
+| Windows Unity | [Validate38019981969](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38019981969),job114118617236; scene/DrivingChecks/GPU 캡처 모두 PASS |
+| 차선 변경 | 2뒤차 실제 통과 후3pulse, 앞차 간격 부족 대기, 깜빡이 중 새 뒤차 접근 취소, 횡단보도/비바람 시작 금지,600초 production교통 검사. 완료11회/독립 merge검사11회/뒤차대기73회, 최소 bumper gap1.800000m, 순간 lateral이동<.055m/30Hz tick, 중앙선/연석 침범 없음 |
+| 실제 lamp/clock | 기존 실제Renderer MPB의 낮/밤·제동 발광/좌우 방향·54tick3pulse,17renderer/car/sharedmesh 및 실제Light4개 확인. 실제 StreetSimulation15/30/60/120Hz의 z/x/merge state와 pause tick freeze PASS |
+| 보행·날씨·외형 | 4/32/100명200/600/600초/223회 횡단/33signal cycles, 최저 foot거리0.399999m. 날씨 각810초/퇴장92/복귀92/100우산/96spray PASS. 차량24대4모델/600초, curved mesh/window/tyre/wrap·wheel·기존상가/창문 전환 PASS |
+| 예산 | 기본108,546tri/1347renderer/47material. 최대100우산119,922/1515/47, 기존strict <120000/<2400/<48 유지. 삼각형 여유78개뿐이므로 다음geometry추가 전 기존메시 감축 필요 |
+| 실제 화면 | D3D11 URP Editor PNG36장(도시14·차량8·상가6·등화4·실제lane상태4). 낮/밤 도시와 등화on/off 및실제merge시작/중간/완료를 관찰했다. 등화 closeup의 임시카메라/pose/state는 unsaved Editor scene에만 적용하고 APKscene에는 저장하지 않는다. lane캡처는 실제 모델 진행 상태이며 잔여 weather효과가 일부 보인다. phone screenshot/FPS 증거 아님 |
+| Android | [BuildApk38020355014](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38020355014),job114119779332; 실제BuildPlayer Succeeded/errors0, launcher Lint errors0/warnings8 |
+| unchanged host | 관련12input SHA 불변으로 기존 실제host Lint38008378207(0errors/10warnings/nativeFilesMatched8)을 재사용한다. 새host Lint를 실행했다고 주장하지 않는다 |
+| 실제 다운로드 APK | artifact API size/digest·ZIP CRC·APK hash/bytes, aapt0.10.0/code11/min29/target36/ARM64/SettingsActivity launcher·exportedBIND_WALLPAPER/:wallpaper service/meta·private provider·disabledUnityActivity, original v2cert PASS |
+
+폰에서0.10.0 구도·깜빡이와 양보·설정 보존·홈/잠금·숨김/복귀·재부팅·발열/FPS는 설치 후 사용자 확인이다. 기존 launcher경고8와host경고10이 남으며 오류0과 구분한다. 안전조건이 맞지 않으면 차량이 차선을 바꾸지 않는 것이 정상이다. 모든 후방310m 차가 아닌 관측 범위60m 안의 차를 기다리는 정책이다.
+
+### 산출물·추적
+
+- Source **27e6dda036ec72648bbaf1639012c4fa4676e182**, tag **unity-apk-0.10.0-build1**. 19파일 whitelist/84입력SHA·host입력 불변은 `/workspace/artifacts/unity-0.10.0-source-manifest.json`; 기존 real index와 native dirty 상태를 보존했다. 문서만 추가하는 최종commit은 이manifest에 별도 기록하며 source SHA가 같으면 검사를 반복하지 않는다.
+- APK `/workspace/artifacts/pixel-traffic-unity-prototype-0.10.0.apk`, **29796063bytes**, SHA256 **40f0ab6cdd699c443a1b8b6998ac0d98f57d31cbbd8ffc47a7636eb013fbaf9e**, original v2certificate **a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6**.
+- Validateartifact11657144723/SHAe650d318a31365b4cd0cd50b84ff5a3506bc01e6a7d91fb140508448ffdbcb55, APKartifact11658136898, APKreportsartifact11657777254; 실제report `/workspace/artifacts/unity-prototype-0.10.0-reports`/검증 `unity-prototype-0.10.0-download-verification.json`. 7일 GitHubartifact와 cloud 첨부파일의 다음세션 존속을 가정하지 않는다.
+
+### 집 PC 설치
+
+APK를 `C:\Users\김백현\Desktop\AI`에 저장한 다음 실행한다.
+
+```powershell
+$unityAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $unityAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.10.0.apk"
+if ($LASTEXITCODE -eq 0) {
+    & $unityAdb shell am start -W -n "com.s20plus.pixeltraffic.unityprototype/com.s20plus.pixeltraffic.unitywallpaper.WallpaperSettingsActivity"
+}
+```
+
+다음 후보: 수관/나무 위치로상가시야개선, 주차/정류장·생활소품. 최대우산 예산의tri여유가78개이므로 먼저기존geometry비용을낮추고실제구도를비교한다.
+
 ## 2026-10-10 — Unity 0.10.0 camera and safe vehicle maneuver implementation (validation pending)
 
 - User requested a lower/closer portrait camera, vehicle headlights/brake lamps, and intermittent lane changes after exactly three blinks and rear traffic passes. Existing permission covers main publication and the connected Windows runner.

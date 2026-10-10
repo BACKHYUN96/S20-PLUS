@@ -1,6 +1,6 @@
 # S20+
 
-Unity 라이브 배경화면 **0.9.0**을 전달했습니다. 건물 1층에 카페·편의점·일반 매장을 추가하고, 불 꺼진 방과 따뜻한/차가운 창문 조명이 낮→노을→밤에 서서히 밝아집니다. 공유 atlas와 건물별 메시로 renderer 수를 줄였으며 실제 PC Unity 검사·상가 낮/밤 GPU 렌더·Android 빌드/Lint·기존 v2서명 APK를 확인했습니다. 실제폰 화면·FPS/발열은 설치 후 확인합니다. [설치·검증 기록](docs/UNITY_AUTOMATION.md), [Unity 안내](pixel-traffic-unity/README.md)를 참조합니다.
+Unity 라이브 배경화면 **0.10.0**을 전달했습니다. 카메라를 낮고 가까운 구도로 조정하고 차량 전조등·브레이크등·깜빡이를 구현했습니다. 목표 차선의 뒤차가 지나가고 안전거리가 확보되면 깜빡이3회 후 부드럽게 차선을 변경합니다. 실제 PC Unity 교통/등화 검사·GPU36PNG·Android 빌드/Lint와 원본 v2서명 APK를 확인했습니다. 폰 화면·발열/FPS는 설치 후 확인합니다. [설치·검증 기록](docs/UNITY_AUTOMATION.md),[Unity 안내](pixel-traffic-unity/README.md)를 참조합니다.
 
 루팅된 Samsung Galaxy S20+ 관련 앱과 도구의 개발 작업 공간입니다.
 

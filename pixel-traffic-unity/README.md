@@ -1,6 +1,12 @@
-# Pixel Traffic Unity — 상가·다양한 야간 창문 조명 0.9.0
+# Pixel Traffic Unity — 차량 등화·안전한 차선 변경 0.10.0
 
-## 현재 패치 — 상가·창문 조명 0.9.0 (2026-10-10, 검증 완료)
+## 현재 패치 — 카메라·전조등/브레이크등·깜빡이 0.10.0 (2026-10-10, 검증 완료)
+
+카메라를 낮고 가까운 세로 구도로 바꾸고24대의야간전조등/도로빛·제동등과방향에맞는깜빡이를 구현했습니다. 같은방향옆차선의뒤60m관측차가전부지나가고앞뒤안전거리가확보되면1.8초간깜빡이를3번표시한뒤3초동안부드럽게차선을변경합니다. 새뒤차가깜빡이중접근하거나간격이없으면취소/대기하며비바람과횡단보도근처에서는새변경을시작하지않습니다. 일부상가의나무가림은남습니다.
+
+**0.10.0/code11**,`Driving-0.10.0.unity`/`Generated/Driving0100`,`Builds/pixel-traffic-unity-prototype-0.10.0.apk`. 실제600초변경11회·최저gap1.800000m·실제등화MPB와15/30/60/120Hz x/z/merge·pause검사,기존보행/날씨/외형을통과했습니다. D3D11 GPU PNG36장과AndroidBuildPlayer/launcherLint 오류0/경고8,실제다운로드원본v2cert/version/hash/manifest를확인했습니다. 최대100우산119,922tri/1515renderer/47material로strict예산유지,tri여유78개입니다. unchangedhost기존Lint0errors/10warnings재사용. 폰FPS/발열·홈/잠금 lifecycle은설치후확인합니다. [검증/설치](../docs/STATUS.md),[자동화](../docs/UNITY_AUTOMATION.md)를참조합니다.
+
+## 이전 패치 — 상가·창문 조명 0.9.0 (2026-10-10, 검증 완료)
 
 건물24개의 1층에 카페·편의점·일반 매장8개씩을 추가했습니다. 진열 창문·출입문/손잡이·간판·OPEN 포스터와 차양을 만들고, 상층480개 창문에 불 꺼진 방과 따뜻한/차가운 빛·커튼/블라인드를 섞었습니다. 건물별 합친메시와 공유256×128 창문/512×512 상가 atlas를 사용하며 실제조명4개를 유지합니다. 노을부터 매장과 창문 조명이서서히 밝아지며 기존낮→노을→밤/밤→낮과날씨·신호·보행/차량을유지합니다.
 
@@ -46,9 +52,9 @@ PC 빌드·Lint·실제 APK 서비스/서명 검증 결과와 최신 설치 명�
 
 ## 현재 빌드와 실행
 
-Unity 6000.3.26f1/Android 모듈을 사용합니다. `tools/run-pipeline.ps1 -Operation Validate`로 장면·production 모델·manifest 템플릿 검사를 수행하고, `-Operation BuildApk`로 Android 빌드/Lint/원본 v2 인증서 및 APK 메타데이터를 검사합니다. Gradle 생성 후 `AndroidWallpaperBuild`가 `NativeAndroid/src`와 `res`를 복사하고 service/provider/설정 Activity를 등록합니다. Export에도 같은 처리를 적용합니다. 실제 Android 컴파일은 PC BuildApk 결과로 확인합니다. 새 NativeAndroid 모듈은 `tools/check-wallpaper-lint.ps1`로 unityLibrary Lint를 추가 확인합니다. 이 도구는 생성된 Java/리소스 SHA가 현재 소스와 같은지 먼저 확인하며 APK를 다시 만들지 않습니다. 0.9.0의 실제 launcher Lint는 오류0/경고8입니다. 변경 없는 NativeAndroid/host 입력은0.6.0 SHA를 확인하고 실제 unityLibrary Lint 오류0/경고10을 재사용합니다.
+Unity 6000.3.26f1/Android 모듈을 사용합니다. `tools/run-pipeline.ps1 -Operation Validate`로 장면·production 모델·manifest 템플릿 검사를 수행하고, `-Operation BuildApk`로 Android 빌드/Lint/원본 v2 인증서 및 APK 메타데이터를 검사합니다. Gradle 생성 후 `AndroidWallpaperBuild`가 `NativeAndroid/src`와 `res`를 복사하고 service/provider/설정 Activity를 등록합니다. Export에도 같은 처리를 적용합니다. 실제 Android 컴파일은 PC BuildApk 결과로 확인합니다. 새 NativeAndroid 모듈은 `tools/check-wallpaper-lint.ps1`로 unityLibrary Lint를 추가 확인합니다. 이 도구는 생성된 Java/리소스 SHA가 현재 소스와 같은지 먼저 확인하며 APK를 다시 만들지 않습니다. 0.10.0의 실제 launcher Lint는 오류0/경고8입니다. 변경 없는 NativeAndroid/host 입력은0.6.0 SHA를 확인하고 실제 unityLibrary Lint 오류0/경고10을 재사용합니다.
 
-Editor 메뉴 **4. Build Signed Wallpaper APK**를 사용할 수 있습니다. APK는 `Builds/pixel-traffic-unity-prototype-0.9.0.apk`에 생성됩니다. 기존 `BuildActivityApk` 메서드 이름은 PowerShell 호출 호환용으로 유지하며 결과 앱은 라이브 배경화면입니다. 서명 환경 변수 및 PC runner 설정은 아래 초기 기록과 [자동화 안내](../docs/UNITY_AUTOMATION.md)를 참조합니다. 최신 안내가 아래 초기 0.1.0 기록보다 우선합니다.
+Editor 메뉴 **4. Build Signed Wallpaper APK**를 사용할 수 있습니다. APK는 `Builds/pixel-traffic-unity-prototype-0.10.0.apk`에 생성됩니다. 기존 `BuildActivityApk` 메서드 이름은 PowerShell 호출 호환용으로 유지하며 결과 앱은 라이브 배경화면입니다. 서명 환경 변수 및 PC runner 설정은 아래 초기 기록과 [자동화 안내](../docs/UNITY_AUTOMATION.md)를 참조합니다. 최신 안내가 아래 초기 0.1.0 기록보다 우선합니다.
 
 ## 이전 기록 — 0.4.0 및 초기 설정
 ## 이전 패치 — 신호·인도 보행·횡단 0.4.0 (2026-10-10 KST)

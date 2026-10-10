@@ -1,5 +1,12 @@
 # 작은 패치 작업 안내
 
+## Unity 0.10.0 — 카메라·차량 등화와 차선 변경 (2026-10-10)
+
+- 변경19소스/meta/84build inputs. Runtime StarterConfig/PrototypeDrive/StreetModel/StreetSimulation/LaneChanges/VehicleLighting,Editor TrafficFleet/StarterScene/ClimateScene/CityPreview/StreetChecks/WeatherLifeChecks/VehicleDetailChecks/DrivingScene/DrivingChecks 및 신규meta4개. Driving-0.10.0.unity/Generated/Driving0100/code11.
+- 뒤60m모든관측차 실제추월/새뒤차/loopodometer/앞뒤속도차·안전거리/동방향차선예약/3pulse1.8초후3초smoothmerge/50m횡단보도·storm금지/600초productiongap·보행phase/실제MPB·좌우·sharedmesh/15·30·60·120Hz z/x/stage·pause를 검사한다. 도로빛은BodyBounds제외,실제Light4개유지. 100우산max119922/1515/47,tri잔여78.
+- WindowsValidate38019981969 및실제D3D11 36PNG에서낮/밤구도·4등화·4실제lane상태를관찰한다. GPU사진은폰성능증거가아니며Editor임시pose와camera는저장하지않는다. 부분수관가림은남는다.
+- 동일source APKtagunity-apk-0.10.0-build1/BuildApk38020355014,AndroidBuildPlayer·launcherLint0errors/8warnings·downloadSHA/원본v2cert/11version/ARM64/service manifest확인. 12host입력불변으로실제hostLint38008378207재사용. 문서only는검사반복불필요.
+
 ## Unity 0.9.0 — 상가·창문 야간 조명 (2026-10-10)
 
 - 변경10소스/meta: Editor CityEnvironment/ClimateScene/StarterScene/CityPreview/FrontageScene/FrontageChecks 및meta2개,Runtime CityClimate/StarterConfig. Storefront-0.9.0.unity/Generated/Storefront090/code10. 건물별window/frame/shop mesh 및shared256×128/512×512 atlas. 차량/보행/host geometry·native·서명 설정 불변.
