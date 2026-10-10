@@ -1,5 +1,9 @@
 # 현재 상태
 
+## 2026-10-10 — Unity 0.6.0 효과 방향·낮 렌더 보완 (KST)
+
+투명 shader sourceee3872f6ce2ad5532383a698d92630910aba0652의 실제 검사는 진행 중이다. ClimateEffects.cs만 보완해 lamp gain0일 때 20개 노면 pool renderer를 꺼 낮의 불필요한 alpha0 draw를 줄인다. 비 줄기의 위쪽 끝은 이동 속도 반대인 +x/+y로 두어 왼쪽 아래로 이동하는 비·왼쪽으로 날리는 신문지/나무 tilt와 방향을 맞춘다. 고정 pool 수·신문지 간격·blend 계약은 유지한다. 최종 source의 실제 Validate/렌더/Android 빌드를 확인하고 이전 시각 결과를 최종 결과로 재사용하지 않는다.
+
 ## 2026-10-10 — Unity 0.6.0 실제 렌더 관찰 후 투명·발광 재질 보정 (KST)
 
 sourcee41a272cf6241728f5d8a24759296aa2d31bcc92의 PC Validate38006733953/job114077126272와 D3D11 540×1200 캡처가 success다. 실제 180 blend oracle/18 endpoint/32 canopy 측정 PASS, minimumCanopySwing4.602755도, paperLaunches8/lastInterval3.146284초. 기본107346 triangles/2162 renderers/46 materials,100명116322/2230/46. reports artifact11651143952/5029068bytes ZIP SHA256700c5f4940a83cc961ca43004d51c121a2c79723ca1861745eb4df849db7f35b/CRC를 확인했다.

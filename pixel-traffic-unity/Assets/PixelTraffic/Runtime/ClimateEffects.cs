@@ -39,7 +39,7 @@ namespace PixelTraffic.UnityPrototype
         {
             Initialize(); block.Clear(); block.SetColor("_BaseColor", new Color(1, .66f, .24f, gain * .28f));
             block.SetColor("_EmissionColor", new Color(1, .66f, .24f) * .5f);
-            foreach (var renderer in pools) renderer.SetPropertyBlock(block);
+            foreach (var renderer in pools) { renderer.enabled = gain > .001f; renderer.SetPropertyBlock(block); }
         }
         public void Advance(float dt, float rainGain, float snowGain, float wind, bool stormTarget)
         {
@@ -74,7 +74,7 @@ namespace PixelTraffic.UnityPrototype
                 Vector3 p = positions[i]; p.y -= (flakes ? 1.6f : 12 + gain * 5) * dt;
                 p.x += ((flakes ? Mathf.Sin(clock + i) * .5f : -1) - wind * (flakes ? 2 : 7)) * dt;
                 if (p.y < .2f) p.y += 16; if (p.x < -13) p.x += 26; if (p.x > 13) p.x -= 26; positions[i] = p;
-                Vector3 a = right * (flakes ? .065f : .018f), b = flakes ? up * .065f : new Vector3(-.05f - wind * .28f, .65f, 0);
+                Vector3 a = right * (flakes ? .065f : .018f), b = flakes ? up * .065f : new Vector3(.05f + wind * .28f, .65f, 0);
                 int k = i * 4; vertices[k] = p - a; vertices[k + 1] = p + a; vertices[k + 2] = p + a + b; vertices[k + 3] = p - a + b;
             }
             mesh.vertices = vertices;
