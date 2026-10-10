@@ -71,6 +71,24 @@ namespace PixelTraffic.UnityPrototype.Editor
             climate.Select(2,5);for(int i=0;i<9;i++)climate.Advance(.1,true);weights=distant.RuntimeMaterial.GetVector("_Theme");climate.Select(1,3);
             Need(weights==distant.RuntimeMaterial.GetVector("_Theme"),"Backdrop retarget jumps before the next frame.");
             Need(original.GetVector("_Theme")==originalTheme&&original.GetVector("_Weather")==originalWeather,"Backdrop preview changed asset defaults.");
+            // Observe the real scene light while changing weather, rather than
+            // merely recomputing shader weights in this test.
+            var sunlight=GameObject.Find("Afternoon Sun").GetComponent<Light>();
+            climate.Preview(0,0);float clearSun=sunlight.intensity;climate.Select(0,5);
+            float previousSun=clearSun;int skyWeatherFrames=0;
+            for(int frame=0;frame<60;frame++)
+            {
+                climate.Advance(.1,true);Need(sunlight.intensity<=previousSun+.00001f&&sunlight.intensity>=0,"Storm sunlight does not dim smoothly.");
+                previousSun=sunlight.intensity;skyWeatherFrames++;
+            }
+            Need(previousSun<clearSun*.6f,"Storm keeps full clear-weather sunlight.");
+            climate.Select(0,0);
+            for(int frame=0;frame<60;frame++)
+            {
+                climate.Advance(.1,true);Need(sunlight.intensity>=previousSun-.00001f&&sunlight.intensity<=clearSun+.00001f,"Clearing sunlight overshoots or dims.");
+                previousSun=sunlight.intensity;skyWeatherFrames++;
+            }
+            Need(Mathf.Abs(previousSun-clearSun)<.00001f,"Clearing does not restore daylight.");
             Camera camera=Camera.main;float oldAspect=camera.aspect;int compositionSamples=0;
             try
             {
@@ -81,10 +99,15 @@ namespace PixelTraffic.UnityPrototype.Editor
                     Vector3 summit=camera.WorldToViewportPoint(new Vector3(-42,70,425));
                     Need(river.z>0&&river.y>.62f&&river.y<.72f,"River leaves the band behind the boulevard.");
                     Need(summit.z>0&&summit.y>river.y+.10f&&summit.y<.92f,"Mountain depth or sky room lost.");compositionSamples+=2;
+                    foreach(var celestial in new[]{new Vector3(-30,126,468),new Vector3(22,123,468)})
+                    {
+                        var screen=camera.WorldToViewportPoint(celestial);
+                        Need(screen.z>0&&screen.x>.03f&&screen.x<.97f&&screen.y>.85f&&screen.y<.99f,"Sun or moon leaves the portrait sky.");
+                    }
                 }
             }finally{camera.aspect=oldAspect;}
             climate.Preview(0,0);
-            return new Report{result="PASS: river depth and unsubmerged bridge, authored lamps, three ridge silhouettes, one runtime material, saved endpoints, directional sunset, hidden clock, retarget and portrait composition; actual GPU preview/device test separate",meshCount=filters.Length,triangles=triangles,streetCylinderTriangles=64,combinations=combinations,frameRates=rates,transitionFrames=transitionFrames,compositionSamples=compositionSamples,maxThemeFrameJump=maxJump,hiddenFrames=100,bridgeLampCount=11,riverDepth=riverMesh.bounds.size.z,bridgeDeckClearance=24.8f-1.3f/2-surfaceY};
+            return new Report{result="PASS: sky sunlight dim/recovery and portrait celestial composition, river depth/bridge lamps, ridge silhouettes, one runtime material, saved endpoints, directional sunset, hidden clock and retarget; actual GPU preview/device test separate",meshCount=filters.Length,triangles=triangles,streetCylinderTriangles=64,combinations=combinations,frameRates=rates,transitionFrames=transitionFrames,compositionSamples=compositionSamples,maxThemeFrameJump=maxJump,hiddenFrames=100,bridgeLampCount=11,riverDepth=riverMesh.bounds.size.z,bridgeDeckClearance=24.8f-1.3f/2-surfaceY,skyWeatherFrames=skyWeatherFrames};
         }
         private static void Need(bool ok,string why){if(!ok)throw new InvalidOperationException(why);}
         [Serializable] internal sealed class Report
@@ -92,6 +115,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             public string result;public int meshCount,triangles,streetCylinderTriangles,combinations,transitionFrames,compositionSamples,hiddenFrames;
             public int[] frameRates;public float maxThemeFrameJump;
             public int bridgeLampCount;public float riverDepth,bridgeDeckClearance;
+            public int skyWeatherFrames;
         }
     }
 }

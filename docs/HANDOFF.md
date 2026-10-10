@@ -1,5 +1,11 @@
 # 새 채팅 인수인계 — 픽셀 트래픽 0.29.0
 
+## 2026-10-11 — Unity 0.17.0 하늘·구름·해·달: 구현 완료, 실제 검사 대기
+
+사용자가 폰0.16 적용 성공을 확인하고 다음 하늘 패치를 승인했다. 범위5소스: Distant.shader, DistantChecks, CityPreview, StarterScene, StarterConfig. 시작 시 기존dirty285파일·git status-uall·index SHA와110 빌드 입력/12 host 입력을 기록했다. 0.17.0/code18, 새 SkyClimate-0.17.0 장면과 SkyClimate0170 generated 경로. 기존8원경 mesh/공유 불투명 셰이더에서 둥근 구름 밀도/내부 음영/노을 가장자리, 해의 원형 disc와 halo/노을 하강, 달의 질감/halo·별 antialias와 구름 가림을 구현했다. 움직임은 기존 CityClimate visible clock을 사용한다. 기존 조명의 기후 연동을 재사용하며 storm dim→clear 복구의 실제 Light 검사120frames 및 두 세로 aspect 해/달 위치 검사를 추가했다. 임시 sky GPU 촬영5장을 추가하며 카메라와 기후는 복원하고 저장하지 않는다.
+
+현재 로컬 입력 SHA·수정 범위·기존 index 보존을 확인했으며 Unity 실행/GPU/Android 빌드·서명/APK 전달은 아직 대기다. 낮→노을→밤/밤→낮·숨김 freeze/traffic·정류장 회귀 검사를 기존 pipeline에서 함께 수행한다. NativeAndroid/host/workflow/traffic 변경 없음; host 입력12개의 SHA가 같아 기존 실제 host Lint를 재사용한다. 폰0.17/FPS·발열은 미확인, Drive PC 구성은 보류한다.
+
 ## 2026-10-11 — Unity 0.16.0 강·도시·산 원경 보강: 실제 화면 검증·서명 APK 전달 완료
 
 사용자는 폰 **0.15.0 적용 성공**을 확인했고 이번 배경 보강을 승인했다. **0.16.0/code17**, `RiverCity-0.16.0.unity` / `Generated/RiverCity0160`. 기존 원경 코드를 재사용해 산3겹의 높이와 봉우리를 분리하고, 도시34건물·첨탑·강변12저층군과 양안을 보강했다. 강은 upright sheet에서 깊이65m의 완만하게 상승하는 stylized surface로 바뀌고 다리 deck/기둥/난간·11램프가 수면 위에 보인다. 창문과 다리 불빛 아래 월드좌표 반사 ribbon, 노을 반짝임과 움직이는 잔물결, 비/눈/안개 흐림을 단일 공유 불투명 shader로 표현한다. 반사는 authored 효과이며 실제 reflection camera가 아니다. 원래 제품 카메라와 차량24대/보행100명/정류장8명/승하차·hazard·안전 출발 동작, NativeAndroid/host/workflow를 유지했다.

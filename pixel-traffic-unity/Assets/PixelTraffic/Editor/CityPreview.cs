@@ -148,6 +148,29 @@ namespace PixelTraffic.UnityPrototype.Editor
                 for(int i=0;i<60;i++)landscapeClimate.Advance(.1,true);
                 landscapePreviews.Add(CaptureState(camera,request,target,image,"river-motion"));
                 camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);camera.fieldOfView=roadFov;landscapeClimate.Preview(0,0);
+                var skyPreviews=new System.Collections.Generic.List<string>();
+                var skyTarget=new RenderTexture(960,720,24,RenderTextureFormat.ARGB32){antiAliasing=2};skyTarget.Create();
+                var skyImage=new Texture2D(960,720,TextureFormat.RGB24,false);
+                try
+                {
+                    camera.aspect=4f/3;camera.transform.position=new Vector3(0,60,295);
+                    camera.transform.LookAt(new Vector3(0,115,468));camera.fieldOfView=44;
+                    var skyRequest=new UniversalRenderPipeline.SingleCameraRequest{destination=skyTarget};
+                    foreach(int theme in new[]{0,1,2})
+                    {
+                        landscapeClimate.Preview(theme,0);
+                        skyPreviews.Add(CaptureState(camera,skyRequest,skyTarget,skyImage,"sky-"+new[]{"day","sunset","night"}[theme]));
+                    }
+                    landscapeClimate.Preview(0,5);
+                    skyPreviews.Add(CaptureState(camera,skyRequest,skyTarget,skyImage,"sky-storm"));
+                    landscapeClimate.Preview(0,0);for(int frame=0;frame<60;frame++)landscapeClimate.Advance(.1,true);
+                    skyPreviews.Add(CaptureState(camera,skyRequest,skyTarget,skyImage,"sky-motion"));
+                }
+                finally
+                {
+                    skyTarget.Release();UnityEngine.Object.DestroyImmediate(skyTarget);UnityEngine.Object.DestroyImmediate(skyImage);
+                    camera.aspect=.45f;camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);camera.fieldOfView=roadFov;landscapeClimate.Preview(0,0);
+                }
                 var sceneryPreviews=new System.Collections.Generic.List<string>();
                 var sceneryTarget=new RenderTexture(960,720,24,RenderTextureFormat.ARGB32){antiAliasing=2};sceneryTarget.Create();
                 var sceneryImage=new Texture2D(960,720,TextureFormat.RGB24,false);
@@ -348,7 +371,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     result = "PASS", version = StarterConfig.VersionName, editor = Application.unityVersion,
                     graphicsApi = SystemInfo.graphicsDeviceType.ToString(), width = width, height = height,
                     image = output, source = "Unity Editor URP camera; not a phone screenshot or FPS test"
-                    , materialColors = colors, climateImages = previews.ToArray(), vehicleImages = vehiclePreviews.ToArray(),frontageImages=frontagePreviews.ToArray(),drivingImages=drivingPreviews.ToArray(),cameraImages=cameraPreviews.ToArray(),landscapeImages=landscapePreviews.ToArray(),sceneryImages=sceneryPreviews.ToArray(),heavyImages=heavyPreviews.ToArray(),busStopImages=stopPreviews.ToArray()
+                    , materialColors = colors, climateImages = previews.ToArray(), vehicleImages = vehiclePreviews.ToArray(),frontageImages=frontagePreviews.ToArray(),drivingImages=drivingPreviews.ToArray(),cameraImages=cameraPreviews.ToArray(),landscapeImages=landscapePreviews.ToArray(),skyImages=skyPreviews.ToArray(),sceneryImages=sceneryPreviews.ToArray(),heavyImages=heavyPreviews.ToArray(),busStopImages=stopPreviews.ToArray()
                 }, true));
                 Debug.Log("PASS: real city camera preview saved: " + output);
             }
@@ -395,7 +418,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         {
             public string result, version, editor, graphicsApi, image, source;
             public int width, height;
-            public string[] materialColors, climateImages, vehicleImages,frontageImages,drivingImages,cameraImages,landscapeImages,sceneryImages,heavyImages,busStopImages;
+            public string[] materialColors, climateImages, vehicleImages,frontageImages,drivingImages,cameraImages,landscapeImages,skyImages,sceneryImages,heavyImages,busStopImages;
         }
     }
 }

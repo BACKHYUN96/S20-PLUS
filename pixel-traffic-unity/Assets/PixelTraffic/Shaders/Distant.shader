@@ -46,14 +46,41 @@ Shader "PixelTraffic/Distant"
                     float3 low=float3(.64,.82,.95)*day+float3(1,.55,.30)*dusk+float3(.09,.13,.24)*night;
                     float3 high=float3(.06,.35,.81)*day+float3(.29,.24,.52)*dusk+float3(.012,.022,.065)*night;
                     color=lerp(low,high,pow(elevation,.65));
-                    float2 p=uv*float2(10,15)-float2(_Motion.y,0);
-                    float n=Noise(p)*.58+Noise(p*2.1)*.28+Noise(p*4.2)*.14;
-                    float mass=smoothstep(.54-cloud*.16,.63-cloud*.16,n);
-                    float3 clouds=float3(.97,.98,1)*day+float3(.91,.66,.56)*dusk+float3(.12,.16,.27)*night;
-                    clouds*=1-cloud*.28;color=lerp(color,clouds,mass*.94);
+                    // Broad rounded lobes with smaller edges; all motion uses the
+                    // visible wallpaper clock rather than Unity's global time.
+                    float2 p=uv*float2(8,13)-float2(_Motion.y,0);
+                    float broad=Noise(p);
+                    float n=broad*.70+Noise(p*2.03)*.21+Noise(p*4.07)*.09;
+                    float mass=smoothstep(.52-cloud*.22,.64-cloud*.18,n);
+                    float density=saturate((n-.48)*3.6+cloud*.50);
+                    float sunward=saturate(.5+(Noise(p+float2(-.16,.22))-broad)*4);
+                    float3 cloudShade=float3(.57,.70,.82)*day+float3(.47,.33,.48)*dusk+float3(.045,.065,.12)*night;
+                    float3 cloudLight=float3(1,.99,.95)*day+float3(1,.66,.37)*dusk+float3(.17,.21,.33)*night;
+                    float3 clouds=lerp(cloudShade,cloudLight,saturate(sunward*.8+(1-density)*.35));
+                    clouds*=1-cloud*.42;
+                    // World-sized circular discs stay round at either phone aspect.
+                    // The sunset sun descends while the night moon fades in separately.
+                    float2 skyXY=i.positionWS.xy;
+                    float2 sunPosition=float2(-30,126-61*dusk);
+                    float sunDistance=length(skyXY-sunPosition);
+                    float aa=max(fwidth(sunDistance),.12);
+                    float sunDisc=1-smoothstep(4.3-aa,4.3+aa,sunDistance);
+                    float sunGlow=exp(-sunDistance*.065);
+                    color+=float3(1,.76,.38)*(sunGlow*.19+sunDisc*.65)*(day+dusk)*(1-cloud*.82);
+                    float2 moonXY=skyXY-float2(22,123);
+                    float moonDistance=length(moonXY);
+                    float moonAA=max(fwidth(moonDistance),.12);
+                    float moonDisc=1-smoothstep(3.4-moonAA,3.4+moonAA,moonDistance);
+                    float moonTexture=.82+.18*Noise(moonXY*.72);
+                    color+=night*(1-cloud*.88)*float3(.68,.78,.96)*(moonDisc*moonTexture*.82+exp(-moonDistance*.13)*.10);
                     float2 starUV=uv*float2(140,180);
-                    float stars=step(.997,Hash(floor(starUV)))*(1-smoothstep(.03,.17,length(frac(starUV)-.5)));
-                    color+=stars*night*(1-mass)*(1-cloud)*float3(.7,.8,1);
+                    float starRadius=length(frac(starUV)-.5);
+                    float starAA=max(fwidth(starRadius),.025);
+                    float stars=step(.994,Hash(floor(starUV)))*(1-smoothstep(.14-starAA,.14+starAA,starRadius));
+                    stars*=1-smoothstep(.45,1.2,max(fwidth(starUV.x),fwidth(starUV.y)));
+                    color+=stars*night*(1-cloud)*float3(.7,.8,1);
+                    // Clouds occlude every celestial object, including their halos.
+                    color=lerp(color,clouds,mass*lerp(.96,1,cloud));
                     color=lerp(color,_HazeColor.rgb,saturate(fog*.83+rain*.24+snow*.23));
                 }
                 else if(kind<1.5)
