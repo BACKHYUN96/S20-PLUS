@@ -1,5 +1,9 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-10 — Unity 0.15.0 전체 승하차 검사 통과·실제 차선변경 추적 촬영 보정
+
+source9bd8f58b7d9df6aa2a001e974531145f577d1def / Validate38050819623(job114209413052)/artifact11669780165에서 Runtime PASS: 실제24대600초 arrivals3/departures2/minimumGap1.799999m, 독립4/32/100명 boarding18/alighting24/departures43/hazard26233frames/minfoot.400042m/stormdepartures2, 15/30/60/120Hz/pause와118442tri/1579renderer/44material 예산을 확인했다. GPU촬영은55PNG이후 기존폰구도 viewport안에서차선변경차량을못찾아실패했으므로 성공으로간주하지않는다. 실제시뮬레이션의Signaling→Merging→완료상태는그대로사용하고임시촬영카메라가해당차량을따라가게한다. Runtime/productioncamera/차선변경안전요건은불변이며촬영/최종APK는재검증대기다.
+
 ## 2026-10-10 — Unity 0.15.0 횡단보도 이후 정류장 신호 교착 보정
 
 source55ae3daa4e92077aba2e241ffa0655f11df3788b / Validate38050278331(job114207848807)/artifact11668294656의 실제24차량600초 검사에서arrivals3/boarded6/departures1을 확인했다. 횡단보도를 이미 차체전체가 지난 정류장 버스가green만 기다리면 뒤 차량이횡단보도를비우지못해VehicleClearance가끝나지않는경우를보정한다. 문닫힘/현재차선앞뒤gap/3pulse는유지하고, 빨간신호때도차체전체가crossing+5m안전범위를이미지났다면현재바깥차선으로출발한다. 신호가아직적용되는upstream차량은green을기다리며기존정지선/횡단보도/보행clearance는그대로사용한다. 전체fleet검사는red시departure의실제crossingclearance와실패시busstate를함께검사한다. 최종Runtime/GPU/서명APK는재검증대기, 폰0.14성공/Drive보류.

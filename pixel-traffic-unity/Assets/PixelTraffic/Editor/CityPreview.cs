@@ -289,10 +289,11 @@ namespace PixelTraffic.UnityPrototype.Editor
                     detailStreet.Advance(StreetModel.Dt);detailStreet.ApplyViews();
                     var cars=detailStreet.Model.Cars;
                     if(tracked<0)for(int i=0;i<cars.Length;i++)if(cars[i].maneuver==LaneChanges.Stage.Signaling&&cars[i].signalTicks==0)
-                    {Vector3 screen=camera.WorldToViewportPoint(new Vector3(cars[i].X,.8f,(float)cars[i].z));if(screen.z>0&&screen.x>.1f&&screen.x<.9f&&screen.y>.2f&&screen.y<.8f){tracked=i;captured=1;drivingPreviews.Add(CaptureState(camera,request,target,image,"lane-signal-start"));break;}}
+                    {tracked=i;captured=1;camera.transform.position=new Vector3(cars[i].X+5,7,(float)cars[i].z-14);camera.transform.LookAt(new Vector3(cars[i].X,.8f,(float)cars[i].z));drivingPreviews.Add(CaptureState(camera,request,target,image,"lane-signal-start"));break;}
                     if(tracked>=0)
                     {
                         var car=cars[tracked];
+                        camera.transform.position=new Vector3(car.X+5,7,(float)car.z-14);camera.transform.LookAt(new Vector3(car.X,.8f,(float)car.z));
                         if(captured==1&&car.maneuver==LaneChanges.Stage.Merging){captured=2;drivingPreviews.Add(CaptureState(camera,request,target,image,"lane-change-start"));}
                         else if(captured==2&&car.maneuver==LaneChanges.Stage.Merging&&car.mergeTicks==car.MergeDuration/2){captured=3;drivingPreviews.Add(CaptureState(camera,request,target,image,"lane-change-mid"));}
                         else if(captured==3&&car.maneuver==LaneChanges.Stage.Idle){captured=4;drivingPreviews.Add(CaptureState(camera,request,target,image,"lane-change-complete"));}
