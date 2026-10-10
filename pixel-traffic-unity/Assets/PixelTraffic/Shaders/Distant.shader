@@ -24,10 +24,10 @@ Shader "PixelTraffic/Distant"
                 half4 _HazeColor;
             CBUFFER_END
             struct Attributes {float4 positionOS:POSITION;float3 normalOS:NORMAL;float2 uv:TEXCOORD0;float4 color:COLOR;};
-            struct Varyings {float4 positionCS:SV_POSITION;float3 normalWS:TEXCOORD0;float2 uv:TEXCOORD1;float4 color:TEXCOORD2;};
+            struct Varyings {float4 positionCS:SV_POSITION;float3 normalWS:TEXCOORD0;float2 uv:TEXCOORD1;float4 color:TEXCOORD2;float3 positionWS:TEXCOORD3;};
             Varyings Vert(Attributes v)
             {
-                Varyings o;o.positionCS=TransformObjectToHClip(v.positionOS.xyz);o.normalWS=TransformObjectToWorldNormal(v.normalOS);o.uv=v.uv;o.color=v.color;return o;
+                Varyings o;o.positionCS=TransformObjectToHClip(v.positionOS.xyz);o.normalWS=TransformObjectToWorldNormal(v.normalOS);o.uv=v.uv;o.color=v.color;o.positionWS=TransformObjectToWorld(v.positionOS.xyz);return o;
             }
             float Hash(float2 p){return frac(sin(dot(p,float2(127.1,311.7)))*43758.5453);}
             float Noise(float2 p)
@@ -60,9 +60,11 @@ Shader "PixelTraffic/Distant"
                 {
                     float far=i.color.y;
                     float3 green=lerp(float3(.16,.36,.23),float3(.39,.58,.72),far);
-                    float shade=.84+Noise(uv*float2(28,9)+i.color.z)*.18;
+                    // Shared world coordinates keep terrain noise continuous between ridge strips.
+                    float2 terrain=i.positionWS.xy*float2(.065,.11);
+                    float shade=.79+Noise(terrain+i.color.z)*.15+Noise(terrain*2.3)*.06;
                     color=(green*day+lerp(float3(.34,.34,.30),float3(.49,.43,.53),far)*dusk+float3(.035,.07,.12)*night)*shade;
-                    color=lerp(color,float3(.84,.87,.9)*(day+dusk*.65+night*.19),snow*smoothstep(.65,.98,uv.y)*.62);
+                    color=lerp(color,float3(.84,.87,.9)*(day+dusk*.65+night*.19),snow*smoothstep(48,80,i.positionWS.y)*.62);
                     color=lerp(color,_HazeColor.rgb,saturate(.09+far*.13+fog*.84+rain*.26));
                 }
                 else if(kind<2.5)
@@ -81,8 +83,9 @@ Shader "PixelTraffic/Distant"
                 else if(kind<3.5)
                 {
                     color=float3(.14,.48,.72)*day+float3(.39,.36,.46)*dusk+float3(.018,.075,.15)*night;
-                    float ripples=sin(uv.y*250+uv.x*11+_Motion.x*.65)+sin(uv.y*590-uv.x*21-_Motion.x*.43)*.38;
-                    float glints=smoothstep(.88,1.33,ripples)*(Noise(uv*float2(90,210))*.6+.4);
+                    float distortion=Noise(uv*float2(130,37))*4;
+                    float ripples=sin(uv.y*250+uv.x*39+distortion+_Motion.x*.65)+sin(uv.y*590-uv.x*67-distortion-_Motion.x*.43)*.38;
+                    float glints=smoothstep(.88,1.33,ripples)*smoothstep(.32,.72,Noise(uv*float2(170,210)));
                     float ribbon=exp(-abs(uv.x-.65)*(5+uv.y*8));
                     color+=glints*(.14+ribbon*.55)*(float3(.64,.82,.95)*day+float3(1,.56,.25)*dusk);
                     float cityReflection=pow(saturate(sin(uv.x*150)*.5+.5),16)*(.4+.6*uv.y)*smoothstep(.1,1.1,ripples);

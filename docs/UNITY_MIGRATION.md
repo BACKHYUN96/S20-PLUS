@@ -1,5 +1,8 @@
 # Pixel Traffic — Unity 전환 준비
 
+## 2026-10-10 — Unity 0.12.0 첫 실제 검증 통과, 원경 GPU 표면 보정 후 재검증
+
+첫 실제 Windows Validate run38031801525/source64ed2349는 장면·원경·기존 날씨/노을/보행자/차량/차선변경 검사 PASS, GPU43PNG 및 pipeline PASS다. 최대100우산117318tri/1467renderer/43material로 기존119922/1515/47보다 감소했다. 실제 이미지를 검토하니 산48구간마다0..1UV가 반복되어 세로 줄무늬가 보였고 강광택이 지나치게 평행했다. Distant.shader를 공유 world-position 기반 산음영/적설로 수정하고 강 ripples에 불규칙한 phase와 glint mask를 넣었다. geometry/카메라/Android host 입력은 그대로다. 새 소스에서 실제 Validate·GPU 캡처를 다시 확인한 후 signed APK를 빌드한다. 첫 검사와 수정 후 검사를 구분하고 폰0.12/FPS·발열은 확인 대기다. Drive 구성은 사용자 지시대로 보류한다.
 ## 2026-10-10 — Unity 0.12.0 하늘·산·강·맞은편 도시 원경 구현, 실제 검증 대기
 
 사용자가 기존0.11.0 APK 다운로드·폰 적용 성공을 확인했고 다음 원경 패치 진행을 승인했다. Drive/Colab 구성은 나중에 PC에서 재개하므로 이번에 연결·업로드·메일 작업을 하지 않는다. 변경13소스/meta: StarterConfig/StarterScene/CityEnvironment/CityClimate/CityPreview 및 DistantBackdrop/DistantScene/DistantChecks/Distant.shader와meta. 0.12.0/code13, Landscape-0.12.0.unity/Generated/Landscape0120.
