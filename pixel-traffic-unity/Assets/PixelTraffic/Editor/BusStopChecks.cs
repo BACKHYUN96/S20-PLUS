@@ -33,6 +33,14 @@ namespace PixelTraffic.UnityPrototype.Editor
                 if(a.x>1.274f&&b.x>1.274f&&c.x>1.274f)
                 {var middle=(a+b+c)/3;Need(!(middle.z>3.48f&&middle.z<4.67f&&middle.y>.59f&&middle.y<2.69f),"Opaque bus skin blocks the doorway.");}
             }
+            var routes=new SidewalkRoutes();var path=new int[600];
+            for(int stop=0;stop<2;stop++)
+            {
+                int side=BusStops.Side(stop);float z=BusStops.DoorZ(stop);
+                int count=routes.Find(new Vector2(side*9.995f,z-3),new Vector2(side*9.995f,z+3),side,path);
+                Need(count>1,"Shelter blocks the sidewalk route.");
+                for(int i=1;i<count;i++)Need(SidewalkRoutes.SegmentAllowed(routes.Node(path[i-1],side),routes.Node(path[i],side)),"Sidewalk graph uses obstacles from the opposite side.");
+            }
             int boards=0,alights=0,departures=0,hazardFrames=0;float minimum=float.MaxValue;
             foreach(int population in new[]{4,32,100})
             {

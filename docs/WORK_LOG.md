@@ -1,5 +1,9 @@
 # 작업 이력
 
+## 2026-10-10 — Unity 0.15.0 실제 보행 검사 실패: 양쪽 보도 경로 분리
+
+sourceb7273c4db99f24049ebd0ce1babcbdf0776edccc / Validate38048620357(job114203088402)/artifact11668014038은Unity컴파일과traffic/vehicle mesh 검사를통과했지만StreetChecks4명/200초의보행자0이서쪽정류장옆에서교차로로가도록예약한뒤멈춰횡단하지못했다. 기존SidewalkRoutes는+side의obstacle graph를양쪽에공유했으나새정류장두곳의z위치가다르다. ±side각각의open/link cache를만들고Nearest/Find/Place/Roam/weather-reentry에actualside를사용한다. 실제양쪽쉼터주변 경로의모든edge를SegmentAllowed로확인하는독립검사도추가한다. 기존교차/간격/모든보행자횡단요건을그대로유지하고재검증한다. GPU/서명APK는아직대기이며폰0.14성공/Drive보류와기존dirty/index를보존한다.
+
 ## 2026-10-10 — Unity 0.15.0 실제 첫 컴파일 오류 보정
 
 source1cf232604f465391174bb44a5f3e5d7b3f0e293e / Validate38048497084(job114202732886), artifact11668108617: 실제Unity컴파일에서CityPreview의기존labels와정류장촬영labels가중복되어CS0136으로실패했다. 정류장변수를stopLabels로변경한다. Runtime검사/GPU/APK는아직실행되지않았다. 통합검토에서하차끝→Returning전환tick에승객이두번걷는경로도발견해같은tick의velocity가이미있으면Returning을다음tick부터진행한다. SidewalkOpen의짧은배열생성을제거해내비게이션반복검사의allocation을줄였다. 실제재검증대기이며기존안전검사와허용오차를유지한다. 0.14폰적용성공/Drive보류를유지한다.

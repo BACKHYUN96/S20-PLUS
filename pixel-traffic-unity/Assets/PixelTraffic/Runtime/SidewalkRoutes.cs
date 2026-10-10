@@ -8,23 +8,27 @@ namespace PixelTraffic.UnityPrototype
         public const float Radius = .16f;
         public const int Columns = 12;
         private const int Rows = 401;
-        private readonly bool[] open = new bool[Columns * Rows];
+        private readonly bool[] open = new bool[Columns * Rows*2];
         private readonly int[] seen = new int[Columns * Rows], previous = new int[Columns * Rows], queue = new int[Columns * Rows];
-        private readonly byte[] links=new byte[Columns*Rows];
+        private readonly byte[] links=new byte[Columns*Rows*2];
         private int stamp;
-        public int Count => open.Length;
+        public int Count => Columns*Rows;
         public SidewalkRoutes()
         {
-            for(int i=0;i<open.Length;i++)open[i]=Allowed(Node(i,1));
-            // Static obstacle edges are checked once, then shared by all pedestrian searches.
-            for(int i=0;i<open.Length;i++)if(open[i])
+            // Stops differ on the two sidewalks; never reuse a mirrored obstacle graph.
+            foreach(int side in new[]{-1,1})
             {
-                if(i%Columns<Columns-1&&open[i+1]&&SegmentAllowed(Node(i,1),Node(i+1,1))){links[i]|=2;links[i+1]|=1;}
-                if(i+Columns<open.Length&&open[i+Columns]&&SegmentAllowed(Node(i,1),Node(i+Columns,1))){links[i]|=8;links[i+Columns]|=4;}
+                int offset=side<0?0:Count;
+                for(int i=0;i<Count;i++)open[offset+i]=Allowed(Node(i,side));
+                for(int i=0;i<Count;i++)if(open[offset+i])
+                {
+                    if(i%Columns<Columns-1&&open[offset+i+1]&&SegmentAllowed(Node(i,side),Node(i+1,side))){links[offset+i]|=2;links[offset+i+1]|=1;}
+                    if(i+Columns<Count&&open[offset+i+Columns]&&SegmentAllowed(Node(i,side),Node(i+Columns,side))){links[offset+i]|=8;links[offset+i+Columns]|=4;}
+                }
             }
         }
         public Vector2 Node(int index,int side) => new Vector2(side*(6.80f+.355f*(index%Columns)),-28+.45f*(index/Columns));
-        public bool IsOpen(int index) => open[index];
+        public bool IsOpen(int index,int side=1) => open[(side<0?0:Count)+index];
         public static bool Allowed(Vector2 p)
         {
             float x=Mathf.Abs(p.x);
@@ -45,14 +49,14 @@ namespace PixelTraffic.UnityPrototype
         private int Nearest(Vector2 p,int side)
         {
             float best=float.MaxValue;int result=-1;
-            for(int i=0;i<open.Length;i++)if(open[i])
+            for(int i=0;i<Count;i++)if(IsOpen(i,side))
             {
                 float d=(Node(i,side)-p).sqrMagnitude;
                 if(d<best){best=d;result=i;}
             }
             if(result>=0&&SegmentAllowed(p,Node(result,side)))return result;
             best=float.MaxValue;result=-1;
-            for(int i=0;i<open.Length;i++)if(open[i])
+            for(int i=0;i<Count;i++)if(IsOpen(i,side))
             {
                 float d=(Node(i,side)-p).sqrMagnitude;
                 if(d<best&&SegmentAllowed(p,Node(i,side))){best=d;result=i;}
@@ -62,7 +66,7 @@ namespace PixelTraffic.UnityPrototype
         public int Find(Vector2 from,Vector2 to,int side,int[] path)
         {
             int start=Nearest(from,side),end=Nearest(to,side);if(start<0||end<0)return 0;
-            stamp++;int read=0,write=0;queue[write++]=start;seen[start]=stamp;previous[start]=-1;
+            int offset=side<0?0:Count;stamp++;int read=0,write=0;queue[write++]=start;seen[start]=stamp;previous[start]=-1;
             while(read<write&&seen[end]!=stamp)
             {
                 int n=queue[read++];
@@ -70,7 +74,7 @@ namespace PixelTraffic.UnityPrototype
                 {
                     if(seen[v]!=stamp) {seen[v]=stamp;previous[v]=n;queue[write++]=v;}
                 }
-                if((links[n]&1)!=0)Add(n-1);if((links[n]&2)!=0)Add(n+1);if((links[n]&4)!=0)Add(n-Columns);if((links[n]&8)!=0)Add(n+Columns);
+                if((links[offset+n]&1)!=0)Add(n-1);if((links[offset+n]&2)!=0)Add(n+1);if((links[offset+n]&4)!=0)Add(n-Columns);if((links[offset+n]&8)!=0)Add(n+Columns);
             }
             if(seen[end]!=stamp)return 0;
             int count=0;for(int n=end;n>=0&&count<path.Length;n=previous[n])path[count++]=n;

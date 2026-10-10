@@ -83,7 +83,7 @@ namespace PixelTraffic.UnityPrototype
             Person p=People[index];
             for(int trial=0;trial<Routes.Count;trial++)
             {
-                int node=(index*137+trial*29)%Routes.Count;if(!Routes.IsOpen(node))continue;
+                int node=(index*137+trial*29)%Routes.Count;if(!Routes.IsOpen(node,p.side))continue;
                 Vector2 pos=Routes.Node(node,p.side);bool free=true;
                 for(int j=0;j<index;j++)if((People[j].position-pos).sqrMagnitude<Separation*Separation)free=false;
                 if(free){p.position=pos;return;}
@@ -133,7 +133,7 @@ namespace PixelTraffic.UnityPrototype
                     bool placed=false;
                     for(int column=0;column<SidewalkRoutes.Columns;column++)
                     {
-                        Vector2 point=Routes.Node(column,p.side);if(!Routes.IsOpen(column)||Visible(point))continue;
+                        Vector2 point=Routes.Node(column,p.side);if(!Routes.IsOpen(column,p.side)||Visible(point))continue;
                         bool free=true;foreach(var other in People)if(other.active&&(other.position-point).sqrMagnitude<Separation*Separation)free=false;
                         if(!free)continue;
                         p.position=point;p.active=true;p.weatherHidden=false;p.retiring=false;p.velocity=Vector2.zero;p.cooldown=8+Random(p)*16;p.detourSeconds=0;Roam(p);placed=true;break;
@@ -166,8 +166,8 @@ namespace PixelTraffic.UnityPrototype
                 row=Mathf.Clamp(Mathf.RoundToInt((p.position.y+28)/.45f)+(p.position.y<StarterConfig.CrossingZ?-1:1)*(55+(int)(Random(p)*30)),1,398);
             if(p.cooldown<=0)row=Mathf.Clamp(Mathf.RoundToInt((StarterConfig.CrossingZ-24+Random(p)*48+28)/.45f),1,398);
             int columns=SidewalkRoutes.Columns;int col=(int)(Random(p)*columns),node=row*columns+col;
-            for(int trial=0;trial<columns&&!Routes.IsOpen(node);trial++)node=row*columns+(col+trial+1)%columns;
-            if(!Routes.IsOpen(node))node=row*columns;
+            for(int trial=0;trial<columns&&!Routes.IsOpen(node,p.side);trial++)node=row*columns+(col+trial+1)%columns;
+            if(!Routes.IsOpen(node,p.side))node=row*columns;
             Path(p,Routes.Node(node,p.side));
         }
         private Vector2 SlotPoint(Person p) => new Vector2(p.side*(7.02f+.45f*(p.slot/2)),StarterConfig.CrossingZ+(p.side<0?-1.2f:.4f)+.8f*(p.slot%2));
