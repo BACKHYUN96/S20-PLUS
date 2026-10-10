@@ -129,7 +129,7 @@ namespace PixelTraffic.UnityPrototype
                 {
                     // The curb stop is already inside the outer lane. Return to its centre;
                     // a full move into the inner lane uses the normal rear-pass reservation rules.
-                    if(model.PhaseSeconds<16&&SafeDeparture(c))
+                    if(SafeDeparture(c))
                     {c.busStage=Stage.DepartureSignal;c.signalTicks=0;c.blinks=1;}
                 }
                 else if(c.busStage==Stage.DepartureSignal)
@@ -153,7 +153,12 @@ namespace PixelTraffic.UnityPrototype
         }
         bool SafeDeparture(StreetModel.Car c)
         {
-            if(c.busDoor!=0||model.Signal!=StreetModel.Phase.VehicleGreen)return false;
+            if(c.busDoor!=0)return false;
+            // Stops sit downstream of the crossing. A bus that has fully cleared it
+            // must release the queue even during clearance; waiting for green here
+            // would prevent the upstream vehicles from clearing the crossing.
+            if(model.Signal!=StreetModel.Phase.VehicleGreen&&
+                c.Direction*(c.z-StarterConfig.CrossingZ)<5+c.SafetyLength/2)return false;
             double span=StarterConfig.RouteEnd-StarterConfig.RouteStart;
             foreach(var other in model.Cars)if(other!=c&&other.active&&other.Occupies(c.lane))
             {

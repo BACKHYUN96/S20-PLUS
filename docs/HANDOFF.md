@@ -1,5 +1,9 @@
 # 새 채팅 인수인계 — 픽셀 트래픽 0.29.0
 
+## 2026-10-10 — Unity 0.15.0 횡단보도 이후 정류장 신호 교착 보정
+
+source55ae3daa4e92077aba2e241ffa0655f11df3788b / Validate38050278331(job114207848807)/artifact11668294656의 실제24차량600초 검사에서arrivals3/boarded6/departures1을 확인했다. 횡단보도를 이미 차체전체가 지난 정류장 버스가green만 기다리면 뒤 차량이횡단보도를비우지못해VehicleClearance가끝나지않는경우를보정한다. 문닫힘/현재차선앞뒤gap/3pulse는유지하고, 빨간신호때도차체전체가crossing+5m안전범위를이미지났다면현재바깥차선으로출발한다. 신호가아직적용되는upstream차량은green을기다리며기존정지선/횡단보도/보행clearance는그대로사용한다. 전체fleet검사는red시departure의실제crossingclearance와실패시busstate를함께검사한다. 최종Runtime/GPU/서명APK는재검증대기, 폰0.14성공/Drive보류.
+
 ## 2026-10-10 — Unity 0.15.0 실제 전체 교통 교착 보정: 바깥 차선에서 정류장 출발
 
 sourcedf73618c5a79f6bb0ac1e9f9fdfaa64c5f0fd0a7 / Validate38049517205(job114205646178)/artifact11669690043은추가한serialized24차량600초검사에서arrivals1/boarded2/departures0으로실패했다. 버스가이미바깥차선내(x±4.92)에정차하는구조에서출발마다안쪽차선전체합류를요구하면혼잡때계속대기하게된다. 정류장출발은현재차선앞/뒤gap과green을확인하고문닫힘→왼쪽방향3pulse/1.8초→6초에걸쳐바깥차선중앙(x±4.8)으로복귀하며가속한다. Boarding/Closing은양쪽hazard,Ready/DepartureSignal은stationary,Leaving은door0과following solver를유지한다. 다른차선으로실제로변경할때는기존60m뒤차모두통과/앞뒤예측gap/예약/새뒤차취소/3pulse/heavy6초/일반기후제한을그대로사용한다.
