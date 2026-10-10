@@ -1,5 +1,11 @@
 # 작업 이력
 
+## 2026-10-10 — Unity 0.6.0 실제 렌더 관찰 후 투명·발광 재질 보정 (KST)
+
+sourcee41a272cf6241728f5d8a24759296aa2d31bcc92의 PC Validate38006733953/job114077126272와 D3D11 540×1200 캡처가 success다. 실제 180 blend oracle/18 endpoint/32 canopy 측정 PASS, minimumCanopySwing4.602755도, paperLaunches8/lastInterval3.146284초. 기본107346 triangles/2162 renderers/46 materials,100명116322/2230/46. reports artifact11651143952/5029068bytes ZIP SHA256700c5f4940a83cc961ca43004d51c121a2c79723ca1861745eb4df849db7f35b/CRC를 확인했다.
+
+실제 PNG를 관찰하니 가로등 pool이 사각 회색 패치로 보이고 창문 emission이 약해 시각 품질은 통과로 전달하지 않았다. 3종 투명 효과용 명시적 alpha blend/ZWriteOff/CullOff URP unlit Atmosphere.shader를 추가한다. Radial/Newsprint texture와 property block alpha/fog를 그대로 사용해 ShaderGUI의 Lit surface 상태에 의존하지 않는다. 소스 lamp/window/head/tail emission은 tiny non-black0.001을 넣어 black emission 자동 처리/variant stripping에 대응하고 runtime clones에 _EMISSION을 명시한다. Scene checks는 custom atmosphere shader와 runtime window keyword도 확인한다. CityEnvironment의 shader 허용 검사만 관련 범위에 추가하며 도시/차선 geometry는 변경하지 않는다. scene-clean sourcebf04e953773757afae0c11f7b12053652e67ff55 검사는 별도로 진행 중이며 이 보정 후 최종 실제 렌더/빌드 결과를 확인한다. 아직 APK를 전달하지 않는다.
+
 ## 2026-10-10 — Unity 0.6.0 검사 후 빌드 장면 초기화 보강 (KST)
 
 wind sampling 보정 sourcee41a272cf6241728f5d8a24759296aa2d31bcc92의 실제 검사는 진행 중이다. 코드 검토에서 ClimateChecks.Initialize가 열린 Editor 장면의 Renderer/MeshFilter에 임시 runtime material/mesh를 연결한 채 BuildPlayer로 이어질 수 있음을 확인했다. BuildPlayer의 열린 scene 처리에 기대지 않도록 StarterScene.Validate 성공 후 저장된 ScenePath를 다시 열고 CityClimate.TimeBlend가 미초기화 null인지 확인한다. 소스 장면은 이미 검사 전 저장되어 있고 임시 검사 상태는 저장하지 않는다. 원래 재질 참조와 Android 저장 설정으로 player가 초기화되도록 보장하는 수정이며 실제 폰에서 발생한 버그라고 주장하지 않는다. Editor 임시 material/mesh는 앞서 OnDestroy에서 edit/play API를 구분해 정리한다. 변경은 StarterScene.cs와 진행 문서, 다음 실제 검사/빌드로 확인한다.

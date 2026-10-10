@@ -77,6 +77,8 @@ namespace PixelTraffic.UnityPrototype.Editor
             Need(minimumCanopySwing > 1, "At least one actual canopy does not sway over the storm interval.");
             Need(climate.Effects.PaperLaunches - launches >= 5 && climate.Effects.LastPaperInterval >= 3 && climate.Effects.LastPaperInterval <= 5, "Storm paper cadence invalid.");
             for (int i = 0; i < fixedObjects.Count; i++) Need(fixedObjects[i].position == fixedPositions[i] && fixedObjects[i].rotation == fixedRotations[i], "Climate moves traffic, pedestrians or obstacles.");
+            Need(GameObject.Find("Warm Road Pool").GetComponent<Renderer>().sharedMaterial.shader.name == "PixelTraffic/Atmosphere", "Transparent effects shader missing.");
+            Need(GameObject.Find("Window Glass").GetComponent<Renderer>().sharedMaterial.IsKeywordEnabled("_EMISSION"), "Runtime window emission variant missing.");
             Need(climate.Effects.RainCapacity == 160 && climate.Effects.SnowCapacity == 96, "Precipitation pool is unbounded.");
             var report = new Report { result = "PASS: native four-second smoothstep oracle, retarget, pause, 18 scene endpoints, wind and fixed-capacity effects; device test pending", durationSeconds = 4, frameRates = rates, blendCases = blendCases, combinations = combos, realtimeStreetLights = climate.AdditionalLights, rainCapacity = 160, snowCapacity = 96, paperLaunches = climate.Effects.PaperLaunches, lastPaperInterval = climate.Effects.LastPaperInterval, animatedCanopies = trees.Count, minimumCanopySwing = minimumCanopySwing };
             climate.Preview(0, 0); climate.Advance(.01, true); return report;

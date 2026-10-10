@@ -291,7 +291,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             {
                 if(transform.name=="City Tree")trees++;if(transform.name=="City Building")buildings++;if(transform.name=="Street Lamp")lamps++;if(transform.name=="Skyline Tower")towers++;
             }
-            foreach(var renderer in renderers) {Need(renderer.sharedMaterial!=null&&renderer.sharedMaterial.shader.name=="Universal Render Pipeline/Lit","City material is missing or pink.");materials.Add(renderer.sharedMaterial);}
+            foreach(var renderer in renderers) {Need(renderer.sharedMaterial!=null&&(renderer.sharedMaterial.shader.name=="Universal Render Pipeline/Lit" || renderer.sharedMaterial.shader.name=="PixelTraffic/Atmosphere"),"City material is missing or pink.");materials.Add(renderer.sharedMaterial);}
             Need(trees==32&&buildings==24&&lamps==20&&towers==26,"City scenery is incomplete.");
             Need(triangles<120000&&renderers.Length<2400&&materials.Count<48,"City geometry/material budget exceeded.");
             foreach(string name in new[]{"Asphalt","Pavers","Masonry"})

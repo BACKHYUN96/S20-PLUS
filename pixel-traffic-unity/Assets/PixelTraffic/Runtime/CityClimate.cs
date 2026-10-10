@@ -27,7 +27,11 @@ namespace PixelTraffic.UnityPrototype
             if (initialized) return; initialized = true;
             time = new SceneBlend(3, theme); weather = new SceneBlend(6, selectedWeather);
             runtimeSurfaces = new Material[surfaces.Length];
-            for (int i = 0; i < surfaces.Length; i++) runtimeSurfaces[i] = new Material(surfaces[i]) { name = surfaces[i].name + " Runtime" };
+            for (int i = 0; i < surfaces.Length; i++)
+            {
+                runtimeSurfaces[i] = new Material(surfaces[i]) { name = surfaces[i].name + " Runtime" };
+                if (i >= 2) runtimeSurfaces[i].EnableKeyword("_EMISSION");
+            }
             foreach (var renderer in Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None))
                 for (int i = 0; i < surfaces.Length; i++) if (renderer.sharedMaterial == surfaces[i]) { renderer.sharedMaterial = runtimeSurfaces[i]; break; }
             treeRotations = new Quaternion[canopies.Length];

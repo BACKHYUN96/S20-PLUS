@@ -24,7 +24,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 if (renderer.name == "Lamp Lens") lamps.Add(renderer.transform);
                 if (renderer.name == "Layered Canopy") { trees.Add(renderer.transform); GameObjectUtility.SetStaticEditorFlags(renderer.gameObject, 0); }
             }
-            for (int i = 2; i < materials.Length; i++) { materials[i].EnableKeyword("_EMISSION"); materials[i].SetColor("_EmissionColor", Color.black); EditorUtility.SetDirty(materials[i]); }
+            for (int i = 2; i < materials.Length; i++) { materials[i].EnableKeyword("_EMISSION"); materials[i].SetColor("_EmissionColor", Color.white * .001f); materials[i].globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive; EditorUtility.SetDirty(materials[i]); }
             lamps.Sort((a, b) => Vector3.Distance(a.position, Camera.main.transform.position).CompareTo(Vector3.Distance(b.position, Camera.main.transform.position)));
             Light[] lights = new Light[4]; var pools = new Renderer[lamps.Count];
             Material glow = Transparent("Lamp Pool", RadialTexture(), true);
@@ -45,11 +45,15 @@ namespace PixelTraffic.UnityPrototype.Editor
         }
         private static Material Transparent(string name, Texture2D texture, bool emission)
         {
-            var mat = StarterScene.Surface(name, Color.white);
-            mat.SetFloat("_Surface", 1); mat.SetFloat("_Blend", 0); mat.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha); mat.SetFloat("_DstBlend", (float)BlendMode.OneMinusSrcAlpha); mat.SetFloat("_ZWrite", 0); mat.SetFloat("_Cull", 0);
-            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT"); mat.renderQueue = (int)RenderQueue.Transparent;
+            Shader shader = Shader.Find("PixelTraffic/Atmosphere");
+            if (shader == null) throw new InvalidOperationException("Atmosphere shader missing.");
+            string path = StarterScene.Generated + "/" + name.Replace(" ", "") + ".mat";
+            Material mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (mat == null) { mat = new Material(shader) { name = name }; AssetDatabase.CreateAsset(mat, path); }
+            else mat.shader = shader;
+            mat.SetColor("_BaseColor", Color.white); mat.SetColor("_EmissionColor", Color.black);
+            mat.renderQueue = (int)RenderQueue.Transparent;
             if (texture != null) mat.SetTexture("_BaseMap", texture);
-            if (emission) { mat.EnableKeyword("_EMISSION"); mat.SetColor("_EmissionColor", Color.black); }
             EditorUtility.SetDirty(mat); return mat;
         }
         private static Renderer Quad(string name, Transform root, Material mat, bool billboard)
