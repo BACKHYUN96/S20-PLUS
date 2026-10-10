@@ -90,6 +90,25 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Need(m.Stops.Arrivals>=2&&m.Stops.Boardings>=4&&m.Stops.Alightings>=2&&m.Stops.Departures>=2,"Bus service does not complete: population="+population+" arrivals="+m.Stops.Arrivals+" boarded="+m.Stops.Boardings+" alighted="+m.Stops.Alightings+" departed="+m.Stops.Departures+" states="+cars[0].busStage+"/"+cars[1].busStage);
                 boards+=m.Stops.Boardings;alights+=m.Stops.Alightings;departures+=m.Stops.Departures;
             }
+            // Exercise the complete serialized fleet, including queues on both lanes during service.
+            controller.ResetModel();var productionStops=controller.Model;float productionGap=float.MaxValue;
+            for(int productionTick=0;productionTick<18000;productionTick++)
+            {
+                productionStops.Tick();
+                Need(!(productionStops.CanEnter||productionStops.Signal==StreetModel.Phase.PedestrianClearance)||!productionStops.RoadOccupied(),"Full bus fleet blocks pedestrian green.");
+                for(int ci=0;ci<productionStops.Cars.Length;ci++)
+                {
+                    var ca=productionStops.Cars[ci];if(!ca.active)continue;
+                    if(ca.busDoor>0)Need(ca.speed==0,"Full-fleet bus moves with an open door.");
+                    for(int cj=ci+1;cj<productionStops.Cars.Length;cj++)
+                    {
+                        var cb=productionStops.Cars[cj];if(!cb.active||!LaneChanges.SharesLane(ca,cb))continue;
+                        double cd=Math.Abs(ca.z-cb.z);cd=Math.Min(cd,310-cd);float clearance=(float)cd-(ca.SafetyLength+cb.SafetyLength)/2;
+                        productionGap=Mathf.Min(productionGap,clearance);Need(clearance>=1.79f,"Full-fleet stop reservation overlaps another vehicle.");
+                    }
+                }
+            }
+            Need(productionStops.Stops.Arrivals>=2&&productionStops.Stops.Boardings>=4&&productionStops.Stops.Departures>=2,"Full fleet deadlocks serviced buses: arrivals="+productionStops.Stops.Arrivals+" boarded="+productionStops.Stops.Boardings+" departed="+productionStops.Stops.Departures);
             // Storm traffic may be slower, but a serviced bus must eventually depart safely.
             var weatherBus=Bus(0,BusStops.CenterZ(0),6);weatherBus.speed=0;
             var weatherModel=new StreetModel(4,new[]{weatherBus}){AutomaticLaneChanges=false};weatherModel.SetWeather(.3f,.45f,.6f,1.18f);
@@ -121,9 +140,9 @@ namespace PixelTraffic.UnityPrototype.Editor
             var stopPipeline=(UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset)UnityEngine.Rendering.GraphicsSettings.defaultRenderPipeline;
             var peak=CityEnvironment.Validate(Camera.main,stopPipeline);
             stopClimate.Preview(0,0);controller.ResetModel();controller.ApplyViews();
-            return new Report{result="PASS: two shelters, real open doorways, pooled walk-on/off riders, both-side hazard lamps, closed-door three-pulse safe departures, queues/curb/crosswalk/foot safety, 600sec 4/32/100 people, fixed clock and pause; phone test pending",stops=2,riders=8,peakRiderBudget=peak,stormDepartures=weatherModel.Stops.Departures,boardings=boards,alightings=alights,departures=departures,hazardFrames=hazardFrames,minimumFootDistance=minimum,dwellSeconds=8,doorSeconds=.8f,departureBlinkCount=3,departureBlinkSeconds=1.8f,departureMergeSeconds=6,frameRates=new[]{15,30,60,120}};
+            return new Report{result="PASS: two shelters, real open doorways, pooled walk-on/off riders, both-side hazard lamps, closed-door three-pulse safe departures, queues/curb/crosswalk/foot safety, 600sec 4/32/100 people, fixed clock and pause; phone test pending",stops=2,riders=8,productionDepartures=productionStops.Stops.Departures,productionArrivals=productionStops.Stops.Arrivals,productionMinimumGap=productionGap,peakRiderBudget=peak,stormDepartures=weatherModel.Stops.Departures,boardings=boards,alightings=alights,departures=departures,hazardFrames=hazardFrames,minimumFootDistance=minimum,dwellSeconds=8,doorSeconds=.8f,departureBlinkCount=3,departureBlinkSeconds=1.8f,departureMergeSeconds=6,frameRates=new[]{15,30,60,120}};
         }
         [Serializable]internal sealed class Report
-        {public string result;public CityEnvironment.Report peakRiderBudget;public int stormDepartures;public int stops,riders,boardings,alightings,departures,hazardFrames,departureBlinkCount;public float minimumFootDistance,dwellSeconds,doorSeconds,departureBlinkSeconds,departureMergeSeconds;public int[] frameRates;}
+        {public string result;public CityEnvironment.Report peakRiderBudget;public int stormDepartures,productionDepartures,productionArrivals;public float productionMinimumGap;public int stops,riders,boardings,alightings,departures,hazardFrames,departureBlinkCount;public float minimumFootDistance,dwellSeconds,doorSeconds,departureBlinkSeconds,departureMergeSeconds;public int[] frameRates;}
     }
 }

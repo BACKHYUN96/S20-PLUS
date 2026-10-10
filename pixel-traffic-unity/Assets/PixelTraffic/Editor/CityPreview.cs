@@ -307,7 +307,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 var stopImage=new Texture2D(720,960,TextureFormat.RGB24,false);var seenStop=new bool[2,4];int stopCaptured=0;
                 try
                 {
-                    camera.aspect=.75f;camera.fieldOfView=58;var stopRequest=new UniversalRenderPipeline.SingleCameraRequest{destination=stopTarget};
+                    camera.aspect=.75f;camera.fieldOfView=68;var stopRequest=new UniversalRenderPipeline.SingleCameraRequest{destination=stopTarget};
                     for(int tick=0;tick<18000&&stopCaptured<8;tick++)
                     {
                         detailStreet.Advance(StreetModel.Dt);var model=detailStreet.Model;
@@ -320,7 +320,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                             for(int stage=0;stage<4;stage++)if(ready[stage]&&!seenStop[stop,stage])
                             {
                                 int side=BusStops.Side(stop);float z=BusStops.DoorZ(stop);
-                                camera.transform.position=new Vector3(side*10.55f,5.5f,z-side*6);camera.transform.LookAt(new Vector3(side*7.45f,1.25f,z));
+                                camera.transform.position=new Vector3(side*7.5f,2.25f,z-side*5);camera.transform.LookAt(new Vector3(side*7.7f,1.2f,z));
                                 climate.Preview(stage<2?0:2,0);detailStreet.ApplyViews();
                                 string[] stopLabels={"alighting-day","boarding-day","hazards-on-night","hazards-off-night"};
                                 stopPreviews.Add(CaptureState(camera,stopRequest,stopTarget,stopImage,"bus-stop-"+(stop==0?"west-":"east-")+stopLabels[stage]));seenStop[stop,stage]=true;stopCaptured++;
