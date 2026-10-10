@@ -97,7 +97,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             }
             Need(Camera.main.transform.position==new Vector3(1.4f,14,-37)&&Camera.main.fieldOfView==44,"Driving camera framing missing.");
             climate.Preview(0,0);UnityEngine.Object.FindFirstObjectByType<StreetSimulation>().ApplyViews();
-            return new Report{result="PASS: heavy rear passes, three pulses, final gap cancellation, 600-second mixed fleet/rotated-envelope safety, actual light properties and camera; phone test pending",completedChanges=longRun.Maneuvers.Completed,rearWaits=longRun.Maneuvers.RearWaits,verifiedMergeStarts=verifiedStarts,simulatedSeconds=600,minimumBumperGap=gap,heavyMergeStarts=heavyStarts,heavyRearPassCases=1,heavySweepCases=sweepCases,blinkCount=3,blinkSeconds=1.8f,mergeSeconds=3,heavyMergeSeconds=6,renderersPerVehicle=17,fleetLightTriangles=288,realtimeStreetLights=lights};
+            return new Report{result="PASS: heavy rear passes, three pulses, final gap cancellation, 600-second mixed fleet/rotated-envelope safety, actual light properties and camera; phone test pending",completedChanges=longRun.Maneuvers.Completed,rearWaits=longRun.Maneuvers.RearWaits,verifiedMergeStarts=verifiedStarts,simulatedSeconds=600,minimumBumperGap=gap,heavyMergeStarts=heavyStarts,heavyRearPassCases=1,heavySweepCases=sweepCases,blinkCount=3,blinkSeconds=1.8f,mergeSeconds=3,heavyMergeSeconds=6,renderersPerVehicle=17,busRenderersPerVehicle=19,fleetLightTriangles=288,realtimeStreetLights=lights};
         }
         static void Gap(StreetModel model,ref float minimum)
         {
@@ -110,6 +110,6 @@ namespace PixelTraffic.UnityPrototype.Editor
         }
         static void Need(bool value,string message){if(!value)throw new InvalidOperationException(message);}
         [Serializable]internal sealed class Report
-        {public string result;public int completedChanges,rearWaits,verifiedMergeStarts,simulatedSeconds,blinkCount,renderersPerVehicle,fleetLightTriangles,realtimeStreetLights,heavyMergeStarts,heavyRearPassCases,heavySweepCases;public float minimumBumperGap,blinkSeconds,mergeSeconds,heavyMergeSeconds;}
+        {public int busRenderersPerVehicle;public string result;public int completedChanges,rearWaits,verifiedMergeStarts,simulatedSeconds,blinkCount,renderersPerVehicle,fleetLightTriangles,realtimeStreetLights,heavyMergeStarts,heavyRearPassCases,heavySweepCases;public float minimumBumperGap,blinkSeconds,mergeSeconds,heavyMergeSeconds;}
     }
 }

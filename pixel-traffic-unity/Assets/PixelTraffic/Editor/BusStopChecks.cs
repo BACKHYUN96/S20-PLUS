@@ -36,8 +36,8 @@ namespace PixelTraffic.UnityPrototype.Editor
             var routes=new SidewalkRoutes();var path=new int[600];
             for(int stop=0;stop<2;stop++)
             {
-                int side=BusStops.Side(stop);float z=BusStops.DoorZ(stop);
-                int count=routes.Find(new Vector2(side*9.995f,z-3),new Vector2(side*9.995f,z+3),side,path);
+                int side=BusStops.Side(stop);float stopZ=BusStops.DoorZ(stop);
+                int count=routes.Find(new Vector2(side*9.995f,stopZ-3),new Vector2(side*9.995f,stopZ+3),side,path);
                 Need(count>1,"Shelter blocks the sidewalk route.");
                 for(int i=1;i<count;i++)Need(SidewalkRoutes.SegmentAllowed(routes.Node(path[i-1],side),routes.Node(path[i],side)),"Sidewalk graph uses obstacles from the opposite side.");
             }
@@ -90,6 +90,11 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Need(m.Stops.Arrivals>=2&&m.Stops.Boardings>=4&&m.Stops.Alightings>=2&&m.Stops.Departures>=2,"Bus service does not complete: population="+population+" arrivals="+m.Stops.Arrivals+" boarded="+m.Stops.Boardings+" alighted="+m.Stops.Alightings+" departed="+m.Stops.Departures+" states="+cars[0].busStage+"/"+cars[1].busStage);
                 boards+=m.Stops.Boardings;alights+=m.Stops.Alightings;departures+=m.Stops.Departures;
             }
+            // Storm traffic may be slower, but a serviced bus must eventually depart safely.
+            var weatherBus=Bus(0,BusStops.CenterZ(0),6);weatherBus.speed=0;
+            var weatherModel=new StreetModel(4,new[]{weatherBus}){AutomaticLaneChanges=false};weatherModel.SetWeather(.3f,.45f,.6f,1.18f);
+            for(int weatherTick=0;weatherTick<5400;weatherTick++)weatherModel.Tick();
+            Need(weatherModel.Stops.Boardings>=2&&weatherModel.Stops.Departures>=1,"Storm locks a serviced bus at the stop.");
             // The actual serialized controller clock must preserve stops, doors and riders across frame rates and pause.
             var drives=UnityEngine.Object.FindObjectsByType<PrototypeDrive>(FindObjectsSortMode.None);float[] z=new float[drives.Length];for(int i=0;i<z.Length;i++)z[i]=drives[i].transform.position.z;
             string baseline=null;
@@ -107,9 +112,18 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
             }
             finally{controller.SetPaused(false);for(int i=0;i<z.Length;i++)drives[i].ResetPosition(z[i]);controller.ResetModel();controller.ApplyViews();}
-            return new Report{result="PASS: two shelters, real open doorways, pooled walk-on/off riders, both-side hazard lamps, closed-door three-pulse safe departures, queues/curb/crosswalk/foot safety, 600sec 4/32/100 people, fixed clock and pause; phone test pending",stops=2,riders=8,boardings=boards,alightings=alights,departures=departures,hazardFrames=hazardFrames,minimumFootDistance=minimum,dwellSeconds=8,doorSeconds=.8f,departureBlinkCount=3,departureBlinkSeconds=1.8f,departureMergeSeconds=6,frameRates=new[]{15,30,60,120}};
+            var stopClimate=UnityEngine.Object.FindFirstObjectByType<CityClimate>();
+            stopClimate.Preview(0,2);controller.ResetModel();controller.Model.SetPopulation(100);
+            // Stress all eight passenger rigs/umbrellas as well as the 100 ordinary walkers.
+            foreach(var stressRider in controller.Model.Stops.Riders)stressRider.stage=BusStops.RiderStage.Queue;
+            controller.ApplyViews();
+            foreach(var passengerView in controller.Riders)Need(passengerView.root.gameObject.activeSelf&&passengerView.umbrella.gameObject.activeSelf,"Waiting rain passenger lacks umbrella.");
+            var stopPipeline=(UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset)UnityEngine.Rendering.GraphicsSettings.defaultRenderPipeline;
+            var peak=CityEnvironment.Validate(Camera.main,stopPipeline);
+            stopClimate.Preview(0,0);controller.ResetModel();controller.ApplyViews();
+            return new Report{result="PASS: two shelters, real open doorways, pooled walk-on/off riders, both-side hazard lamps, closed-door three-pulse safe departures, queues/curb/crosswalk/foot safety, 600sec 4/32/100 people, fixed clock and pause; phone test pending",stops=2,riders=8,peakRiderBudget=peak,stormDepartures=weatherModel.Stops.Departures,boardings=boards,alightings=alights,departures=departures,hazardFrames=hazardFrames,minimumFootDistance=minimum,dwellSeconds=8,doorSeconds=.8f,departureBlinkCount=3,departureBlinkSeconds=1.8f,departureMergeSeconds=6,frameRates=new[]{15,30,60,120}};
         }
         [Serializable]internal sealed class Report
-        {public string result;public int stops,riders,boardings,alightings,departures,hazardFrames,departureBlinkCount;public float minimumFootDistance,dwellSeconds,doorSeconds,departureBlinkSeconds,departureMergeSeconds;public int[] frameRates;}
+        {public string result;public CityEnvironment.Report peakRiderBudget;public int stormDepartures;public int stops,riders,boardings,alightings,departures,hazardFrames,departureBlinkCount;public float minimumFootDistance,dwellSeconds,doorSeconds,departureBlinkSeconds,departureMergeSeconds;public int[] frameRates;}
     }
 }

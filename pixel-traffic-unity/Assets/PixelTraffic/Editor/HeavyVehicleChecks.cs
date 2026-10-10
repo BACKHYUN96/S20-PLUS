@@ -76,7 +76,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
             }
             Need(buses==4&&trucks==4&&checkedModels.Count==2,"Mixed fleet lost bus/truck ratio.");
-            return new Report{result="PASS: actual symmetric straight metre bodies, four axle pivots, front/rear lamps, paired cargo seam/locks/hinges, bus windows/AC, shared opaque mesh topology; phone test pending",buses=buses,trucks=trucks,checkedVertices=vertices,cargoLockBars=doorLocks,cargoHinges=doorHinges};
+            return new Report{result="PASS: actual straight metre bodies with curbside bus opening, four axle pivots, front/rear lamps, paired cargo seam/locks/hinges, bus windows/AC, shared opaque mesh topology; phone test pending",busRenderersPerVehicle=19,buses=buses,trucks=trucks,checkedVertices=vertices,cargoLockBars=doorLocks,cargoHinges=doorHinges};
         }
         static bool Finite(float x)=>!float.IsNaN(x)&&!float.IsInfinity(x);
         static Vector3Int Key(Vector3 p)=>new Vector3Int(Mathf.RoundToInt(p.x*10000),Mathf.RoundToInt(p.y*10000),Mathf.RoundToInt(p.z*10000));
@@ -87,6 +87,6 @@ namespace PixelTraffic.UnityPrototype.Editor
         }
         static bool Has(List<Bounds> boxes,Vector3 center){foreach(var b in boxes)if(Vector3.Distance(b.center,center)<.001f)return true;return false;}
         static void Need(bool value,string message){if(!value)throw new InvalidOperationException(message);}
-        [Serializable]internal sealed class Report{public string result;public int buses,trucks,checkedVertices,cargoLockBars,cargoHinges;}
+        [Serializable]internal sealed class Report{public int busRenderersPerVehicle;public string result;public int buses,trucks,checkedVertices,cargoLockBars,cargoHinges;}
     }
 }

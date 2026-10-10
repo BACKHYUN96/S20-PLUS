@@ -61,13 +61,13 @@ namespace PixelTraffic.UnityPrototype.Editor
             // including all 100 open umbrellas (previous city total: 118,914).
             Need(fleetTriangles<49686,"Vehicle detail exhausts the city triangle budget.");
             return new Report {result="PASS: actual shared mesh topology, finite/unit normals, curved shading, crowned roofs, tyre shoulder/contact, window UV/finish and fleet budget; device performance unmeasured",
-                models=models.Count,vehicles=cars.Length,renderersPerVehicle=17,fleetTriangles=fleetTriangles,checkedVertices=checkedVertices,curvedSeams=curvedSeams,windowTextureSize=64};
+                models=models.Count,vehicles=cars.Length,renderersPerVehicle=17,busRenderersPerVehicle=19,fleetTriangles=fleetTriangles,checkedVertices=checkedVertices,curvedSeams=curvedSeams,windowTextureSize=64};
         }
         private static bool Finite(float v)=>!float.IsNaN(v)&&!float.IsInfinity(v);
         private static void Need(bool value,string message){if(!value)throw new InvalidOperationException(message);}
         [Serializable] internal sealed class Report
         {
-            public string result;public int models,vehicles,renderersPerVehicle,fleetTriangles,checkedVertices,curvedSeams,windowTextureSize;
+            public int busRenderersPerVehicle;public string result;public int models,vehicles,renderersPerVehicle,fleetTriangles,checkedVertices,curvedSeams,windowTextureSize;
         }
     }
 }

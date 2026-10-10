@@ -1,5 +1,9 @@
 # 작업 이력
 
+## 2026-10-10 — Unity 0.15.0 경로 검증 변수명 보정·비바람 출발/최대 승객 예산 추가
+
+source38bc2951102725c8d132b918db3d30e30014db6b / Validate38048846997(job114203726577)/artifact11668109208은새경로검사의local z와기존pose배열z가C#scope상중복되어CS0136으로실패했다. route변수를stopZ로분리하여양쪽navigation재검증을진행한다. 보강검사에서storm pace에서도승하차완료버스가출발하는지확인하고, 실제100보행자+8정류장승객/우산을모두활성화한strict120000tri/2400renderer/48material예산을측정한다. 정류장우산도기존windblend기울기를따른다. renderer통계는승용차/트럭17·버스19를각각명시하고기존Heavyreport의완전대칭설명을오른쪽문opening이있는metrebody로정정한다. 실제Runtime/GPU/서명APK는재검증대기이며성공주장하지않는다.
+
 ## 2026-10-10 — Unity 0.15.0 실제 보행 검사 실패: 양쪽 보도 경로 분리
 
 sourceb7273c4db99f24049ebd0ce1babcbdf0776edccc / Validate38048620357(job114203088402)/artifact11668014038은Unity컴파일과traffic/vehicle mesh 검사를통과했지만StreetChecks4명/200초의보행자0이서쪽정류장옆에서교차로로가도록예약한뒤멈춰횡단하지못했다. 기존SidewalkRoutes는+side의obstacle graph를양쪽에공유했으나새정류장두곳의z위치가다르다. ±side각각의open/link cache를만들고Nearest/Find/Place/Roam/weather-reentry에actualside를사용한다. 실제양쪽쉼터주변 경로의모든edge를SegmentAllowed로확인하는독립검사도추가한다. 기존교차/간격/모든보행자횡단요건을그대로유지하고재검증한다. GPU/서명APK는아직대기이며폰0.14성공/Drive보류와기존dirty/index를보존한다.

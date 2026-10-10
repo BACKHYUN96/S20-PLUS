@@ -129,6 +129,7 @@ namespace PixelTraffic.UnityPrototype
                 if(v.umbrella!=null)
                 {
                     float rain=climate!=null&&climate.WeatherBlend!=null?climate.RainGain:0;bool open=rain>.015f&&(p.stage==BusStops.RiderStage.Queue||p.stage==BusStops.RiderStage.Returning);
+                    float passengerWind=climate!=null&&climate.WeatherBlend!=null?climate.WindGain:0;v.umbrella.rotation=Quaternion.Euler(-passengerWind*12,0,passengerWind*10);
                     v.umbrella.gameObject.SetActive(open);v.umbrella.localScale=new Vector3(Mathf.SmoothStep(0,1,Mathf.Clamp01(rain/.38f)),1,Mathf.SmoothStep(0,1,Mathf.Clamp01(rain/.38f)));
                 }
             }
