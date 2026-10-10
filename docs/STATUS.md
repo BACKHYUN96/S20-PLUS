@@ -1,5 +1,11 @@
 # 현재 상태
 
+## 2026-10-10 — Unity 0.15.0 실제 전체 교통 교착 보정: 바깥 차선에서 정류장 출발
+
+sourcedf73618c5a79f6bb0ac1e9f9fdfaa64c5f0fd0a7 / Validate38049517205(job114205646178)/artifact11669690043은추가한serialized24차량600초검사에서arrivals1/boarded2/departures0으로실패했다. 버스가이미바깥차선내(x±4.92)에정차하는구조에서출발마다안쪽차선전체합류를요구하면혼잡때계속대기하게된다. 정류장출발은현재차선앞/뒤gap과green을확인하고문닫힘→왼쪽방향3pulse/1.8초→6초에걸쳐바깥차선중앙(x±4.8)으로복귀하며가속한다. Boarding/Closing은양쪽hazard,Ready/DepartureSignal은stationary,Leaving은door0과following solver를유지한다. 다른차선으로실제로변경할때는기존60m뒤차모두통과/앞뒤예측gap/예약/새뒤차취소/3pulse/heavy6초/일반기후제한을그대로사용한다.
+
+하차한승객이같은버스에즉시다시타지않도록lastAlightOwner와15초재승차대기를추가했다. 독립서비스/비바람/실제24차량600초·정류장출발3pulse/6초복귀/foot/curb/crossing/clock/pause와새나무아래확대GPU를재검증한다. 아직최종Runtime/GPU/서명APK는대기이며폰0.14성공/Drive보류와기존dirty/index보존을유지한다.
+
 ## 2026-10-10 — Unity 0.15.0 첫 실제 검사·GPU67 통과, 정류장 촬영 위치와 전체 교통 검사 보강
 
 source913227f9b3bd45cf6fa124e3eedb64f628bffd2a / Validate38049032287(job114204258172)/artifact11669145181의25,016,442bytes/digestcfd6ac9ed218c89d857e14a59962b7f18eaef7e62f6e4f741a7047dcc27c5b25/ZIP CRC/source를확인했다. 실제4/32/100명600초서비스: boarding12/alighting6/departure6/hazard1590frames/minfoot.400352m,storm departure1,15/30/60/120Hz/pause·기존기후/교통/바퀴/보행검사PASS. 실제100기존우산+정류장8rig/8우산stress118442tri/1579renderer/44material,기본weathermax6정류장활성상태118130/1575/44로strict120000/2400/48예산을유지한다.

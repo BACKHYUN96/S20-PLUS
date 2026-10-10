@@ -6,11 +6,11 @@ namespace PixelTraffic.UnityPrototype
     // All doors, riders and departure decisions share the street's fixed 30 Hz clock.
     public sealed class BusStops
     {
-        public enum Stage { Cruising, Approach, Boarding, Closing, Ready, Leaving }
+        public enum Stage { Cruising, Approach, Boarding, Closing, Ready, DepartureSignal, Leaving }
         public enum RiderStage { Queue, Boarding, Onboard, Alighting, Returning }
         public sealed class Rider
         {
-            public int stop,slot,owner=-1;public RiderStage stage;public Vector2 position,velocity;
+            public int stop,slot,owner=-1,lastAlightOwner=-1,eligibleAt;public RiderStage stage;public Vector2 position,velocity;
             public float distance;public bool Visible=>stage!=RiderStage.Onboard;
         }
         public const int DwellTicks=240,DoorTicks=24;
@@ -56,7 +56,7 @@ namespace PixelTraffic.UnityPrototype
             if(!c.bus||c.busServed)return false;int stop=c.Direction<0?0:1;
             double ahead=c.Direction*(CenterZ(stop)-c.z);return ahead>=-8&&ahead<70;
         }
-        public bool Holds(StreetModel.Car c)=>c.busStage==Stage.Boarding||c.busStage==Stage.Closing||c.busStage==Stage.Ready;
+        public bool Holds(StreetModel.Car c)=>c.busStage==Stage.Boarding||c.busStage==Stage.Closing||c.busStage==Stage.Ready||c.busStage==Stage.DepartureSignal;
         public float Room(StreetModel.Car c)
         {
             if(Holds(c))return 0;if(c.busStage!=Stage.Approach)return float.MaxValue;
@@ -127,19 +127,42 @@ namespace PixelTraffic.UnityPrototype
                 }
                 else if(c.busStage==Stage.Ready)
                 {
-                    if(c.maneuver==LaneChanges.Stage.Merging){c.busStage=Stage.Leaving;Departures++;}
-                    else if(c.maneuver==LaneChanges.Stage.Idle&&model.ActiveTicks%30==0)model.Maneuvers.Request(model,i);
+                    // The curb stop is already inside the outer lane. Return to its centre;
+                    // a full move into the inner lane uses the normal rear-pass reservation rules.
+                    if(model.PhaseSeconds<16&&SafeDeparture(c))
+                    {c.busStage=Stage.DepartureSignal;c.signalTicks=0;c.blinks=1;}
+                }
+                else if(c.busStage==Stage.DepartureSignal)
+                {
+                    if(!SafeDeparture(c)){c.busStage=Stage.Ready;c.signalTicks=0;c.blinks=0;continue;}
+                    c.signalTicks++;
+                    if(c.signalTicks<LaneChanges.BlinkTicks&&c.signalTicks%18==0)c.blinks++;
+                    if(c.signalTicks>=LaneChanges.BlinkTicks&&c.blinks==3)
+                    {c.busStage=Stage.Leaving;c.busTicks=0;Departures++;}
                 }
                 else if(c.busStage==Stage.Leaving)
                 {
-                    c.busOffset=c.Direction*.12f*(1-Mathf.SmoothStep(0,1,c.mergeTicks/(float)c.MergeDuration));
-                    if(c.maneuver==LaneChanges.Stage.Idle){c.busStage=Stage.Cruising;c.busOffset=0;}
+                    c.busTicks++;c.busOffset=c.Direction*.12f*(1-Mathf.SmoothStep(0,1,c.busTicks/(float)c.MergeDuration));
+                    if(c.busTicks>=c.MergeDuration){c.busStage=Stage.Cruising;c.busOffset=0;c.signalTicks=0;}
                 }
             }
             foreach(var r in Riders)if(r.stage==RiderStage.Returning&&r.velocity.sqrMagnitude<1e-8f)
             {
                 if(Move(r,QueuePoint(r),false))r.stage=RiderStage.Queue;
             }
+        }
+        bool SafeDeparture(StreetModel.Car c)
+        {
+            if(c.busDoor!=0||model.Signal!=StreetModel.Phase.VehicleGreen)return false;
+            double span=StarterConfig.RouteEnd-StarterConfig.RouteStart;
+            foreach(var other in model.Cars)if(other!=c&&other.active&&other.Occupies(c.lane))
+            {
+                double gap=c.Direction*(other.z-c.z);gap-=span*Math.Floor((gap+span/2)/span);
+                float half=(c.SafetyLength+other.SafetyLength)/2;
+                // Both vehicles already occupy this lane, so the normal following solver
+                // controls their motion. Never cut into a lane whose rear queue is still passing.
+                if(gap>=0?gap<half+2.2f:-gap<half+1.79f)return false;
+            }return true;
         }
         void Service(int stop,int owner)
         {
@@ -150,10 +173,10 @@ namespace PixelTraffic.UnityPrototype
                 {
                     alighted[stop]=true;
                     foreach(var r in Riders)if(r.stop==stop&&r.stage==RiderStage.Onboard&&(r.owner<0||r.owner==owner))
-                    {r.owner=owner;r.position=new Vector2(c.Direction*5.82f,door.y);r.stage=RiderStage.Alighting;break;}
+                    {r.owner=owner;r.lastAlightOwner=owner;r.eligibleAt=model.ActiveTicks+450;r.position=new Vector2(c.Direction*5.82f,door.y);r.stage=RiderStage.Alighting;break;}
                 }
                 else if(boarded[stop]<2&&c.busTicks<DwellTicks+360)
-                    foreach(var r in Riders)if(r.stop==stop&&r.stage==RiderStage.Queue){r.owner=owner;r.stage=RiderStage.Boarding;break;}
+                    foreach(var r in Riders)if(r.stop==stop&&r.stage==RiderStage.Queue&&r.lastAlightOwner!=owner&&model.ActiveTicks>=r.eligibleAt){r.owner=owner;r.stage=RiderStage.Boarding;break;}
             }
             foreach(var r in Riders)if(r.stop==stop)
             {
