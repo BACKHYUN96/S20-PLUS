@@ -12,6 +12,7 @@ namespace PixelTraffic.UnityPrototype.Editor
     {
         private static double started;
         private static int warmupFrames;
+        private static readonly System.Collections.Generic.Dictionary<PrototypeDrive,float> initialPositions=new System.Collections.Generic.Dictionary<PrototypeDrive,float>();
 
         // A real URP camera render on the runner's GPU, not an AI-generated mockup.
         // This is an Editor preview; it does not assert Android device performance.
@@ -23,6 +24,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Null)
                     throw new InvalidOperationException("Preview needs a graphics device; do not use -nographics.");
                 EditorSceneManager.OpenScene(StarterConfig.ScenePath);
+                initialPositions.Clear();foreach(var vehicle in UnityEngine.Object.FindObjectsByType<PrototypeDrive>(FindObjectsSortMode.None))initialPositions.Add(vehicle,vehicle.transform.position.z);
                 var street = UnityEngine.Object.FindFirstObjectByType<StreetSimulation>();
                 if (street != null) { street.ResetModel(); street.Advance(30); street.ApplyViews(); }
                 UnityEngine.Object.FindFirstObjectByType<CityClimate>().Initialize();
@@ -72,7 +74,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 if (camera == null) throw new InvalidOperationException("City camera missing.");
                 camera.aspect = (float)width / height;
                 Vector3 roadCameraPosition=camera.transform.position;Quaternion roadCameraRotation=camera.transform.rotation;float roadFov=camera.fieldOfView;
-                var originalCars=UnityEngine.Object.FindObjectsByType<PrototypeDrive>(FindObjectsSortMode.None);var originalZ=new float[originalCars.Length];for(int i=0;i<originalCars.Length;i++)originalZ[i]=originalCars[i].transform.position.z;
+                var originalCars=UnityEngine.Object.FindObjectsByType<PrototypeDrive>(FindObjectsSortMode.None);var originalZ=new float[originalCars.Length];for(int i=0;i<originalCars.Length;i++)originalZ[i]=initialPositions[originalCars[i]];
                 target = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32) { antiAliasing = 2 };
                 target.Create();
                 var request = new UniversalRenderPipeline.SingleCameraRequest { destination = target };
@@ -283,11 +285,11 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
                 for(int i=0;i<originalCars.Length;i++)originalCars[i].ResetPosition(originalZ[i]);
                 detailStreet.ResetModel();climate.Preview(0,0);camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);camera.fieldOfView=roadFov;
-                int tracked=-1,captured=0;
+                int tracked=-1,captured=0,laneSignals=0,laneMerges=0;
                 for(int tick=0;tick<18000&&captured<4;tick++)
                 {
                     detailStreet.Advance(StreetModel.Dt);detailStreet.ApplyViews();
-                    var cars=detailStreet.Model.Cars;
+                    var cars=detailStreet.Model.Cars;foreach(var candidate in cars){if(candidate.maneuver==LaneChanges.Stage.Signaling)laneSignals++;if(candidate.maneuver==LaneChanges.Stage.Merging)laneMerges++;}
                     if(tracked<0)for(int i=0;i<cars.Length;i++)if(cars[i].maneuver==LaneChanges.Stage.Signaling&&cars[i].signalTicks==0)
                     {tracked=i;captured=1;camera.transform.position=new Vector3(cars[i].X+5,7,(float)cars[i].z-14);camera.transform.LookAt(new Vector3(cars[i].X,.8f,(float)cars[i].z));drivingPreviews.Add(CaptureState(camera,request,target,image,"lane-signal-start"));break;}
                     if(tracked>=0)
@@ -300,7 +302,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                         else if(captured==1&&car.maneuver==LaneChanges.Stage.Idle){tracked=-1;captured=0;drivingPreviews.RemoveAt(drivingPreviews.Count-1);}
                     }
                 }
-                if(captured!=4)throw new InvalidOperationException("No visible real lane maneuver captured.");
+                if(captured!=4)throw new InvalidOperationException("Real lane maneuver capture incomplete: frames="+captured+" signalingTicks="+laneSignals+" mergingTicks="+laneMerges+" cycles="+detailStreet.Model.Cycles+" signal="+detailStreet.Model.Signal+" arrivals="+detailStreet.Model.Stops.Arrivals+" departures="+detailStreet.Model.Stops.Departures);
                 // Capture real stop transfers and both phases of the same hazard clock.
                 for(int i=0;i<originalCars.Length;i++)originalCars[i].ResetPosition(originalZ[i]);
                 detailStreet.ResetModel();var stopPreviews=new System.Collections.Generic.List<string>();

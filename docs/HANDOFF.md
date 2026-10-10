@@ -1,5 +1,9 @@
 # 새 채팅 인수인계 — 픽셀 트래픽 0.29.0
 
+## 2026-10-10 — Unity 0.15.0 촬영 ResetModel 시작 위치 보정
+
+source45e01d0bf7f55f552ec87d6d78316ceed707f212 / Validate38051670312(job114211889567)/artifact11670100882에서 전체 Runtime 검사는 다시 PASS였지만 GPU55PNG후 실제 차선변경 촬영은 계속 실패했다. 촬영 originalZ가 CaptureBatch에서 이미30초 진행한 위치를 사용하면서 ResetModel의 승하차/신호상태만 초기화되던 부분을 발견했다. serialized장면의 차량 위치를 첫 Advance전에 저장하고 각 독립 촬영마다 그 위치로 복원한다. 실제maneuver Signaling/Merging ticks·cycles/정류장 진행을 실패진단에 추가한다. runtime/productioncamera/geometry는불변, 최종GPU/APK는재검증대기다. 앞의viewport 추정만으로문제가해결되지않았음을명시한다.
+
 ## 2026-10-10 — Unity 0.15.0 전체 승하차 검사 통과·실제 차선변경 추적 촬영 보정
 
 source9bd8f58b7d9df6aa2a001e974531145f577d1def / Validate38050819623(job114209413052)/artifact11669780165에서 Runtime PASS: 실제24대600초 arrivals3/departures2/minimumGap1.799999m, 독립4/32/100명 boarding18/alighting24/departures43/hazard26233frames/minfoot.400042m/stormdepartures2, 15/30/60/120Hz/pause와118442tri/1579renderer/44material 예산을 확인했다. GPU촬영은55PNG이후 기존폰구도 viewport안에서차선변경차량을못찾아실패했으므로 성공으로간주하지않는다. 실제시뮬레이션의Signaling→Merging→완료상태는그대로사용하고임시촬영카메라가해당차량을따라가게한다. Runtime/productioncamera/차선변경안전요건은불변이며촬영/최종APK는재검증대기다.
