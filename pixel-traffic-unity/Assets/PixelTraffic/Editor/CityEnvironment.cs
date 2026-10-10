@@ -15,7 +15,10 @@ namespace PixelTraffic.UnityPrototype.Editor
         private static GameObject Box(string name, Transform parent, Vector3 position, Vector3 scale, Material material)
             => StarterScene.Box(name, parent, position, scale, material);
         private static GameObject Cylinder(string name, Transform parent, Vector3 position, Vector3 scale, Material material)
-            => StarterScene.Part(name, parent, PrimitiveType.Cylinder, position, scale, material);
+            {
+            var obj=new GameObject(name,typeof(MeshFilter),typeof(MeshRenderer));obj.transform.SetParent(parent,false);obj.transform.localPosition=position;obj.transform.localScale=scale;
+            obj.GetComponent<MeshFilter>().sharedMesh=DistantScene.StreetCylinder();obj.GetComponent<MeshRenderer>().sharedMaterial=material;return obj;
+        }
 
         public static void Create(Transform road, Transform scenery)
         {
@@ -63,7 +66,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 foreach (float side in new[] { -1f, 1f }) Building(scenery, side * 14.1f, -22 + i * 17, i);
             for (int i = 0; i < 10; i++)
                 foreach (float side in new[] { -1f, 1f }) StreetLamp(scenery, side * 7.1f, -15 + i * 20);
-            Skyline(scenery);
+            DistantScene.Create(scenery);
             foreach (Transform root in new[] { road, scenery })
                 foreach (Renderer renderer in root.GetComponentsInChildren<Renderer>())
                     GameObjectUtility.SetStaticEditorFlags(renderer.gameObject, StaticEditorFlags.BatchingStatic);
@@ -214,38 +217,6 @@ namespace PixelTraffic.UnityPrototype.Editor
             Box("Lamp Lens",root,new Vector3(inward * .95f,4.105f,0),new Vector3(.36f,.025f,.25f),Mat("Lamp Lens",new Color(.94f,.88f,.68f)));
         }
 
-        private static void Skyline(Transform parent)
-        {
-            Transform root = new GameObject("Distant Skyline").transform; root.SetParent(parent,false);
-            Material[] tones = {Mat("Skyline Near",new Color(.45f,.52f,.54f)),Mat("Skyline Far",new Color(.53f,.60f,.62f))};
-            for (int i = 0; i < 26; i++)
-            {
-                float x = -128 + i * 10.1f, height = 13 + (i * 17 % 27), z = 236 + i % 3 * 18;
-                if (Mathf.Abs(x) < 9) x += 14;
-                Box("Skyline Tower",root,new Vector3(x,height / 2,z),new Vector3(6 + i % 4,height,8 + i % 3 * 2),tones[i % 2]);
-                Box("Tower Roof",root,new Vector3(x,height + .4f,z),new Vector3(3,.8f,4),tones[i % 2]);
-            }
-            // Three overlapping terrain ridges behind the buildings give atmospheric depth.
-            for (int layer = 0; layer < 3; layer++)
-            {
-                var mesh = new Mesh {name = "Distant Ridge " + layer};
-                var vertices = new List<Vector3>(); var triangles = new List<int>();
-                for (int i = 0; i <= 24; i++)
-                {
-                    float x = -220 + i * 18.4f;
-                    float height = 15 + layer * 5 + Mathf.Sin(i * .44f + layer * 1.9f) * 10 + Mathf.Sin(i * .91f) * 3;
-                    vertices.Add(new Vector3(x,-2,316 + layer * 24)); vertices.Add(new Vector3(x,height,316 + layer * 24));
-                    if (i < 24) {int a=i*2;triangles.AddRange(new[]{a,a+1,a+2,a+2,a+1,a+3});}
-                }
-                mesh.SetVertices(vertices); mesh.SetTriangles(triangles,0); mesh.RecalculateNormals(); mesh.RecalculateBounds();
-                AssetDatabase.CreateAsset(mesh,StarterScene.Generated + "/Ridge" + layer + ".asset");
-                GameObject ridge = new GameObject("Distant Ridge",typeof(MeshFilter),typeof(MeshRenderer)); ridge.transform.SetParent(root,false);
-                ridge.GetComponent<MeshFilter>().sharedMesh=mesh;
-                ridge.GetComponent<MeshRenderer>().sharedMaterial=Mat("Ridge " + layer,new Color(.43f + layer*.035f,.55f + layer*.025f,.58f + layer*.03f));
-                ridge.GetComponent<MeshRenderer>().shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
-            }
-        }
-
         public static Report Validate(Camera camera, UniversalRenderPipelineAsset pipeline)
         {
             void Need(bool condition,string message) {if(!condition)throw new InvalidOperationException(message);}
@@ -303,7 +274,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             {
                 if(transform.name=="City Tree")trees++;if(transform.name=="City Building")buildings++;if(transform.name=="Street Lamp")lamps++;if(transform.name=="Skyline Tower")towers++;
             }
-            foreach(var renderer in renderers) {Need(renderer.sharedMaterial!=null&&(renderer.sharedMaterial.shader.name=="Universal Render Pipeline/Lit" || renderer.sharedMaterial.shader.name=="PixelTraffic/Atmosphere"),"City material is missing or pink.");materials.Add(renderer.sharedMaterial);}
+            foreach(var renderer in renderers) {Need(renderer.sharedMaterial!=null&&(renderer.sharedMaterial.shader.name=="Universal Render Pipeline/Lit" || renderer.sharedMaterial.shader.name=="PixelTraffic/Atmosphere" || renderer.sharedMaterial.shader.name=="PixelTraffic/Distant"),"City material is missing or pink.");materials.Add(renderer.sharedMaterial);}
             Need(trees==32&&buildings==24&&lamps==20&&towers==26,"City scenery is incomplete.");
             Need(triangles<120000&&renderers.Length<2400&&materials.Count<48,"City geometry/material budget exceeded.");
             foreach(string name in new[]{"Asphalt","Pavers","Masonry"})

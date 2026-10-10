@@ -131,6 +131,15 @@ namespace PixelTraffic.UnityPrototype.Editor
                     cameraPreviews.Add(CaptureState(camera,new UniversalRenderPipeline.SingleCameraRequest{destination=referenceTarget},referenceTarget,referenceImage,"camera-reference-9x16"));
                 }
                 finally{camera.aspect=.45f;referenceTarget.Release();UnityEngine.Object.DestroyImmediate(referenceTarget);UnityEngine.Object.DestroyImmediate(referenceImage);}
+                var landscapePreviews=new System.Collections.Generic.List<string>();
+                var landscapeClimate=UnityEngine.Object.FindFirstObjectByType<CityClimate>();
+                camera.transform.position=new Vector3(2,20,295);camera.transform.LookAt(new Vector3(-13,48,425));camera.fieldOfView=44;
+                foreach(int theme in new[]{0,1,2})
+                {
+                    landscapeClimate.Preview(theme,0);landscapePreviews.Add(CaptureState(camera,request,target,image,"landscape-"+new[]{"day","sunset","night"}[theme]));
+                }
+                landscapeClimate.Preview(0,5);landscapePreviews.Add(CaptureState(camera,request,target,image,"landscape-storm"));
+                camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);camera.fieldOfView=roadFov;landscapeClimate.Preview(0,0);
                 var climate = UnityEngine.Object.FindFirstObjectByType<CityClimate>();
                 var previews = new System.Collections.Generic.List<string>();
                 int[] themes = { 1, 2, 0, 0, 0, 2 }; int[] weather = { 0, 0, 2, 3, 4, 5 };
@@ -233,7 +242,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     result = "PASS", version = StarterConfig.VersionName, editor = Application.unityVersion,
                     graphicsApi = SystemInfo.graphicsDeviceType.ToString(), width = width, height = height,
                     image = output, source = "Unity Editor URP camera; not a phone screenshot or FPS test"
-                    , materialColors = colors, climateImages = previews.ToArray(), vehicleImages = vehiclePreviews.ToArray(),frontageImages=frontagePreviews.ToArray(),drivingImages=drivingPreviews.ToArray(),cameraImages=cameraPreviews.ToArray()
+                    , materialColors = colors, climateImages = previews.ToArray(), vehicleImages = vehiclePreviews.ToArray(),frontageImages=frontagePreviews.ToArray(),drivingImages=drivingPreviews.ToArray(),cameraImages=cameraPreviews.ToArray(),landscapeImages=landscapePreviews.ToArray()
                 }, true));
                 Debug.Log("PASS: real city camera preview saved: " + output);
             }
@@ -273,7 +282,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         {
             public string result, version, editor, graphicsApi, image, source;
             public int width, height;
-            public string[] materialColors, climateImages, vehicleImages,frontageImages,drivingImages,cameraImages;
+            public string[] materialColors, climateImages, vehicleImages,frontageImages,drivingImages,cameraImages,landscapeImages;
         }
     }
 }

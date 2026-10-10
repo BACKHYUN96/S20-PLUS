@@ -1,5 +1,16 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-10 — Unity 0.12.0 하늘·산·강·맞은편 도시 원경 구현, 실제 검증 대기
+
+사용자가 기존0.11.0 APK 다운로드·폰 적용 성공을 확인했고 다음 원경 패치 진행을 승인했다. Drive/Colab 구성은 나중에 PC에서 재개하므로 이번에 연결·업로드·메일 작업을 하지 않는다. 변경13소스/meta: StarterConfig/StarterScene/CityEnvironment/CityClimate/CityPreview 및 DistantBackdrop/DistantScene/DistantChecks/Distant.shader와meta. 0.12.0/code13, Landscape-0.12.0.unity/Generated/Landscape0120.
+
+- 기존 나무 줄기·가지·가로등 등 원통을 같은1×2×1 크기의 smooth-normal16면/64triangle 공유메시로 바꿔 엄격한120000triangle/2400renderer/48material 예산 여유를 확보한다. 차량/수관/나무수와사용자0.11카메라(1.4,14,-37)/target(-4.9,1,68)/44°는유지한다. 실제최종예산은Windows검사대기다.
+- 기존단순tower/3ridge 대신 sky/3산능선/26도시/강/다리7메시·공유재질1개를만든다. shader에하늘gradient·천천히움직이는구름·산음영/적설·26건물창문/낮→노을→밤도시빛·강ripples/노을과야간반짝임을넣고기존Climate활성시간/시간·날씨weights에연동한다. realtimeLight/투명full-screen층/매프레임geometry생성을추가하지않는다.
+- 새실제geometry/자료·단일runtime재질·asset불변·18저장endpoint·독립15/30/60/120Hz노을경유oracle·밤→낮노을없음·숨김cloud/shimmerfreeze·retarget·두세로화면비projection검사를추가했다. 같은기존geometry/traffic/weather/100우산검사도실행할예정이며단순소스읽기를PASS라고기록하지않는다.
+- 실제GPU기존39PNG에원경확대낮/노을/밤/비바람4PNG를추가해원경묘사와전체portrait구도를관찰한다. shadercompilation/실제새원경렌더/AndroidBuild/Lint/서명code13/hash/실제폰은아직검증전이다. source게시→WindowsValidate및GPU→동일sourceAPKtag순서로진행한다. host12입력이0.11과불변이므로기존실제Lint38008378207을재사용한다.
+
+기존native dirty/realindex와원본입력상태를 `/workspace/artifacts/unity-0.12.0-start-state.json`에저장했다. 새buildinputs92개와13파일whitelist/hostinputSHA는 `unity-0.12.0-source-manifest.json`에기록한다. 이번원경이시안사진의건축·식생·차량상세까지완성한것을의미하지않는다.
+
 ## 2026-10-10 — Unity 0.11.0 시안 카메라 구도·모바일 APK 전달 완료
 
 사용자는 0.10.0의 실제 폰 적용 성공을 확인했고, 외출 중 모바일 WORK에서 이전 시안6650.jpg를 다시 제공했다. 카메라 → 원경 배경 → 나무·건물 순서를 작업 전에 설명한 뒤 이번 카메라 패치 진행 승인을 받았다. 이번 범위는 **0.11.0/code12 카메라 구도**이며 강·구름 등 배경 상세 작업은 다음 단계다.

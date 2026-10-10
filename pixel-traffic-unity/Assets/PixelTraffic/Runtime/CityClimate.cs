@@ -10,6 +10,7 @@ namespace PixelTraffic.UnityPrototype
         [SerializeField] private Transform[] canopies;
         [SerializeField] private ClimateEffects effects;
         private Material[] runtimeSurfaces;
+        private DistantBackdrop distant;
         private Quaternion[] treeRotations;
         private SceneBlend time, weather;
         private bool initialized, paused, focused = true, skipDelta, wallpaper;
@@ -45,6 +46,7 @@ namespace PixelTraffic.UnityPrototype
                 for (int i = 0; i < surfaces.Length; i++) if (renderer.sharedMaterial == surfaces[i]) { renderer.sharedMaterial = runtimeSurfaces[i]; break; }
             treeRotations = new Quaternion[canopies.Length];
             for (int i = 0; i < canopies.Length; i++) treeRotations[i] = canopies[i].localRotation;
+            distant=Object.FindFirstObjectByType<DistantBackdrop>();
             effects.Initialize(); Apply();
         }
         private void Awake()
@@ -89,6 +91,7 @@ namespace PixelTraffic.UnityPrototype
             RenderSettings.fogStartDistance = Mathf.Lerp(130, 10, fog);
             RenderSettings.fogEndDistance = Mathf.Lerp(360 * day + 310 * dusk + 270 * night, 105, fog);
             Camera.main.backgroundColor = RenderSettings.fogColor;
+            if(distant!=null)distant.Apply(day,dusk,night,rain,snow,fog,cloud,clock);
             LampGain = Mathf.Clamp01(dusk * .72f + night + cloud * .4f);
             BuildingGain = Mathf.Clamp01(dusk * .52f + night + cloud * .16f);
             ShopGain = Mathf.Clamp01(dusk * .86f + night + cloud * .35f);
