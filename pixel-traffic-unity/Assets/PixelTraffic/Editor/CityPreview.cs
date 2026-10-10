@@ -286,6 +286,13 @@ namespace PixelTraffic.UnityPrototype.Editor
 
         private static string CaptureState(Camera camera, UniversalRenderPipeline.SingleCameraRequest request, RenderTexture target, Texture2D image, string label)
         {
+            // Snap/temporary camera changes need a zero-delta effect refresh before readback.
+            // Keep the exact blend/active clock while clearing old weather and aligning billboards.
+            var climate=UnityEngine.Object.FindFirstObjectByType<CityClimate>();
+            climate.Effects.Advance(0,climate.RainGain,(float)climate.WeatherBlend.Weights[3],climate.WindGain,climate.WeatherBlend.Target==5);
+            if(climate.RainGain==0&&climate.WeatherBlend.Weights[3]==0)
+                if(GameObject.Find("Rain Pool").GetComponent<Renderer>().enabled||GameObject.Find("Snow Pool").GetComponent<Renderer>().enabled)
+                    throw new InvalidOperationException("Clear-weather capture still contains precipitation: "+label);
             RenderPipeline.SubmitRenderRequest(camera, request); RenderTexture.active = target;
             image.ReadPixels(new Rect(0, 0, image.width, image.height), 0, 0); image.Apply();
             int visible = 0, pink = 0; foreach (Color32 pixel in image.GetPixels32())

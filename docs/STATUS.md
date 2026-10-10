@@ -1,5 +1,11 @@
 # 현재 상태
 
+## 2026-10-10 — Unity 0.13.0 확대 촬영의 날씨 잔상 보정
+
+최종 implementation source1196faea / Validate38039103702는 실제48slab/192railpost·기존 검사와GPU51PNG PASS이며 동일source APKtag0.13.0-build1/BuildApk38039430522가진행중이다. 야간 나무 확대사진에서 이전 비바람의빗줄기가 남아있음을 발견했다. Editor Preview는 시간/날씨를 Snap하지만 Runtime ClimateEffects 갱신은 매프레임 Advance에서 수행되므로 readback직전엔 이전particle renderer상태가남을수있었다. CityPreview.CaptureState에서 Effects.Advance(0,currentRain,currentSnow,currentWind,currentTarget)를 호출해 시계/전환값을 움직이지않고 현재weathervisibility와임시camera billboard를 갱신한다. 맑음에서 실제 Rain/Snow renderer가꺼졌는지검사한다.
+
+이번 변경은 CityPreview Editor 촬영파일1개뿐이다. 이미검증된Runtime/셰이더/geometry generator/config/NativeAndroid/빌드도구97개입력은1196faea와같다. source1196faea의서명APK빌드는계속진행하고 새capture-onlysource에서 실제Validate/촬영을확인한다. APKsource와새capture source를최종문서에구분하여기록하며 변경없는Android빌드는반복하지않는다. 기존폰0.12성공/Drive보류를유지한다.
+
 ## 2026-10-10 — Unity 0.13.0 첫 실제 검증·GPU 확인, 발코니 실체 검사 강화
 
 source646020f9 / Validate38038675998(job114174391564) 및 실제 GPU51PNG PASS. artifact11665420067의20,392,603bytes/digest7bc3ff9c52f6a18994b6fe6ad2f87a19ada466d126cf5e994c5131cee87b1c4e/CRC/source를 확인했다. 실제 전체 낮·둥근 나무·외벽·옥상 사진에서 잎 무늬와 수형, 석재 테두리·발코니, 옥상 slit/난간/화단/안테나를 관찰했다. 기본107334tri/1383renderer/43material,100우산 최대118710/1551/43으로 기존 strict120000/2400/48을 유지했다. 수관은 실제400tri/32나무/3종·공유256잎 texture contrast.3294, 건물24/옥상garden12·architecture8352tri이다.
