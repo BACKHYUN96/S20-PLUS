@@ -1,5 +1,9 @@
 # 작업 이력
 
+## 2026-10-10 — Unity 0.15.0 보행 회귀 보정·실제 횡단보도 clearance 기준
+
+sourcefda16f92837149a7338a5a19195ab58ff3fc6115 / Validate38052325990(job114214725982)/artifact11670326172는기존StreetChecks100명600초의person23이횡단하지못하는회귀로실패했다. 정류장1m이동이보도 graph와군중경로를바꿨으므로기존 west doorZ=-4.5를복원한다. 보행검사의모든사람횡단/600초/foot/경로요건은완화하지않는다. 실제RoadOccupied는crossing±2.5m+SafetyLength/2이며CommittedApproach는4m+SafetyLength/2다. 이미그구간을완전히지난정류장출발은occupied band밖 추가2mrear여유(4.5m+SafetyLength/2)를확인한다. 원래서쪽정차점은rear clearance약4.94m로이기준보다.3m이상여유가있고, 별도모든busdefinition·red출발·600초signalCycles>=2검사를유지한다. upstream신호/차체보정/앞뒤gap은불변이다. 이는이전5m추가buffer로발생한downstream교착을실제안전대역과맞춰보정한것이며, 문닫힘/3pulse/6초현재차선복귀를유지한다. 반복승객visit/cooldown보정도함께최종재검증한다. 아직최종GPU/서명APK는대기다.
+
 ## 2026-10-10 — Unity 0.15.0 반복 운행의 승객 pool 재사용 보정
 
 600초 서비스 수치를 검토하니 같은버스 영구재승차 금지가 단일버스노선의 pool을 소진시킬 수 있었다(boarding18/alighting24/departures43). 하차 직후 같은 정차 방문에서 다시타는 것은 금지하되, 버스가한바퀴돌아새로방문하고15초cooldown이지났다면 pool을다음승객으로재사용하도록 lastAlightArrival/busArrivalTick를 추가한다. 새 rig/우산/재질은 늘리지 않는다. 4/32/100명 각각600초 검사에서 뒤300초에도양쪽정류장에실제탑승완료가있는지assert하고lateBoardings를기록한다. 같은방문재승차/15초 cooldown/foot/curb/open-door/정지/3pulse/6초/clock/pause 요건을 유지한다. 최종Runtime/GPU/서명APK는 재검증대기이며 초기방문PASS만으로영구운행승차를주장하지않는다.

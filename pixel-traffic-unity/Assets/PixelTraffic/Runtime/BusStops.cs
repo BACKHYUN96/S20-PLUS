@@ -22,7 +22,7 @@ namespace PixelTraffic.UnityPrototype
         readonly int[] boarded=new int[2];
         public int Arrivals {get;private set;}public int Boardings {get;private set;}public int Alightings {get;private set;}public int Departures {get;private set;}
         public static int Side(int stop)=>stop==0?-1:1;
-        public static float DoorZ(int stop)=>stop==0?-5.5f:34.5f;
+        public static float DoorZ(int stop)=>stop==0?-4.5f:34.5f;
         public static bool SidewalkOpen(Vector2 p)
         {
             float x=Mathf.Abs(p.x);for(int stop=0;stop<2;stop++)
@@ -155,10 +155,11 @@ namespace PixelTraffic.UnityPrototype
         {
             if(c.busDoor!=0)return false;
             // Stops sit downstream of the crossing. A bus that has fully cleared it
-            // must release the queue even during clearance; waiting for green here
+            // is outside the 2.5m occupied band with another 2m rear clearance.
+            // It must release the queue even during clearance; waiting for green here
             // would prevent the upstream vehicles from clearing the crossing.
             if(model.Signal!=StreetModel.Phase.VehicleGreen&&
-                c.Direction*(c.z-StarterConfig.CrossingZ)<5+c.SafetyLength/2)return false;
+                c.Direction*(c.z-StarterConfig.CrossingZ)<4.5f+c.SafetyLength/2)return false;
             double span=StarterConfig.RouteEnd-StarterConfig.RouteStart;
             foreach(var other in model.Cars)if(other!=c&&other.active&&other.Occupies(c.lane))
             {

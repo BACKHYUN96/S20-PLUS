@@ -97,7 +97,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             // Exercise the complete serialized fleet, including queues on both lanes during service.
             controller.ResetModel();var productionStops=controller.Model;float productionGap=float.MaxValue;int clearanceDepartures=0;
             foreach(var busDefinition in productionStops.Cars)if(busDefinition.bus)
-            {int stop=busDefinition.Direction<0?0:1;Need(busDefinition.Direction*(BusStops.CenterZ(stop)-StarterConfig.CrossingZ)>5+busDefinition.SafetyLength/2+.3f,"Bus stop does not fully clear the crossing departure margin.");}
+            {int stop=busDefinition.Direction<0?0:1;Need(busDefinition.Direction*(BusStops.CenterZ(stop)-StarterConfig.CrossingZ)>4.5f+busDefinition.SafetyLength/2+.3f,"Bus stop does not fully clear the crossing departure margin.");}
             for(int productionTick=0;productionTick<18000;productionTick++)
             {
                 int departuresBefore=productionStops.Stops.Departures;productionStops.Tick();
@@ -108,7 +108,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     var ca=productionStops.Cars[ci];if(!ca.active)continue;
                     if(ca.busDoor>0)Need(ca.speed==0,"Full-fleet bus moves with an open door.");
                     if(ca.busStage==BusStops.Stage.DepartureSignal&&productionStops.Signal!=StreetModel.Phase.VehicleGreen)
-                        Need(ca.Direction*(ca.z-StarterConfig.CrossingZ)>=5+ca.SafetyLength/2,"Bus departs against an applicable upstream red signal.");
+                        Need(ca.Direction*(ca.z-StarterConfig.CrossingZ)>=4.5f+ca.SafetyLength/2,"Bus departs against an applicable upstream red signal.");
                     for(int cj=ci+1;cj<productionStops.Cars.Length;cj++)
                     {
                         var cb=productionStops.Cars[cj];if(!cb.active||!LaneChanges.SharesLane(ca,cb))continue;
