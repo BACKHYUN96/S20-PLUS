@@ -1,5 +1,24 @@
 # 새 채팅 인수인계 — 픽셀 트래픽 0.29.0
 
+## 2026-10-11 — Unity 0.16.0 강·도시·산 원경 보강: 실제 화면 검증·서명 APK 전달 완료
+
+사용자는 폰 **0.15.0 적용 성공**을 확인했고 이번 배경 보강을 승인했다. **0.16.0/code17**, `RiverCity-0.16.0.unity` / `Generated/RiverCity0160`. 기존 원경 코드를 재사용해 산3겹의 높이와 봉우리를 분리하고, 도시34건물·첨탑·강변12저층군과 양안을 보강했다. 강은 upright sheet에서 깊이65m의 완만하게 상승하는 stylized surface로 바뀌고 다리 deck/기둥/난간·11램프가 수면 위에 보인다. 창문과 다리 불빛 아래 월드좌표 반사 ribbon, 노을 반짝임과 움직이는 잔물결, 비/눈/안개 흐림을 단일 공유 불투명 shader로 표현한다. 반사는 authored 효과이며 실제 reflection camera가 아니다. 원래 제품 카메라와 차량24대/보행100명/정류장8명/승하차·hazard·안전 출발 동작, NativeAndroid/host/workflow를 유지했다.
+
+- **수정 범위:** Editor DistantScene/DistantChecks/CityEnvironment/CityPreview/StarterScene, Runtime StarterConfig, Shaders Distant.shader의7소스. 새 scene/generated 경로로 이전 장면을 덮어쓰지 않는다. distant 8mesh/1778tri, runtime material1개. 실시간 Light·reflection camera·collider 추가 없음. 최대100기존우산+8정류장 rig/우산 stress 119112tri/1580renderer/44material, 기존 strict120000/2400/48 이내.
+- **실제 검증:** source `d431b0b0f25e09b77d393cac0c9738e736303175` / [Validate 38068045214](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38068045214) / reports artifact 11675947051. 강 깊이65m/다리 deck 수면 clearance 7.781m/11lamp/산층·finite geometry/shared material을 확인했고, 기존18기후·180blend·15/30/60/120Hz directional 낮→노을→밤·밤→낮·숨김 clock/retarget 검사를 통과했다. 실제24대600초 signal 11순환/차선변경 21/정류장 출발 14, rear/front 최소 gap 1.799999m. 승객 반복운행 후반 탑승 23회, 기존 모든 안전 검사 PASS.
+- **GPU:** 실제 Unity6000.3.26f1/Direct3D11 71PNG. 원래 카메라의 낮/노을/밤/안개·비, 확대 원경/강 낮·밤·6초 ripple를 관찰했다. 추가 촬영의 카메라/기후 상태는 Editor 임시 변경이고 APK 장면에 저장하지 않는다. GPU PNG는 실제 폰 screenshot/FPS·발열 측정과 구분한다.
+- **진행 중 오류와 해결:** 사용자 PC 강제 재부팅으로 runner 창이 닫혀 queued였으나 `D:\Unity\actions-runner\run.cmd` 재실행으로 작업을 받았다. 첫 Validate38065914574/attempt1은 Unity Personal 라이선스 entitlement0/exit198로 컴파일 전에 실패했고 artifact11674804394의 bytes/SHA/CRC/source를 확인했다. Hub 로그인/Personal 활성 상태를 사용자가 확인한 뒤 같은 source를 재검사했다. 후속 GPU에서 새 건물 색상 sine-hash의 보간 seed 때문에 낮 표면 잔점이 관찰되어, fwidth 창문 필터와 건물ID quantize/안정된 diffuse lerp로 보정했다. 최종 사진에서 다시 확인했다. 추가 시도와 실제 결과는 source manifest에 기록한다. 라이선스 문제를 코드 검사 PASS로 취급하지 않는다.
+- **Android·서명:** 같은 source tag `unity-apk-0.16.0-build1` / [BuildApk 38068543923](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38068543923) / reports 11676148220 / APK 11675404034. BuildPlayer 오류0/경고0, launcher Lint 오류0/경고8. 다운로드한 APK의 기존v2 인증서 `a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6`, version0.16.0/code17/min29/target36/ARM64 IL2CPP, settings launcher·exported BIND_WALLPAPER service·private provider·disabled Unity activity를 직접 검증했다. 변경 없는12 host 입력의 SHA를 비교해 실제 host Lint38008378207(오류0/경고10)을 재사용한다.
+- **전달:** [APK 직접 다운로드](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/e635e0a1d513611a216f24526ed20e15ecef5b69/pixel-traffic-unity-prototype-0.16.0.apk) · [실제 Unity 전체 화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/e635e0a1d513611a216f24526ed20e15ecef5b69/river-city-preview.png) · [야간 전체 화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/e635e0a1d513611a216f24526ed20e15ecef5b69/river-night-preview.png) · [강·다리 확대](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/e635e0a1d513611a216f24526ed20e15ecef5b69/river-detail-preview.png). APK 30037656bytes/SHA256 `6dbf63e679817a5f51e20bd310897f8358c32949c70bcfd5a62afbb3828039ab`. 일회성 `downloads/unity-0.16.0` branch의APK1·PNG3파일을 로그인 없는HTTP200/redirect없음/전체bytes/SHA로 검증했다. main에binary/새Releaseworkflow를추가하지않는다.
+
+PC 설치(다운로드한 실제 파일 위치를 사용):
+```powershell
+$trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $trafficAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.16.0.apk"
+```
+
+**미확인/다음:** 폰0.16 적용 후 강·다리/낮·노을·밤/장시간 주행/FPS·발열 확인. 실제 설치는 사용자 PC에서 수행하며 여기서 폰에 설치했다고 주장하지 않는다.0.15는사용자적용성공확인이다. Drive는나중에PC설치후재개한다. 이전dirty285파일/index/status 및110 build/capture입력을보존했다. 최종docs-onlycommit은빌드입력이같으므로검사를반복하지않는다.
+
 ## 2026-10-11 — Unity 0.16.0 실제 화면 건물 색상의 잔점 보정
 
 source2b221d8의Validate38067479489/job114257960606/artifact11675546625는Runtime와GPU71PNG PASS였다.26957271bytes/digest65fb7f8f3ebc602354d8b6e971ff5cb0d6139e17499cd4ed9b18721928122197/CRC/source를확인했다. 실제낮/밤/원경/안개사진에서window fwidth filter로밤subpixel창문은개선됐지만낮의벽전체에잔점이남았다. 새diffuse색상의sineHash에perspective-interpolatedseed를직접넣은것을원인으로판단해건물ID를34cell로quantize하고diffusehash를안정된seedlerp로교체한다. 창문은floorgrid와quantizedseed로계산한다. Shader만변경하고geometry/runtime/host는같다. 낮표면잔점을검증PASS만으로넘기지않으며최종GPU와같은sourceAPK를재검증한다. 아직APK0.16은미생성이다.
