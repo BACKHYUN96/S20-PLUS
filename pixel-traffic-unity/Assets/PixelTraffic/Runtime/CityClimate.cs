@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace PixelTraffic.UnityPrototype
 {
+    [DefaultExecutionOrder(-50)]
     public sealed class CityClimate : MonoBehaviour
     {
         [SerializeField] private Material[] surfaces;
@@ -20,12 +21,18 @@ namespace PixelTraffic.UnityPrototype
         public int AdditionalLights => streetLights.Length;
         public float LampGain { get; private set; }
         public float Wetness { get; private set; }
+        public float RainGain => (float)(weather.Weights[1] * .38 + weather.Weights[2] + weather.Weights[5]);
+        public float WindGain => (float)weather.Weights[5];
+        public float PeopleFraction => (float)(weather.Weights[0] + weather.Weights[1] * .85 + weather.Weights[2] * .65 + weather.Weights[3] * .7 + weather.Weights[4] * .85 + weather.Weights[5] * .30);
+        public float TrafficFraction => (float)(weather.Weights[0] + weather.Weights[1] * .95 + weather.Weights[2] * .8 + weather.Weights[3] * .85 + weather.Weights[4] * .85 + weather.Weights[5] * .45);
+        public float DrivingPace => (float)(weather.Weights[0] + weather.Weights[1] * .9 + weather.Weights[2] * .75 + weather.Weights[3] * .7 + weather.Weights[4] * .8 + weather.Weights[5] * .6);
+        public float WalkingPace => 1 + RainGain * .08f + WindGain * .10f;
         public void Configure(Material[] materials, Light[] lights, Transform[] trees, ClimateEffects particles)
         { surfaces = materials; streetLights = lights; canopies = trees; effects = particles; }
         public void Initialize(int theme = 0, int selectedWeather = 0)
         {
             if (initialized) return; initialized = true;
-            time = new SceneBlend(3, theme); weather = new SceneBlend(6, selectedWeather);
+            time = new SceneBlend(3, theme, true); weather = new SceneBlend(6, selectedWeather);
             runtimeSurfaces = new Material[surfaces.Length];
             for (int i = 0; i < surfaces.Length; i++)
             {

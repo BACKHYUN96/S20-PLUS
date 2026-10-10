@@ -42,6 +42,9 @@ namespace PixelTraffic.UnityPrototype.Editor
             MeshFilter rain = ParticlePool("Rain Pool", root.transform, particles, 160), snow = ParticlePool("Snow Pool", root.transform, particles, 96);
             Renderer paper = Quad("Windblown Newspaper", root.transform, Transparent("Newspaper", PaperTexture(), false), true); paper.transform.localScale = new Vector3(.65f, .46f, 1); paper.enabled = false;
             effects.Configure(rain, snow, paper, pools); controller.Configure(materials, lights, trees.ToArray(), effects);
+            var street=UnityEngine.Object.FindFirstObjectByType<StreetSimulation>();
+            var cars=UnityEngine.Object.FindObjectsByType<PrototypeDrive>(FindObjectsSortMode.None);Array.Sort(cars,(a,b)=>string.CompareOrdinal(a.name,b.name));
+            var spray=root.AddComponent<WetTraffic>();spray.Configure(ParticlePool("Tyre Spray Pool",root.transform,glow,96),cars);street.ConfigureSpray(spray);
         }
         private static Material Transparent(string name, Texture2D texture, bool emission)
         {

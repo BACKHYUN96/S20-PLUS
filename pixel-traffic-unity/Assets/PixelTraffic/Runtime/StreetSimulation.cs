@@ -5,12 +5,18 @@ namespace PixelTraffic.UnityPrototype
 {
     public sealed class StreetSimulation : MonoBehaviour
     {
-        [Serializable] public sealed class WalkerView {public Transform root;public Transform[] limbs;}
+        [Serializable] public sealed class WalkerView {public Transform root;public Transform[] limbs;public Transform umbrella;}
         [SerializeField] private PrototypeDrive[] vehicles;
         [SerializeField] private WalkerView[] walkers;
         [SerializeField] private Renderer[] vehicleLights,walkLights;
         [SerializeField] private int people=StarterConfig.DefaultPeople;
+        [SerializeField] private WetTraffic spray;
+        private CityClimate climate;
+        private readonly Plane[] viewPlanes=new Plane[6];
+        private Camera portraitCamera;
         private StreetModel model;
+        public WetTraffic Spray => spray;
+        public void ConfigureSpray(WetTraffic value)=>spray=value;
         private double accumulator;
         private bool paused,focused=true;
         private bool wallpaperRuntime,skipNextDelta;
@@ -37,11 +43,13 @@ namespace PixelTraffic.UnityPrototype
             var cars=new StreetModel.Car[vehicles.Length];
             for(int i=0;i<cars.Length;i++)
             {
-                var vehicle=vehicles[i];var renderers=vehicle.GetComponentsInChildren<Renderer>();Bounds bounds=renderers[0].bounds;
+                var vehicle=vehicles[i];vehicle.gameObject.SetActive(true);var renderers=vehicle.GetComponentsInChildren<Renderer>(true);Bounds bounds=renderers[0].bounds;
                 foreach(var r in renderers)bounds.Encapsulate(r.bounds);
                 cars[i]=new StreetModel.Car {lane=vehicle.Lane,z=vehicle.transform.position.z,cruise=vehicle.Speed,speed=vehicle.Speed,length=bounds.size.z};
             }
-            model=new StreetModel(people,cars);accumulator=0;lastPhase=(StreetModel.Phase)(-1);
+            model=new StreetModel(people,cars);
+            portraitCamera=Camera.main;if(portraitCamera!=null){GeometryUtility.CalculateFrustumPlanes(portraitCamera,viewPlanes);model.Visible=Visible;}
+            accumulator=0;lastPhase=(StreetModel.Phase)(-1);
         }
         private void Update()
         {
@@ -64,13 +72,23 @@ namespace PixelTraffic.UnityPrototype
         {
             if(double.IsNaN(elapsed)||double.IsInfinity(elapsed)||elapsed<0)throw new ArgumentOutOfRangeException(nameof(elapsed));
             if(paused||(!focused&&!Application.isEditor&&!wallpaperRuntime))return;
+            if(climate==null)climate=UnityEngine.Object.FindFirstObjectByType<CityClimate>();
+            if(climate!=null&&climate.WeatherBlend!=null)model.SetWeather(climate.PeopleFraction,climate.TrafficFraction,climate.DrivingPace,climate.WalkingPace);
+            if(portraitCamera!=null)GeometryUtility.CalculateFrustumPlanes(portraitCamera,viewPlanes);
             accumulator+=elapsed;
             while(accumulator+1e-7>=1d/30)
             {
                 model.Tick();accumulator-=1d/30;
-                for(int i=0;i<vehicles.Length;i++)vehicles[i].ApplyTraffic(model.Cars[i].z,model.Cars[i].distance);
+                for(int i=0;i<vehicles.Length;i++)
+                {
+                    var car=model.Cars[i];if(vehicles[i].gameObject.activeSelf!=car.active)vehicles[i].gameObject.SetActive(car.active);
+                    vehicles[i].ApplyTraffic(car.z,car.distance);
+                }
             }
+            if(spray!=null)spray.Advance((float)elapsed,model,climate!=null&&climate.WeatherBlend!=null?climate.RainGain:0);
         }
+        private bool Visible(Vector2 point)
+            =>GeometryUtility.TestPlanesAABB(viewPlanes,new Bounds(new Vector3(point.x,1.2f,point.y),new Vector3(2.2f,3.2f,2.2f)));
         public void ApplyViews()
         {
             if(lightBlock==null)lightBlock=new MaterialPropertyBlock();
@@ -82,8 +100,16 @@ namespace PixelTraffic.UnityPrototype
                 ground=Mathf.Lerp(ground,.06f,Mathf.Clamp01((x-10.36f)/.12f));
                 v.root.position=new Vector3(p.position.x,ground,p.position.y);
                 if(p.velocity.sqrMagnitude>.001f)v.root.rotation=Quaternion.LookRotation(new Vector3(p.velocity.x,0,p.velocity.y));
+                float rain=climate!=null&&climate.WeatherBlend!=null?climate.RainGain:0;
+                float wind=climate!=null&&climate.WeatherBlend!=null?climate.WindGain:0;
+                if(v.umbrella!=null)
+                {
+                    bool open=rain>.015f;if(v.umbrella.gameObject.activeSelf!=open)v.umbrella.gameObject.SetActive(open);
+                    float scale=Mathf.SmoothStep(0,1,Mathf.Clamp01(rain/.38f));v.umbrella.localScale=new Vector3(scale,1,scale);
+                    v.umbrella.rotation=Quaternion.Euler(-wind*12,0,wind*10);
+                }
                 float angle=Mathf.Sin(p.walkDistance*8)*20*(p.velocity.sqrMagnitude>.01f?1:0);
-                for(int n=0;n<4;n++)v.limbs[n].localRotation=Quaternion.Euler((n%2==0?1:-1)*angle*(n < 2 ? .8f : 1),0,0);
+                for(int n=0;n<4;n++)v.limbs[n].localRotation=Quaternion.Euler(n==1&&rain>.015f?-65:(n%2==0?1:-1)*angle*(n < 2 ? .8f : 1),0,0);
             }
             if(lastPhase==model.Signal)return;lastPhase=model.Signal;
             bool green=model.Signal==StreetModel.Phase.VehicleGreen,yellow=model.Signal==StreetModel.Phase.VehicleYellow;

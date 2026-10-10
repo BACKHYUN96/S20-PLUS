@@ -122,15 +122,21 @@ namespace PixelTraffic.UnityPrototype.Editor
                 for (int i = 0; i < labels.Length; i++)
                 {
                     climate.Preview(themes[i], weather[i]);
-                    for (int n = 0; n < 50; n++) climate.Advance(.1, true);
+                    var street=UnityEngine.Object.FindFirstObjectByType<StreetSimulation>();
+                    for (int n = 0; n < 50; n++) {climate.Advance(.1, true);street.Advance(.1);}street.ApplyViews();
                     previews.Add(CaptureState(camera, request, target, image, labels[i]));
                 }
-                climate.Preview(0, 0); climate.Advance(.01, true); climate.Select(2, 5);
+                climate.Preview(0, 0); climate.Advance(.01, true); climate.Select(2, 0);
                 previews.Add(CaptureState(camera, request, target, image, "transition-0s"));
-                for (int n = 0; n < 20; n++) climate.Advance(.1, true);
-                previews.Add(CaptureState(camera, request, target, image, "transition-2s"));
-                for (int n = 0; n < 20; n++) climate.Advance(.1, true);
-                previews.Add(CaptureState(camera, request, target, image, "transition-4s"));
+                for(int second=1;second<=4;second++)
+                {
+                    for (int n = 0; n < 10; n++) climate.Advance(.1, true);
+                    previews.Add(CaptureState(camera, request, target, image, "transition-"+second+"s"));
+                }
+                climate.Preview(0,5);
+                var settledStreet=UnityEngine.Object.FindFirstObjectByType<StreetSimulation>();
+                for(int n=0;n<2000;n++){climate.Advance(.1,true);settledStreet.Advance(.1);}settledStreet.ApplyViews();
+                previews.Add(CaptureState(camera, request, target, image, "storm-settled"));
                 climate.Preview(0, 0);
                 File.WriteAllText("Reports/preview-result.json", JsonUtility.ToJson(new Report {
                     result = "PASS", version = StarterConfig.VersionName, editor = Application.unityVersion,

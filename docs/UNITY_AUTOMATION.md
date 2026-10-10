@@ -1,5 +1,13 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-10 — Unity 0.7.0 노을 경유·날씨 반응 도시 시작 (진행 중)
+
+사용자가 0.6.0 실제 폰 적용 성공을 확인했다. 낮→밤 직접 선택은 총4초(2초 낮→노을,2초 노을→밤)로 이어지고 밤→낮은 기존4초 직행을 유지한다. 현재 가중치 retarget/같은 선택/저장 상태 snap/숨김 active-time 정지를 보존한다. 이전에 제안한 날씨별 통행량·보행자 우산/빠른 걸음·차량 감속/물보라도 승인받았다. 차량24개·사람100개 pool을 유지하고 화면 밖에서만 날씨로 퇴장/재등장하며 횡단자는 인도까지 이동한다. 날씨 감소에는 퇴장 경로를 걷는 시간이 걸린다.
+
+범위: Runtime SceneBlend/CityClimate/StreetModel/StreetSimulation/StarterConfig, Editor StreetScene/ClimateScene/ClimateChecks/CityPreview/StarterScene 및 관련 새 효과/검사 파일. 도시·차선/차량 원형 geometry·서비스/설정 저장 구조는 유지한다. 새 WeatherLife-0.7.0.unity/Generated/WeatherLife070과 code8을 사용한다. 원격 base6d32fb9794ecf9b0b3dd24a365e33a83c1aa6e1b와 누적 dirty/index를 보존하며 임시 index로 관련 source만 게시한다.
+
+실제 PC Unity compile/장면·교통 안전/새 전환과 날씨 교통·우산100개 예산/실제 GPU 렌더, 같은 source BuildApk/launcher Lint/원본 서명·버전 확인이 필요하다. NativeAndroid source 불변이면 0.6.0 host Lint errors0/warnings10과 SHA 일치를 재사용한다. 검사·APK는 아직 실행/전달하지 않았으며 폰 성능은 사용자 확인이다.
+
 ## 2026-10-10 — Unity 0.6.0 시간대·날씨 4초 전환 APK 전달 (KST)
 
 사용자가 **0.5.1 실제 폰 적용 성공**을 확인했고, 기존 앱처럼 날씨·시간대 변경을 부드럽게 연결하는 패치를 요청했다. **0.6.0/code7**의 실제 PC 검사/렌더와 Android 빌드/두 모듈 Lint/기존 서명을 확인해 전달한다. 이번0.6.0의 실제 폰 설치·설정 UI/저장/숨김 복귀·FPS/발열은 사용자 확인 대기다.

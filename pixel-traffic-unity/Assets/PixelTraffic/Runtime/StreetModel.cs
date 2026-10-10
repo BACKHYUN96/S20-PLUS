@@ -10,12 +10,12 @@ namespace PixelTraffic.UnityPrototype
         public enum Activity { Roam, Approach, Wait, Cross, Exit }
         public sealed class Car
         {
-            public int lane;public double z;public float cruise,speed,length,distance;public bool committed;
+            public int lane;public double z;public float cruise,speed,length,distance;public bool committed,active=true;public int rank;
             public int Direction => lane<2?-1:1;
         }
         public sealed class Person
         {
-            public int side,slot=-1,crossings,pathCount,pathCursor;public bool active;
+            public int side,slot=-1,crossings,pathCount,pathCursor;public bool active,retiring,weatherHidden;
             public Vector2 position,goal,velocity,detour;public Activity activity;public float detourSeconds;
             public float speed,cooldown,retrySeconds,routeRepairSeconds,walkDistance,waitingTime;
             public uint random;public readonly int[] path=new int[600];
@@ -27,7 +27,15 @@ namespace PixelTraffic.UnityPrototype
         private readonly double[] oldZ;
         private readonly int[,] slots=new int[2,6];
         private int tick;
-        private float phaseTime;
+        private float phaseTime,spawnWait;
+        private float peopleFraction=1,trafficFraction=1,drivingPace=1,walkingPace=1;
+        public Func<Vector2,bool> Visible = point => point.y > -25 && point.y < 160;
+        public int WeatherPeopleTarget => Mathf.Max(4,Mathf.RoundToInt(RequestedPeople*peopleFraction));
+        public int WeatherCarsPerLane => Mathf.Clamp(Mathf.RoundToInt(StarterConfig.VehiclesPerLane*trafficFraction),2,StarterConfig.VehiclesPerLane);
+        public float WalkingPace => walkingPace;
+        public float DrivingPace => drivingPace;
+        public int WeatherDepartures { get; private set; }
+        public int WeatherArrivals { get; private set; }
         public Phase Signal {get;private set;}
         public int RequestedPeople {get;private set;}
         public int Cycles {get;private set;}
@@ -37,6 +45,7 @@ namespace PixelTraffic.UnityPrototype
         public StreetModel(int population,Car[] cars)
         {
             Cars=cars;oldZ=new double[cars.Length];
+            int[] ranks=new int[4];foreach(var car in Cars)car.rank=ranks[car.lane]++;
             for(int side=0;side<2;side++)for(int slot=0;slot<6;slot++)slots[side,slot]=-1;
             for(int i=0;i<People.Length;i++)
             {
@@ -67,7 +76,7 @@ namespace PixelTraffic.UnityPrototype
             for(int i=0;i<People.Length;i++)
             {
                 Person p=People[i];
-                if(i<RequestedPeople&&!p.active)
+                if(i<WeatherPeopleTarget&&i<RequestedPeople&&!p.active&&!p.weatherHidden)
                 {
                     // Reactivating waits for a free stored foot position; no pop through another person.
                     bool free=true;for(int j=0;j<People.Length;j++)if(People[j].active&&(People[j].position-p.position).sqrMagnitude<Separation*Separation)free=false;
@@ -78,7 +87,51 @@ namespace PixelTraffic.UnityPrototype
         }
         private void Retire(int i)
         {
-            Person p=People[i];Release(i);p.active=false;p.activity=Activity.Roam;Roam(p);
+            Person p=People[i];Release(i);p.active=false;p.retiring=false;p.activity=Activity.Roam;Roam(p);
+        }
+        public void SetWeather(float peopleGain,float trafficGain,float driving,float walking)
+        {
+            peopleFraction=Mathf.Clamp01(peopleGain);trafficFraction=Mathf.Clamp01(trafficGain);
+            drivingPace=Mathf.Clamp(driving,.5f,1);walkingPace=Mathf.Clamp(walking,1,1.25f);
+        }
+        private void WeatherPopulation()
+        {
+            int target=WeatherPeopleTarget;
+            for(int i=0;i<People.Length;i++)
+            {
+                var p=People[i];
+                if(p.retiring&&i<target){p.retiring=false;p.detourSeconds=0;Roam(p);}
+                if(p.active&&i>=target&&i<RequestedPeople&&!p.retiring&&p.activity!=Activity.Cross)
+                { Release(i);p.retiring=true;p.detourSeconds=0;p.activity=Activity.Roam;Path(p,new Vector2(p.side*8.22f,-27.55f)); }
+            }
+            spawnWait-=Dt;
+            if(spawnWait<=0)
+            {
+                for(int i=0;i<target;i++)
+                {
+                    var p=People[i];if(p.active||!p.weatherHidden)continue;
+                    bool placed=false;
+                    for(int column=0;column<SidewalkRoutes.Columns;column++)
+                    {
+                        Vector2 point=Routes.Node(column,p.side);if(!Routes.IsOpen(column)||Visible(point))continue;
+                        bool free=true;foreach(var other in People)if(other.active&&(other.position-point).sqrMagnitude<Separation*Separation)free=false;
+                        if(!free)continue;
+                        p.position=point;p.active=true;p.weatherHidden=false;p.retiring=false;p.velocity=Vector2.zero;p.cooldown=8+Random(p)*16;p.detourSeconds=0;Roam(p);placed=true;break;
+                    }
+                    if(placed){spawnWait=1.5f;WeatherArrivals++;break;}
+                }
+            }
+            foreach(var car in Cars)if(!car.active&&car.rank<WeatherCarsPerLane)
+            {
+                double entry=StarterConfig.RouteStart+.05;bool free=true;
+                double span=StarterConfig.RouteEnd-StarterConfig.RouteStart;
+                foreach(var other in Cars)if(other.active&&other.lane==car.lane)
+                {
+                    double distance=Math.Abs(entry-other.z);distance=Math.Min(distance,span-distance);
+                    if(distance<(car.length+other.length)/2+2.2)free=false;
+                }
+                if(free){car.active=true;car.z=entry;car.speed=0;car.distance=0;car.committed=false;}
+            }
         }
         private void Path(Person p,Vector2 goal)
         {
@@ -115,7 +168,7 @@ namespace PixelTraffic.UnityPrototype
         }
         public void Tick()
         {
-            tick++;phaseTime+=Dt;UpdateSignal();MoveCars();
+            tick++;phaseTime+=Dt;WeatherPopulation();UpdateSignal();MoveCars();
             // Rotating update order removes a permanent priority bias; pairs never share a foot disc.
             for(int n=0;n<People.Length;n++)MovePerson((tick+n)%People.Length);
             if(tick%30==0)SetPopulation(RequestedPeople);
@@ -127,6 +180,7 @@ namespace PixelTraffic.UnityPrototype
             {
                 foreach(var car in Cars)
                 {
+                    if(!car.active){car.committed=false;continue;}
                     float stop=StopCenter(car);float room=(float)(car.Direction*(stop-car.z));
                     car.committed=(room>=0&&room<car.speed*car.speed/6.8f+1)||(room<0&&car.Direction*(car.z-StarterConfig.CrossingZ)<5+car.length/2);
                 }
@@ -141,12 +195,12 @@ namespace PixelTraffic.UnityPrototype
         private float StopCenter(Car car) => StarterConfig.CrossingZ-car.Direction*(4+car.length/2);
         private bool CommittedApproach()
         {
-            foreach(var car in Cars)if(car.committed&&car.Direction*(car.z-StarterConfig.CrossingZ)<4+car.length/2)return true;
+            foreach(var car in Cars)if(car.active&&car.committed&&car.Direction*(car.z-StarterConfig.CrossingZ)<4+car.length/2)return true;
             return false;
         }
         public bool RoadOccupied()
         {
-            foreach(var car in Cars)if(Math.Abs(car.z-StarterConfig.CrossingZ)<2.5+car.length/2)return true;
+            foreach(var car in Cars)if(car.active&&Math.Abs(car.z-StarterConfig.CrossingZ)<2.5+car.length/2)return true;
             return false;
         }
         public bool CrossingActive()
@@ -159,8 +213,11 @@ namespace PixelTraffic.UnityPrototype
             for(int i=0;i<Cars.Length;i++)oldZ[i]=Cars[i].z;
             for(int i=0;i<Cars.Length;i++)
             {
-                Car car=Cars[i];float room=float.MaxValue;
-                for(int j=0;j<Cars.Length;j++)if(j!=i&&Cars[j].lane==car.lane)
+                Car car=Cars[i];car.distance=0;if(!car.active)continue;
+                if(car.rank>=WeatherCarsPerLane&&!Visible(new Vector2((car.lane-1.5f)*StarterConfig.LaneWidth,(float)car.z)))
+                {car.active=false;car.committed=false;car.speed=0;continue;}
+                float room=float.MaxValue;
+                for(int j=0;j<Cars.Length;j++)if(j!=i&&Cars[j].active&&Cars[j].lane==car.lane)
                 {
                     double gap=car.Direction*(oldZ[j]-oldZ[i]);gap=(gap%span+span)%span;
                     room=Mathf.Min(room,(float)gap-(car.length+Cars[j].length)/2-1.8f);
@@ -172,7 +229,7 @@ namespace PixelTraffic.UnityPrototype
                     distance=(distance%span+span)%span;
                     room=Mathf.Min(room,(float)distance);
                 }
-                float target=Mathf.Min(car.cruise,Mathf.Sqrt(Mathf.Max(0,6.8f*room)));
+                float target=Mathf.Min(car.cruise*drivingPace,Mathf.Sqrt(Mathf.Max(0,6.8f*room)));
                 car.speed=Mathf.MoveTowards(car.speed,target,(target>car.speed?1.8f:3.4f)*Dt);
                 float travel=Mathf.Min(car.speed*Dt,Mathf.Max(0,room));if(travel<.0005f){travel=0;car.speed=0;}
                 double next=oldZ[i]+car.Direction*travel;
@@ -180,15 +237,19 @@ namespace PixelTraffic.UnityPrototype
                 { next=StopCenter(car);travel=Mathf.Max(0,(float)(car.Direction*(next-oldZ[i])));car.speed=0; }
                 next=StarterConfig.RouteStart+((next-StarterConfig.RouteStart)%span+span)%span;
                 car.distance=travel;car.z=next;
-                if(car.committed&&car.Direction*(car.z-StarterConfig.CrossingZ)>5+car.length/2)car.committed=false;
+                if(car.active&&car.committed&&car.Direction*(car.z-StarterConfig.CrossingZ)>5+car.length/2)car.committed=false;
             }
         }
         private void MovePerson(int i)
         {
             Person p=People[i];if(!p.active)return;p.velocity=Vector2.zero;
             bool seekingStarts=p.cooldown>0&&p.cooldown<=Dt;p.cooldown-=Dt;p.retrySeconds-=Dt;p.routeRepairSeconds-=Dt;
-            if(seekingStarts&&p.activity==Activity.Roam)Roam(p);
-            if(p.activity==Activity.Roam&&p.cooldown<=0&&p.retrySeconds<=0&&Mathf.Abs(p.position.y-StarterConfig.CrossingZ)<=18&&!Reserve(i))
+            if(p.retiring)
+            {
+                if(!Visible(p.position)){Retire(i);p.weatherHidden=true;WeatherDepartures++;return;}
+            }
+            if(seekingStarts&&!p.retiring&&p.activity==Activity.Roam)Roam(p);
+            if(!p.retiring&&p.activity==Activity.Roam&&p.cooldown<=0&&p.retrySeconds<=0&&Mathf.Abs(p.position.y-StarterConfig.CrossingZ)<=18&&!Reserve(i))
             {
                 p.retrySeconds=8+Random(p)*12;
                 if(p.crossings>0)p.cooldown=45+Random(p)*60;
@@ -240,6 +301,7 @@ namespace PixelTraffic.UnityPrototype
             Move(i,target,false);
             if(Vector2.Distance(p.position,p.goal)<.14f)
             {
+                if(p.retiring)return;
                 if(p.activity==Activity.Approach)p.activity=Activity.Wait;
                 else {if(i>=RequestedPeople){Retire(i);return;}p.activity=Activity.Roam;Roam(p);}
             }
@@ -266,7 +328,7 @@ namespace PixelTraffic.UnityPrototype
                 else goal=p.detour;
             }
             Vector2 difference=goal-p.position;float distance=difference.magnitude;if(distance<.001f)return;
-            Vector2 forward=difference/distance;float step=Mathf.Min(distance,p.speed*Dt);
+            Vector2 forward=difference/distance;float step=Mathf.Min(distance,p.speed*walkingPace*Dt);
             // Prefer each walker's right side. Opposing walkers choose opposite world sides.
             Vector2 right=new Vector2(forward.y,-forward.x);
             if(!crossing&&p.detourSeconds<=0&&!Free(i,p.position+forward*step,false))
@@ -278,7 +340,7 @@ namespace PixelTraffic.UnityPrototype
                     Vector2 waypoint=p.position+right*(side==0?.65f:-.65f)-forward*.15f;
                     if(!SidewalkRoutes.SegmentAllowed(p.position,waypoint))continue;
                     p.detour=waypoint;p.detourSeconds=3;
-                    difference=waypoint-p.position;distance=difference.magnitude;forward=difference/distance;right=new Vector2(forward.y,-forward.x);step=Mathf.Min(distance,p.speed*Dt);break;
+                    difference=waypoint-p.position;distance=difference.magnitude;forward=difference/distance;right=new Vector2(forward.y,-forward.x);step=Mathf.Min(distance,p.speed*walkingPace*Dt);break;
                 }
             }
             for(int attempt=0;attempt<7;attempt++)
