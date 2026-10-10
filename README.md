@@ -1,6 +1,6 @@
 # S20+
 
-Unity 라이브 배경화면 **0.10.0**을 전달했습니다. 카메라를 낮고 가까운 구도로 조정하고 차량 전조등·브레이크등·깜빡이를 구현했습니다. 목표 차선의 뒤차가 지나가고 안전거리가 확보되면 깜빡이3회 후 부드럽게 차선을 변경합니다. 실제 PC Unity 교통/등화 검사·GPU36PNG·Android 빌드/Lint와 원본 v2서명 APK를 확인했습니다. 폰 화면·발열/FPS는 설치 후 확인합니다. [설치·검증 기록](docs/UNITY_AUTOMATION.md),[Unity 안내](pixel-traffic-unity/README.md)를 참조합니다.
+Unity 라이브 배경화면 **0.11.0**을 전달했습니다. 사용자가 제공한 시안에 맞춰 카메라 각도와 위치를 조정해 오른쪽 위 도로 소실점, 아래쪽 횡단보도와 전경 차량, 상단 배경 여백을 담습니다. 실제 PC Unity 검사·카메라 비교 GPU39PNG·Android 빌드/Lint·원본 v2서명 APK를 확인했습니다. [모바일 APK 다운로드](https://github.com/BACKHYUN96/S20-PLUS/raw/ff54aa438e6f782b727b566e619b8d826bd985fc/pixel-traffic-unity-prototype-0.11.0.apk), [실제 Unity 화면](https://github.com/BACKHYUN96/S20-PLUS/raw/ff54aa438e6f782b727b566e619b8d826bd985fc/camera-preview.png), [설치·검증 기록](docs/UNITY_AUTOMATION.md). 다음 단계는 원경의 강·산·구름입니다. 폰0.11.0 적용은 확인 대기입니다.
 
 루팅된 Samsung Galaxy S20+ 관련 앱과 도구의 개발 작업 공간입니다.
 

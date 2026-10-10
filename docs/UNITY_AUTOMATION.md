@@ -1,5 +1,54 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-10 — Unity 0.11.0 시안 카메라 구도·모바일 APK 전달 완료
+
+사용자는 0.10.0의 실제 폰 적용 성공을 확인했고, 외출 중 모바일 WORK에서 이전 시안6650.jpg를 다시 제공했다. 카메라 → 원경 배경 → 나무·건물 순서를 작업 전에 설명한 뒤 이번 카메라 패치 진행 승인을 받았다. 이번 범위는 **0.11.0/code12 카메라 구도**이며 강·구름 등 배경 상세 작업은 다음 단계다.
+
+### 구현·시안 비교
+
+- 원본 첨부 `/tmp/codex-remote-attachments/01a1148a-d85a-7329-b63f-154bf06c802b/93b2f3fc-8317-4832-bf9f-7214372258cd/1-6650.jpg`를 실제로 관찰했다. 시안처럼 도로 소실점을 오른쪽 위에 두고 횡단보도를 아래쪽 중간에 배치하며, 전경 차량과 상단 배경 여백을 함께 담는다.
+- 카메라 위치 **(1.4,14,-37)**, 시선 목표 **(-4.9,1,68)**, FOV **44°**. 기존0.10.0의 (-1.2,20.5,-27)/target(0,1.6,23)보다 덜 내려다본다. 9:20과9:16 화면비에서 독립 world projection으로 소실점·전경 중앙선·횡단보도 위치를 검사한다. lower-band18 ground rays와 upper-band6 sky rays를 구분해 의도적인 하늘 여백을 지면 누락으로 오인하지 않는다. 실제 lower band는 모두 기존 지면 bounds 안에 있어야 한다.
+- 첫 source **f7e885d53c83d315dfe7b1fe46ae0104780287f6**, Validate38027918710/job114142612019는 장면·39PNG 생성 PASS였다. 하지만 old/new 실제 이미지에서 전경 중앙선이 시안보다 너무 왼쪽으로 치우친 것을 확인했다. 카메라/target x를 함께1.8m 옮겨 pitch/yaw/FOV를 유지하면서 하단 도로를 중앙에 맞췄다. 보정 source에 대한 실제 검증과 캡처를 다시 수행한 뒤 APK 태그를 만들었다.
+- 변경5소스: Runtime StarterConfig, Editor StarterScene/CityEnvironment/DrivingChecks/CityPreview. `ReferenceCamera-0.11.0.unity`, `Generated/ReferenceCamera0110`, build inputs84개. 새geometry/material/실제Light는 추가하지 않았다. 실제 시야가 날씨 offscreen 생성·퇴장 판정에 영향을 주므로 보행·교통·날씨 검사도 실행했다.
+- 같은 차량/조명 상태의 old camera, new camera, reference9:16 캡처3장을 추가했다. 최종 GPU 장면에서 도로 하단과 횡단보도, 전경 차량, 하늘 여백, 낮/밤 등화를 관찰했다. 일부 상가는 수관에 가려지고 상단 원경은 아직 기존 단순 fog/skyline/ridge다. 그림의 강·구름·건축/차량 디테일까지 구현했다고 주장하지 않는다.
+
+### 실제 검사
+
+| 검사 | 관측 결과 |
+| --- | --- |
+| Windows Unity | [Validate38028274105](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38028274105), job114143665812 success. 실제 scene/기존 검사와 GPU 캡처 PASS |
+| 카메라 | 9:20/9:16 모두 ground rays18/sky rays6. 마지막9:16 측정 road vanishingX0.632975/horizonY0.652768/crossingY0.291969/foregroundCentreX0.512751; viewport y는 아래0/위1 |
+| 실제 GPU | D3D11 URP Editor PNG39장: 기존 도시14·차량8·상가6·등화/변경8 + 카메라 비교3. old/new는 같은 교통·조명 상태, reference9:16은720×1280. 실제 사진을 관찰했으며 phone screenshot/FPS 증거는 아님. 임시 카메라 비교 포즈는 APK scene에 저장하지 않음 |
+| 교통/보행 | 차선 변경600초 완료11회/뒤차대기73회/최저 gap1.800000m,3pulse 후3초merge·중앙선/연석·실제램프·15/30/60/120Hz/pause PASS. 보행4/32/100명200/600/600초, 횡단223회/신호33주기 |
+| 날씨/시간 | 각810초 storm drain/recovery·offscreen-only생성/퇴장, 퇴장92/복귀92, 우산100/spray96·기존낮→노을→밤/retarget/숨김·32나무·신문지3~5초 PASS |
+| 예산 | 기본108,546tri/1347renderer/47material; 최대100우산119,922/1515/47, 기존 strict <120000/<2400/<48 유지. 삼각형 여유78개뿐이므로 다음 원경 geometry 추가 전에 기존 geometry 비용을 줄여야 함 |
+| Android | [BuildApk38028607350](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38028607350),job114144636634 success. 실제 BuildPlayer Succeeded/errors0, launcher Lint errors0/warnings8 |
+| Host 검사 | 관련12입력 SHA가0.10.0과 같아 기존 실제 host Lint38008378207(0errors/10warnings/nativeFilesMatched8)을 재사용. 새 host 검사를 했다고 주장하지 않음 |
+| APK | 실제다운로드 artifact digest/size/CRC, aapt0.11.0/code12/min29/target36/ARM64/SettingsActivity launcher·BIND_WALLPAPER/:wallpaper service/meta·private provider·disabledUnityActivity·원본v2cert·APK SHA/bytes PASS |
+| 모바일 전달 | [로그인 없는 APK 다운로드](https://github.com/BACKHYUN96/S20-PLUS/raw/ff54aa438e6f782b727b566e619b8d826bd985fc/pixel-traffic-unity-prototype-0.11.0.apk), HTTP200/전체bytes/공개파일SHA 일치를 다시 확인. 원본APK 그대로 일회성 downloadbranch로 게시. WORK 로컬 파일 전송 오류를 피하며 자동 release workflow/지속 쓰기 권한은 추가하지 않음. [실제 Unity 카메라 화면](https://github.com/BACKHYUN96/S20-PLUS/raw/ff54aa438e6f782b727b566e619b8d826bd985fc/camera-preview.png)도 공개 HTTP/SHA 검증 |
+
+실제폰0.11.0 적용과 설정 보존·홈/잠금·숨김/복귀·재부팅·발열/FPS는 사용자 설치 후 확인 대기다. 최신 실제폰 성공은0.10.0이다. launcher 경고8와 기존 host 경고10은 오류0과 구분한다.
+
+### 산출물·소스 추적
+
+- Source **a04836ca7a36a4b0460a74814c5e82dd90a99729**, tag **unity-apk-0.11.0-build1**, 다운로드 전용branch **downloads/unity-0.11.0**/commit **ff54aa438e6f782b727b566e619b8d826bd985fc**. 앱 source main에 APK binary를 넣지 않았다. 수정5파일은 temp index whitelist로 게시하며 real index/기존 native dirty 상태를 보존했다. manifest `/workspace/artifacts/unity-0.11.0-source-manifest.json`에84입력SHA·원본시안경로·첫렌더보정내역·run/artifact/문서commit을 기록한다.
+- APK `/workspace/artifacts/pixel-traffic-unity-prototype-0.11.0.apk`, **29788679bytes**, SHA256 **528363f609f6a67c59583e5e16190befe1814d71fc0dce009b9b9987afab1084**. original v2cert **a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6**.
+- Validateartifact11660639198/SHAa9a421e881be70aab66c9ba1bc89ebe0103ffaf107a3e54902a894168f8786c0; APKartifact11661475378/reportsartifact11661880061. actual reports `/workspace/artifacts/unity-prototype-0.11.0-reports`, download verification `unity-prototype-0.11.0-download-verification.json`, public delivery `unity-0.11.0-mobile-apk-download.json`. 특정 cloud 첨부/7일Actionsartifact의다음세션존속은가정하지않는다.
+
+### 설치
+
+모바일에서는 위 링크를 크롬/삼성인터넷으로 열고 다운로드한 APK를 설치한다. PC라면 `C:\Users\김백현\Desktop\AI`에 저장하고 실행한다.
+
+```powershell
+$unityAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $unityAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.11.0.apk"
+if ($LASTEXITCODE -eq 0) {
+    & $unityAdb shell am start -W -n "com.s20plus.pixeltraffic.unityprototype/com.s20plus.pixeltraffic.unitywallpaper.WallpaperSettingsActivity"
+}
+```
+
+다음 단계는 **강·산·구름과 맞은편 도시 원경**이다. 먼저 기존 메시의삼각형 비용을 낮추고, 이구도에서 낮/노을/밤·fog 전환을 비교하며 만든다.
+
 ## 2026-10-10 — Unity 0.11.0 실제 카메라 렌더 관찰 후 좌우 위치 보정
 
 첫sourcef7e885d53c83d315dfe7b1fe46ae0104780287f6의WindowsValidate38027918710/job114142612019와D3D11 PNG39장생성은PASS였다. old/new/9:16과야간렌더를관찰했다. 새pitch와상단배경여백/횡단보도y는적절하지만전경중앙선이시안보다왼쪽으로치우쳐대각선이과했다. 카메라와target의x를동시에1.8m왼쪽으로옮겨yaw/pitch/FOV를유지하면서도로하단을중앙에맞춘다. 최종position(1.4,14,-37),target(-4.9,1,68). ForegroundCenterX와crossingx의독립worldprojection검사를추가/강화했다.

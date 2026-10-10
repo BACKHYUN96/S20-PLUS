@@ -1,10 +1,17 @@
-# Pixel Traffic Unity — 차량 등화·안전한 차선 변경 0.10.0
+# Pixel Traffic Unity — 시안 카메라 구도 0.11.0
 
-## 모바일 APK 다운로드 (2026-10-10)
+## 현재 패치 — 시안 카메라 0.11.0 (2026-10-10)
 
-[Unity0.10.0 APK 다운로드](https://github.com/BACKHYUN96/S20-PLUS/raw/50a5b1945a646e7f6dbec5493cc0b599b0bd66d4/pixel-traffic-unity-prototype-0.10.0.apk) — 크롬 또는 삼성 인터넷에서 링크를 열어 다운로드합니다. WORK가작업파일을열때app-server응답오류가나면이일반https링크를사용합니다. 원본서명된29796063bytesAPK와공개다운로드SHA의일치를확인했고앱을변경하지않았습니다. 실제폰다운로드는사용자확인대기입니다. 자동릴리스workflow는설치하지않았으며이번APK만일회성배포했습니다. [배포·설치기록](../docs/STATUS.md).
+사용자가 다시 제공한 시안의 도로 원근과 화면 배치에 맞춰 카메라를 조정했습니다. 덜 내려다보는 각도, 오른쪽 위 소실점, 아래쪽 횡단보도, 전경 차량과 상단 배경 여백을 담습니다. 위치(1.4,14,-37)/target(-4.9,1,68)/44°FOV. 그림의 강·구름·건축 외형 상세는 다음 작업이며 일부 수관 가림과 단순한 원경은 남아 있습니다.
 
-## 현재 패치 — 카메라·전조등/브레이크등·깜빡이 0.10.0 (2026-10-10, 검증 완료)
+**0.11.0/code12**,`ReferenceCamera-0.11.0.unity`/`Generated/ReferenceCamera0110`,`Builds/pixel-traffic-unity-prototype-0.11.0.apk`. 실제9:20/9:16 projection·ground/sky rays,기존 교통/보행/날씨·100우산 예산,같은상태의old/new GPU 비교를검증했습니다. 실제GPU39PNG·AndroidBuildPlayer/launcherLint0errors/경고8·원본v2cert/version/manifest/hash PASS. 최대100우산119,922tri/1515renderer/47material,unchangedhost기존Lint0errors/10warnings재사용. 실제폰0.11.0/FPS·발열은설치후확인합니다.
+
+## 모바일 APK 다운로드
+
+[Unity0.11.0 APK 다운로드](https://github.com/BACKHYUN96/S20-PLUS/raw/ff54aa438e6f782b727b566e619b8d826bd985fc/pixel-traffic-unity-prototype-0.11.0.apk) — 크롬 또는 삼성 인터넷에서 링크를 열어 받습니다. 로그인 없는 HTTP200 다운로드와 원본APK SHA 일치를 확인했습니다. WORK가 작업파일을 열 때 app-server 응답 오류가 나면 이 일반https 링크를 사용합니다. [실제 Unity 화면 미리보기](https://github.com/BACKHYUN96/S20-PLUS/raw/ff54aa438e6f782b727b566e619b8d826bd985fc/camera-preview.png)도 볼 수 있습니다. 앱APK는 29788679bytes, 원본서명이며 자동 release 설정은 추가하지 않았습니다. [설치·검증기록](../docs/STATUS.md).
+
+
+## 이전 패치 — 카메라·전조등/브레이크등·깜빡이 0.10.0 (2026-10-10, 검증 완료)
 
 카메라를 낮고 가까운 세로 구도로 바꾸고24대의야간전조등/도로빛·제동등과방향에맞는깜빡이를 구현했습니다. 같은방향옆차선의뒤60m관측차가전부지나가고앞뒤안전거리가확보되면1.8초간깜빡이를3번표시한뒤3초동안부드럽게차선을변경합니다. 새뒤차가깜빡이중접근하거나간격이없으면취소/대기하며비바람과횡단보도근처에서는새변경을시작하지않습니다. 일부상가의나무가림은남습니다.
 
@@ -56,9 +63,9 @@ PC 빌드·Lint·실제 APK 서비스/서명 검증 결과와 최신 설치 명�
 
 ## 현재 빌드와 실행
 
-Unity 6000.3.26f1/Android 모듈을 사용합니다. `tools/run-pipeline.ps1 -Operation Validate`로 장면·production 모델·manifest 템플릿 검사를 수행하고, `-Operation BuildApk`로 Android 빌드/Lint/원본 v2 인증서 및 APK 메타데이터를 검사합니다. Gradle 생성 후 `AndroidWallpaperBuild`가 `NativeAndroid/src`와 `res`를 복사하고 service/provider/설정 Activity를 등록합니다. Export에도 같은 처리를 적용합니다. 실제 Android 컴파일은 PC BuildApk 결과로 확인합니다. 새 NativeAndroid 모듈은 `tools/check-wallpaper-lint.ps1`로 unityLibrary Lint를 추가 확인합니다. 이 도구는 생성된 Java/리소스 SHA가 현재 소스와 같은지 먼저 확인하며 APK를 다시 만들지 않습니다. 0.10.0의 실제 launcher Lint는 오류0/경고8입니다. 변경 없는 NativeAndroid/host 입력은0.6.0 SHA를 확인하고 실제 unityLibrary Lint 오류0/경고10을 재사용합니다.
+Unity 6000.3.26f1/Android 모듈을 사용합니다. `tools/run-pipeline.ps1 -Operation Validate`로 장면·production 모델·manifest 템플릿 검사를 수행하고, `-Operation BuildApk`로 Android 빌드/Lint/원본 v2 인증서 및 APK 메타데이터를 검사합니다. Gradle 생성 후 `AndroidWallpaperBuild`가 `NativeAndroid/src`와 `res`를 복사하고 service/provider/설정 Activity를 등록합니다. Export에도 같은 처리를 적용합니다. 실제 Android 컴파일은 PC BuildApk 결과로 확인합니다. 새 NativeAndroid 모듈은 `tools/check-wallpaper-lint.ps1`로 unityLibrary Lint를 추가 확인합니다. 이 도구는 생성된 Java/리소스 SHA가 현재 소스와 같은지 먼저 확인하며 APK를 다시 만들지 않습니다. 0.11.0의 실제 launcher Lint는 오류0/경고8입니다. 변경 없는 NativeAndroid/host 입력은0.6.0 SHA를 확인하고 실제 unityLibrary Lint 오류0/경고10을 재사용합니다.
 
-Editor 메뉴 **4. Build Signed Wallpaper APK**를 사용할 수 있습니다. APK는 `Builds/pixel-traffic-unity-prototype-0.10.0.apk`에 생성됩니다. 기존 `BuildActivityApk` 메서드 이름은 PowerShell 호출 호환용으로 유지하며 결과 앱은 라이브 배경화면입니다. 서명 환경 변수 및 PC runner 설정은 아래 초기 기록과 [자동화 안내](../docs/UNITY_AUTOMATION.md)를 참조합니다. 최신 안내가 아래 초기 0.1.0 기록보다 우선합니다.
+Editor 메뉴 **4. Build Signed Wallpaper APK**를 사용할 수 있습니다. APK는 `Builds/pixel-traffic-unity-prototype-0.11.0.apk`에 생성됩니다. 기존 `BuildActivityApk` 메서드 이름은 PowerShell 호출 호환용으로 유지하며 결과 앱은 라이브 배경화면입니다. 서명 환경 변수 및 PC runner 설정은 아래 초기 기록과 [자동화 안내](../docs/UNITY_AUTOMATION.md)를 참조합니다. 최신 안내가 아래 초기 0.1.0 기록보다 우선합니다.
 
 ## 이전 기록 — 0.4.0 및 초기 설정
 ## 이전 패치 — 신호·인도 보행·횡단 0.4.0 (2026-10-10 KST)

@@ -1,5 +1,12 @@
 # 작은 패치 작업 안내
 
+## Unity 0.11.0 — 시안 카메라 (2026-10-10)
+
+- 변경5소스: StarterConfig/StarterScene/CityEnvironment/DrivingChecks/CityPreview. ReferenceCamera-0.11.0.unity/Generated/ReferenceCamera0110/code12,84build inputs. Camera(1.4,14,-37),target(-4.9,1,68),44°FOV. 원경 강·구름 디테일은 다음 단계.
+- 9:20/9:16 독립 world projection의 road vanishing/foregroundCentreX/crossingx,y/horizon,lower18 ground rays/upper6 sky rays 검사. 기존 차량/보행/날씨offscreen생성·퇴장과100우산 예산을 검사. 최대119922/1515/47,새geometry 없음.
+- 실제 D3D11 PNG39장에 동일traffic/lighting의 old/new/9:16 비교3 추가. 첫PASS렌더의 과한 diagonal을 실제 관찰하고 카메라/target을1.8m shift한 뒤 최종Validate38028274105와새render를관찰했다. 사진은폰성능증거가아님.
+- 동일 source의 APKtagunity-apk-0.11.0-build1/BuildApk38028607350,AndroidBuildPlayer/Lint·다운로드SHA/원본v2/code12/ARM64/manifest. unchanged12host SHA로기존Lint38008378207재사용. APK는일회성downloads/unity-0.11.0branch의공개HTTP/SHA검증링크로전달;자동release권한은없음. 문서-only에는같은검사반복불필요.
+
 ## Unity 0.10.0 — 카메라·차량 등화와 차선 변경 (2026-10-10)
 
 - 변경19소스/meta/84build inputs. Runtime StarterConfig/PrototypeDrive/StreetModel/StreetSimulation/LaneChanges/VehicleLighting,Editor TrafficFleet/StarterScene/ClimateScene/CityPreview/StreetChecks/WeatherLifeChecks/VehicleDetailChecks/DrivingScene/DrivingChecks 및 신규meta4개. Driving-0.10.0.unity/Generated/Driving0100/code11.
