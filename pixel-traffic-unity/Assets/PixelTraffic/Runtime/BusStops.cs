@@ -31,7 +31,7 @@ namespace PixelTraffic.UnityPrototype
                 if(x>9.14f&&x<10.28f&&Mathf.Abs(z)<1.42f)return false;
                 if(Mathf.Abs(x-10.29f)<.18f&&Mathf.Abs(z)<1.85f)return false;
                 if(x>9.45f&&x<10.47f&&Mathf.Abs(Mathf.Abs(z)-1.65f)<.19f)return false;
-                foreach(float px in new[]{8.95f,10.3f})if(Mathf.Abs(x-px)<.20f&&Mathf.Abs(Mathf.Abs(z)-1.72f)<.20f)return false;
+                if((Mathf.Abs(x-8.95f)<.20f||Mathf.Abs(x-10.3f)<.20f)&&Mathf.Abs(Mathf.Abs(z)-1.72f)<.20f)return false;
                 if(new Vector2(x-7.04f,z+2.15f).sqrMagnitude<.21f*.21f)return false;
             }return true;
         }
@@ -136,7 +136,7 @@ namespace PixelTraffic.UnityPrototype
                     if(c.maneuver==LaneChanges.Stage.Idle){c.busStage=Stage.Cruising;c.busOffset=0;}
                 }
             }
-            foreach(var r in Riders)if(r.stage==RiderStage.Returning)
+            foreach(var r in Riders)if(r.stage==RiderStage.Returning&&r.velocity.sqrMagnitude<1e-8f)
             {
                 if(Move(r,QueuePoint(r),false))r.stage=RiderStage.Queue;
             }

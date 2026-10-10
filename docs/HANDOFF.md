@@ -1,5 +1,9 @@
 # 새 채팅 인수인계 — 픽셀 트래픽 0.29.0
 
+## 2026-10-10 — Unity 0.15.0 실제 첫 컴파일 오류 보정
+
+source1cf232604f465391174bb44a5f3e5d7b3f0e293e / Validate38048497084(job114202732886), artifact11668108617: 실제Unity컴파일에서CityPreview의기존labels와정류장촬영labels가중복되어CS0136으로실패했다. 정류장변수를stopLabels로변경한다. Runtime검사/GPU/APK는아직실행되지않았다. 통합검토에서하차끝→Returning전환tick에승객이두번걷는경로도발견해같은tick의velocity가이미있으면Returning을다음tick부터진행한다. SidewalkOpen의짧은배열생성을제거해내비게이션반복검사의allocation을줄였다. 실제재검증대기이며기존안전검사와허용오차를유지한다. 0.14폰적용성공/Drive보류를유지한다.
+
 ## 2026-10-10 — Unity 0.15.0 정류장·승하차·비상깜빡이 구현, 실제 검사 대기
 
 사용자가 폰0.14.0 적용 성공을 확인하고 정류장 표지/쉼터/벤치·대기 승객·정차/문/승하차·뒤차 안전거리·출발3회깜빡이/안전합류를 승인했다. 추가로 승하차 중 양쪽 비상깜빡이를 요청했다. 0.15.0/code16/BusStops-0.15.0.unity/Generated/BusStops0150로 별도 장면을 생성한다. 버스문 실제 오른쪽 skin opening·공유 sliding panels2개/19renderer(bus only), 양측 보도 정류장2곳과 shared 8승객 rig/umbrella를 추가한다. 정류장은 횡단보도 후방(doorZ -4.5/34.5)에 놓고 tree/bench/post 통로를 함께 피한다. 버스가 완전 정차한 뒤 .8초에 문을 열고 하차 후 순차승차, 최소8초 dwell와 transfer완료를 기다린다. Boarding/Closing은 양쪽hazard9on/9off ticks, 문 닫힘 후 Ready는 hazard off→뒤60m대상 모두 통과·앞뒤gap·green확인→3pulse/1.8초→6초inner lane 합류다. 새뒤차/신호취소/예약/보행안전요건을 유지한다. weather pace가 낮아도 정류장에서 무기한 묶이지 않도록 정류장출발에 한해 pace 제한을 분리한다.
