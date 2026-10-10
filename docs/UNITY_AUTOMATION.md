@@ -1,5 +1,25 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-10 — Unity 0.12.0 원경 패치: 실제 렌더·서명 APK 검증 및 모바일 전달 완료
+
+사용자가 실제 폰0.11.0 적용 성공을 확인하고 원경 패치를 승인했다. **0.12.0/code13**, `Landscape-0.12.0.unity`/`Generated/Landscape0120`, `pixel-traffic-unity-prototype-0.12.0.apk`. 0.11 카메라 위치(1.4,14,-37)/target(-4.9,1,68)/44°FOV와 교통·보행·횡단보도/차량 등화·세 번 깜빡임/안전 차선변경을 유지한다. 시안 원본은 사용자 첨부6650.jpg이며 이 환경의 임시 첨부 경로에만 존재하므로 새 환경에서는 재확보가 필요할 수 있다.
+
+- **구현:** sky/3산능선/맞은편26도시와 정상 랜드마크/강/다리의7개 opaque mesh, 원경 총1108tri 및 한 개 공유 runtime material. 느린 구름·산음영·적설·도시 창문 불빛·강 glints/노을/야간 반짝임을 기존 active clock와 18시간/날씨 조합에 연결한다. 낮→노을→밤4초, 밤→낮 직접4초, 재선택과 숨김 시간 정지를 유지한다. realtime조명은4개이며 원경은 새 조명/투명 fullscreen층/매프레임 geometry를 추가하지 않는다. Distant.shader는 재질 종류에 맞춰 world좌표와UV를 사용한다.
+- **예산:** tree trunk/branch·lamp pole 등 CityEnvironment의 원통만 같은1×2×1 bounds와 smooth normals의16면/64tri 공유 mesh로 바꾼다. 차량 타이어·수관과32그루 수는 유지한다. 기본 105942tri/1299renderer/43material, 최대100우산 **117318tri/1467renderer/43material**. 이전119922/1515/47보다 감소하며 기존 strict <120000/<2400/<48 검사를 유지한다. 이는 geometry 예산이며 실제 폰 성능 측정이 아니다.
+- **개발 중 보정:** 첫 Validate 38031801525은 PASS였지만 실제 GPU 이미지에서 산 quad별UV 반복이 세로 줄무늬로 나타났고 강 반짝임이 지나치게 평행했다. 산 음영/적설을 공유 world좌표로 고치고 강 ripples에 불규칙 phase와 glint mask를 추가했다. 수정 후 Validate 38032346679의 새 GPU 이미지에서 보정을 확인했으며 첫 결과만으로 완료라고 판단하지 않았다.
+- **실제 검증:** source `b0c20f510d53c82f466310a5334824c32ac82526`, Validate [38032346679](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38032346679)와 동일 source APK tag `unity-apk-0.12.0-build1`, BuildApk [38032677827](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38032677827) PASS. 원경 topology/색·UV/finite 자료·runtime단일 재질·saved18endpoint·15/30/60/120Hz 양방향시간oracle900frame·숨김100frame·retarget·9:20/9:16 projection4sample, 기존 날씨/노을/차량/보행/차선변경 검사 PASS. 실제 Editor 6000.3.26f1 / Direct3D11 **43PNG**: 기존39+원경 낮/노을/밤/비바람 확대4. GPU 캡처는 실제 폰 홈 화면 사진과 구분한다.
+- **Android/APK:** 실제 BuildPlayer Succeeded/오류0/경고0, launcher Android Lint 오류0/경고8. NativeAndroid/Bridge/host 입력12개의 SHA 불변과92build input SHA 일치로 이전 unityLibrary Lint run38008378207 오류0/경고10을 재사용한다. 내려받은 artifact ZIP digest·CRC, APK CRC/SHA/크기와 Linux SDK `apksigner`/`aapt` 원본 v2 cert `a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6`, version/code13/min29/target36/ARM64, 설정 Activity launcher/BIND_WALLPAPER 별도process서비스/meta/private provider/비활성 Unity Activity를 확인했다. APK **29686703bytes**, SHA256 `540c7f3be7010e49add8101c441c550bc3b23f9f7455cb97958fc9367c09f2a2`.
+- **전달:** [로그인 없는 모바일 APK](https://github.com/BACKHYUN96/S20-PLUS/raw/d513f037b9592bf747bfededf3fdcc5ed1150b20/pixel-traffic-unity-prototype-0.12.0.apk), [실제 Unity GPU 화면](https://github.com/BACKHYUN96/S20-PLUS/raw/d513f037b9592bf747bfededf3fdcc5ed1150b20/landscape-preview.png). 일회성 `downloads/unity-0.12.0` branch `d513f037b9592bf747bfededf3fdcc5ed1150b20`에는 APK/PNG만2개; source main에 APK/지속 release workflow/contents:write를 추가하지 않았다. 공개 HTTP200에서 파일 전체 bytes/SHA가 검증 APK/PNG와 같은지 확인했다. 작업파일 열기 오류가 있으면 이 일반 https 링크를 크롬/삼성 인터넷에서 연다.
+- **작업 보존:** 변경13 Unity 소스/meta와 관련 문서만 원격에 게시했다. 기존 nativeAndroid 작업 및 실제index/사용자 dirty파일을 보존하고 checkout/reset/pull/worktree를 사용하지 않았다. 0.11 카메라/nativehost 입력은 유지한다.
+- **아직 미확인/다음:** 실제폰0.12 외형·홈/잠금/복귀/재부팅/FPS·발열은 설치 후 확인한다. 구름/원경은 이번 단계의 procedural 표현이며 시안의 완성 사진 수준 자산은 아니다. 다음 추천은 수관/가로수 품종·건물 옥상/외벽 디테일이며 geometry 예산을 지켜 단계적으로 진행한다. 사용자의 Drive/Colab 연결은 나중에 PC Drive 탐색기를 설치한 뒤 재개하므로 이번에는 Drive 업로드/메일을 하지 않는다.
+
+집 PC에서 APK를 최신 다운로드 폴더에 저장한 뒤 업데이트 설치:
+
+```powershell
+$unityAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $unityAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.12.0.apk"
+```
+
 ## 2026-10-10 — Unity 0.12.0 첫 실제 검증 통과, 원경 GPU 표면 보정 후 재검증
 
 첫 실제 Windows Validate run38031801525/source64ed2349는 장면·원경·기존 날씨/노을/보행자/차량/차선변경 검사 PASS, GPU43PNG 및 pipeline PASS다. 최대100우산117318tri/1467renderer/43material로 기존119922/1515/47보다 감소했다. 실제 이미지를 검토하니 산48구간마다0..1UV가 반복되어 세로 줄무늬가 보였고 강광택이 지나치게 평행했다. Distant.shader를 공유 world-position 기반 산음영/적설로 수정하고 강 ripples에 불규칙한 phase와 glint mask를 넣었다. geometry/카메라/Android host 입력은 그대로다. 새 소스에서 실제 Validate·GPU 캡처를 다시 확인한 후 signed APK를 빌드한다. 첫 검사와 수정 후 검사를 구분하고 폰0.12/FPS·발열은 확인 대기다. Drive 구성은 사용자 지시대로 보류한다.

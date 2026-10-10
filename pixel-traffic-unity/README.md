@@ -1,15 +1,25 @@
-# Pixel Traffic Unity — 시안 카메라 구도 0.11.0
+# Pixel Traffic Unity — 하늘·산·강·도시 원경 0.12.0
 
-## 현재 패치 — 시안 카메라 0.11.0 (2026-10-10)
+## 현재 패치 — 원경 0.12.0 (2026-10-10)
 
-사용자가 다시 제공한 시안의 도로 원근과 화면 배치에 맞춰 카메라를 조정했습니다. 덜 내려다보는 각도, 오른쪽 위 소실점, 아래쪽 횡단보도, 전경 차량과 상단 배경 여백을 담습니다. 위치(1.4,14,-37)/target(-4.9,1,68)/44°FOV. 그림의 강·구름·건축 외형 상세는 다음 작업이며 일부 수관 가림과 단순한 원경은 남아 있습니다.
+0.11 시안 카메라를 유지하고 하늘·천천히 흐르는 구름·세 겹 산능선·강/다리·건너편 도시와 야간 창문 빛을 추가했습니다. 기존4초 시간/날씨 전환과 낮→노을→밤, 숨김 정지에 연결합니다. 원경7메시/1108tri/공유재질1개이며 얇은 원통최적화로100우산 최대117318tri/1467renderer/43material을 유지합니다. 차량/보행/등화·차선변경은 유지합니다.
 
-**0.11.0/code12**,`ReferenceCamera-0.11.0.unity`/`Generated/ReferenceCamera0110`,`Builds/pixel-traffic-unity-prototype-0.11.0.apk`. 실제9:20/9:16 projection·ground/sky rays,기존 교통/보행/날씨·100우산 예산,같은상태의old/new GPU 비교를검증했습니다. 실제GPU39PNG·AndroidBuildPlayer/launcherLint0errors/경고8·원본v2cert/version/manifest/hash PASS. 최대100우산119,922tri/1515renderer/47material,unchangedhost기존Lint0errors/10warnings재사용. 실제폰0.11.0/FPS·발열은설치후확인합니다.
+**0.12.0/code13**, `Landscape-0.12.0.unity`/`Generated/Landscape0120`. 실제 Windows Unity검사·D3D11 GPU43PNG·BuildPlayer 오류0/경고0·launcherLint 오류0/경고8·다운로드 원본v2cert/version/manifest/SHA 검증 및 로그인 없는공개HTTP200/SHA 확인. 원경 GPU표면 줄무늬는 공유world좌표로 수정한 후 다시검증했습니다. 폰0.11은 사용자가 적용 성공을 확인했고 폰0.12 외형/FPS·발열/전체lifecycle은 설치후확인합니다. Drive 작업은 나중에PC에서재개합니다.
 
 ## 모바일 APK 다운로드
 
-[Unity0.11.0 APK 다운로드](https://github.com/BACKHYUN96/S20-PLUS/raw/ff54aa438e6f782b727b566e619b8d826bd985fc/pixel-traffic-unity-prototype-0.11.0.apk) — 크롬 또는 삼성 인터넷에서 링크를 열어 받습니다. 로그인 없는 HTTP200 다운로드와 원본APK SHA 일치를 확인했습니다. WORK가 작업파일을 열 때 app-server 응답 오류가 나면 이 일반https 링크를 사용합니다. [실제 Unity 화면 미리보기](https://github.com/BACKHYUN96/S20-PLUS/raw/ff54aa438e6f782b727b566e619b8d826bd985fc/camera-preview.png)도 볼 수 있습니다. 앱APK는 29788679bytes, 원본서명이며 자동 release 설정은 추가하지 않았습니다. [설치·검증기록](../docs/STATUS.md).
+[Unity0.12.0 APK 다운로드](https://github.com/BACKHYUN96/S20-PLUS/raw/d513f037b9592bf747bfededf3fdcc5ed1150b20/pixel-traffic-unity-prototype-0.12.0.apk) — 크롬 또는 삼성 인터넷에서 받습니다. [실제 Unity 화면 미리보기](https://github.com/BACKHYUN96/S20-PLUS/raw/d513f037b9592bf747bfededf3fdcc5ed1150b20/landscape-preview.png). APK 29686703bytes; 일회성 downloadbranch에는 APK/PNG만있으며 자동release설정은추가하지않았습니다. [설치·검증 기록](../docs/STATUS.md).
 
+```powershell
+$unityAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $unityAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.12.0.apk"
+```
+
+## 이전 패치 — 시안 카메라 0.11.0 (2026-10-10)
+
+사용자가 다시 제공한 시안의 도로 원근과 화면 배치에 맞춰 카메라를 조정했습니다. 덜 내려다보는 각도, 오른쪽 위 소실점, 아래쪽 횡단보도, 전경 차량과 상단 배경 여백을 담습니다. 위치(1.4,14,-37)/target(-4.9,1,68)/44°FOV. 그림의 강·구름·건축 외형 상세는 다음 작업이며 일부 수관 가림과 단순한 원경은 남아 있습니다.
+
+**0.11.0/code12**,`ReferenceCamera-0.11.0.unity`/`Generated/ReferenceCamera0110`,`Builds/pixel-traffic-unity-prototype-0.11.0.apk`. 실제9:20/9:16 projection·ground/sky rays,기존 교통/보행/날씨·100우산 예산,같은상태의old/new GPU 비교를검증했습니다. 실제GPU39PNG·AndroidBuildPlayer/launcherLint0errors/경고8·원본v2cert/version/manifest/hash PASS. 최대100우산119,922tri/1515renderer/47material,unchangedhost기존Lint0errors/10warnings재사용. 사용자가 실제폰0.11.0 다운로드·적용 성공을 확인했습니다. FPS·발열과 전체 lifecycle은 별도 확인이 필요합니다. Drive 전달 구성은 사용자 요청으로 보류했습니다.
 
 ## 이전 패치 — 카메라·전조등/브레이크등·깜빡이 0.10.0 (2026-10-10, 검증 완료)
 
@@ -63,9 +73,9 @@ PC 빌드·Lint·실제 APK 서비스/서명 검증 결과와 최신 설치 명�
 
 ## 현재 빌드와 실행
 
-Unity 6000.3.26f1/Android 모듈을 사용합니다. `tools/run-pipeline.ps1 -Operation Validate`로 장면·production 모델·manifest 템플릿 검사를 수행하고, `-Operation BuildApk`로 Android 빌드/Lint/원본 v2 인증서 및 APK 메타데이터를 검사합니다. Gradle 생성 후 `AndroidWallpaperBuild`가 `NativeAndroid/src`와 `res`를 복사하고 service/provider/설정 Activity를 등록합니다. Export에도 같은 처리를 적용합니다. 실제 Android 컴파일은 PC BuildApk 결과로 확인합니다. 새 NativeAndroid 모듈은 `tools/check-wallpaper-lint.ps1`로 unityLibrary Lint를 추가 확인합니다. 이 도구는 생성된 Java/리소스 SHA가 현재 소스와 같은지 먼저 확인하며 APK를 다시 만들지 않습니다. 0.11.0의 실제 launcher Lint는 오류0/경고8입니다. 변경 없는 NativeAndroid/host 입력은0.6.0 SHA를 확인하고 실제 unityLibrary Lint 오류0/경고10을 재사용합니다.
+Unity 6000.3.26f1/Android 모듈을 사용합니다. `tools/run-pipeline.ps1 -Operation Validate`로 장면·production 모델·manifest 템플릿 검사를 수행하고, `-Operation BuildApk`로 Android 빌드/Lint/원본 v2 인증서 및 APK 메타데이터를 검사합니다. Gradle 생성 후 `AndroidWallpaperBuild`가 `NativeAndroid/src`와 `res`를 복사하고 service/provider/설정 Activity를 등록합니다. Export에도 같은 처리를 적용합니다. 실제 Android 컴파일은 PC BuildApk 결과로 확인합니다. 새 NativeAndroid 모듈은 `tools/check-wallpaper-lint.ps1`로 unityLibrary Lint를 추가 확인합니다. 이 도구는 생성된 Java/리소스 SHA가 현재 소스와 같은지 먼저 확인하며 APK를 다시 만들지 않습니다. 0.12.0의 실제 launcher Lint는 오류0/경고8입니다. 변경 없는 NativeAndroid/host 입력은0.6.0 SHA를 확인하고 실제 unityLibrary Lint 오류0/경고10을 재사용합니다.
 
-Editor 메뉴 **4. Build Signed Wallpaper APK**를 사용할 수 있습니다. APK는 `Builds/pixel-traffic-unity-prototype-0.11.0.apk`에 생성됩니다. 기존 `BuildActivityApk` 메서드 이름은 PowerShell 호출 호환용으로 유지하며 결과 앱은 라이브 배경화면입니다. 서명 환경 변수 및 PC runner 설정은 아래 초기 기록과 [자동화 안내](../docs/UNITY_AUTOMATION.md)를 참조합니다. 최신 안내가 아래 초기 0.1.0 기록보다 우선합니다.
+Editor 메뉴 **4. Build Signed Wallpaper APK**를 사용할 수 있습니다. APK는 `Builds/pixel-traffic-unity-prototype-0.12.0.apk`에 생성됩니다. 기존 `BuildActivityApk` 메서드 이름은 PowerShell 호출 호환용으로 유지하며 결과 앱은 라이브 배경화면입니다. 서명 환경 변수 및 PC runner 설정은 아래 초기 기록과 [자동화 안내](../docs/UNITY_AUTOMATION.md)를 참조합니다. 최신 안내가 아래 초기 0.1.0 기록보다 우선합니다.
 
 ## 이전 기록 — 0.4.0 및 초기 설정
 ## 이전 패치 — 신호·인도 보행·횡단 0.4.0 (2026-10-10 KST)

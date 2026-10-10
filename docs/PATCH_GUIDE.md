@@ -1,5 +1,12 @@
 # 작은 패치 작업 안내
 
+## Unity 0.12.0 — 하늘·산·강·도시 원경 (2026-10-10)
+
+- 변경13 Unity소스/meta: StarterConfig/CityClimate/StarterScene/CityEnvironment/CityPreview와 신규 DistantBackdrop/DistantScene/DistantChecks/Distant.shader +meta4개. Landscape0120/code13,92build입력; NativeAndroid12host 입력/카메라/기존traffic/light/lane변경 유지.
+- 원경7mesh/1108tri/한 개 공유runtime재질,64tri 공유 원통최적화. 기본105942/1299/43,100우산117318/1467/43, strict120000/2400/48 유지. actual topology/finiteUVColors/materialclone18endpoint/독립15·30·60·120Hz sunset900frame/숨김100/retarget/projection4 검사.
+- 첫Validate38031801525 GPU산UV줄무늬·평행glints 보정 후 실제Validate38032346679과새43PNG 확인. 원경낮/노을/밤/비바람 확대4장; Editor이미지≠phoneFPS.
+- sourceb0c20f510d53c82f466310a5334824c32ac82526, 동일source APKtag0.12.0-build1/BuildApk38032677827, 실제BuildPlayer0errors0warnings/launcherLint0errors8warnings/다운로드APK v2cert/code13/manifest/hash. unchanged12host입력으로hostLint380083782070errors10warnings 재사용. public일회성APK/PNG branch HTTP/SHA검증; docs-only변경에는동일검사반복안함. 폰0.12/발열·FPS 대기, Drive보류.
+
 ## Unity 0.11.0 — 시안 카메라 (2026-10-10)
 
 - 변경5소스: StarterConfig/StarterScene/CityEnvironment/DrivingChecks/CityPreview. ReferenceCamera-0.11.0.unity/Generated/ReferenceCamera0110/code12,84build inputs. Camera(1.4,14,-37),target(-4.9,1,68),44°FOV. 원경 강·구름 디테일은 다음 단계.
