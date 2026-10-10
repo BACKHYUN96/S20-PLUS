@@ -1,5 +1,23 @@
 # Pixel Traffic — Unity 전환 준비
 
+## 2026-10-10 — Unity 0.14.0 버스·박스 트럭: 실제 검증·서명 APK 전달 완료
+
+사용자가 **0.13.0 실제 폰 적용 성공**을 확인하고 다음 패치를 승인했다. **0.14.0/code15**, `HeavyTraffic-0.14.0.unity`/`Generated/HeavyTraffic0140`, `pixel-traffic-unity-prototype-0.14.0.apk`를 전달한다. 기존 시안 카메라·원경/건물/가로수·시간/날씨/노을 경유·보행/신호·설정과 라이브 배경화면 host를 유지한다.
+
+- **모델·배치:** 차량 24대/차선당6대 중 파란 CityBus **4대**, 흰 BoxTruck **4대**, 기존 승용차16대를 섞는다. 6종 공유 메시·기존17 renderer/4 wheel pivots·64×64 opaque glass·기존 램프/road beam을 사용하며 공유 흰 재질1개를 추가한다. 버스는 대칭10.6m 차체·옆창/승차문·앞뒤창/그릴/거울·옥상 AC, 트럭은7.4m cab/cargo·뒤 중앙문 틈·실제2 locking bars/6 hinges·범퍼/미러를 만든다. 전경 차량을 늘리기 위해 외측 차선에 긴 차량6대, 내측에2대를 배치했다. 본체는±X대칭이며 차선별 scale1/실제 폭·높이·길이와 앞뒤 lamp 좌표를 검사했다.
+- **주행 안전:** 실제 치수에8° 회전을 덮는 고정 길이 envelope를 추가하여 앞뒤 following/stop/횡단보도 clearance/날씨 재진입/차선 예약 간격을 계산한다. 승용차3초, 긴 차량6초 smooth merge와 깜빡임·차선변경 시간을 포함한 상대속도별 예측 여유를 적용한다. 기존3pulse/1.8초 깜빡이와60m 관측 범위의 뒤차 모두 추월 대기, 새 뒤차 취소/마지막 gap 검사를 유지한다. 저속에서 회전한 차체의 모서리도 중앙선/보도 안에 머물도록 yaw를 제한한다. 차량 전체 bounds로 날씨 퇴장/재진입 visibility를 판정하며 보행 visibility와 분리한다.
+- **실제 검사:** 600초 실제 mixed fleet에서 merge starts14/완료14/긴차량 starts5, projected bumper 최소2.1090m, 느린 버스·트럭/양방향 sweep2896개를 검사했다. 버스가 뒤의 트럭·버스 모두를 보낸 뒤3번 깜빡이고6초 merge 완료하는 사례도 통과했다. 기존18기후·15/30/60/120Hz·600초 교통/보행·810초 날씨 drain/recovery·100우산·wind/숨김·실제 light4개 검사 PASS. 각 표본의 원본 수치는 scene-validation.json에 있다.
+- **실패와 보정:** 첫 source9f4d0d4/Validate38045876827은 StreetChecks의90초 프레임속도 비교에서 실패했다. 이전 wheel steer/roll이 ResetPosition 후 남아 BodyBounds/폭 envelope에 영향을 줄 수 있어 logical roll과 실제 wheel.localRotation을 함께 초기화했다. reset wheel pose 검사도 추가하고 기존 frame-rate 허용오차를 유지했다. 두 번째 Validate38046156301에서는 프레임 비교가 통과했지만 뒤차 추월 사례가 실패했다. production 신호/안전요건을 유지하며 검사 요청버스4.8m/s·뒤차10m/s로 속도 차가 충분한 사례를 구성하고 실제 stage/mask 진단을 넣었다. 최종 [38046520813](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38046520813)에서 재검증했다.
+- **GPU·예산:** 실제 Unity 6000.3.26f1/Direct3D11 **59PNG**(기존51+heavy 앞/뒤 낮·밤8). 전체 화면과 두 모델의 앞뒤·야간 램프/브레이크등을 관찰했다. 임시 pose/camera/숨김은 저장하지 않아 APK 장면은 production fleet/camera를 사용한다. 이전 Effects.Advance(0) 촬영 보정을 유지했다. 실제 기본 105266tri/1383renderer/44material, 최대100우산 **116642tri/1551renderer/44material**로 기존 <120000/<2400/<48 예산을 지켰다. Editor GPU 결과는 폰 FPS나 발열 측정과 구분한다.
+- **APK 검증:** 동일 source `4f6a1122650ff0b240e7d0e2d7df4adc917d5178`/tag `unity-apk-0.14.0-build1`의 [38046875651](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38046875651)에서 실제 Android BuildPlayer 오류0/경고0, launcher Lint 오류0/경고8. 102입력 SHA와12 unchanged NativeAndroid/Bridge/build host 입력을 대조하여 기존 host Lint38008378207(오류0/경고10)을 재사용했다. 다운로드 artifact digest/bytes/CRC/source, 실제 APK v2 원본 cert `a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6`/version0.14.0/code15/min29/target36/ARM64/설정 launcher/별도 wallpaper process·BIND_WALLPAPER·private provider·metadata와 비활성 Unity Activity를 검증했다. **29998135bytes**, SHA256 `4c24ee44c09750378b23cc8e05720c334b756da29c8f22c5953369ce2494509a`.
+- **전달·보존:** [모바일 직접 APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/08fed474120a21f8908dc451a57388e4f7d7b586/pixel-traffic-unity-prototype-0.14.0.apk), [실제 Unity 화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/08fed474120a21f8908dc451a57388e4f7d7b586/heavy-traffic-preview.png). 로그인·redirect 없이 HTTP200 전체 bytes/SHA가 검증 파일과 같았다. 일회성 `downloads/unity-0.14.0`/`08fed474120a21f8908dc451a57388e4f7d7b586`에 APK/PNG2개만 두고 main에는 binary/지속 Release workflow/권한을 추가하지 않았다. 변경18source/meta와 관련8문서만 게시하고 기존 dirty native/user 파일·실제 index를 보존했다. 사용자 폰0.14 외형/홈·잠금·복귀·재부팅/FPS·발열은 확인 대기다. Drive/메일·Colab는 사용자의 PC Drive 구성 때까지 보류한다. 다음 후보는 버스 정류장과 상가·보행 장면의 생활 디테일이다.
+
+집 PC의 최신 폴더에서 업데이트 설치(사용자 PC에서 실행):
+
+```powershell
+adb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.14.0.apk"
+```
+
 ## 2026-10-10 — Unity 0.14.0 프레임 검사 통과, 긴차량 추월 시나리오 보정
 
 source8a0810da/Validate38046156301(job114195996689)/artifact11666704099는reset-wheel보정후StreetChecks의실제90초15/30/60/120Hz비교를통과해DrivingChecks까지진행했고Rear-pass maneuver fails to finish로실패했다. 긴body를대입한원래6m/s대10m/s추월사례는두차가충분히앞서가는시점을현재12초요청가능구간끝에가깝게만들수있었다. 요청버스를4.8m/s,목표차선을10m/s로두어속도차가충분한실제뒤차추월사례를검사한다. production속도·신호허용구간·안전gap·60m뒤차범위·3pulse·6초merge요건은완화하지않으며실패메시지에actualstage/mask/z/ticks/pulses/phase를추가했다. 재검증대기다.

@@ -1,5 +1,12 @@
 # 작은 패치 작업 안내
 
+## Unity 0.14.0 — 3D 버스·박스 트럭 (2026-10-10)
+
+- 범위18source/meta/102입력: VehicleGeometry/HeavyVehicleGeometry·TrafficFleet/DrivingScene·PrototypeDrive/StreetModel/LaneChanges/StreetSimulation·Driving/Street/WeatherLife/VehicleDetail/HeavyVehicleChecks·CityPreview/StarterScene/StarterConfig. HeavyTraffic0140/code15. NativeAndroid/원경·건축·가로수·시안camera 유지.
+- 6종24대/4bus4truck16sedans, 공유8mesh와17renderer/vehicle, actual metres·axles/contact·대칭body/frontrearlamps/cargo seam·2lock bars6hinges/AC/windows/topology·sharedmaterial 검사. 고정8° longitudinal envelope, sedan3초/heavy6초 merge/3pulse1.8초/뒤차 모두 대기·projected gap/slow rotated-corner2896사례 및600초 mixed fleet/100우산/18기후·15/30/60/120Hz·810초weather 검사.
+- 첫 Validate38045876827의 frame-rate 실패 후 reset wheel pose를 수정했다. 최종 source4f6a1122650ff0b240e7d0e2d7df4adc917d5178/Validate38046520813/GPU59PNG(heavy8확대)·BuildApk38046875651 동일입력 확인. 기본105266/1383/44,100우산116642/1551/44; 기존120000/2400/48 strict 유지.
+- 실제BuildPlayer0errors/0warnings, launcherLint0errors/8warnings, 다운로드원본v2cert/code15/manifest/SHA. unchanged12host입력으로hostLint380083782070errors/10warnings재사용. 일회성publicAPK/PNG HTTP200/no redirect/fullSHA; 동일소스docs-only에는검사반복안함. 폰0.14 확인대기/Drive보류.
+
 ## Unity 0.13.0 — 가로수·외벽·옥상 (2026-10-10)
 
 - 범위10source/meta: StarterConfig/StarterScene/CityEnvironment/CityPreview 및 FoliageScene/ArchitectureScene/SceneryChecks+meta3. Scenery0130/code14,98build입력; 기존 카메라·원경/traffic/light/lane/NativeAndroid 유지.

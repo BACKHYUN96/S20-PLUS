@@ -1,19 +1,26 @@
-# Pixel Traffic Unity — 가로수·외벽·옥상 0.13.0
+# Pixel Traffic Unity — 버스·박스 트럭 0.14.0
 
-## 현재 패치 — 가로수·건물 디테일 0.13.0 (2026-10-10)
+## 현재 패치 — 혼합 차량·긴 차체 주행 (2026-10-10)
+
+**0.14.0/code15**, `HeavyTraffic-0.14.0.unity`/`Generated/HeavyTraffic0140`. 총24대 중 파란 시내버스4대·흰 박스 트럭4대·기존 승용차16대를 섞습니다. 버스 옆창·문·옥상AC, 트럭 cab/cargo·뒤문 seam/잠금봉/힌지를 추가하고 기존 전조등·브레이크등·깜빡이를 연결했습니다. 긴 차체는6초에 걸쳐 차선을 바꾸며 실제 치수·회전범위·뒤차추월을 확인합니다. 시안camera·도시·시간/날씨·보행/신호·배경화면host는 유지합니다.
+
+실제 Unity검사/GPU59PNG·Android BuildPlayer오류0/경고0·launcherLint오류0/경고8·원본v2서명/버전/manifest·공개파일 전체SHA를 확인했습니다. 최대100우산 116642tri/1551renderer/44material이며 폰 FPS·발열은 설치후 확인합니다. 사용자는폰0.13 적용성공을확인했고Drive구성은나중에PC에서재개합니다.
+
+## 모바일 APK 다운로드
+
+[Unity0.14.0 APK 직접 다운로드](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/08fed474120a21f8908dc451a57388e4f7d7b586/pixel-traffic-unity-prototype-0.14.0.apk) · [실제 Unity 화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/08fed474120a21f8908dc451a57388e4f7d7b586/heavy-traffic-preview.png) · [설치·검증 기록](../docs/STATUS.md).
+
+일반 Chrome/삼성 인터넷에서 열며 APK 29998135bytes입니다. 일회성downloadbranch에는APK/PNG만두고자동Release설정은없습니다.
+
+```powershell
+adb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.14.0.apk"
+```
+
+## 이전 패치 — 가로수·건물 디테일 0.13.0 (2026-10-10)
 
 가로수32그루의 둥근형/수직형/퍼지는형 수관과 공유 잎 무늬, 건물24개의 콘크리트 외벽·석재 테두리·발코니48개·옥상 난간/환기구 slit/출입실/일부안테나·12옥상화단을 추가했습니다. 기존 카메라·원경/날씨·노을/바람·보행/교통·등화/안전차선변경을 유지합니다. 수관400tri/sharedopaqueLit와 merged building mesh로100우산118710tri/1551renderer/43material 예산을 유지합니다.
 
 **0.13.0/code14**, `Scenery-0.13.0.unity`/`Generated/Scenery0130`. 실제PC Unity검사·51GPU PNG(새수형/건축8확대)·BuildPlayer0errors/21warnings·launcherLint0errors/8warnings·다운로드원본v2cert/version/manifest/SHA 및공개HTTP200전체SHA검증 완료. 실제 slab/post bounds에서48발코니/192post를확인했습니다. 사용자는폰0.12 적용성공을확인했고폰0.13 외형/FPS·발열/전체lifecycle은설치후확인합니다. Drive작업은나중에PC에서재개합니다.
-
-## 모바일 APK 다운로드
-
-[Unity0.13.0 APK 다운로드](https://github.com/BACKHYUN96/S20-PLUS/raw/cb1522d10644096f540e24714d8e486098c57dcc/pixel-traffic-unity-prototype-0.13.0.apk) — 크롬/삼성인터넷에서받습니다. [실제 Unity 화면](https://github.com/BACKHYUN96/S20-PLUS/raw/cb1522d10644096f540e24714d8e486098c57dcc/scenery-preview.png). APK 29966435bytes;일회성downloadbranch에APK/PNG만있고자동release설정은없습니다. [설치·검증기록](../docs/STATUS.md).
-
-```powershell
-$unityAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
-& $unityAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.13.0.apk"
-```
 
 ## 이전 패치 — 원경 0.12.0 (2026-10-10)
 
@@ -79,9 +86,9 @@ PC 빌드·Lint·실제 APK 서비스/서명 검증 결과와 최신 설치 명�
 
 ## 현재 빌드와 실행
 
-Unity 6000.3.26f1/Android 모듈을 사용합니다. `tools/run-pipeline.ps1 -Operation Validate`로 장면·production 모델·manifest 템플릿 검사를 수행하고, `-Operation BuildApk`로 Android 빌드/Lint/원본 v2 인증서 및 APK 메타데이터를 검사합니다. Gradle 생성 후 `AndroidWallpaperBuild`가 `NativeAndroid/src`와 `res`를 복사하고 service/provider/설정 Activity를 등록합니다. Export에도 같은 처리를 적용합니다. 실제 Android 컴파일은 PC BuildApk 결과로 확인합니다. 새 NativeAndroid 모듈은 `tools/check-wallpaper-lint.ps1`로 unityLibrary Lint를 추가 확인합니다. 이 도구는 생성된 Java/리소스 SHA가 현재 소스와 같은지 먼저 확인하며 APK를 다시 만들지 않습니다. 0.13.0의 실제 launcher Lint는 오류0/경고8입니다. 변경 없는 NativeAndroid/host 입력은0.6.0 SHA를 확인하고 실제 unityLibrary Lint 오류0/경고10을 재사용합니다.
+Unity 6000.3.26f1/Android 모듈을 사용합니다. `tools/run-pipeline.ps1 -Operation Validate`로 장면·production 모델·manifest 템플릿 검사를 수행하고, `-Operation BuildApk`로 Android 빌드/Lint/원본 v2 인증서 및 APK 메타데이터를 검사합니다. Gradle 생성 후 `AndroidWallpaperBuild`가 `NativeAndroid/src`와 `res`를 복사하고 service/provider/설정 Activity를 등록합니다. Export에도 같은 처리를 적용합니다. 실제 Android 컴파일은 PC BuildApk 결과로 확인합니다. 새 NativeAndroid 모듈은 `tools/check-wallpaper-lint.ps1`로 unityLibrary Lint를 추가 확인합니다. 이 도구는 생성된 Java/리소스 SHA가 현재 소스와 같은지 먼저 확인하며 APK를 다시 만들지 않습니다. 0.14.0의 실제 launcher Lint는 오류0/경고8입니다. 변경 없는 NativeAndroid/host 입력은0.6.0 SHA를 확인하고 실제 unityLibrary Lint 오류0/경고10을 재사용합니다.
 
-Editor 메뉴 **4. Build Signed Wallpaper APK**를 사용할 수 있습니다. APK는 `Builds/pixel-traffic-unity-prototype-0.13.0.apk`에 생성됩니다. 기존 `BuildActivityApk` 메서드 이름은 PowerShell 호출 호환용으로 유지하며 결과 앱은 라이브 배경화면입니다. 서명 환경 변수 및 PC runner 설정은 아래 초기 기록과 [자동화 안내](../docs/UNITY_AUTOMATION.md)를 참조합니다. 최신 안내가 아래 초기 0.1.0 기록보다 우선합니다.
+Editor 메뉴 **4. Build Signed Wallpaper APK**를 사용할 수 있습니다. APK는 `Builds/pixel-traffic-unity-prototype-0.14.0.apk`에 생성됩니다. 기존 `BuildActivityApk` 메서드 이름은 PowerShell 호출 호환용으로 유지하며 결과 앱은 라이브 배경화면입니다. 서명 환경 변수 및 PC runner 설정은 아래 초기 기록과 [자동화 안내](../docs/UNITY_AUTOMATION.md)를 참조합니다. 최신 안내가 아래 초기 0.1.0 기록보다 우선합니다.
 
 ## 이전 기록 — 0.4.0 및 초기 설정
 ## 이전 패치 — 신호·인도 보행·횡단 0.4.0 (2026-10-10 KST)
