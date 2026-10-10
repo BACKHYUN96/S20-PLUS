@@ -68,7 +68,7 @@ namespace PixelTraffic.UnityPrototype
         public void ResetPosition(float z)
         {
             routePosition = z;
-            wheelRoll=0;
+            wheelRoll=0;var doors=GetComponent<BusDoors>();if(doors!=null)doors.Apply(0);
             foreach(var wheel in wheels)if(wheel!=null)wheel.localRotation=Quaternion.identity;
             initialized = true;
             transform.position = new Vector3(LaneX, 0, z);

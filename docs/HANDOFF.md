@@ -1,5 +1,11 @@
 # 새 채팅 인수인계 — 픽셀 트래픽 0.29.0
 
+## 2026-10-10 — Unity 0.15.0 정류장·승하차·비상깜빡이 구현, 실제 검사 대기
+
+사용자가 폰0.14.0 적용 성공을 확인하고 정류장 표지/쉼터/벤치·대기 승객·정차/문/승하차·뒤차 안전거리·출발3회깜빡이/안전합류를 승인했다. 추가로 승하차 중 양쪽 비상깜빡이를 요청했다. 0.15.0/code16/BusStops-0.15.0.unity/Generated/BusStops0150로 별도 장면을 생성한다. 버스문 실제 오른쪽 skin opening·공유 sliding panels2개/19renderer(bus only), 양측 보도 정류장2곳과 shared 8승객 rig/umbrella를 추가한다. 정류장은 횡단보도 후방(doorZ -4.5/34.5)에 놓고 tree/bench/post 통로를 함께 피한다. 버스가 완전 정차한 뒤 .8초에 문을 열고 하차 후 순차승차, 최소8초 dwell와 transfer완료를 기다린다. Boarding/Closing은 양쪽hazard9on/9off ticks, 문 닫힘 후 Ready는 hazard off→뒤60m대상 모두 통과·앞뒤gap·green확인→3pulse/1.8초→6초inner lane 합류다. 새뒤차/신호취소/예약/보행안전요건을 유지한다. weather pace가 낮아도 정류장에서 무기한 묶이지 않도록 정류장출발에 한해 pace 제한을 분리한다.
+
+BusStops fixed30Hz가 문·승객·정차/출발을 소유하며 걷는 승객과 기존People의foot discs를 함께 회피한다. 보행정원4/32/100은 기존People이며 별도대중교통8pool을 사용한다. 줄여도 기존버스/날씨・차선검사를 재사용하고 추가600초서비스·문/MPB양쪽hazard/3pulse/뒤차/rotatedcorner/curb/crossing/foot간격·15/30/60/120Hz와pause검사를 작성했다. 실제transfer와hazard-on/off낮밤8확대GPU를 추가해총67PNG촬영할 계획이다. 이 시점에는 실제Unity compile/check/GPU/AndroidBuild/Lint/서명APK/공개download를 아직 실행하지 않아 통과를 주장하지 않는다. 다음은 Windows runner 검증과 결과 기반보정, 같은최종source서명APK/다운로드와폰확인이다. 기존사용자dirty/index·native source와12unchangedhost입력·Drive보류를 보존한다.
+
 ## 2026-10-10 — Unity 0.14.0 버스·박스 트럭: 실제 검증·서명 APK 전달 완료
 
 사용자가 **0.13.0 실제 폰 적용 성공**을 확인하고 다음 패치를 승인했다. **0.14.0/code15**, `HeavyTraffic-0.14.0.unity`/`Generated/HeavyTraffic0140`, `pixel-traffic-unity-prototype-0.14.0.apk`를 전달한다. 기존 시안 카메라·원경/건물/가로수·시간/날씨/노을 경유·보행/신호·설정과 라이브 배경화면 host를 유지한다.

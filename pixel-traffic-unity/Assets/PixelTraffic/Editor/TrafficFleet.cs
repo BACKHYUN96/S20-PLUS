@@ -41,6 +41,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             Material tail = StarterScene.Surface("Tail Lamp",new Color(.66f,.04f,.025f),.1f,.6f);
             Material truckWhite=StarterScene.Surface("Truck White",new Color(.93f,.94f,.92f),.20f,.55f);
             Material[] paints={blue,red,silver,pearl};
+            var pane=new VehicleGeometry.Builder();pane.Box(Vector3.zero,new Vector3(.026f,2.06f,.57f));Mesh doorMesh=pane.Save("SlidingBusDoor");
             for(int lane=0;lane<4;lane++) for(int index=0;index<StarterConfig.VehiclesPerLane;index++)
             {
                 int kind=(int)KindFor(lane,index);
@@ -69,6 +70,11 @@ namespace PixelTraffic.UnityPrototype.Editor
                 var drive=root.gameObject.AddComponent<PrototypeDrive>();
                 drive.Wheels=wheels.ToArray();drive.Configure(lane,speeds[lane],shape.radius,((VehicleGeometry.Kind)kind).ToString());
                 DrivingScene.Attach(root,shape,head,((VehicleGeometry.Kind)kind).ToString());
+                if(kind==(int)VehicleGeometry.Kind.CityBus)
+                {
+                    MeshPart("Sliding Door Front",root,doorMesh,glass);MeshPart("Sliding Door Rear",root,doorMesh,glass);
+                    root.gameObject.AddComponent<BusDoors>().Configure(root.Find("Sliding Door Front"),root.Find("Sliding Door Rear"));
+                }
             }
         }
 

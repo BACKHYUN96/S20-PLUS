@@ -12,10 +12,10 @@ namespace PixelTraffic.UnityPrototype.Editor
         internal static void Create()
         {
             var root=new GameObject("Street Life");var controller=root.AddComponent<StreetSimulation>();
-            var views=new StreetSimulation.WalkerView[100];Mesh[] meshes=new Mesh[8];
+            var views=new StreetSimulation.WalkerView[100];var riders=new StreetSimulation.WalkerView[8];Mesh[] meshes=new Mesh[8];
             Mesh umbrellaMesh=UmbrellaMesh();
             Material palette=Palette();for(int i=0;i<meshes.Length;i++)meshes[i]=PersonMesh(i);
-            for(int i=0;i<views.Length;i++)
+            for(int i=0;i<views.Length+riders.Length;i++)
             {
                 Transform person=new GameObject("Walker "+i).transform;person.SetParent(root.transform,false);
                 var bones=new Transform[5];bones[0]=person;
@@ -29,7 +29,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 umbrellaRenderer.lightProbeUsage=LightProbeUsage.Off;umbrellaRenderer.reflectionProbeUsage=ReflectionProbeUsage.Off;
                 var tint=new MaterialPropertyBlock();Color[] umbrellaColors={new Color(.45f,.65f,1),new Color(1,.4f,.3f),new Color(1,.83f,.4f),new Color(.5f,.83f,.6f)};
                 tint.SetColor("_BaseColor",umbrellaColors[i%4]);umbrellaRenderer.SetPropertyBlock(tint);umbrella.gameObject.SetActive(false);
-                views[i]=new StreetSimulation.WalkerView {root=person,limbs=new[]{bones[1],bones[2],bones[3],bones[4]},umbrella=umbrella};
+                var view=new StreetSimulation.WalkerView {root=person,limbs=new[]{bones[1],bones[2],bones[3],bones[4]},umbrella=umbrella};if(i<views.Length)views[i]=view;else {person.name="Bus Passenger "+(i-views.Length);riders[i-views.Length]=view;}
             }
             Material metal=StarterScene.Surface("Vehicle Trim",new Color(.025f,.031f,.038f),.05f,.2f);
             Material lens=StarterScene.Surface("Headlamp",new Color(.97f,.94f,.79f),.1f,.6f);
@@ -52,6 +52,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             var cars=UnityEngine.Object.FindObjectsByType<PrototypeDrive>(FindObjectsSortMode.None);
             Array.Sort(cars,(a,b)=>string.CompareOrdinal(a.name,b.name));
             controller.Configure(cars,views,vehicleLights.ToArray(),walkLights.ToArray());
+            BusStopScene.Create();controller.ConfigureRiders(riders);
         }
         private static Mesh UmbrellaMesh()
         {

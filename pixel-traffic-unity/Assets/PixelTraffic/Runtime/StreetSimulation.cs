@@ -23,6 +23,9 @@ namespace PixelTraffic.UnityPrototype
         private float settingsAt;
         private StreetModel.Phase lastPhase=(StreetModel.Phase)(-1);
         private MaterialPropertyBlock lightBlock;
+        [SerializeField] private WalkerView[] riders;
+        public WalkerView[] Riders=>riders;
+        public void ConfigureRiders(WalkerView[] value){riders=value;ApplyViews();}
         private static readonly Color[] umbrellaColors={new Color(.45f,.65f,1),new Color(1,.4f,.3f),new Color(1,.83f,.4f),new Color(.5f,.83f,.6f)};
         public StreetModel Model => model;
         public WalkerView[] Walkers => walkers;
@@ -45,7 +48,7 @@ namespace PixelTraffic.UnityPrototype
             for(int i=0;i<cars.Length;i++)
             {
                 var vehicle=vehicles[i];vehicle.gameObject.SetActive(true);vehicle.ResetPosition(vehicle.transform.position.z);Bounds bounds=vehicle.BodyBounds();
-                cars[i]=new StreetModel.Car {lane=vehicle.Lane,z=vehicle.transform.position.z,cruise=vehicle.Speed,speed=vehicle.Speed,length=bounds.size.z,width=bounds.size.x,height=bounds.size.y};
+                cars[i]=new StreetModel.Car {lane=vehicle.Lane,z=vehicle.transform.position.z,cruise=vehicle.Speed,speed=vehicle.Speed,length=bounds.size.z,width=bounds.size.x,height=bounds.size.y,bus=vehicle.Model=="CityBus"};
             }
             model=new StreetModel(people,cars);
             portraitCamera=Camera.main;if(portraitCamera!=null){GeometryUtility.CalculateFrustumPlanes(portraitCamera,viewPlanes);model.Visible=Visible;model.VisibleVehicle=VisibleVehicle;}
@@ -115,6 +118,21 @@ namespace PixelTraffic.UnityPrototype
                 float angle=Mathf.Sin(p.walkDistance*8)*20*(p.velocity.sqrMagnitude>.01f?1:0);
                 for(int n=0;n<4;n++)v.limbs[n].localRotation=Quaternion.Euler(n==1&&rain>.015f?-65:(n%2==0?1:-1)*angle*(n < 2 ? .8f : 1),0,0);
             }
+            if(riders!=null)for(int i=0;i<riders.Length;i++)
+            {
+                var p=model.Stops.Riders[i];var v=riders[i];v.root.gameObject.SetActive(p.Visible);if(!p.Visible)continue;
+                float ground=Mathf.Lerp(.60f,.16f,Mathf.InverseLerp(6.15f,6.8f,Mathf.Abs(p.position.x)));
+                v.root.position=new Vector3(p.position.x,ground,p.position.y);
+                if(p.velocity.sqrMagnitude>.001f)v.root.rotation=Quaternion.LookRotation(new Vector3(p.velocity.x,0,p.velocity.y));
+                float swing=p.velocity.sqrMagnitude>.001f?Mathf.Sin(p.distance*8)*20:0;
+                for(int n=0;n<4;n++)v.limbs[n].localRotation=Quaternion.Euler((n%2==0?1:-1)*swing,0,0);
+                if(v.umbrella!=null)
+                {
+                    float rain=climate!=null&&climate.WeatherBlend!=null?climate.RainGain:0;bool open=rain>.015f&&(p.stage==BusStops.RiderStage.Queue||p.stage==BusStops.RiderStage.Returning);
+                    v.umbrella.gameObject.SetActive(open);v.umbrella.localScale=new Vector3(Mathf.SmoothStep(0,1,Mathf.Clamp01(rain/.38f)),1,Mathf.SmoothStep(0,1,Mathf.Clamp01(rain/.38f)));
+                }
+            }
+            foreach(var v in vehicles){var doors=v.GetComponent<BusDoors>();if(doors!=null){int index=Array.IndexOf(vehicles,v);doors.Apply(model.Cars[index].busDoor);}}
             if(lastPhase==model.Signal)return;lastPhase=model.Signal;
             bool green=model.Signal==StreetModel.Phase.VehicleGreen,yellow=model.Signal==StreetModel.Phase.VehicleYellow;
             for(int i=0;i<vehicleLights.Length;i++)

@@ -14,7 +14,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             var cars=UnityEngine.Object.FindObjectsByType<PrototypeDrive>(FindObjectsSortMode.None);
             foreach(var car in cars)
             {
-                Need(car.GetComponentsInChildren<MeshRenderer>().Length==17,"Vehicle lighting renderer budget differs.");
+                Need(car.GetComponentsInChildren<MeshRenderer>().Length==(car.Model=="CityBus"?19:17),"Vehicle lighting renderer budget differs.");
                 foreach(var filter in car.GetComponentsInChildren<MeshFilter>())
                 {
                     Mesh mesh=filter.sharedMesh;fleetTriangles+=mesh.triangles.Length/3;

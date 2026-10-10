@@ -14,7 +14,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             {
                 bool bus=drive.Model=="CityBus",truck=drive.Model=="BoxTruck";if(!bus&&!truck)continue;
                 if(bus)buses++;else trucks++;
-                Need(drive.Wheels.Length==4&&drive.GetComponentsInChildren<Renderer>().Length==17,"Heavy wheel/renderer contract changed.");
+                Need(drive.Wheels.Length==4&&drive.GetComponentsInChildren<Renderer>().Length==(bus?19:17),"Heavy wheel/renderer contract changed.");
                 Need(drive.GetComponentsInChildren<Collider>().Length==0&&drive.GetComponentsInChildren<Light>().Length==0,"Heavy fleet adds physics or real-time lights.");
                 float frontAxle=bus?3.64f:2.35f,rearAxle=bus?-3.10f:-2.22f;
                 int frontWheels=0,rearWheels=0;
@@ -29,7 +29,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Mesh Mesh(string part)=>drive.transform.Find(part).GetComponent<MeshFilter>().sharedMesh;
                 var body=Mesh("Sculpted Body");var points=new HashSet<Vector3Int>();
                 foreach(var p in body.vertices)points.Add(Key(p));
-                foreach(var p in body.vertices)Need(points.Contains(Key(new Vector3(-p.x,p.y,p.z))),"Heavy body has baked sideways perspective.");
+                if(truck)foreach(var p in body.vertices)Need(points.Contains(Key(new Vector3(-p.x,p.y,p.z))),"Heavy body has baked sideways perspective.");
                 Need(Mathf.Abs(body.bounds.center.x)<.001f&&Mathf.Abs(body.bounds.size.z-(bus?10.6f:7.4f))<.001f,"Heavy body dimensions are not centred/metre scale.");
                 float f=bus?5.3f:3.7f,r=-f,lampX=bus?1.04f:1.02f;
                 float fy=bus?.88f:.83f,ry=bus?.82f:.75f;
@@ -55,7 +55,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
                 else
                 {
-                    Need(Boxes(Mesh("Sloped Windows")).Count>=18,"Bus lacks side windows or paired entry panes.");
+                    Need(Boxes(Mesh("Sloped Windows")).Count>=16,"Bus lacks side windows or paired entry panes.");
                     Need(Mesh("Chrome and Plates").bounds.max.y>3.37f,"Bus roof air conditioning missing.");
                 }
                 foreach(var filter in drive.GetComponentsInChildren<MeshFilter>())

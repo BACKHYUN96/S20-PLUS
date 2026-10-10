@@ -91,7 +91,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             var meshes=new System.Collections.Generic.Dictionary<string,Mesh>();
             foreach(var drive in drives)
             {
-                Need(drive.Lighting!=null&&drive.GetComponentsInChildren<Renderer>().Length==17,"Fleet light parts incomplete.");
+                Need(drive.Lighting!=null&&drive.GetComponentsInChildren<Renderer>().Length==(drive.Model=="CityBus"?19:17),"Fleet light parts incomplete.");
                 foreach(string part in new[]{"Left Turn Signals","Right Turn Signals","Headlight Road Beams"})
                 {Mesh mesh=drive.transform.Find(part).GetComponent<MeshFilter>().sharedMesh;string key=drive.Model+part;if(meshes.TryGetValue(key,out var old))Need(old==mesh,"Vehicle lighting mesh is copied per vehicle.");else meshes.Add(key,mesh);}
             }

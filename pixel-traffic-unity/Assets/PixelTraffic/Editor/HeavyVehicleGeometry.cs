@@ -19,7 +19,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             float frontY=bus?.88f:.83f,rearY=bus?.82f:.75f,lampX=bus?1.04f:1.02f;
             if(bus)
             {
-                Chamfered(paint,half,.38f,3.13f,rear,front,.13f);
+                BusBody(paint,half,.38f,3.13f,rear,front,.13f);
                 glass.Box(new Vector3(0,2.12f,front+.009f),new Vector3(2.18f,1.27f,.016f));
                 glass.Box(new Vector3(0,2.30f,rear-.009f),new Vector3(2.10f,.90f,.016f));
                 trim.Box(new Vector3(0,2.97f,front+.018f),new Vector3(1.8f,.19f,.027f));
@@ -27,16 +27,16 @@ namespace PixelTraffic.UnityPrototype.Editor
                 foreach(float side in new[]{-1f,1f})
                 {
                     for(int n=0;n<7;n++)
-                        glass.Box(new Vector3(side*(half+.009f),2.22f,-4.30f+n*1.27f),new Vector3(.016f,1.06f,1.08f));
-                    trim.Box(new Vector3(side*(half+.018f),1.53f,-.12f),new Vector3(.025f,.10f,9.78f));
-                    metal.Box(new Vector3(side*(half+.019f),1.04f,-.12f),new Vector3(.026f,.055f,9.78f));
+                        if(side<0||n<6)glass.Box(new Vector3(side*(half+.009f),2.22f,-4.30f+n*1.27f),new Vector3(.016f,1.06f,1.08f));
+                        else glass.Box(new Vector3(side*(half+.009f),2.22f,2.96f),new Vector3(.016f,1.06f,.70f));
+                    trim.Box(new Vector3(side*(half+.018f),1.53f,side>0?-.765f:-.12f),new Vector3(.025f,.10f,side>0?8.49f:9.78f));
+                    metal.Box(new Vector3(side*(half+.019f),1.04f,side>0?-.765f:-.12f),new Vector3(.026f,.055f,side>0?8.49f:9.78f));
                     trim.Box(new Vector3(side*1.345f,2.37f,4.67f),new Vector3(.15f,.38f,.25f));
                     metal.Beam(new Vector3(side*1.26f,2.55f,4.64f),new Vector3(side*1.34f,2.55f,4.64f),.045f,.045f);
                 }
                 // Tall paired panes identify the bus's curbside entry door.
-                foreach(float z in new[]{3.77f,4.38f})
-                    glass.Box(new Vector3(half+.025f,1.62f,z),new Vector3(.020f,1.98f,.48f));
-                trim.Box(new Vector3(half+.039f,1.62f,4.075f),new Vector3(.024f,2.05f,.045f));
+                trim.Box(new Vector3(half, .59f,4.075f),new Vector3(.10f,.08f,1.18f));
+                trim.Box(new Vector3(1.01f,.59f,4.075f),new Vector3(.50f,.10f,1.18f));
                 trim.Box(new Vector3(0,.55f,front+.024f),new Vector3(2.32f,.13f,.030f));
                 trim.Box(new Vector3(0,.55f,rear-.024f),new Vector3(2.32f,.13f,.030f));
                 for(int n=0;n<5;n++)trim.Box(new Vector3(0,1.20f+n*.105f,rear-.014f),new Vector3(1.55f,.038f,.021f));
@@ -95,6 +95,16 @@ namespace PixelTraffic.UnityPrototype.Editor
                 trim=trim.Save(prefix+"Trim"),metal=metal.Save(prefix+"Metal"),head=head.Save(prefix+"Head"),tail=tail.Save(prefix+"Tail"),
                 tyre=tyre.Save(prefix+"Tyre",65),rim=rim.Save(prefix+"Rim",55),radius=radius,axle=frontAxle,
                 wheelX=bus?1.23f:1.20f,frontAxle=frontAxle,rearAxle=rearAxle,lampX=lampX,frontLampY=frontY,rearLampY=rearY};
+        }
+
+        private static void BusBody(VehicleGeometry.Builder b,float half,float bottom,float top,float rear,float front,float bevel)
+        {
+            Vector3[] ring={new Vector3(-half+bevel,bottom,0),new Vector3(half-bevel,bottom,0),new Vector3(half,bottom+bevel,0),new Vector3(half,top-bevel,0),new Vector3(half-bevel,top,0),new Vector3(-half+bevel,top,0),new Vector3(-half,top-bevel,0),new Vector3(-half,bottom+bevel,0)};
+            for(int k=0;k<8;k++)if(k!=2)
+            {int n=(k+1)%8;var a=ring[k]+Vector3.forward*rear;var c=ring[n]+Vector3.forward*front;b.Quad(a,ring[n]+Vector3.forward*rear,c,ring[k]+Vector3.forward*front,(ring[k]+ring[n])/2-new Vector3(0,(bottom+top)/2,0));}
+            foreach(float z in new[]{rear,front})for(int k=0;k<8;k++)b.Triangle(new Vector3(0,(bottom+top)/2,z),ring[k]+Vector3.forward*z,ring[(k+1)%8]+Vector3.forward*z,z<0?Vector3.back:Vector3.forward);
+            void Skin(float y0,float y1,float z0,float z1)=>b.Quad(new Vector3(half,y0,z0),new Vector3(half,y0,z1),new Vector3(half,y1,z1),new Vector3(half,y1,z0),Vector3.right);
+            Skin(bottom+bevel,top-bevel,rear,3.48f);Skin(bottom+bevel,top-bevel,4.67f,front);Skin(bottom+bevel,.59f,3.48f,4.67f);Skin(2.69f,top-bevel,3.48f,4.67f);
         }
 
         private static void Chamfered(VehicleGeometry.Builder b,float half,float bottom,float top,float rear,float front,float bevel)

@@ -28,6 +28,7 @@ namespace PixelTraffic.UnityPrototype
         public static bool Allowed(Vector2 p)
         {
             float x=Mathf.Abs(p.x);
+            if(!BusStops.SidewalkOpen(p))return false;
             if(x<6.79f||x>10.75f||p.y< -28.1f||p.y>152.1f)return false;
             for(int i=0;i<16;i++)if(Mathf.Abs(x-8.6f)<1.1f+Radius&&Mathf.Abs(p.y-(-24+i*13))<1.1f+Radius)return false;
             for(int i=0;i<10;i++)if(new Vector2(x-7.1f,p.y-(-15+i*20)).sqrMagnitude<.34f*.34f)return false;

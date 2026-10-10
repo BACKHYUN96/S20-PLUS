@@ -18,7 +18,8 @@ namespace PixelTraffic.UnityPrototype
             BrakeGain=car.braking?2.6f:.06f+night*.42f;
             Tint(tail,car.braking?new Color(1,.07f,.025f):new Color(.46f,.025f,.012f),new Color(1,.035f,.009f)*BrakeGain);
             int side=LaneChanges.IndicatorSide(car);bool on=car.active&&LaneChanges.IndicatorOn(car);
-            Indicator(left,on&&side<0);Indicator(right,on&&side>0);
+            bool hazard=car.active&&(car.busStage==BusStops.Stage.Boarding||car.busStage==BusStops.Stage.Closing)&&car.hazardTicks%18<9;
+            Indicator(left,hazard||(on&&side<0));Indicator(right,hazard||(on&&side>0));
             bool beamOn=car.active&&night>.015f;if(beams.enabled!=beamOn)beams.enabled=beamOn;
             if(beamOn)Tint(beams,new Color(.94f,.9f,.65f,night*(.14f+wet*.08f)),new Color(.045f,.041f,.024f)*night);
         }

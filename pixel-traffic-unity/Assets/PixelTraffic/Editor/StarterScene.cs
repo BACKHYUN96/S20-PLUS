@@ -14,7 +14,7 @@ namespace PixelTraffic.UnityPrototype.Editor
     // Generated geometry stays in its own scene; existing scenes are never rebuilt in place.
     public static class StarterScene
     {
-        internal const string Generated = "Assets/PixelTraffic/Generated/HeavyTraffic0140";
+        internal const string Generated = "Assets/PixelTraffic/Generated/BusStops0150";
         private const string PipelinePath = Generated + "/MobileURP.asset";
         private static readonly Dictionary<string, Material> materials = new Dictionary<string, Material>();
 
@@ -220,13 +220,14 @@ namespace PixelTraffic.UnityPrototype.Editor
             DistantChecks.Report distant = DistantChecks.Validate();
             SceneryChecks.Report scenery = SceneryChecks.Validate();
             HeavyVehicleChecks.Report heavy = HeavyVehicleChecks.Validate();
+            BusStopChecks.Report busStops=BusStopChecks.Validate();
             Require(PlayerSettings.bundleVersion == StarterConfig.VersionName &&
                 PlayerSettings.Android.bundleVersionCode == StarterConfig.VersionCode, "APK version differs from source configuration.");
             Directory.CreateDirectory("Reports");
             File.WriteAllText("Reports/scene-validation.json", JsonUtility.ToJson(new ValidationReport {
                 editor = Application.unityVersion, applicationId = StarterConfig.ExperimentAppId,
                 utc = DateTime.UtcNow.ToString("O"), traffic = traffic, street = street,
-                version = StarterConfig.VersionName, environment = environment, climate = climate, vehicleDetail = vehicleDetail, frontage = frontage, driving=driving, distant=distant, scenery=scenery, heavy=heavy,
+                version = StarterConfig.VersionName, environment = environment, climate = climate, vehicleDetail = vehicleDetail, frontage = frontage, driving=driving, distant=distant, scenery=scenery, heavy=heavy,busStops=busStops,
                 result = "PASS: actual city and two-way fleet geometry, material, lane bounds, motion, wrap, wheels and lifecycle; not an Android/device test"
             }, true));
             Debug.Log("PASS: city and two-way traffic geometry and motion. Reports/scene-validation.json");
@@ -255,6 +256,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             public DistantChecks.Report distant;
             public SceneryChecks.Report scenery;
             public HeavyVehicleChecks.Report heavy;
+            public BusStopChecks.Report busStops;
         }
     }
 }

@@ -300,11 +300,45 @@ namespace PixelTraffic.UnityPrototype.Editor
                     }
                 }
                 if(captured!=4)throw new InvalidOperationException("No visible real lane maneuver captured.");
+                // Capture real stop transfers and both phases of the same hazard clock.
+                for(int i=0;i<originalCars.Length;i++)originalCars[i].ResetPosition(originalZ[i]);
+                detailStreet.ResetModel();var stopPreviews=new System.Collections.Generic.List<string>();
+                var stopTarget=new RenderTexture(720,960,24,RenderTextureFormat.ARGB32){antiAliasing=2};stopTarget.Create();
+                var stopImage=new Texture2D(720,960,TextureFormat.RGB24,false);var seenStop=new bool[2,4];int stopCaptured=0;
+                try
+                {
+                    camera.aspect=.75f;camera.fieldOfView=58;var stopRequest=new UniversalRenderPipeline.SingleCameraRequest{destination=stopTarget};
+                    for(int tick=0;tick<18000&&stopCaptured<8;tick++)
+                    {
+                        detailStreet.Advance(StreetModel.Dt);var model=detailStreet.Model;
+                        for(int stop=0;stop<2;stop++)
+                        {
+                            StreetModel.Car bus=null;foreach(var c in model.Cars)if(c.bus&&c.busStage==BusStops.Stage.Boarding&&c.busDoor==1&&c.Direction==BusStops.Side(stop)){bus=c;break;}
+                            if(bus==null)continue;bool board=false,alight=false;
+                            foreach(var rider in model.Stops.Riders)if(rider.stop==stop){board|=rider.stage==BusStops.RiderStage.Boarding;alight|=rider.stage==BusStops.RiderStage.Alighting;}
+                            bool[] ready={alight,board,board&&bus.hazardTicks%18<9,board&&bus.hazardTicks%18>=9};
+                            for(int stage=0;stage<4;stage++)if(ready[stage]&&!seenStop[stop,stage])
+                            {
+                                int side=BusStops.Side(stop);float z=BusStops.DoorZ(stop);
+                                camera.transform.position=new Vector3(side*10.55f,5.5f,z-side*6);camera.transform.LookAt(new Vector3(side*7.45f,1.25f,z));
+                                climate.Preview(stage<2?0:2,0);detailStreet.ApplyViews();
+                                string[] labels={"alighting-day","boarding-day","hazards-on-night","hazards-off-night"};
+                                stopPreviews.Add(CaptureState(camera,stopRequest,stopTarget,stopImage,"bus-stop-"+(stop==0?"west-":"east-")+labels[stage]));seenStop[stop,stage]=true;stopCaptured++;
+                            }
+                        }
+                    }
+                    if(stopCaptured!=8)throw new InvalidOperationException("Actual bus transfer/hazard capture incomplete: "+stopCaptured+"/8");
+                }
+                finally
+                {
+                    stopTarget.Release();UnityEngine.Object.DestroyImmediate(stopTarget);UnityEngine.Object.DestroyImmediate(stopImage);
+                    for(int i=0;i<originalCars.Length;i++)originalCars[i].ResetPosition(originalZ[i]);detailStreet.ResetModel();climate.Preview(0,0);detailStreet.ApplyViews();camera.aspect=.45f;camera.fieldOfView=roadFov;camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);
+                }
                 File.WriteAllText("Reports/preview-result.json", JsonUtility.ToJson(new Report {
                     result = "PASS", version = StarterConfig.VersionName, editor = Application.unityVersion,
                     graphicsApi = SystemInfo.graphicsDeviceType.ToString(), width = width, height = height,
                     image = output, source = "Unity Editor URP camera; not a phone screenshot or FPS test"
-                    , materialColors = colors, climateImages = previews.ToArray(), vehicleImages = vehiclePreviews.ToArray(),frontageImages=frontagePreviews.ToArray(),drivingImages=drivingPreviews.ToArray(),cameraImages=cameraPreviews.ToArray(),landscapeImages=landscapePreviews.ToArray(),sceneryImages=sceneryPreviews.ToArray(),heavyImages=heavyPreviews.ToArray()
+                    , materialColors = colors, climateImages = previews.ToArray(), vehicleImages = vehiclePreviews.ToArray(),frontageImages=frontagePreviews.ToArray(),drivingImages=drivingPreviews.ToArray(),cameraImages=cameraPreviews.ToArray(),landscapeImages=landscapePreviews.ToArray(),sceneryImages=sceneryPreviews.ToArray(),heavyImages=heavyPreviews.ToArray(),busStopImages=stopPreviews.ToArray()
                 }, true));
                 Debug.Log("PASS: real city camera preview saved: " + output);
             }
@@ -351,7 +385,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         {
             public string result, version, editor, graphicsApi, image, source;
             public int width, height;
-            public string[] materialColors, climateImages, vehicleImages,frontageImages,drivingImages,cameraImages,landscapeImages,sceneryImages,heavyImages;
+            public string[] materialColors, climateImages, vehicleImages,frontageImages,drivingImages,cameraImages,landscapeImages,sceneryImages,heavyImages,busStopImages;
         }
     }
 }

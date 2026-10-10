@@ -11,6 +11,7 @@ namespace PixelTraffic.UnityPrototype
         public sealed class Car
         {
             public int lane;public double z;public float cruise,speed,length,distance;public float width=2.2f,height=1.9f;public bool committed,active=true;public int rank;
+            public bool bus,busServed;public BusStops.Stage busStage;public int busTicks,hazardTicks;public float busDoor,busOffset;
             public LaneChanges.Stage maneuver;public int targetLane=-1,signalTicks,mergeTicks,blinks,requestTick;
             public double nextChangeTick,totalDistance;public uint rearMask;public bool braking;
             // A conservative longitudinal envelope covers any yaw up to eight degrees.
@@ -18,7 +19,7 @@ namespace PixelTraffic.UnityPrototype
             public float SafetyLength => length+width*Mathf.Sin(8*Mathf.Deg2Rad);
             public int MergeDuration => length>6?180:LaneChanges.MergeTicks;
             public int Direction => lane<2?-1:1;
-            public float X => (lane-1.5f)*StarterConfig.LaneWidth+(maneuver==LaneChanges.Stage.Merging?(targetLane-lane)*StarterConfig.LaneWidth*Mathf.SmoothStep(0,1,mergeTicks/(float)MergeDuration):0);
+            public float X => (lane-1.5f)*StarterConfig.LaneWidth+busOffset+(maneuver==LaneChanges.Stage.Merging?(targetLane-lane)*StarterConfig.LaneWidth*Mathf.SmoothStep(0,1,mergeTicks/(float)MergeDuration):0);
             public bool Occupies(int value)=>lane==value||((maneuver==LaneChanges.Stage.Signaling||maneuver==LaneChanges.Stage.Merging)&&targetLane==value);
         }
         public sealed class Person
@@ -34,6 +35,7 @@ namespace PixelTraffic.UnityPrototype
         public readonly SidewalkRoutes Routes=new SidewalkRoutes();
         private readonly double[] oldZ;
         public readonly LaneChanges Maneuvers;
+        public readonly BusStops Stops;
         public bool AutomaticLaneChanges=true;
         public Func<Vector2,Vector3,bool> VisibleVehicle;
         public bool VehicleVisible(Car car,double z)
@@ -70,7 +72,7 @@ namespace PixelTraffic.UnityPrototype
                 var p=new Person {side=i%2==0?-1:1,random=(uint)(7847+i*971),speed=1.05f+(i%7)*.04f,activity=Activity.Roam,cooldown=8+i%32};People[i]=p;
                 Place(i);Roam(p);
             }
-            SetPopulation(population);
+            SetPopulation(population);Stops=new BusStops(this);
         }
         private static float Random(Person p)
         {
@@ -149,7 +151,7 @@ namespace PixelTraffic.UnityPrototype
                     double distance=Math.Abs(entry-other.z);distance=Math.Min(distance,span-distance);
                     if(distance<(car.SafetyLength+other.SafetyLength)/2+2.2)free=false;
                 }
-                if(free){car.active=true;car.z=entry;car.speed=0;car.distance=0;car.committed=false;}
+                if(free){car.active=true;car.z=entry;car.speed=0;car.distance=0;car.committed=false;if(car.bus)Stops.Wrapped(car);}
             }
         }
         private void Path(Person p,Vector2 goal)
@@ -187,7 +189,7 @@ namespace PixelTraffic.UnityPrototype
         }
         public void Tick()
         {
-            tick++;phaseTime+=Dt;WeatherPopulation();UpdateSignal();Maneuvers.Tick(this);MoveCars();
+            tick++;phaseTime+=Dt;WeatherPopulation();UpdateSignal();Stops.Tick();Maneuvers.Tick(this);MoveCars();
             // Rotating update order removes a permanent priority bias; pairs never share a foot disc.
             for(int n=0;n<People.Length;n++)MovePerson((tick+n)%People.Length);
             if(tick%30==0)SetPopulation(RequestedPeople);
@@ -233,7 +235,7 @@ namespace PixelTraffic.UnityPrototype
             for(int i=0;i<Cars.Length;i++)
             {
                 Car car=Cars[i];car.distance=0;if(!car.active)continue;
-                if(car.rank>=WeatherCarsPerLane&&car.maneuver!=LaneChanges.Stage.Merging&&car.maneuver!=LaneChanges.Stage.Signaling&&!VehicleVisible(car,car.z))
+                if(car.rank>=WeatherCarsPerLane&&car.maneuver!=LaneChanges.Stage.Merging&&car.maneuver!=LaneChanges.Stage.Signaling&&!Stops.Holds(car)&&!VehicleVisible(car,car.z))
                 {car.active=false;car.committed=false;car.speed=0;car.braking=false;Maneuvers.Cancel(car,tick);continue;}
                 float room=float.MaxValue;
                 for(int j=0;j<Cars.Length;j++)if(j!=i&&Cars[j].active&&LaneChanges.SharesLane(car,Cars[j]))
@@ -248,6 +250,7 @@ namespace PixelTraffic.UnityPrototype
                     distance=(distance%span+span)%span;
                     room=Mathf.Min(room,(float)distance);
                 }
+                room=Mathf.Min(room,Stops.Room(car));
                 float yield=car.maneuver==LaneChanges.Stage.Waiting&&car.rearMask!=0?.72f:1;
                 float target=Mathf.Min(car.cruise*drivingPace*yield,Mathf.Sqrt(Mathf.Max(0,6.8f*room)));
                 float previousSpeed=car.speed;
@@ -257,6 +260,7 @@ namespace PixelTraffic.UnityPrototype
                 if(Signal!=Phase.VehicleGreen&&!car.committed&&Math.Abs(next-StopCenter(car))<.001)
                 { next=StopCenter(car);travel=Mathf.Max(0,(float)(car.Direction*(next-oldZ[i])));car.speed=0; }
                 next=StarterConfig.RouteStart+((next-StarterConfig.RouteStart)%span+span)%span;
+                if(Math.Abs(next-oldZ[i])>span/2&&car.bus)Stops.Wrapped(car);
                 car.distance=travel;car.totalDistance+=travel;car.z=next;
                 car.braking=previousSpeed-car.speed>.015f||(car.speed<.1f&&room<.3f);
                 if(car.active&&car.committed&&car.Direction*(car.z-StarterConfig.CrossingZ)>5+car.SafetyLength/2)car.committed=false;
@@ -328,7 +332,7 @@ namespace PixelTraffic.UnityPrototype
                 else {if(i>=RequestedPeople){Retire(i);return;}p.activity=Activity.Roam;Roam(p);}
             }
         }
-        private static float SegmentDistanceSquared(Vector2 a,Vector2 b,Vector2 p)
+        public static float SegmentDistanceSquared(Vector2 a,Vector2 b,Vector2 p)
         {
             Vector2 d=b-a;float t=d.sqrMagnitude<1e-9f?0:Mathf.Clamp01(Vector2.Dot(p-a,d)/d.sqrMagnitude);return (a+t*d-p).sqrMagnitude;
         }
@@ -337,6 +341,7 @@ namespace PixelTraffic.UnityPrototype
             Person p=People[i];
             if(crossing){if(next.y<8.2f||next.y>11.8f||Mathf.Abs(next.x)>7.25f)return false;}
             else if(!SidewalkRoutes.SegmentAllowed(p.position,next))return false;
+            if(Stops.Blocks(p.position,next))return false;
             for(int j=0;j<People.Length;j++)if(j!=i&&People[j].active&&SegmentDistanceSquared(p.position,next,People[j].position)<Separation*Separation-1e-6f)return false;
             return true;
         }

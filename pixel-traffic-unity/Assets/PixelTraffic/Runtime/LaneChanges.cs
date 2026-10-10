@@ -27,6 +27,8 @@ namespace PixelTraffic.UnityPrototype
         }
         bool Context(StreetModel model,StreetModel.Car car)
         {
+            if(car.busStage==BusStops.Stage.Ready)return car.active&&car.busDoor==0&&model.Signal==StreetModel.Phase.VehicleGreen&&model.PhaseSeconds<10&&car.speed<.001f;
+            if(car.busStage!=BusStops.Stage.Cruising||model.Stops.NearUnservedStop(car))return false;
             return car.active&&model.Signal==StreetModel.Phase.VehicleGreen&&model.PhaseSeconds<12&&model.DrivingPace>.85f&&car.speed>2&&
                 Math.Abs(car.z-StarterConfig.CrossingZ)>50+car.SafetyLength/2&&car.z>StarterConfig.RouteStart+22+car.SafetyLength/2&&car.z<StarterConfig.RouteEnd-22-car.SafetyLength/2;
         }
@@ -69,7 +71,7 @@ namespace PixelTraffic.UnityPrototype
                 if(car.maneuver==Stage.Idle&&model.AutomaticLaneChanges&&model.ActiveTicks>=car.nextChangeTick)Request(model,i);
                 if(car.maneuver==Stage.Waiting)
                 {
-                    if(model.ActiveTicks-car.requestTick>3600||model.DrivingPace<=.85f){Cancel(car,model.ActiveTicks);continue;}
+                    if(model.ActiveTicks-car.requestTick>3600||(model.DrivingPace<=.85f&&car.busStage!=BusStops.Stage.Ready)){Cancel(car,model.ActiveTicks);continue;}
                     for(int j=0;j<cars.Length;j++)if(j!=i&&cars[j].active&&cars[j].Occupies(car.targetLane)&&(car.rearMask&(1u<<j))==0)
                     {
                         double gap=SignedAhead(car,cars[j]);
@@ -91,11 +93,11 @@ namespace PixelTraffic.UnityPrototype
                     {double gap=SignedAhead(car,cars[j]);if(gap<0&&gap>=-60)rearArrived=true;}
                     if(rearArrived){Cancel(car,model.ActiveTicks);continue;}
                     car.signalTicks++;
-                    if(model.Signal!=StreetModel.Phase.VehicleGreen||model.DrivingPace<=.85f){Cancel(car,model.ActiveTicks);continue;}
+                    if(model.Signal!=StreetModel.Phase.VehicleGreen||(model.DrivingPace<=.85f&&car.busStage!=BusStops.Stage.Ready)){Cancel(car,model.ActiveTicks);continue;}
                     if(car.signalTicks<BlinkTicks&&car.signalTicks%18==0)car.blinks++;
                     if(car.signalTicks>=BlinkTicks)
                     {
-                        if(car.blinks==3&&car.rearMask==0&&SafeGap(i)&&Math.Abs(car.z-StarterConfig.CrossingZ)>18+car.SafetyLength/2)
+                        if(car.blinks==3&&car.rearMask==0&&SafeGap(i)&&(car.busStage==BusStops.Stage.Ready||Math.Abs(car.z-StarterConfig.CrossingZ)>18+car.SafetyLength/2))
                         {car.maneuver=Stage.Merging;car.mergeTicks=0;}
                         else Cancel(car,model.ActiveTicks);
                     }
