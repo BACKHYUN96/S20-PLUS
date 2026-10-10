@@ -1,5 +1,24 @@
 # 작업 이력
 
+## 2026-10-11 — Unity 0.17.0 하늘·구름·해·달: 실제 GPU 검증·서명 APK 전달 완료
+
+사용자는 폰 **0.16.0 적용 성공**을 확인했고 하늘 패치를 승인했다. **0.17.0/code18**, `SkyClimate-0.17.0.unity` / `Generated/SkyClimate0170`. Distant.shader에서 넓고 둥근 구름의 밀도·내부 음영·밝은 가장자리와 노을빛을 표현한다. 낮의 원형 해/halo는 노을에 낮아지고, 밤에는 질감 있는 달/halo와 antialias 별이 나타난다. 구름은 해·달·별/halo를 가리며 비·안개·눈은 하늘과 천체의 선명도를 줄인다. 기존 CityClimate의 visible clock과 햇빛 dim/복구를 재사용한다. 추가 실시간 Light·reflection camera·모델 없이 기존 공유 불투명 셰이더로 처리한다. 제품 카메라/산·강·도시/차량24대·보행100명·정류장8명/승하차·hazard·안전 출발, NativeAndroid/host/workflow는 유지했다.
+
+- **범위·예산:** Distant.shader, DistantChecks, CityPreview, StarterScene, StarterConfig 5소스. 새 scene/generated 경로로 이전 장면을 덮어쓰지 않는다. 원경 8mesh/1778tri·runtime material1개. 100기존 우산+8정류장 rig/우산 stress 119112tri/1580renderer/44material, 기존 strict120000/2400/48 이내. 셰이더 연산은 늘었으므로 같은 geometry 예산이 실제 폰 FPS 동일을 보장하지 않는다.
+- **Unity:** source `95cc418a5d43e0a16561a9706adc38f20c3d50d7` / [Validate 38095123479](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38095123479) / reports artifact 11684929033. 실제 Sun의 storm dim→clear 복구 120frames/두 세로 aspect 해·달 위치 검사, 기존18기후·180blend·15/30/60/120Hz 낮→노을→밤·밤→낮·숨김 clock/retarget·8mesh/강65m/다리11lamp/산층·finite geometry/shared material을 확인했다. 실제24대600초 신호 11순환/차선변경 21/정류장 출발 14, 최소 차체 gap 1.799999m. 승객 후반 탑승 23회, 기존 안전 검사 PASS.
+- **GPU:** 실제 Unity6000.3.26f1/Direct3D11 76PNG, 하늘 확대 낮/노을/밤/폭풍/6초 구름 이동5장 포함. 원래 제품 카메라의 낮·노을·밤과 확대 하늘을 직접 관찰했다. 촬영 카메라/기후 변경은 임시이며 저장하지 않는다. 실제 Editor 렌더와 폰 screenshot/FPS·발열 측정은 구분한다. 구름 이동 관찰은 source manifest에 기록한다.
+- **시각 보정:** 첫 source742c388/Validate38094648632/artifact11685996336은 검사·76PNG가 통과했으나 구름이 큰 띠처럼 보여 noise 크기/가장자리와 내부 음영을 보정했다. 최종 source의 실제 GPU에서 다시 확인했다. 첫 관측과 수정 이력은 source manifest에 보존한다.
+- **Android·서명:** 같은 source tag `unity-apk-0.17.0-build1` / [BuildApk 38095550311](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38095550311) / reports 11685299837 / APK 11685494079. BuildPlayer 오류0/경고0, launcher Lint 오류0/경고8. 실제 다운로드 APK의 기존v2 인증서 `a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6`, version0.17.0/code18/min29/target36/ARM64 IL2CPP, settings launcher·BIND_WALLPAPER service·private provider·disabled Unity activity를 검증했다. 12 host 입력의 SHA가 같아 실제 host Lint38008378207(오류0/경고10)을 재사용한다.
+- **전달:** [APK 직접 다운로드](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/7c562331c9837c7d5977cb9da3eda7b992c6307e/pixel-traffic-unity-prototype-0.17.0.apk) · [실제 Unity 전체 화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/7c562331c9837c7d5977cb9da3eda7b992c6307e/sky-city-preview.png) · [야간 화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/7c562331c9837c7d5977cb9da3eda7b992c6307e/sky-night-preview.png) · [노을 하늘 확대](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/7c562331c9837c7d5977cb9da3eda7b992c6307e/sky-detail-preview.png). APK 30036724bytes/SHA256 `12b60019361d07486b16634330ecb58bd00484d6d460306e9951d2574764536f`. 일회성 `downloads/unity-0.17.0` branch의APK1·실제PNG3파일을 로그인 없는HTTP200/redirect없음/전체bytes/SHA로 검증했다. main에binary/새Release workflow는 추가하지 않는다.
+
+PC 설치(다운로드한 실제 위치 사용):
+```powershell
+$trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $trafficAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.17.0.apk"
+```
+
+**미확인/다음:** 폰0.17 하늘 외형/낮·노을·밤/날씨/FPS·발열·장시간 lifecycle 확인. 폰0.16 적용 성공은 사용자가 확인했다. 실제 설치는 사용자 PC에서 수행한다. Drive는나중에PC설치후재개한다. 기존dirty285파일/index/status 및110 build/capture 입력을보존했다. 최종docs-onlycommit은빌드입력이같으므로검사를반복하지않는다.
+
 ## 2026-10-11 — Unity 0.17.0 하늘·구름·해·달: 구현 완료, 실제 검사 대기
 
 사용자가 폰0.16 적용 성공을 확인하고 다음 하늘 패치를 승인했다. 범위5소스: Distant.shader, DistantChecks, CityPreview, StarterScene, StarterConfig. 시작 시 기존dirty285파일·git status-uall·index SHA와110 빌드 입력/12 host 입력을 기록했다. 0.17.0/code18, 새 SkyClimate-0.17.0 장면과 SkyClimate0170 generated 경로. 기존8원경 mesh/공유 불투명 셰이더에서 둥근 구름 밀도/내부 음영/노을 가장자리, 해의 원형 disc와 halo/노을 하강, 달의 질감/halo·별 antialias와 구름 가림을 구현했다. 움직임은 기존 CityClimate visible clock을 사용한다. 기존 조명의 기후 연동을 재사용하며 storm dim→clear 복구의 실제 Light 검사120frames 및 두 세로 aspect 해/달 위치 검사를 추가했다. 임시 sky GPU 촬영5장을 추가하며 카메라와 기후는 복원하고 저장하지 않는다.
