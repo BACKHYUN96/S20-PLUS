@@ -15,7 +15,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             PrototypeDrive bus=null,truck=null;foreach(var d in drives){if(d.Model=="CityBus")bus=d;if(d.Model=="BoxTruck")truck=d;}
             Need(bus!=null&&truck!=null,"Heavy production fleet missing.");var bb=bus.BodyBounds();var tb=truck.BodyBounds();
             // A real-length bus must wait for both a rear truck and another bus to pass; lateral movement starts only after three pulses.
-            var m=Scenario(Car(0,140,6,bb.size.z,bb.size.x,bb.size.y),Car(1,160,10,tb.size.z,tb.size.x,tb.size.y),Car(1,185,10,bb.size.z,bb.size.x,bb.size.y));Need(m.Maneuvers.Request(m,0),"Rear-pass request rejected.");
+            var m=Scenario(Car(0,140,4.8f,bb.size.z,bb.size.x,bb.size.y),Car(1,160,10,tb.size.z,tb.size.x,tb.size.y),Car(1,185,10,bb.size.z,bb.size.x,bb.size.y));Need(m.Maneuvers.Request(m,0),"Rear-pass request rejected.");
             Need(m.Cars[0].rearMask==6,"Rear tracker misses a rear vehicle.");int pulses=0;bool wasOn=false;float gap=float.MaxValue;int mergeAt=-1;
             for(int n=0;n<1050;n++)
             {
@@ -29,7 +29,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Gap(m,ref gap);
                 if(m.Maneuvers.Completed>0){Need(n-mergeAt==180,"Heavy lane change does not take six seconds.");break;}
             }
-            Need(m.Maneuvers.Completed==1&&m.Cars[0].lane==1&&mergeAt>=54,"Rear-pass maneuver fails to finish.");
+            Need(m.Maneuvers.Completed==1&&m.Cars[0].lane==1&&mergeAt>=54,"Rear-pass maneuver fails to finish: stage="+m.Cars[0].maneuver+" mask="+m.Cars[0].rearMask+" z="+m.Cars[0].z+" ticks="+m.ActiveTicks+" pulses="+pulses+" phase="+m.Signal);
             var blocked=Scenario(Car(0,140,6,bb.size.z,bb.size.x,bb.size.y),Car(1,130,4,tb.size.z,tb.size.x,tb.size.y));Need(blocked.Maneuvers.Request(blocked,0),"Front-gap request rejected.");
             for(int n=0;n<60;n++){blocked.Tick();Need(blocked.Cars[0].maneuver==LaneChanges.Stage.Waiting,"Insufficient front gap starts a maneuver.");}
             var late=Scenario(Car(0,140,6),Car(1,90,6));Need(late.Maneuvers.Request(late,0),"Late-gap request rejected.");

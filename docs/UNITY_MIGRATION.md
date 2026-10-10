@@ -1,5 +1,9 @@
 # Pixel Traffic — Unity 전환 준비
 
+## 2026-10-10 — Unity 0.14.0 프레임 검사 통과, 긴차량 추월 시나리오 보정
+
+source8a0810da/Validate38046156301(job114195996689)/artifact11666704099는reset-wheel보정후StreetChecks의실제90초15/30/60/120Hz비교를통과해DrivingChecks까지진행했고Rear-pass maneuver fails to finish로실패했다. 긴body를대입한원래6m/s대10m/s추월사례는두차가충분히앞서가는시점을현재12초요청가능구간끝에가깝게만들수있었다. 요청버스를4.8m/s,목표차선을10m/s로두어속도차가충분한실제뒤차추월사례를검사한다. production속도·신호허용구간·안전gap·60m뒤차범위·3pulse·6초merge요건은완화하지않으며실패메시지에actualstage/mask/z/ticks/pulses/phase를추가했다. 재검증대기다.
+
 ## 2026-10-10 — Unity 0.14.0 실제 첫 검사 실패: 초기화 바퀴 자세 보정
 
 첫source9f4d0d4/Validate38045876827(job114195187333)/artifact11667219347는Unity컴파일·장면생성을수행한뒤StreetChecks90초15/30/60/120Hz에서Signal/merge traffic depends on frame rate로실패했다. rawlog대신비밀값제거unity-failure.json의실제예외/소스위치를확인했다. 이전테스트주행의앞바퀴steer/roll이ResetPosition뒤에도남았고,긴차량에서는steer된tyre가미러밖으로돌출해ResetModel의actualBodyBounds/폭안전envelope에영향을줄수있었다.
