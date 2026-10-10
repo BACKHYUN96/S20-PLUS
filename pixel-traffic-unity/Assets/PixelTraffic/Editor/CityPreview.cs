@@ -141,9 +141,10 @@ namespace PixelTraffic.UnityPrototype.Editor
                 previews.Add(CaptureState(camera, request, target, image, "storm-settled"));
                 climate.Preview(0, 0);
                 var vehiclePreviews=new System.Collections.Generic.List<string>();
-                EditorSceneManager.OpenScene(StarterConfig.ScenePath);
-                camera=Camera.main;camera.aspect=(float)width/height;
-                UnityEngine.Object.FindFirstObjectByType<CityClimate>().Initialize();
+                // Opening another scene here would unload the temporary readback texture.
+                // Reset the existing unsaved scene instead; it is never used to build the APK.
+                var detailStreet=UnityEngine.Object.FindFirstObjectByType<StreetSimulation>();
+                detailStreet.ResetModel();detailStreet.Advance(0);detailStreet.ApplyViews();
                 // Temporary camera/poses in an unsaved Editor scene; phone camera is unchanged.
                 foreach(string model in new[]{"Sedan","SportCoupe","Suv","Taxi"})
                 {

@@ -1,5 +1,11 @@
 # 새 채팅 인수인계 — 픽셀 트래픽 0.29.0
 
+## 2026-10-10 — Unity 0.8.0 차량 검사 PASS·확대 캡처 텍스처 수명 수정
+
+첫 source70323806cab8098afbdb739e813b600feb9d6a87의 Validate38013153642/job114097483337에서 장면/기존 교통·날씨·전환과 새 차량 geometry 검사는 모두 PASS였다. 차량49,080tri/14renderer씩,기본 도시108,018tri/2163renderer/46material,100우산119,394tri/2331renderer/46material로 기존 제한 내이며 모델별 metre dimensions가0.7.0과 일치한다. 첫 report ZIP11655256763/6,727,748bytes/SHA b00d666b0f672782b85873bd443c06d0bb936de006025b73ee8707319f20c826를 CRC 확인하여 실제 보고서를 읽었다.
+
+GPU 캡처는 기존 도시/날씨/전환 PNG14장을 작성했지만, 새 확대 캡처 직전 EditorSceneManager.OpenScene이 임시 readback Texture2D를 unload하여 MissingReferenceException으로 실패했다. job의 Capture가 선택 단계여서 overall success여도 preview-result FAILED였으며 성공으로 취급하지 않았다. CityPreview의 해당 재열기를 제거하고 같은 unsaved scene의 Street.ResetModel/Advance(0)/ApplyViews로 맑음 상태만 동기화한다. runtime/build geometry는 문제 없고 캡처 장면은 APK에 저장하지 않는다. 최종 source의 실제 장면·GPU 검사를 다시 수행한 뒤 같은 source APK로 진행한다. APK/실기기 검증은 아직 미완료이다.
+
 ## 2026-10-10 — Unity 0.8.0 차량 외형 고도화 구현·실제 검사 진행 중
 
 사용자가 0.7.0의 실제 폰 적용 성공을 확인하고 다음 단계를 승인했다. 기존 다음 추천인 차량 3D 외형을 진행한다. base01e70ec78bb5ce25154f4c499d33ef1a3c1a834e에서 차량 크기/차선 unit scale/24대·4모델과 날씨·신호·NativeAndroid를 유지한다. 0.8.0/code9,VehicleDetail-0.8.0.unity,Generated/VehicleDetail080을 사용한다.
