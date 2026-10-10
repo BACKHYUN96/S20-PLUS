@@ -1,5 +1,11 @@
 # 작업 이력
 
+## 2026-10-10 — Unity 0.8.0 실제 확대 렌더 관찰·후면 camera 가림 보정
+
+source3f453bf1453f7a978a98835d6651a4f662daa1e3의 Validate38013490732/job114098566506는 장면/렌더 모두 실제 PASS이며22PNG를 작성했다. artifact11655602445/8,781,715bytes/SHA b0711af6bffa9b4e9a04d3b07a20ffa069fa62b9b6c768486a0b1df21fab9d68를 내려받아CRC와result를 확인했다. 앞면 Sedan/SUV/Taxi에서 보닛 곡면의 빛/유리 gradient/휠·lamp를 관찰했다. 후면 확대 camera가 인도 canopy 안에 들어가 SportCoupe rear PNG가 녹색 잎에 가려져 있었으므로, 단순 black/pink 자동검사 PASS를 시각 검증 완료로 취급하지 않는다.
+
+CityPreview 후면 camera의 x를-8.6→-1m 도로 안으로 옮겨 전·후면 camera 모두 canopy 밖으로 둔다. 실제 앱 camera와 geometry에는 영향이 없고 캡처용 unsaved pose만 변경한다. 다시 실제 PNG 확인 뒤APK를 빌드한다. 이전0.7 실제 폰 성공/0.8 geometry·예산 PASS와 누적 native dirty 보존은 그대로이다.
+
 ## 2026-10-10 — Unity 0.8.0 차량 검사 PASS·확대 캡처 텍스처 수명 수정
 
 첫 source70323806cab8098afbdb739e813b600feb9d6a87의 Validate38013153642/job114097483337에서 장면/기존 교통·날씨·전환과 새 차량 geometry 검사는 모두 PASS였다. 차량49,080tri/14renderer씩,기본 도시108,018tri/2163renderer/46material,100우산119,394tri/2331renderer/46material로 기존 제한 내이며 모델별 metre dimensions가0.7.0과 일치한다. 첫 report ZIP11655256763/6,727,748bytes/SHA b00d666b0f672782b85873bd443c06d0bb936de006025b73ee8707319f20c826를 CRC 확인하여 실제 보고서를 읽었다.

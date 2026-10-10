@@ -154,7 +154,8 @@ namespace PixelTraffic.UnityPrototype.Editor
                     selected.transform.position=new Vector3(-4.8f,0,0);selected.transform.rotation=Quaternion.identity;
                     foreach(bool rear in new[]{false,true})
                     {
-                        camera.transform.position=new Vector3(rear ? -8.6f : -1.0f,4.8f,rear ? -11.8f : 11.8f);
+                        // Both views stay over the road; a sidewalk camera can sit inside a canopy.
+                        camera.transform.position=new Vector3(-1.0f,4.8f,rear ? -11.8f : 11.8f);
                         camera.transform.LookAt(selected.transform.position+Vector3.up*.85f);camera.fieldOfView=48;
                         vehiclePreviews.Add(CaptureState(camera,request,target,image,"vehicle-"+model+(rear ? "-rear" : "-front")));
                     }
