@@ -16,7 +16,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             for(int i=0;i<drives.Length;i++)
             {
                 poses[i]=drives[i].transform.position;wheels[i]=new Quaternion[4];for(int n=0;n<4;n++)wheels[i][n]=drives[i].Wheels[n].localRotation;
-                var renderers=drives[i].GetComponentsInChildren<Renderer>();Bounds bounds=renderers[0].bounds;foreach(var r in renderers)bounds.Encapsulate(r.bounds);
+                Bounds bounds=drives[i].BodyBounds();
                 definitions[i]=new StreetModel.Car {lane=drives[i].Lane,z=poses[i].z,cruise=drives[i].Speed,speed=drives[i].Speed,length=bounds.size.z};
             }
             StreetModel Create(int count)
@@ -52,7 +52,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     {
                         int waiting=0;foreach(var p in model.People)if(p.active&&(p.activity==StreetModel.Activity.Wait||p.activity==StreetModel.Activity.Approach))waiting++;
                         Need(waiting<=12,"Crosswalk queue attracts the whole population.");
-                        for(int i=0;i<model.Cars.Length;i++)for(int j=i+1;j<model.Cars.Length;j++)if(model.Cars[i].lane==model.Cars[j].lane)
+                        for(int i=0;i<model.Cars.Length;i++)for(int j=i+1;j<model.Cars.Length;j++)if(LaneChanges.SharesLane(model.Cars[i],model.Cars[j]))
                         {
                             float distance=(float)Math.Abs(model.Cars[i].z-model.Cars[j].z);distance=Mathf.Min(distance,StarterConfig.RouteEnd-StarterConfig.RouteStart-distance);
                             float gap=distance-(model.Cars[i].length+model.Cars[j].length)/2;minimumCars=Mathf.Min(minimumCars,gap);Need(gap>=1.79f,"Queue/wrap vehicles overlap.");
@@ -75,15 +75,16 @@ namespace PixelTraffic.UnityPrototype.Editor
             try
             {
                 // Exercise the actual runtime controller clock/pause/wheels and compare 15/30/60/120Hz.
-                double[] baseline=null;
+                double[] baseline=null;float[] baselineX=null;int[] baselineState=null;
                 foreach(int fps in new[]{15,30,60,120})
                 {
                     for(int i=0;i<drives.Length;i++)drives[i].ResetPosition(poses[i].z);
                     controller.ResetModel();
                     for(int n=0;n<fps*90;n++)controller.Advance(1d/fps);
                     var positions=new double[drives.Length];for(int i=0;i<positions.Length;i++)positions[i]=controller.Model.Cars[i].z;
-                    if(baseline==null)baseline=positions;else for(int i=0;i<positions.Length;i++)Need(Math.Abs(positions[i]-baseline[i])<.001,"Signal traffic depends on frame rate.");
-                    controller.SetPaused(true);double before=controller.Model.Cars[0].z;controller.Advance(30);Need(controller.Model.Cars[0].z==before,"Paused signal time advances.");controller.SetPaused(false);
+                    if(baseline==null){baseline=positions;baselineX=new float[positions.Length];baselineState=new int[positions.Length];for(int i=0;i<positions.Length;i++){baselineX[i]=controller.Model.Cars[i].X;baselineState[i]=(int)controller.Model.Cars[i].maneuver;}}
+                    else for(int i=0;i<positions.Length;i++)Need(Math.Abs(positions[i]-baseline[i])<.001&&Math.Abs(controller.Model.Cars[i].X-baselineX[i])<.001&&(int)controller.Model.Cars[i].maneuver==baselineState[i],"Signal/merge traffic depends on frame rate.");
+                    controller.SetPaused(true);double before=controller.Model.Cars[0].z;int beforeTick=controller.Model.ActiveTicks;controller.Advance(30);Need(controller.Model.Cars[0].z==before&&controller.Model.ActiveTicks==beforeTick,"Paused signal time advances.");controller.SetPaused(false);
                 }
                 // All 100 actual rigs/materials/geometry fit the same mobile budget, not just the default32.
                 for(int i=0;i<drives.Length;i++)drives[i].ResetPosition(poses[i].z);

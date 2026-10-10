@@ -14,7 +14,7 @@ namespace PixelTraffic.UnityPrototype.Editor
     // Generated geometry stays in its own scene; existing scenes are never rebuilt in place.
     public static class StarterScene
     {
-        internal const string Generated = "Assets/PixelTraffic/Generated/Storefront090";
+        internal const string Generated = "Assets/PixelTraffic/Generated/Driving0100";
         private const string PipelinePath = Generated + "/MobileURP.asset";
         private static readonly Dictionary<string, Material> materials = new Dictionary<string, Material>();
 
@@ -67,9 +67,9 @@ namespace PixelTraffic.UnityPrototype.Editor
 
             var camera = new GameObject("Portrait Camera").AddComponent<Camera>();
             camera.tag = "MainCamera";
-            camera.transform.position = new Vector3(0, 26, -32);
-            camera.transform.LookAt(new Vector3(0, 0, 28));
-            camera.fieldOfView = 50;
+            camera.transform.position = new Vector3(-1.2f, 20.5f, -27);
+            camera.transform.LookAt(new Vector3(0, 1.6f, 23));
+            camera.fieldOfView = 44;
             camera.nearClipPlane = .3f;
             camera.farClipPlane = 500;
             camera.clearFlags = CameraClearFlags.SolidColor;
@@ -216,13 +216,14 @@ namespace PixelTraffic.UnityPrototype.Editor
             CityEnvironment.Report environment = CityEnvironment.Validate(Camera.main, pipeline);
             ClimateChecks.Report climate = ClimateChecks.Validate();
             FrontageChecks.Report frontage = FrontageChecks.Validate();
+            DrivingChecks.Report driving = DrivingChecks.Validate();
             Require(PlayerSettings.bundleVersion == StarterConfig.VersionName &&
                 PlayerSettings.Android.bundleVersionCode == StarterConfig.VersionCode, "APK version differs from source configuration.");
             Directory.CreateDirectory("Reports");
             File.WriteAllText("Reports/scene-validation.json", JsonUtility.ToJson(new ValidationReport {
                 editor = Application.unityVersion, applicationId = StarterConfig.ExperimentAppId,
                 utc = DateTime.UtcNow.ToString("O"), traffic = traffic, street = street,
-                version = StarterConfig.VersionName, environment = environment, climate = climate, vehicleDetail = vehicleDetail, frontage = frontage,
+                version = StarterConfig.VersionName, environment = environment, climate = climate, vehicleDetail = vehicleDetail, frontage = frontage, driving=driving,
                 result = "PASS: actual city and two-way fleet geometry, material, lane bounds, motion, wrap, wheels and lifecycle; not an Android/device test"
             }, true));
             Debug.Log("PASS: city and two-way traffic geometry and motion. Reports/scene-validation.json");
@@ -246,6 +247,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             public TrafficFleet.Report traffic;
             public VehicleDetailChecks.Report vehicleDetail;
             public FrontageChecks.Report frontage;
+            public DrivingChecks.Report driving;
             public StreetChecks.Report street;
         }
     }

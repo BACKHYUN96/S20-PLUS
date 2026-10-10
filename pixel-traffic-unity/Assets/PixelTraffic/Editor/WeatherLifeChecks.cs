@@ -18,7 +18,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 var cars=new StreetModel.Car[drives.Length];
                 for(int i=0;i<cars.Length;i++)
                 {
-                    var renderers=drives[i].GetComponentsInChildren<Renderer>(true);Bounds b=renderers[0].bounds;foreach(var r in renderers)b.Encapsulate(r.bounds);
+                    Bounds b=drives[i].BodyBounds();
                     cars[i]=new StreetModel.Car {lane=drives[i].Lane,z=drives[i].transform.position.z,cruise=drives[i].Speed,speed=drives[i].Speed,length=b.size.z};
                 }
                 var model=new StreetModel(count,cars){Visible=Visible};
@@ -56,7 +56,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                         if(oldCars[i]&&!cars[i].active)Need(!Visible(new Vector2((cars[i].lane-1.5f)*3.2f,(float)oldZ[i])),"Car disappears inside viewport.");
                         if(!oldCars[i]&&cars[i].active)Need(!Visible(new Vector2((cars[i].lane-1.5f)*3.2f,(float)cars[i].z)),"Car reappears inside viewport.");
                         if(tick%10!=0||!cars[i].active)continue;
-                        for(int j=i+1;j<cars.Length;j++)if(cars[j].active&&cars[j].lane==cars[i].lane)
+                        for(int j=i+1;j<cars.Length;j++)if(cars[j].active&&LaneChanges.SharesLane(cars[j],cars[i]))
                         {
                             float d=(float)Math.Abs(cars[i].z-cars[j].z);d=Mathf.Min(d,310-d);float gap=d-(cars[i].length+cars[j].length)/2;
                             minimumGap=Mathf.Min(minimumGap,gap);Need(gap>=1.79f,"Weather traffic overlaps at queue or respawn.");

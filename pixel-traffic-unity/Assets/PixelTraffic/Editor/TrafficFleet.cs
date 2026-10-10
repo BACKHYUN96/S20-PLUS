@@ -53,6 +53,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
                 var drive=root.gameObject.AddComponent<PrototypeDrive>();
                 drive.Wheels=wheels.ToArray();drive.Configure(lane,speeds[lane],shape.radius,((VehicleGeometry.Kind)kind).ToString());
+                DrivingScene.Attach(root,shape,head,((VehicleGeometry.Kind)kind).ToString());
             }
         }
 
@@ -97,11 +98,10 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Need(car.transform.localScale==Vector3.one&&car.transform.parent.localScale==Vector3.one,"Vehicle scaled to fit a lane.");
                 Need(Mathf.Abs(car.transform.position.x-car.LaneX)<.001f,"Vehicle not centered in its lane.");
                 Need(Vector3.Dot(car.transform.forward,Vector3.forward*car.Direction)>.999f,"Vehicle front/rear points away from travel direction.");
-                var renderers=car.GetComponentsInChildren<Renderer>();Bounds bounds=renderers[0].bounds;
+                var renderers=car.GetComponentsInChildren<Renderer>();Bounds bounds=car.BodyBounds();
                 foreach(var r in renderers)
                 {
-                    bounds.Encapsulate(r.bounds);
-                    Need(r.sharedMaterial!=null&&r.sharedMaterial.shader.name=="Universal Render Pipeline/Lit","Car has missing material.");
+                    Need(r.sharedMaterial!=null&&r.sharedMaterial.shader.name==(r.name=="Headlight Road Beams"?"PixelTraffic/Atmosphere":"Universal Render Pipeline/Lit"),"Car has missing material.");
                     Need(GameObjectUtility.GetStaticEditorFlags(r.gameObject)==0,"Moving car is statically batched.");
                 }
                 Need(bounds.min.x>car.LaneX-StarterConfig.LaneWidth/2&&bounds.max.x<car.LaneX+StarterConfig.LaneWidth/2,"Vehicle exceeds its own lane.");

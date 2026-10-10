@@ -44,8 +44,7 @@ namespace PixelTraffic.UnityPrototype
             var cars=new StreetModel.Car[vehicles.Length];
             for(int i=0;i<cars.Length;i++)
             {
-                var vehicle=vehicles[i];vehicle.gameObject.SetActive(true);var renderers=vehicle.GetComponentsInChildren<Renderer>(true);Bounds bounds=renderers[0].bounds;
-                foreach(var r in renderers)bounds.Encapsulate(r.bounds);
+                var vehicle=vehicles[i];vehicle.gameObject.SetActive(true);vehicle.ResetPosition(vehicle.transform.position.z);Bounds bounds=vehicle.BodyBounds();
                 cars[i]=new StreetModel.Car {lane=vehicle.Lane,z=vehicle.transform.position.z,cruise=vehicle.Speed,speed=vehicle.Speed,length=bounds.size.z};
             }
             model=new StreetModel(people,cars);
@@ -83,7 +82,7 @@ namespace PixelTraffic.UnityPrototype
                 for(int i=0;i<vehicles.Length;i++)
                 {
                     var car=model.Cars[i];if(vehicles[i].gameObject.activeSelf!=car.active)vehicles[i].gameObject.SetActive(car.active);
-                    vehicles[i].ApplyTraffic(car.z,car.distance);
+                    vehicles[i].ApplyTraffic(car);
                 }
             }
             if(spray!=null)spray.Advance((float)elapsed,model,climate!=null&&climate.WeatherBlend!=null?climate.RainGain:0);
@@ -93,6 +92,7 @@ namespace PixelTraffic.UnityPrototype
         public void ApplyViews()
         {
             if(lightBlock==null)lightBlock=new MaterialPropertyBlock();
+            for(int i=0;i<vehicles.Length;i++)if(vehicles[i].Lighting!=null)vehicles[i].Lighting.Apply(model.Cars[i],climate!=null&&climate.TimeBlend!=null?climate.LampGain:0,climate!=null&&climate.TimeBlend!=null?climate.Wetness:0);
             for(int i=0;i<walkers.Length;i++)
             {
                 var p=model.People[i];var v=walkers[i];if(v.root.gameObject.activeSelf!=p.active)v.root.gameObject.SetActive(p.active);if(!p.active)continue;

@@ -11,7 +11,11 @@ namespace PixelTraffic.UnityPrototype
         public sealed class Car
         {
             public int lane;public double z;public float cruise,speed,length,distance;public bool committed,active=true;public int rank;
+            public LaneChanges.Stage maneuver;public int targetLane=-1,signalTicks,mergeTicks,blinks,requestTick;
+            public double nextChangeTick,totalDistance;public uint rearMask;public bool braking;
             public int Direction => lane<2?-1:1;
+            public float X => (lane-1.5f)*StarterConfig.LaneWidth+(maneuver==LaneChanges.Stage.Merging?(targetLane-lane)*StarterConfig.LaneWidth*Mathf.SmoothStep(0,1,mergeTicks/90f):0);
+            public bool Occupies(int value)=>lane==value||((maneuver==LaneChanges.Stage.Signaling||maneuver==LaneChanges.Stage.Merging)&&targetLane==value);
         }
         public sealed class Person
         {
@@ -25,6 +29,9 @@ namespace PixelTraffic.UnityPrototype
         public readonly Person[] People=new Person[100];
         public readonly SidewalkRoutes Routes=new SidewalkRoutes();
         private readonly double[] oldZ;
+        public readonly LaneChanges Maneuvers;
+        public bool AutomaticLaneChanges=true;
+        public int ActiveTicks=>tick;
         private readonly int[,] slots=new int[2,6];
         private int tick;
         private float phaseTime,spawnWait;
@@ -46,6 +53,7 @@ namespace PixelTraffic.UnityPrototype
         {
             Cars=cars;oldZ=new double[cars.Length];
             int[] ranks=new int[4];foreach(var car in Cars)car.rank=ranks[car.lane]++;
+            Maneuvers=new LaneChanges(Cars);
             for(int side=0;side<2;side++)for(int slot=0;slot<6;slot++)slots[side,slot]=-1;
             for(int i=0;i<People.Length;i++)
             {
@@ -126,7 +134,7 @@ namespace PixelTraffic.UnityPrototype
                 double entry=StarterConfig.RouteStart+.05;bool free=true;
                 if(Visible(new Vector2((car.lane-1.5f)*StarterConfig.LaneWidth,(float)entry)))continue;
                 double span=StarterConfig.RouteEnd-StarterConfig.RouteStart;
-                foreach(var other in Cars)if(other.active&&other.lane==car.lane)
+                foreach(var other in Cars)if(other.active&&other.Occupies(car.lane))
                 {
                     double distance=Math.Abs(entry-other.z);distance=Math.Min(distance,span-distance);
                     if(distance<(car.length+other.length)/2+2.2)free=false;
@@ -169,7 +177,7 @@ namespace PixelTraffic.UnityPrototype
         }
         public void Tick()
         {
-            tick++;phaseTime+=Dt;WeatherPopulation();UpdateSignal();MoveCars();
+            tick++;phaseTime+=Dt;WeatherPopulation();UpdateSignal();Maneuvers.Tick(this);MoveCars();
             // Rotating update order removes a permanent priority bias; pairs never share a foot disc.
             for(int n=0;n<People.Length;n++)MovePerson((tick+n)%People.Length);
             if(tick%30==0)SetPopulation(RequestedPeople);
@@ -215,10 +223,10 @@ namespace PixelTraffic.UnityPrototype
             for(int i=0;i<Cars.Length;i++)
             {
                 Car car=Cars[i];car.distance=0;if(!car.active)continue;
-                if(car.rank>=WeatherCarsPerLane&&!Visible(new Vector2((car.lane-1.5f)*StarterConfig.LaneWidth,(float)car.z)))
-                {car.active=false;car.committed=false;car.speed=0;continue;}
+                if(car.rank>=WeatherCarsPerLane&&car.maneuver!=LaneChanges.Stage.Merging&&car.maneuver!=LaneChanges.Stage.Signaling&&!Visible(new Vector2(car.X,(float)car.z)))
+                {car.active=false;car.committed=false;car.speed=0;car.braking=false;Maneuvers.Cancel(car,tick);continue;}
                 float room=float.MaxValue;
-                for(int j=0;j<Cars.Length;j++)if(j!=i&&Cars[j].active&&Cars[j].lane==car.lane)
+                for(int j=0;j<Cars.Length;j++)if(j!=i&&Cars[j].active&&LaneChanges.SharesLane(car,Cars[j]))
                 {
                     double gap=car.Direction*(oldZ[j]-oldZ[i]);gap=(gap%span+span)%span;
                     room=Mathf.Min(room,(float)gap-(car.length+Cars[j].length)/2-1.8f);
@@ -230,14 +238,17 @@ namespace PixelTraffic.UnityPrototype
                     distance=(distance%span+span)%span;
                     room=Mathf.Min(room,(float)distance);
                 }
-                float target=Mathf.Min(car.cruise*drivingPace,Mathf.Sqrt(Mathf.Max(0,6.8f*room)));
+                float yield=car.maneuver==LaneChanges.Stage.Waiting&&car.rearMask!=0?.72f:1;
+                float target=Mathf.Min(car.cruise*drivingPace*yield,Mathf.Sqrt(Mathf.Max(0,6.8f*room)));
+                float previousSpeed=car.speed;
                 car.speed=Mathf.MoveTowards(car.speed,target,(target>car.speed?1.8f:3.4f)*Dt);
                 float travel=Mathf.Min(car.speed*Dt,Mathf.Max(0,room));if(travel<.0005f){travel=0;car.speed=0;}
                 double next=oldZ[i]+car.Direction*travel;
                 if(Signal!=Phase.VehicleGreen&&!car.committed&&Math.Abs(next-StopCenter(car))<.001)
                 { next=StopCenter(car);travel=Mathf.Max(0,(float)(car.Direction*(next-oldZ[i])));car.speed=0; }
                 next=StarterConfig.RouteStart+((next-StarterConfig.RouteStart)%span+span)%span;
-                car.distance=travel;car.z=next;
+                car.distance=travel;car.totalDistance+=travel;car.z=next;
+                car.braking=previousSpeed-car.speed>.015f||(car.speed<.1f&&room<.3f);
                 if(car.active&&car.committed&&car.Direction*(car.z-StarterConfig.CrossingZ)>5+car.length/2)car.committed=false;
             }
         }

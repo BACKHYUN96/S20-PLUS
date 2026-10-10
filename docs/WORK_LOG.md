@@ -1,5 +1,12 @@
 # 작업 이력
 
+## 2026-10-10 — Unity 0.10.0 camera and safe vehicle maneuver implementation (validation pending)
+
+- User requested a lower/closer portrait camera, vehicle headlights/brake lamps, and intermittent lane changes after exactly three blinks and rear traffic passes. Existing permission covers main publication and the connected Windows runner.
+- Camera (-1.2,20.5,-27), 44° FOV; 24 shared-geometry light rigs, night road beams, brighter braking lamps, direction-correct amber signals. Existing four street spotlights/material budget retained.
+- Same-direction adjacent lanes only. Track rear traffic within 60m until it actually passes; yield in the original lane, reserve both lanes during signaling/merging, cancel when a new rear vehicle approaches or a safe gap disappears. 1.8s/three pulses then 3s smooth merge; avoid starting within 50m of the crossing and storms.
+- Added deterministic rear-pass, late-gap, three-blink, 600s traffic and actual lamp tests; preserve pedestrian/weather/Android host checks. Actual Windows validation, GPU captures and signed APK are pending. Do not present this source as a delivered APK.
+
 ## 2026-10-10 — Unity 0.9.0 상가·다양한 창문 조명 APK 전달 완료
 
 카페·편의점·일반 매장과 자연스러운 야간 조명을 **0.9.0/code10**에 적용했다. 사용자가 이번 수정본을 BACKHYUN96/S20-PLUS main에 게시하고 연결된 PC에서 자동 검증·화면 캡처·서명 APK 빌드까지 진행하도록 명시 승인했다. 직전 main/기능 브랜치 push는 자동 승인 검토에 실행 전 차단됐고 승인 뒤 정상 게시했다. 최신 확인된 사용자 폰 적용 성공은0.7.0이며0.8.0/0.9.0 폰 확인을 가정하지 않는다.

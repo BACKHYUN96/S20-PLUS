@@ -14,7 +14,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             var cars=UnityEngine.Object.FindObjectsByType<PrototypeDrive>(FindObjectsSortMode.None);
             foreach(var car in cars)
             {
-                Need(car.GetComponentsInChildren<MeshRenderer>().Length==14,"Vehicle detail adds renderers.");
+                Need(car.GetComponentsInChildren<MeshRenderer>().Length==17,"Vehicle lighting renderer budget differs.");
                 foreach(var filter in car.GetComponentsInChildren<MeshFilter>())
                 {
                     Mesh mesh=filter.sharedMesh;fleetTriangles+=mesh.triangles.Length/3;
@@ -61,7 +61,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             // including all 100 open umbrellas (previous city total: 118,914).
             Need(fleetTriangles<49686,"Vehicle detail exhausts the city triangle budget.");
             return new Report {result="PASS: actual shared mesh topology, finite/unit normals, curved shading, crowned roofs, tyre shoulder/contact, window UV/finish and fleet budget; device performance unmeasured",
-                models=models.Count,vehicles=cars.Length,renderersPerVehicle=14,fleetTriangles=fleetTriangles,checkedVertices=checkedVertices,curvedSeams=curvedSeams,windowTextureSize=64};
+                models=models.Count,vehicles=cars.Length,renderersPerVehicle=17,fleetTriangles=fleetTriangles,checkedVertices=checkedVertices,curvedSeams=curvedSeams,windowTextureSize=64};
         }
         private static bool Finite(float v)=>!float.IsNaN(v)&&!float.IsInfinity(v);
         private static void Need(bool value,string message){if(!value)throw new InvalidOperationException(message);}

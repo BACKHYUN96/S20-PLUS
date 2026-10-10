@@ -28,6 +28,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             lamps.Sort((a, b) => Vector3.Distance(a.position, Camera.main.transform.position).CompareTo(Vector3.Distance(b.position, Camera.main.transform.position)));
             Light[] lights = new Light[4]; var pools = new Renderer[lamps.Count];
             Material glow = Transparent("Lamp Pool", RadialTexture(), true);
+            DrivingScene.ConfigureBeams(glow);
             for (int i = 0; i < lamps.Count; i++)
             {
                 var pool = Quad("Warm Road Pool", root.transform, glow, false);
