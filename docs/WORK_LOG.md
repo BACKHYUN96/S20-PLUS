@@ -1,5 +1,9 @@
 # 작업 이력
 
+## 2026-10-10 — Unity 0.15.0 최종 Runtime 통과·비상깜빡이 촬영 프레이밍
+
+source264fe94429cfca66bdfcb745589b0277c3c225dd / Validate38053099084(job114216046151)/artifact11670472080의25,306,315bytes/digest/CRC/source를확인했다. 전체Runtime와GPU67PNG PASS: 실제24대600초11signalcycles/21lanechanges/14arrivals14departures/minGap1.799999m, 독립4/32/100명 boarding60/alighting48/departures44/뒤300초 양쪽탑승23/hazard25405frames/minFoot.400056m,storm2/4fps/pause/최대118442tri1579renderer44material. 기존모든사람횡단조건도PASS다. 실제8정류장 확대와production전체사진을관찰해문opening/승객/쉼터시인성은확인했다. 그러나hazard ON/OFF 사진은버스앞램프가왼쪽밖으로잘려시각확인에부적합했다. runtime의양쪽MPB검사는PASS이고제품구도는유지하며, hazard확대2단계만버스전면앞에서비춰램프를포함한다. Editor촬영1파일만변경하며새GPU와같은source서명APK를재검증한다.
+
 ## 2026-10-10 — Unity 0.15.0 보행 회귀 보정·실제 횡단보도 clearance 기준
 
 sourcefda16f92837149a7338a5a19195ab58ff3fc6115 / Validate38052325990(job114214725982)/artifact11670326172는기존StreetChecks100명600초의person23이횡단하지못하는회귀로실패했다. 정류장1m이동이보도 graph와군중경로를바꿨으므로기존 west doorZ=-4.5를복원한다. 보행검사의모든사람횡단/600초/foot/경로요건은완화하지않는다. 실제RoadOccupied는crossing±2.5m+SafetyLength/2이며CommittedApproach는4m+SafetyLength/2다. 이미그구간을완전히지난정류장출발은occupied band밖 추가2mrear여유(4.5m+SafetyLength/2)를확인한다. 원래서쪽정차점은rear clearance약4.94m로이기준보다.3m이상여유가있고, 별도모든busdefinition·red출발·600초signalCycles>=2검사를유지한다. upstream신호/차체보정/앞뒤gap은불변이다. 이는이전5m추가buffer로발생한downstream교착을실제안전대역과맞춰보정한것이며, 문닫힘/3pulse/6초현재차선복귀를유지한다. 반복승객visit/cooldown보정도함께최종재검증한다. 아직최종GPU/서명APK는대기다.

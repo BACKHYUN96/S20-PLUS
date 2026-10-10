@@ -323,7 +323,8 @@ namespace PixelTraffic.UnityPrototype.Editor
                             for(int stage=0;stage<4;stage++)if(ready[stage]&&!seenStop[stop,stage])
                             {
                                 int side=BusStops.Side(stop);float z=BusStops.DoorZ(stop);
-                                camera.transform.position=new Vector3(side*7.5f,2.25f,z-side*5);camera.transform.LookAt(new Vector3(side*7.7f,1.2f,z));
+                                if(stage<2){camera.transform.position=new Vector3(side*7.5f,2.25f,z-side*5);camera.transform.LookAt(new Vector3(side*7.7f,1.2f,z));}
+                                else{camera.transform.position=new Vector3(side*8.5f,2.25f,z+side*8);camera.transform.LookAt(new Vector3(side*5.6f,1.2f,BusStops.CenterZ(stop)));}
                                 climate.Preview(stage<2?0:2,0);detailStreet.ApplyViews();
                                 string[] stopLabels={"alighting-day","boarding-day","hazards-on-night","hazards-off-night"};
                                 stopPreviews.Add(CaptureState(camera,stopRequest,stopTarget,stopImage,"bus-stop-"+(stop==0?"west-":"east-")+stopLabels[stage]));seenStop[stop,stage]=true;stopCaptured++;
