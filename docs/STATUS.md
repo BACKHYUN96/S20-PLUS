@@ -1,5 +1,9 @@
 # 현재 상태
 
+## 2026-10-11 — Unity 0.16.0 실제 화면 건물 색상의 잔점 보정
+
+source2b221d8의Validate38067479489/job114257960606/artifact11675546625는Runtime와GPU71PNG PASS였다.26957271bytes/digest65fb7f8f3ebc602354d8b6e971ff5cb0d6139e17499cd4ed9b18721928122197/CRC/source를확인했다. 실제낮/밤/원경/안개사진에서window fwidth filter로밤subpixel창문은개선됐지만낮의벽전체에잔점이남았다. 새diffuse색상의sineHash에perspective-interpolatedseed를직접넣은것을원인으로판단해건물ID를34cell로quantize하고diffusehash를안정된seedlerp로교체한다. 창문은floorgrid와quantizedseed로계산한다. Shader만변경하고geometry/runtime/host는같다. 낮표면잔점을검증PASS만으로넘기지않으며최종GPU와같은sourceAPK를재검증한다. 아직APK0.16은미생성이다.
+
 ## 2026-10-11 — Unity 0.16.0 첫 실제 검증 통과·원경 창문 필터 보정
 
 사용자가UnityHub로그인/Personal활성을확인한뒤같은source836a03c의Validate38065914574/attempt2/job114256052286은PASS했다. reports11675745377의26628723bytes/digest3a49b3d700adddd56cb71945024f9f977bdec126697be9d16d7b72eaf3e26e3a/CRC/source와GPU71PNG를확인했다. 원래카메라낮/밤·강낮/밤사진을관찰해다리/산층/밤수면반사는확인했으나건물옆면의hard-step창문grid가subpixel에서거칠게alias되어shader만보정한다. fwidth기반edge와area-average창문/점등/색상을거리에서섞고낮강base를더푸르게맞춘다. 실제1778원경tri/8mesh/11lamp/65mdepth/7.781mdeckclearance,최대119112tri/1580renderer/44material로기존strict예산안이다. runtime/geometry/NativeAndroid/host입력은변하지않으며최종sourceGPU·서명APK는아직대기다. 숨김active clock/directional전환/18기후/기존교통·승하차검사는첫실제source에서PASS였고최종source에서도pipeline을실행한다.

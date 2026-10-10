@@ -69,9 +69,12 @@ Shader "PixelTraffic/Distant"
                 }
                 else if(kind<2.5)
                 {
-                    float seed=i.color.z;
+                    // Recover the authored building ID before hashing window cells.
+                    // Perspective interpolation of a nominally constant float can vary
+                    // by ulps; feeding it straight into a sine hash speckles whole faces.
+                    float seed=floor(i.color.z*34+.5)/34;
                     float light=.52+.48*saturate(dot(normalize(i.normalWS),normalize(float3(-.5,.7,-.5))));
-                    color=lerp(float3(.32,.48,.61),float3(.72,.78,.80),Hash(float2(seed*83,3)))*light*(day+dusk*.68+night*.17);
+                    color=lerp(float3(.32,.48,.61),float3(.72,.78,.80),seed)*light*(day+dusk*.68+night*.17);
                     float2 grid=uv*float2(5,max(3,i.color.y));float2 cell=frac(grid);
                     // Fade subpixel windows to their area average, including lighting.
                     // Hard step/hash cells alias on narrow distant building side faces.
