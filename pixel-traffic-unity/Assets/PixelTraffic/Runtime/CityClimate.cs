@@ -20,6 +20,8 @@ namespace PixelTraffic.UnityPrototype
         public ClimateEffects Effects => effects;
         public int AdditionalLights => streetLights.Length;
         public float LampGain { get; private set; }
+        public float BuildingGain { get; private set; }
+        public float ShopGain { get; private set; }
         public float Wetness { get; private set; }
         public float RainGain => (float)(weather.Weights[1] * .38 + weather.Weights[2] + weather.Weights[5]);
         public float WindGain => (float)weather.Weights[5];
@@ -88,15 +90,19 @@ namespace PixelTraffic.UnityPrototype
             RenderSettings.fogEndDistance = Mathf.Lerp(360 * day + 310 * dusk + 270 * night, 105, fog);
             Camera.main.backgroundColor = RenderSettings.fogColor;
             LampGain = Mathf.Clamp01(dusk * .72f + night + cloud * .4f);
+            BuildingGain = Mathf.Clamp01(dusk * .52f + night + cloud * .16f);
+            ShopGain = Mathf.Clamp01(dusk * .86f + night + cloud * .35f);
             Wetness = Mathf.Clamp01((float)(weather.Weights[1] * .68 + weather.Weights[2] + weather.Weights[4] * .35 + weather.Weights[5]));
             runtimeSurfaces[0].SetColor("_BaseColor", Color.Lerp(surfaces[0].GetColor("_BaseColor") * (1 - Wetness * .3f), new Color(.58f, .61f, .64f), snow * .45f));
             runtimeSurfaces[0].SetFloat("_Smoothness", Mathf.Lerp(.12f, .78f, Wetness));
             runtimeSurfaces[1].SetColor("_BaseColor", Color.Lerp(surfaces[1].GetColor("_BaseColor") * (1 - Wetness * .16f), new Color(.84f, .85f, .83f), snow * .7f));
-            runtimeSurfaces[2].SetColor("_BaseColor", Color.Lerp(surfaces[2].GetColor("_BaseColor"), new Color(.72f, .40f, .12f), LampGain * .7f));
-            runtimeSurfaces[2].SetColor("_EmissionColor", new Color(1, .49f, .12f) * LampGain * .65f);
+            // Atlas pixels retain room/shop colours and dark windows; only exposure fades.
+            runtimeSurfaces[2].SetColor("_BaseColor", surfaces[2].GetColor("_BaseColor"));
+            runtimeSurfaces[2].SetColor("_EmissionColor", Color.white * BuildingGain * 1.15f);
             runtimeSurfaces[3].SetColor("_EmissionColor", new Color(1, .76f, .35f) * LampGain * 1.6f);
             runtimeSurfaces[4].SetColor("_EmissionColor", new Color(1, .92f, .68f) * LampGain * 1.5f);
             runtimeSurfaces[5].SetColor("_EmissionColor", new Color(1, .035f, .01f) * LampGain * 1.2f);
+            if(runtimeSurfaces.Length>6)runtimeSurfaces[6].SetColor("_EmissionColor", Color.white * ShopGain * 1.1f);
             foreach (var light in streetLights) light.intensity = 2.3f * LampGain;
             effects.SetLighting(LampGain);
             float wind = (float)weather.Weights[5];

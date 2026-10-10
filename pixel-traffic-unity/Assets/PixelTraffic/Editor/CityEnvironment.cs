@@ -180,19 +180,18 @@ namespace PixelTraffic.UnityPrototype.Editor
             float streetSide = x > 0 ? -3.28f : 3.28f;
             Material stone = Mat("Architectural Trim", new Color(.76f,.75f,.68f));
             Material frame = Mat("Window Frame", new Color(.27f,.31f,.31f), .1f);
-            Material glass = Mat("Window Glass", new Color(.14f,.27f,.33f), .25f, .52f);
+            var windows=FrontageScene.BeginWindows(root,index,streetSide,frame);
             for (int floor = 1; floor < floors; floor++)
             {
                 Box("Floor Cornice", root, new Vector3(streetSide, floor * 2.8f + .1f, 0), new Vector3(.2f,.12f,14.1f), stone);
                 for (int column = 0; column < 5; column++)
                 {
                     Vector3 position = new Vector3(streetSide, 1.6f + floor * 2.8f, -5.2f + column * 2.6f);
-                    Box("Window Frame", root, position, new Vector3(.09f,1.8f,1.8f), frame);
-                    Box("Window Glass", root, position + new Vector3(x > 0 ? -.055f : .055f,0,0), new Vector3(.035f,1.6f,1.6f), glass);
+                    windows.Add(position,floor,column);
                 }
             }
-            Box("Shop Windows", root, new Vector3(streetSide,1.5f,0), new Vector3(.10f,2.4f,11.8f), glass);
-            Color[] awnings = {new Color(.20f,.39f,.23f),new Color(.73f,.36f,.13f),new Color(.28f,.38f,.45f)};
+            windows.Save();FrontageScene.Shop(root,index,streetSide,frame);
+            Color[] awnings = {new Color(.34f,.23f,.15f),new Color(.17f,.40f,.25f),new Color(.25f,.34f,.44f)};
             Box("Shop Awning", root, new Vector3(streetSide + (x > 0 ? -.55f : .55f),2.8f,0), new Vector3(1.2f,.2f,12), Mat("Awning " + index % 3, awnings[index % 3]));
             Box("Roof", root, new Vector3(0,height + .1f,0), new Vector3(6.8f,.2f,14.3f), Mat("Roof",new Color(.39f,.40f,.38f)));
             foreach (float side in new[] {-1f,1f})

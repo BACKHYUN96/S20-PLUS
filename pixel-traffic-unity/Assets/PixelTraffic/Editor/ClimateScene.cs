@@ -12,7 +12,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         {
             var root = new GameObject("Climate and Lighting");
             var controller = root.AddComponent<CityClimate>(); var effects = root.AddComponent<ClimateEffects>();
-            var materials = new Material[6]; string[] names = { "Asphalt", "Paving", "Window Glass", "Lamp Lens", "Headlamp", "Tail Lamp" };
+            var materials = new Material[7]; string[] names = { "Asphalt", "Paving", "Window Glass", "Lamp Lens", "Headlamp", "Tail Lamp", "Shop Interior" };
             for (int i = 0; i < names.Length; i++)
             {
                 materials[i] = AssetDatabase.LoadAssetAtPath<Material>(StarterScene.Generated + "/" + names[i].Replace(" ", "") + ".mat");

@@ -1,5 +1,16 @@
 # 새 채팅 인수인계 — 픽셀 트래픽 0.29.0
 
+## 2026-10-10 — Unity 0.9.0 상가·창문 조명 구현 / 원격 게시 승인 확인·Windows 검증 시작
+
+- 사용자가 이번 수정본을 BACKHYUN96/S20-PLUS main에 게시하고 연결된 PC의 자동 검증·실제 화면 캡처·서명 APK 빌드까지 진행하도록 명시 승인했다. 직전 main/기능 브랜치 push는 자동 승인 검토에 차단됐으며 실행되지 않았다.
+- 사용자 기능 승인: 1층 카페·편의점·일반 매장, 켜짐/꺼짐 및 따뜻한/차가운 창문 조명. 0.8.0 폰 적용 여부는 확인되지 않았으며 최신 실기기 적용 확인은 0.7.0이다.
+- 24개 건물의 480개 창문을 건물별 프레임/유리 메시로 합치고, 공유 256×128 창문 및 512×512 상가 색상/발광 atlas를 Editor에서 생성한다. 카페·편의점·매장 각각 8개, 문·손잡이·진열대·간판·OPEN 포스터를 추가한다. 좌우 간판 UV 방향을 달리해 글자 반전을 방지한다.
+- 기존 4초 전환에 노을 창문 52%·매장 86%, 밤 100% 발광을 연결한다. 기존 낮→노을→밤과 밤→낮, 재선택/중단/숨김 정지가 유지된다. 추가 실제 조명 없이 공유 재질 노출만 변경한다.
+- 수정 범위: CityEnvironment/ClimateScene/CityClimate/StarterConfig/StarterScene/CityPreview, FrontageScene/FrontageChecks 및 신규 meta 2개. 상가 낮/밤 6장과 기존 도시·차량 22장을 실제 URP GPU로 캡처하도록 구성했다. 임시 카메라/차량 포즈는 저장하지 않는다.
+- 모바일 예산 <120000 triangles / <2400 renderers / <48 materials와 실제 조명 4개를 유지하며 예산 검사·전환 oracle·공유 재질·UV·기하·보행 동선 검사를 추가했다. 정적 예상 최대 우산 예산 119634/1443/47은 측정 결과가 아니다.
+- 시작 Git 상태/기존 파일 해시: /workspace/artifacts/unity-0.9.0-start-state.json. 소스 76개 입력 해시 및 범위: /workspace/artifacts/unity-0.9.0-source-manifest.json. NativeAndroid 등 관련 입력은 0.8.0과 동일하여 host Lint 38008378207 결과(0 errors/10 warnings)를 재사용한다.
+- 다음: 동일 소스 Windows Unity 6.3 LTS 검증·실제 상가 낮/밤 이미지 확인 후 기존 서명 ARM64 APK 빌드, launcher Lint·서명·manifest·다운로드 SHA 검증. 아직 Unity/GPU/Android 검사와 0.9.0 실기기 검사를 통과했다고 주장하지 않는다.
+
 ## 2026-10-10 — Unity 0.8.0 차량 곡면·유리·휠·램프 개선 APK 전달 완료
 
 사용자가 **0.7.0 실제 폰 적용 성공**을 확인하고 다음 단계를 승인했다. 이전 추천인 차량 3D 외형 고도화를 **0.8.0/code9**에 적용했다. 실제 PC 장면·GPU 렌더·Android BuildPlayer/launcher Lint와 내려받은 기존 v2 서명 APK를 검증해 전달한다. 실제 폰의0.8.0 외형·설정 보존·숨김 복귀·FPS/발열은 설치 후 확인이며 PC/Editor 결과로 대체하지 않는다.
