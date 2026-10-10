@@ -1,5 +1,11 @@
 # 현재 상태
 
+## 2026-10-10 — Unity 0.14.0 실제 첫 검사 실패: 초기화 바퀴 자세 보정
+
+첫source9f4d0d4/Validate38045876827(job114195187333)/artifact11667219347는Unity컴파일·장면생성을수행한뒤StreetChecks90초15/30/60/120Hz에서Signal/merge traffic depends on frame rate로실패했다. rawlog대신비밀값제거unity-failure.json의실제예외/소스위치를확인했다. 이전테스트주행의앞바퀴steer/roll이ResetPosition뒤에도남았고,긴차량에서는steer된tyre가미러밖으로돌출해ResetModel의actualBodyBounds/폭안전envelope에영향을줄수있었다.
+
+PrototypeDrive.ResetPosition이logicalwheelRoll=0과실제4wheel.localRotation=identity를함께초기화하도록수정하고StreetChecks에서실제resetwheelpose를검사한다. 프레임속도검사의허용오차/횟수/간격요건은완화하지않았다.18source/meta/102input으로범위를갱신했다. 실제재검증/GPU/Android/APK는아직대기다. 이전0.13폰성공과Drive보류/원본서명host입력보존을유지한다.
+
 ## 2026-10-10 — Unity 0.14.0 버스·박스 트럭 구현, 실제 검증 대기
 
 사용자가0.13.0실제폰적용성공을확인하고3D버스/박스트럭패치를승인했다.0.14.0/code15,HeavyTraffic-0.14.0.unity/Generated/HeavyTraffic0140. 차량24대/6perlane에서파란CityBus4·흰BoxTruck4·기존승용차16을혼합하고시안카메라·나무/건축·시간/날씨/노을·보행/신호·NativeAndroid를유지한다.

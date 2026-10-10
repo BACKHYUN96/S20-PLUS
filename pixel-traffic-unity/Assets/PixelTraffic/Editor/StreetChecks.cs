@@ -80,6 +80,8 @@ namespace PixelTraffic.UnityPrototype.Editor
                 {
                     for(int i=0;i<drives.Length;i++)drives[i].ResetPosition(poses[i].z);
                     controller.ResetModel();
+                    foreach(var drive in drives)foreach(var wheel in drive.Wheels)
+                        Need(Quaternion.Angle(wheel.localRotation,Quaternion.identity)<.001f,"Reset retains a previous wheel steering/roll pose.");
                     for(int n=0;n<fps*90;n++)controller.Advance(1d/fps);
                     var positions=new double[drives.Length];for(int i=0;i<positions.Length;i++)positions[i]=controller.Model.Cars[i].z;
                     if(baseline==null){baseline=positions;baselineX=new float[positions.Length];baselineState=new int[positions.Length];for(int i=0;i<positions.Length;i++){baselineX[i]=controller.Model.Cars[i].X;baselineState[i]=(int)controller.Model.Cars[i].maneuver;}}

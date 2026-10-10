@@ -69,6 +69,7 @@ namespace PixelTraffic.UnityPrototype
         {
             routePosition = z;
             wheelRoll=0;
+            foreach(var wheel in wheels)if(wheel!=null)wheel.localRotation=Quaternion.identity;
             initialized = true;
             transform.position = new Vector3(LaneX, 0, z);
             transform.rotation = Quaternion.Euler(0, Direction < 0 ? 180 : 0, 0);
