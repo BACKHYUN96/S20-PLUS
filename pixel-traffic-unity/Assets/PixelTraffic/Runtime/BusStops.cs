@@ -22,7 +22,7 @@ namespace PixelTraffic.UnityPrototype
         readonly int[] boarded=new int[2];
         public int Arrivals {get;private set;}public int Boardings {get;private set;}public int Alightings {get;private set;}public int Departures {get;private set;}
         public static int Side(int stop)=>stop==0?-1:1;
-        public static float DoorZ(int stop)=>stop==0?-4.5f:34.5f;
+        public static float DoorZ(int stop)=>stop==0?-5.5f:34.5f;
         public static bool SidewalkOpen(Vector2 p)
         {
             float x=Mathf.Abs(p.x);for(int stop=0;stop<2;stop++)

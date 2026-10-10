@@ -1,5 +1,9 @@
 # 현재 상태
 
+## 2026-10-10 — Unity 0.15.0 서쪽 정류장 실제 차체 clearance 여유 보강
+
+실제 버스 safetyLength에는8°회전 envelope가 포함된다. 서쪽 기존 centerZ=-.425는 crossingZ10에서10.425m지난위치로, 약10.49m인5m+SafetyLength/2 출발조건보다조금짧았다. 동쪽은충분히떨어져있으나서쪽버스가빨간신호에서Ready로정차한채뒤차의교차로비우기를막을수있다. west doorZ를-4.5에서-5.5로1m앞으로옮겨centerZ=-1.425와추가.3m이상의검증된여유를확보한다. 신호/차체/foot gap기준을낮추지않으며실제모든busdefinition에서stopclearance를검사한다. serialized24대600초검사에signalCycles>=2와실제완료laneChanges측정도추가해서비스횟수만으로장기교통정체를놓치지않는다. 이전Runtime횟수PASS는장기signal진행전체검증과동일하지않음을정정하며최종Runtime/GPU/서명APK는재검증대기다.
+
 ## 2026-10-10 — Unity 0.15.0 촬영 ResetModel 시작 위치 보정
 
 source45e01d0bf7f55f552ec87d6d78316ceed707f212 / Validate38051670312(job114211889567)/artifact11670100882에서 전체 Runtime 검사는 다시 PASS였지만 GPU55PNG후 실제 차선변경 촬영은 계속 실패했다. 촬영 originalZ가 CaptureBatch에서 이미30초 진행한 위치를 사용하면서 ResetModel의 승하차/신호상태만 초기화되던 부분을 발견했다. serialized장면의 차량 위치를 첫 Advance전에 저장하고 각 독립 촬영마다 그 위치로 복원한다. 실제maneuver Signaling/Merging ticks·cycles/정류장 진행을 실패진단에 추가한다. runtime/productioncamera/geometry는불변, 최종GPU/APK는재검증대기다. 앞의viewport 추정만으로문제가해결되지않았음을명시한다.
