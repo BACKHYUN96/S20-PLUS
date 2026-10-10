@@ -1,5 +1,21 @@
 # 작업 이력
 
+## 2026-10-10 — 모바일 WORK APK 다운로드 오류: 외부 브라우저 링크 배포 완료
+
+사용자폰에서작업경로APK링크를열때 `Interrupted waiting for app-server response for seq_id 6`가발생했다. WORK의파일전송경로실패로추정하며모바일클라이언트자체를수정했다고주장하지않는다. 같은 **Unity0.10.0/code11** APK를GitHub공개파일링크로별도배포했고로그인없는HTTP200다운로드/bytes/SHA일치를실제로확인했다. 사용자폰에서새링크로받는것은확인대기다.
+
+- [모바일/PC APK 직접 다운로드](https://github.com/BACKHYUN96/S20-PLUS/raw/50a5b1945a646e7f6dbec5493cc0b599b0bd66d4/pixel-traffic-unity-prototype-0.10.0.apk). WORK내부파일열기대신크롬/삼성인터넷에서URL을연다. 파일명 `pixel-traffic-unity-prototype-0.10.0.apk`, 29796063bytes, SHA256 **40f0ab6cdd699c443a1b8b6998ac0d98f57d31cbbd8ffc47a7636eb013fbaf9e**. 원본APK·서명·앱소스는변경없고이미실행한Unity검증/AndroidBuildPlayer/Lint와다운로드원본v2서명확인을재사용한다.
+- 전용 `downloads/unity-0.10.0` branch/commit **50a5b1945a646e7f6dbec5493cc0b599b0bd66d4**의root tree에APK한파일만업로드했다. workflow·토큰·서명키·앱소스는없다. 소스main에는배포binary를추가하지않았다. 일반https GitHub/raw URL을기반으로하며로그인없는직접다운로드의Content-Type은application/octet-stream, 실제전체29796063bytes의SHA가원본과동일했다. 특정세션작업폴더/7일Actionsartifact링크에의존하지않는다.
+- 먼저GitHubRelease방식을준비했지만cloud에서GitHubAPI직접호출이Forbidden이었다. 이후준비한자동릴리스workflow의main push는자동승인검토에실행전거절됐다: 지속적인contents:write/release게시권한은사용자의다운로드문제해결요청에명시적으로포함되지않고일회성방법이있다는이유다. 새권한설정없이APK한파일만배포하는더좁은방법은실행됐다. 거절된workflow는원격에게시하지않았고local작업파일도제거했다. 조사용준비본만 `/workspace/artifacts/unity-mobile-download-unpublished-workflow.yml`에보관하며적용된기능으로취급하지않는다. **향후자동릴리스는구현하지않았다.**
+- 초기상태 `/workspace/artifacts/unity-mobile-download-start-state.json`, 공개다운로드관측 `/workspace/artifacts/unity-mobile-apk-download.json`. source빌드입력84개·realindex·기존native상태를보존한다. 원격branch게시/공개파일접근확인은완료했고docs는[skipci]범위로만게시해앱재빌드를유발하지않는다.
+
+PC에서설치할경우기존집경로 `C:\Users\김백현\Desktop\AI`에APK를저장하고실행한다:
+
+```powershell
+$unityAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $unityAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.10.0.apk"
+```
+
 ## 2026-10-10 — Unity 0.10.0 카메라·차량 등화·안전한 차선 변경 APK 전달 완료
 
 사용자가 요청한 카메라 구도 변경, 전조등·브레이크등, 간헐적인 깜빡이3회 후 차선 변경을 **0.10.0/code11**에 적용했다. 이전 명시 승인에 따라 main 게시와 연결된 Windows PC의 검증·GPU 캡처·서명 APK 빌드를 실행했다.
