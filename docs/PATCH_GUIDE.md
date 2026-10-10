@@ -1,5 +1,15 @@
 # 작은 패치 작업 안내
 
+## Unity 0.6.0 — 시간대·날씨 전환 (2026-10-10 KST)
+
+관련 범위는 Runtime SceneBlend/CityClimate/ClimateEffects/AndroidWallpaperBridge/StarterConfig/StreetSimulation(신호 emission), Editor ClimateScene/ClimateChecks/StarterScene/CityPreview/CityEnvironment(shader 허용 검사), Shaders/Atmosphere.shader 및 meta, NativeAndroid WallpaperPreferences/WallpaperSettingsActivity/values XML이다. 도시·차선 생성 geometry, VehicleGeometry/TrafficFleet/StreetModel/SidewalkRoutes, Surface host 및 서비스/IPC 보안 코드는 유지한다.
+
+- 네이티브 ThemeBlend/RoadWetness/CinematicScene/WindStorm의 4초 active-time smoothstep와 current weights retarget 계약을 먼저 읽었다. 시간대3/날씨6 및 UI 저장 설정을 연결한다. 수동 설정이며 실시간 시각/기상 API는 연결하지 않는다.
+- 필수 실제 PC pipeline의 PrepareBatch/Validate: 기존 vehicle/street/100-rig budget + 새 ClimateChecks의15/30/60/120Hz 180 oracle cases/18 endpoints/actual rain/snow visibility/32 canopy sway/숨김 freeze/retarget/3~5초 paper cadence. 검사 임시 상태는 저장하지 않고 성공 후 원본 장면을 다시 연다.
+- 실제 GPU Capture는 D3D11 Editor540×1200 낮/노을/야간·날씨6selected endpoints와0/2/4초 전환 PNG를 관찰한다. black/pink 검사가 실제 시각 관찰을 대체하지 않는다. Editor PNG를 폰 screenshot/FPS 증거로 기록하지 않는다.
+- BuildApk의 실제 Android BuildPlayer/launcher Lint/certificate/version/manifest 및 `tools/check-wallpaper-lint.ps1`의 생성 Java/res SHA 확인 후 unityLibrary Lint가 필요하다. Java/res가 바뀌므로 이전 host Lint를 재사용하지 않는다. signed APK는 집PC 최신 폴더 명령과 함께 전달한다.
+- 관련 검증 결과는 STATUS/WORK_LOG/UNITY_AUTOMATION 최신0.6.0항목, APK/보고서/source-manifest는 `/workspace/artifacts`를 참조한다. 실제 폰의 UI/저장설정/숨김·복귀/성능은 사용자 확인 대기다.
+
 ## Unity 횡단보도 차선 보정 0.5.1 범위와 검사
 
 | 변경 대상 | 관련 파일 | 확인 |

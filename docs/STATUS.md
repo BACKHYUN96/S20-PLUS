@@ -1,5 +1,68 @@
 # 현재 상태
 
+## 2026-10-10 — Unity 0.6.0 시간대·날씨 4초 전환 APK 전달 (KST)
+
+사용자가 **0.5.1 실제 폰 적용 성공**을 확인했고, 기존 앱처럼 날씨·시간대 변경을 부드럽게 연결하는 패치를 요청했다. **0.6.0/code7**의 실제 PC 검사/렌더와 Android 빌드/두 모듈 Lint/기존 서명을 확인해 전달한다. 이번0.6.0의 실제 폰 설치·설정 UI/저장/숨김 복귀·FPS/발열은 사용자 확인 대기다.
+
+### 결과와 범위
+
+- 설정 앱에 **낮/노을/야간**과 **맑음/약한 비/강한 비/눈/안개/비바람**을 추가한다. 시간대·날씨는 독립 **4초 active-time smoothstep**으로 색/밝기/안개/노면 젖음/창문·가로등·차량 조명/비·눈·바람 효과를 연결한다. 중간 재선택은 현재 가중치에서 시작하며 같은 선택은 진행을 재시작하지 않는다. 처음 실행은 저장된 상태로 snap하고 화면 꺼짐·숨김 중에는 전환/효과 시간도 멈춘다. 기존 native ThemeBlend/RoadWetness/CinematicScene/WindStorm의 계약을 확인해 옮겼다. 2D와3D의 픽셀 모양이 동일하다는 뜻은 아니다.
+- 가까운 shadowless spot4개, 가로등 노면 pool20개, rain160/snow96 고정 mesh pool, canopy32개 흔들림, 신문지1장/3~5초 활성 시간 간격을 추가한다. gain0인 lamp pool은 draw를 끈다. 노면 wetness는 native값인 약한 비0.68/강한 비·비바람1/안개0.35/맑음·눈0을 사용한다. 비 줄기와 이동/바람 방향을 맞춘다.
+- 수동 설정이며 실제 시각/기상 API와 날씨별 차량·인원 감소는 추가하지 않았다. 기존24대/4~100명(기본32)/절전15·기본30FPS 목표/신호·보행·장애물/기존 appID·v2 서명을 유지한다. FPS는 목표이며 실측 성능 보장이 아니다.
+- 범위22소스/meta: Runtime SceneBlend/CityClimate/ClimateEffects/AndroidWallpaperBridge/StarterConfig/StreetSimulation(신호 emission1줄), Editor ClimateScene/ClimateChecks/StarterScene/CityPreview/CityEnvironment(shader 허용 검사1곳), Atmosphere.shader 및 meta, NativeAndroid WallpaperPreferences/WallpaperSettingsActivity/values XML. 새 Climate-0.6.0.unity/Generated/Climate060으로 이전 장면을 보존한다. CityEnvironment geometry는 byte-equivalent 구간이며 변경은 shader 허용 조건뿐이다. VehicleGeometry/TrafficFleet/StreetModel/SidewalkRoutes/서비스·Surface host 소스는 유지한다. dirty/index를 보존하고 임시 index로 필요한 파일만 게시했다.
+
+### 과정과 보정
+
+base **d1d64e74b85db701647d4678dfbfd95c3bfecadd**에서 구현했다. 첫 실제 검사에서 URP17.3 additionalLightsRenderingMode 읽기 전용 CS0200이 나와 SerializedObject 방식으로 수정했고, 다음에는 표시 이름 기반 재질 찾기 실패를 확정 asset 경로 연결로 고쳤다. 단일 나무의 시작/30초 끝 각도 비교가 주기/float 분해능 때문에 실패해, 전체32개를 매0.1초 관찰하는 더 강한 검사로 바꿨다. 바람 runtime을 무시하거나 검사 조건만 느슨하게 하지 않았다. 검사 임시 재질/mesh가 빌드에 남지 않도록 성공 후 저장된 원본 scene을 다시 연다.
+
+실제 첫 렌더의 회색 사각 lamp pool/약한 window emission을 발견해 전달을 보류하고, 명시적 alpha blend/ZWriteOff/CullOff URP **Atmosphere.shader** 및 emission variant 유지/명시적 runtime keyword로 보정했다. 최종 PNG에서 부드러운 따뜻한 노면 빛·창문 발광, 비/안개/신문지를 관찰했다. 이전 실패/중간 source/run/artifact는 바로 아래 진행 이력에 남긴다. APK 추가 리소스 파서는 aapt의 spec declaration 대신 실제 bag을 조회하도록 보정해 시간대3/날씨6의 개수·순서·한국어 문자열을 확인했다.
+
+최종 코드 **a29e9168e894cb120a9d94c659463227361f5419**, 태그 **unity-apk-0.6.0-build1**, host Lint 태그 **unity-host-lint-0.6.0-check1**. 최종 문서 게시만 별도로 수행하고, 동일한66빌드 입력을 유지하면 검사를 반복하지 않는다.
+
+### 실제 확인
+
+| 검사 | 결과와 근거 |
+| --- | --- |
+| 최종 PC 컴파일/장면/렌더 | [Validate38007422113](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38007422113), job114079822901 success. Shader/클린 scene 재열기 포함 |
+| 기존 모델/횡단/장애물 | 차량24대/4model,4/32/100명,200/600/600초,223횡단/33신호주기; min foot0.3999990523m/bumper1.7999997139m PASS.12zebra/94차선 bounds 비중첩 유지 |
+| 새 전환/효과 | 15/30/60/120Hz 180 독립 native oracle cases,18 scene endpoints/actual rain/snow 활성/retarget/invalid delta/frame cap/숨김 freeze PASS.32개 canopy 최소 측정 sway4.602755도, paper8회/마지막 예약 간격3.146284초 |
+| 실제 장면 budget | 기본107346triangles/2162renderers/46materials;100명116322/2230/46. 추가 실시간 조명4개/그림자없음, material/geometry 제한 내. APK/메모리/FPS 프로파일은 별도 |
+| 실제 GPU 화면 | D3D11 Editor540×1200 PNG11장(기본/diagnostic/selected endpoints6/전환0·2·4초) PASS. 최종 APK 빌드의 야간/비바람/노을도 관찰. 폰 screenshot·영상·FPS 측정 아님 |
+| Android APK | [BuildApk38007659419](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38007659419), job114080698818 success. BuildPlayer errors0/warnings0, launcher Lint errors0/warnings8 |
+| 이번 변경의 host Lint | [HostLint38008378207](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38008378207), job114082376858 success. 생성된 이번 Java/res8개 SHA 일치 후 unityLibrary Lint errors0/warnings10. 이전 host Lint 재사용 아님 |
+| 다운로드 실제 APK | reports/APK/host ZIP digest/CRC,APK digest/bytes/v2 원본cert,aapt0.6.0/code7/min29/target36/ARM64,SettingsActivity launcher,BIND_WALLPAPER/:wallpaper/meta/providerfalse/UnityActivitydisabled, compiled 시간대3/날씨6 arrays PASS |
+
+남은 host 경고10은 Unity/Android 호환·의존성/ARM64 범위9개와 ApplicationContext를 보관하는 기존 StaticFieldLeak1개다. UI 문자열을 resources로 옮겨 이전 SetTextI18n4개가 사라졌다. 경고를 숨기거나 오류0을 경고0으로 기록하지 않는다. 실제 폰에서 같은 설정 저장소 보존·구동/숨김 복귀와 열·전력을 확인한다.
+
+### 파일·서명·추적
+
+- APK **`/workspace/artifacts/pixel-traffic-unity-prototype-0.6.0.apk`**, **29725640 bytes**, SHA256 **`33f895e8a93c2d84b01f7cccf3478e826d9d6078a0b35c21d4a4a3f12a23f6de`**.
+- 기존 certificate SHA256 **`a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6`**, v2 PASS. PC DPAPI 서명을 재사용해 원본 키 백업을 다시 복원하지 않았다.
+- 최종 Validate artifact11651564231/5050267bytes ZIP SHA256`a757ffb2fae0b75de946a0f8af24fb94626e0ffcf8f2462595bb3ede411a5fb4`. Build reports artifact11652750233/5078147bytes ZIP SHA256`caa49da255a2792abc79fc92df047150e7a8a2ccbb51accd8f41082bcff9ae00`; APK artifact11652650606/28761363bytes ZIP SHA256`8bc062b2031d237fab23c3575e8e7bd8b054e22b6400231fe4947933b1159202`; host artifact11651909484/1152bytes ZIP SHA256`fe9986040672053399b30e03ab3dc8a2e4d57b87df806ed361566c909bb1a629`.
+- 최종 보고서 **`/workspace/artifacts/unity-prototype-0.6.0-reports/`**, 야간 PNG SHA256`4c1a61edc72920f768a64dc1f9601eaafa77ef9defa91991e7ba37aa45d4ceac`. 같은 artifacts 폴더의 source-manifest(66입력),download-verification,compiled-settings,preview-metrics JSON에 원본 근거를 기록한다. 특정 클라우드 파일이 새 환경에도 남는다고 가정하지 않고 원격 source와 Actions artifacts 보존기간7일을 함께 사용한다.
+
+### 집 PC 설치·사용
+
+APK를 **`C:\Users\김백현\Desktop\AI`**에 저장하고 PowerShell에서 실행한다.
+
+```powershell
+$unityAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $unityAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.6.0.apk"
+if ($LASTEXITCODE -eq 0) {
+    & $unityAdb shell am start -W -n "com.s20plus.pixeltraffic.unityprototype/com.s20plus.pixeltraffic.unitywallpaper.WallpaperSettingsActivity"
+}
+```
+
+앱에서 시간대·날씨를 선택하고 **배경화면 미리보기 및 적용**을 눌러 시스템 화면에서 적용한다. 기존 적용 중이면 홈으로 돌아가 선택한 상태로 4초 전환되는지 확인한다. 전환 도중 다른 선택,맑음↔비바람,낮↔야간,화면 꺼짐/복귀와 인원·절전 저장을 사용자 폰에서 확인한다. 클라우드에서 사용자 폰 설치나 배경화면 자동 적용을 실행했다고 주장하지 않는다.
+
+다음 후보는 실제 폰 피드백 후 비바람의 차량/보행 인원 감소와 더 자세한 노면 반사·창문 밝기 variation이다. 이 후속 기능을 이번 완료 범위에 포함하지 않는다.
+
+## 2026-10-10 — Unity 0.6.0 최종 장면·렌더 PASS / APK 빌드 중 (KST)
+
+최종 sourcea29e9168e894cb120a9d94c659463227361f5419, PCValidate38007422113/job114079822901 success. 180 native smoothstep oracle cases/18 actual endpoints/retarget/숨김 freeze/actual rain/snow renderer/32 canopy sway/paper3~5초 PASS. minimumCanopySwing4.602755도, paperLaunches8/lastInterval3.146284초. 기존차량24대/4model·4/32/100인원·횡단/장애물/100명 budget 검사를 통과했다. 기본107346triangles/2162renderers/46materials,100명116322/2230/46;12zebra/94차선 비중첩을 유지한다. 원본장면 재열기/임시 검사상태 제거도 통과했다.
+
+실제 D3D11 Editor540×1200 PNG11장(기본/diagnostic/selected endpoints6/전환0·2·4초) PASS. sourceee3872f 보정 렌더에서 회색 사각 pool이 사라지고 따뜻한 창문/가로등·강한 비·안개·신문지가 보이는 것을 관찰했으며 finala29e9168 렌더를 추가 확인한다. 폰 screenshot/FPS 테스트는 아니다. Validate reports artifact11651564231/5050267bytes ZIP SHA256a757ffb2fae0b75de946a0f8af24fb94626e0ffcf8f2462595bb3ede411a5fb4/CRC를 확인했다. 같은 최종 source의 unity-apk-0.6.0-build1 태그 BuildApk38007659419/job114080698818가 진행 중이고 새 Java/res의 host Lint·실제 APK 서명/메타데이터는 완료 후 기록한다. 빌드 입력66개 SHA를 source-manifest에 기록했다.
+
 ## 2026-10-10 — Unity 0.6.0 효과 방향·낮 렌더 보완 (KST)
 
 투명 shader sourceee3872f6ce2ad5532383a698d92630910aba0652의 실제 검사는 진행 중이다. ClimateEffects.cs만 보완해 lamp gain0일 때 20개 노면 pool renderer를 꺼 낮의 불필요한 alpha0 draw를 줄인다. 비 줄기의 위쪽 끝은 이동 속도 반대인 +x/+y로 두어 왼쪽 아래로 이동하는 비·왼쪽으로 날리는 신문지/나무 tilt와 방향을 맞춘다. 고정 pool 수·신문지 간격·blend 계약은 유지한다. 최종 source의 실제 Validate/렌더/Android 빌드를 확인하고 이전 시각 결과를 최종 결과로 재사용하지 않는다.
