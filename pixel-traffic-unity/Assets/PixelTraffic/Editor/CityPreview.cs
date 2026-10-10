@@ -140,11 +140,30 @@ namespace PixelTraffic.UnityPrototype.Editor
                 for(int n=0;n<2000;n++){climate.Advance(.1,true);settledStreet.Advance(.1);}settledStreet.ApplyViews();
                 previews.Add(CaptureState(camera, request, target, image, "storm-settled"));
                 climate.Preview(0, 0);
+                var vehiclePreviews=new System.Collections.Generic.List<string>();
+                EditorSceneManager.OpenScene(StarterConfig.ScenePath);
+                camera=Camera.main;camera.aspect=(float)width/height;
+                UnityEngine.Object.FindFirstObjectByType<CityClimate>().Initialize();
+                // Temporary camera/poses in an unsaved Editor scene; phone camera is unchanged.
+                foreach(string model in new[]{"Sedan","SportCoupe","Suv","Taxi"})
+                {
+                    PrototypeDrive selected=null;
+                    foreach(var car in UnityEngine.Object.FindObjectsByType<PrototypeDrive>(FindObjectsSortMode.None))
+                        if(car.Model==model&&selected==null)selected=car;
+                    selected.transform.position=new Vector3(-4.8f,0,0);selected.transform.rotation=Quaternion.identity;
+                    foreach(bool rear in new[]{false,true})
+                    {
+                        camera.transform.position=new Vector3(rear ? -8.6f : -1.0f,4.8f,rear ? -11.8f : 11.8f);
+                        camera.transform.LookAt(selected.transform.position+Vector3.up*.85f);camera.fieldOfView=48;
+                        vehiclePreviews.Add(CaptureState(camera,request,target,image,"vehicle-"+model+(rear ? "-rear" : "-front")));
+                    }
+                    selected.transform.position=new Vector3(selected.LaneX,0,200);
+                }
                 File.WriteAllText("Reports/preview-result.json", JsonUtility.ToJson(new Report {
                     result = "PASS", version = StarterConfig.VersionName, editor = Application.unityVersion,
                     graphicsApi = SystemInfo.graphicsDeviceType.ToString(), width = width, height = height,
                     image = output, source = "Unity Editor URP camera; not a phone screenshot or FPS test"
-                    , materialColors = colors, climateImages = previews.ToArray()
+                    , materialColors = colors, climateImages = previews.ToArray(), vehicleImages = vehiclePreviews.ToArray()
                 }, true));
                 Debug.Log("PASS: real city camera preview saved: " + output);
             }
@@ -184,7 +203,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         {
             public string result, version, editor, graphicsApi, image, source;
             public int width, height;
-            public string[] materialColors, climateImages;
+            public string[] materialColors, climateImages, vehicleImages;
         }
     }
 }

@@ -21,7 +21,8 @@ namespace PixelTraffic.UnityPrototype.Editor
             Material silver = StarterScene.Surface("Vehicle Silver",new Color(.58f,.64f,.69f),.60f,.63f);
             Material pearl = StarterScene.Surface("Vehicle Pearl",new Color(.82f,.81f,.76f),.38f,.62f);
             Material yellow = StarterScene.Surface("Vehicle Yellow",new Color(.96f,.55f,.045f),.38f,.62f);
-            Material glass = StarterScene.Surface("Vehicle Glass",new Color(.045f,.10f,.145f),.4f,.88f);
+            Material glass = StarterScene.Surface("Vehicle Glass",Color.white,.35f,.88f);
+            GlassFinish(glass);
             Material trim = StarterScene.Surface("Vehicle Trim",new Color(.025f,.031f,.038f),.05f,.2f);
             Material metal = StarterScene.Surface("Vehicle Metal",new Color(.63f,.67f,.70f),.78f,.73f);
             Material head = StarterScene.Surface("Headlamp",new Color(.97f,.94f,.79f),.1f,.6f);
@@ -53,6 +54,24 @@ namespace PixelTraffic.UnityPrototype.Editor
                 var drive=root.gameObject.AddComponent<PrototypeDrive>();
                 drive.Wheels=wheels.ToArray();drive.Configure(lane,speeds[lane],shape.radius,((VehicleGeometry.Kind)kind).ToString());
             }
+        }
+
+        private static void GlassFinish(Material material)
+        {
+            // Small authored highlight/sky tint, lit by the existing URP shader.
+            // No realtime reflection probe or per-car texture/material allocation.
+            var texture=new Texture2D(64,64,TextureFormat.RGB24,true) {
+                name="Vehicle Window Finish",filterMode=FilterMode.Bilinear,wrapMode=TextureWrapMode.Clamp };
+            for(int y=0;y<64;y++)for(int x=0;x<64;x++)
+            {
+                float u=x/63f,v=y/63f;
+                Color color=Color.Lerp(new Color(.025f,.045f,.065f),new Color(.19f,.32f,.43f),Mathf.SmoothStep(0,1,v));
+                float band=Mathf.Exp(-Mathf.Pow((v-(.65f-u*.18f))/.045f,2));
+                color=Color.Lerp(color,new Color(.38f,.48f,.55f),band*.55f);
+                texture.SetPixel(x,y,color);
+            }
+            texture.Apply();AssetDatabase.CreateAsset(texture,StarterScene.Generated+"/VehicleWindowFinish.asset");
+            material.SetTexture("_BaseMap",texture);
         }
 
         private static void MeshPart(string name,Transform root,Mesh mesh,Material material)

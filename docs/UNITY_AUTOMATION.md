@@ -1,5 +1,14 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-10 — Unity 0.8.0 차량 외형 고도화 구현·실제 검사 진행 중
+
+사용자가 0.7.0의 실제 폰 적용 성공을 확인하고 다음 단계를 승인했다. 기존 다음 추천인 차량 3D 외형을 진행한다. base01e70ec78bb5ce25154f4c499d33ef1a3c1a834e에서 차량 크기/차선 unit scale/24대·4모델과 날씨·신호·NativeAndroid를 유지한다. 0.8.0/code9,VehicleDetail-0.8.0.unity,Generated/VehicleDetail080을 사용한다.
+
+- 범위7소스/meta: Editor VehicleGeometry/TrafficFleet/CityPreview/StarterScene/VehicleDetailChecks(.meta),Runtime StarterConfig. 지붕 crown·보닛 ridge, 위치를 움직이지 않는 threshold normal smoothing, 둥근 타이어 shoulder와 깊이 있는 tapered spoke, 보이는 fender lip, chamfered lamp silhouette를 적용한다. 기존 hidden spoke box 면을 줄여 모바일 예산을 확보한다. 기존14renderer/car,공유4mesh 세트/46material 구조를 유지하고 glass 공유64×64 tint/highlight texture와 UV를 추가한다. 고정 authored 유리 표현이며 realtime 반사 probe를 추가하지 않는다.
+- 이전 차량48,600tri는 geometry formula로 계산한 값이다. 변경 후 예상49,080tri/도시100우산119,394tri는 아직 실제 측정 전 추정이다. 기존120,000tri/2400renderer/48material 제한을 올리지 않으며 실제 최악 조건 검사를 계속한다.
+- 기존 차량 크기/방향/타이어 contact/회전/차선/600초 간격/15·30·60·120Hz,신호·보행/날씨·전환·100우산 검사를 유지한다. 새 mesh topology/유한 vertex·unit normal/UV·공유/roof crown·tyre shoulder 검사와 실제 GPU 차량4종 front/rear8PNG를 추가한다. 확대 camera/차량 pose는 unsaved Editor 검사 장면에만 적용하며 폰 camera는 유지한다.
+- 시작 Git dirty/index와 수정 전 hash를 unity-0.8.0-start-state.json에 기록했다. native 누적 변경과 real index는 보존하고 임시 index의 명시7파일 및5진행문서만 게시한다. 변경 없는 기존 build 입력 SHA를 확인했다. 아직 이번 실제 Unity/GPU/Android/APK 결과 없음. 첫 main Validate 결과 후 실제 PNG를 관찰하고 같은 source의 APK를 빌드한다. 기존 host SHA가 같으면 실제 host Lint38008378207 결과를 재사용한다. 실기기 성능은 사용자 설치 후 확인이다.
+
 ## 2026-10-10 — Unity 0.7.0 노을 경유·날씨 반응 도시 APK 전달 완료 (KST)
 
 사용자가 **0.6.0 실제 폰 적용 성공**을 확인했고, 낮→밤 직접 선택에 노을을 거치게 하면서 이전에 추천한 날씨별 통행량·우산/보행·차량 감속/물보라 패치를 승인했다. **0.7.0/code8**의 실제 PC 장면·GPU 렌더·Android 빌드/Lint 및 내려받은 기존 v2 서명 APK를 검증해 전달한다. 0.7.0 폰에서의 업데이트·저장 설정·표현·FPS/발열·숨김 복귀는 설치 후 사용자 확인이다.

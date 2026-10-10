@@ -14,7 +14,7 @@ namespace PixelTraffic.UnityPrototype.Editor
     // Generated geometry stays in its own scene; existing scenes are never rebuilt in place.
     public static class StarterScene
     {
-        internal const string Generated = "Assets/PixelTraffic/Generated/WeatherLife070";
+        internal const string Generated = "Assets/PixelTraffic/Generated/VehicleDetail080";
         private const string PipelinePath = Generated + "/MobileURP.asset";
         private static readonly Dictionary<string, Material> materials = new Dictionary<string, Material>();
 
@@ -209,6 +209,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             Require(pipeline.scriptableRenderer != null, "URP renderer not available.");
             Require(PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android) == StarterConfig.ExperimentAppId, "Experimental app ID changed.");
             TrafficFleet.Report traffic = TrafficFleet.Validate();
+            VehicleDetailChecks.Report vehicleDetail = VehicleDetailChecks.Validate();
             StreetChecks.Report street = StreetChecks.Validate();
             AndroidWallpaperBuild.ValidateTemplates();
             Require(Camera.main != null && Camera.main.farClipPlane > 120, "Portrait camera missing.");
@@ -220,7 +221,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             File.WriteAllText("Reports/scene-validation.json", JsonUtility.ToJson(new ValidationReport {
                 editor = Application.unityVersion, applicationId = StarterConfig.ExperimentAppId,
                 utc = DateTime.UtcNow.ToString("O"), traffic = traffic, street = street,
-                version = StarterConfig.VersionName, environment = environment, climate = climate,
+                version = StarterConfig.VersionName, environment = environment, climate = climate, vehicleDetail = vehicleDetail,
                 result = "PASS: actual city and two-way fleet geometry, material, lane bounds, motion, wrap, wheels and lifecycle; not an Android/device test"
             }, true));
             Debug.Log("PASS: city and two-way traffic geometry and motion. Reports/scene-validation.json");
@@ -242,6 +243,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             public CityEnvironment.Report environment;
             public ClimateChecks.Report climate;
             public TrafficFleet.Report traffic;
+            public VehicleDetailChecks.Report vehicleDetail;
             public StreetChecks.Report street;
         }
     }
