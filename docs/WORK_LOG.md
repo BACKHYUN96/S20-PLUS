@@ -1,5 +1,57 @@
 # 작업 이력
 
+## 2026-10-10 — Unity 0.9.0 상가·다양한 창문 조명 APK 전달 완료
+
+카페·편의점·일반 매장과 자연스러운 야간 조명을 **0.9.0/code10**에 적용했다. 사용자가 이번 수정본을 BACKHYUN96/S20-PLUS main에 게시하고 연결된 PC에서 자동 검증·화면 캡처·서명 APK 빌드까지 진행하도록 명시 승인했다. 직전 main/기능 브랜치 push는 자동 승인 검토에 실행 전 차단됐고 승인 뒤 정상 게시했다. 최신 확인된 사용자 폰 적용 성공은0.7.0이며0.8.0/0.9.0 폰 확인을 가정하지 않는다.
+
+### 구현·범위
+
+- 24개 건물에 카페·편의점·일반 매장 각각8개를 추가했다. 1층 진열 창문·문/손잡이·매장 간판·OPEN 포스터·차양을 구성하고 좌우 간판 글자 방향을 맞췄다. 건물별 프레임/유리 메시로 합쳤으며 실제 저층 geometry는 보행 경로 밖, 차양 간판은 머리 위에 둔다.
+- 480개 상층 창문에 불 꺼진 방, 따뜻한 조명과 차가운 조명, 커튼/블라인드/가구 실루엣을 공유256×128 atlas로 만들었다. 상가는512×512 색상/발광 atlas를 공유한다. 건물별 재질 복제·추가 실제 조명·창문별 Update 없이 기존 공유 재질 노출만 변경한다.
+- 낮→노을2초→밤2초와 밤→낮4초를 유지하며 노을에 창문52%/매장86%, 밤100%로 밝아진다. 흐린 날에도 낮은 발광을 적용한다. 실제 shader 발광 값의 독립 시간 oracle, 재선택/양구간 retarget/숨김 freeze/asset 불변과 4개의 기존 실제 조명 제한을 검사했다.
+- 변경10소스/meta: Editor CityEnvironment/ClimateScene/StarterScene/CityPreview/FrontageScene/FrontageChecks 및 신규meta2개, Runtime CityClimate/StarterConfig. `Storefront-0.9.0.unity`, `Generated/Storefront090`. 차량 geometry·교통/보행 모델·NativeAndroid·Android bridge·서명 설정은 동일하다. 생성 텍스처/메시는 Editor에서 제작하며 소스에 키·토큰을 추가하지 않았다.
+
+### 실제 렌더 수정 과정
+
+첫source 47cdcc68a3657100c74e0431ea9da8b72e65829a의 Validate38017177473는 장면/28PNG 생성PASS였지만 실제 상가낮/밤6장 관찰에서 간판 반전과 Cafe 간판 일부 나무 가림을 발견했다. UV 검사가 잘못된 viewer-right 가정을 공유해 통과했음을 확인하고, FrontageScene의좌우UV flip을 고치며 FrontageChecks를카메라up/forward 벡터 외적으로검사하게바꿨다. CityPreview카메라를낮고반대편도로로옮겼다. 최종source를다시실행하고실제PNG를확인한후APK태그를생성했다. 게임카메라/거리geometry는변경하지않았다.
+
+### 실제 검사
+
+| 검사 | 관측 결과 |
+| --- | --- |
+| Windows Unity | [Validate38017565116](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38017565116), job114111142156 success. 실제 scene 결과PASS, 검사가 만든 임시 재질/상태는 원본 장면 재열기로 제거 |
+| 상가·창문 | 실제 건물24/창문480/매장[8, 8, 8]; lit302/dark178/warm180/cool61. 실제 메시에 degenerate triangle 없음, finite vertex/unit normals/UV·material 공유/좌우 글자 방향/동선 PASS |
+| 실제 시간 전환 | 16개 실제 scene 전환·retarget 조건,15/30/60/120Hz shader emission oracle·숨김 freeze·반복 target·18 기존 날씨/시간 endpoint PASS |
+| 예산 | 기본108,258tri/1275renderer/47material. 100우산 최대119,634/1443/47; strict <120000/<2400/<48 유지. 0.8.0 최대119394/2331/46 대비 실제 renderer 수 감소 |
+| 기존 차량·보행·날씨 | 24대4모델/600초 차량 검사/최소 gap46.754658m, vehicle detail49,080tri/14renderer/car PASS. 보행4/32/100명200/600/600초/223횡단/33신호주기, 날씨 각810초/퇴장92/복귀92/100우산96spray/32나무·신문지3~5초 PASS |
+| 실제 GPU 화면 | D3D11 URP Editor PNG28장: 기존 도시14·차량8(540×1200), 상가3종 낮/밤6(960×540). 최종 source 실제 상가6장과 도시 야간·노을 전환을 관찰했다. 임시 카메라/차량 포즈는 저장하지 않으며 APK phone camera는 유지. 폰 screenshot/FPS 증거 아님 |
+| Android | [BuildApk38017884342](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38017884342),job114112125299 success. 실제BuildPlayer 결과Succeeded/오류0; launcher Lint errors0/warnings8 |
+| 변경 없는 host | NativeAndroid/Bridge/AndroidWallpaperBuild/Atmosphere.shader 입력 SHA 불변. 기존 실제host Lint38008378207(0errors/10warnings/nativeFilesMatched8) 재사용. 신규host Lint를 실행했다고 주장하지 않음 |
+| 내려받은 APK | API ZIP digest/bytes·CRC와 APK SHA/bytes 일치. 실제aapt 0.9.0/code10/min29/target36/ARM64/SettingsActivity launcher, BIND_WALLPAPER/:wallpaper/exported서비스/meta/비공개provider/disabledUnityActivity, 원본 v2 certificate PASS |
+
+launcher 기존 경고8와host 경고10은 오류가 없다는 결과와 구분한다. 실제폰0.9.0 화면·설정 보존·홈/잠금·숨김 복귀·재부팅·FPS/발열 검사는 사용자 설치 후 확인이다.
+
+### 산출물·소스 추적
+
+- 최종source **52ba0b3fc3f47509341be82ec9ebfb16ebfde29e**, tag **unity-apk-0.9.0-build1**. 최초source/실패 수정 내역 및 최종76입력 SHA는 `/workspace/artifacts/unity-0.9.0-source-manifest.json`에 기록한다. 기존 real index/native dirty 상태를 보존했고 임시 index whitelist로 게시했다.
+- APK `/workspace/artifacts/pixel-traffic-unity-prototype-0.9.0.apk`, **29777431bytes**, SHA256 **ea2be19cbcc598dd40565216a8d69038f517357e7ab2ec826adda8a5f81a6d90**. 원본 v2 cert **a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6**.
+- Validate artifact11655984967/SHAa7414949574bb924d3b03bee1553a1ff8ad713170cdd872b8e80f5c472ebc058; APKartifact11656568877, build reportsartifact11656858746. 실제reports `/workspace/artifacts/unity-prototype-0.9.0-reports`, 다운로드 검증 `unity-prototype-0.9.0-download-verification.json`. 원격7일artifact와 특정cloud 첨부파일이 다음세션에도 남는다고 가정하지 않는다.
+- 문서-only 최종8파일 게시 후76입력 SHA가 같으면 검사를 반복하지 않는다. 문서commit은source-manifest에 별도 기록한다.
+
+### 집 PC 설치
+
+APK를 `C:\Users\김백현\Desktop\AI`에 다운로드하고 아래 명령을 실행한다.
+
+```powershell
+$unityAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $unityAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.9.0.apk"
+if ($LASTEXITCODE -eq 0) {
+    & $unityAdb shell am start -W -n "com.s20plus.pixeltraffic.unityprototype/com.s20plus.pixeltraffic.unitywallpaper.WallpaperSettingsActivity"
+}
+```
+
+설정에서 배경화면에 적용한 뒤 낮·노을·밤의상가/창문·비/우산·차량/보행·설정 보존을 폰에서 확인한다. 다음 후보는 도로의 정류장·벤치·생활 소품이며 최대100우산 예산 여유를 실제 계산한 뒤 적용한다.
+
 ## 2026-10-10 — Unity 0.9.0 실제 렌더에서 간판 반전 발견·수정
 
 source47cdcc68a3657100c74e0431ea9da8b72e65829a의 실제Validate38017177473/job114109948455는scene/previewPASS,artifact11656294283/12496027bytes/SHA681d21462d39c674e1d8a1e481c7212308ba469bbea7c90460f79cb6548e5b0b이다. 기본108258tri/1275renderer/47material,최대100우산119634/1443/47로예산PASS. 24건물/480창문(302lit,178dark,180warm,61cool),매장3종8개씩/16실제전환/15·30·60·120Hz 및기존차량/보행/날씨검사PASS.

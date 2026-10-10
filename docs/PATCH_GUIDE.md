@@ -1,5 +1,12 @@
 # 작은 패치 작업 안내
 
+## Unity 0.9.0 — 상가·창문 야간 조명 (2026-10-10)
+
+- 변경10소스/meta: Editor CityEnvironment/ClimateScene/StarterScene/CityPreview/FrontageScene/FrontageChecks 및meta2개,Runtime CityClimate/StarterConfig. Storefront-0.9.0.unity/Generated/Storefront090/code10. 건물별window/frame/shop mesh 및shared256×128/512×512 atlas. 차량/보행/host geometry·native·서명 설정 불변.
+- 실제24건물/480창문/3종8매장, 좌우 readable UV/finitevertex/unitnormals/degenerate없음/공유material·발광map·동선/15·30·60·120Hz directional시간shader oracle/숨김·retarget·asset불변/4개실제조명 제한을 검사한다. 기존차량/보행/날씨·100우산 검사 포함 actual최대119634/1443/47,기존120000/2400/48 strict예산 유지.
+- 실제D3D11 EditorPNG28장, 상가낮/밤6장과도시밤/노을을 관찰한다. black/pink 자동검사PASS가 시각관찰을 대신하지 않는다. 임시카메라/포즈는APKscene에저장하지 않는다.
+- mainValidate38017565116→같은source APKtag0.9.0-build1/BuildApk38017884342→AndroidBuildPlayer/launcherLint/다운로드SHA·원본v2cert/code10/ARM64/service manifest. unchangedhost입력SHA로실제hostLint38008378207재사용. 관련입력변경시재검사하며docs-only에는반복하지않는다. 폰FPS/발열은별도.
+
 ## Unity 0.8.0 — 차량 곡면·유리·휠·램프 (2026-10-10)
 
 - Editor VehicleGeometry/TrafficFleet/CityPreview/StarterScene/VehicleDetailChecks(.meta),Runtime StarterConfig의7소스/meta. VehicleDetail-0.8.0.unity/Generated/VehicleDetail080/code9. 기존4모델24대 metre/unit scale과14renderer/car·신호/날씨·NativeAndroid를 유지한다. Curve normal smoothing은 Editor 생성만 수행하며64×64 공유glass finish는 authored texture이고 realtime reflection이 아니다.
