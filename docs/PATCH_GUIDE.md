@@ -1,5 +1,12 @@
 # 작은 패치 작업 안내
 
+## Unity 0.8.0 — 차량 곡면·유리·휠·램프 (2026-10-10)
+
+- Editor VehicleGeometry/TrafficFleet/CityPreview/StarterScene/VehicleDetailChecks(.meta),Runtime StarterConfig의7소스/meta. VehicleDetail-0.8.0.unity/Generated/VehicleDetail080/code9. 기존4모델24대 metre/unit scale과14renderer/car·신호/날씨·NativeAndroid를 유지한다. Curve normal smoothing은 Editor 생성만 수행하며64×64 공유glass finish는 authored texture이고 realtime reflection이 아니다.
+- actual mesh topology/finite vertices/unit normals/UV·공유/crown/rounded tyre shoulder·contact 및기존4모델 dimensions/600초간격/15·30·60·120Hz/wheel/lifecycle를검사한다. 기존신호·보행·날씨·시간/100우산 worst-case120000tri/2400renderer/48material을통과한다. Actual119394/2331/46; fleet49080tri(+480).
+- 실제 GPU EditorPNG22장과모델4종front/rear8을관찰한다. OpenScene의readback texture unload 및rear camera canopy가림을수정했다. 자동black/pink PASS만으로차량가림을확인했다고하지않는다. unsaved camera/pose는APK에저장하지않는다.
+- mainValidate38013804973→동일source APKtag0.8.0-build1/BuildApk38014126469→실제BuildPlayer/launcherLint/다운로드SHA·v2cert/code9/ARM64/service manifest. NativeAndroid/Bridge/host/shader SHA같아 실제hostLint38008378207을재사용한다. source가바뀌면관련검사를다시수행하고docs-only에는반복하지않는다. 폰FPS/발열은별도이다.
+
 ## Unity 0.7.0 — 노을 경유·날씨 반응 도시 (2026-10-10)
 
 - Runtime SceneBlend/CityClimate/StreetModel/StreetSimulation/StarterConfig/WetTraffic(.meta), Editor StreetScene/ClimateScene/ClimateChecks/WeatherLifeChecks(.meta)/CityPreview/StarterScene의14소스/meta만 변경한다. Generated/WeatherLife070,WeatherLife-0.7.0.unity,code8을 사용한다. 원본 도시/차선·차량 geometry/SidewalkRoutes/NativeAndroid·Surface host를 유지한다.

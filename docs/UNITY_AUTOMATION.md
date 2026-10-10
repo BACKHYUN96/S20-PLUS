@@ -1,5 +1,62 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-10 — Unity 0.8.0 차량 곡면·유리·휠·램프 개선 APK 전달 완료
+
+사용자가 **0.7.0 실제 폰 적용 성공**을 확인하고 다음 단계를 승인했다. 이전 추천인 차량 3D 외형 고도화를 **0.8.0/code9**에 적용했다. 실제 PC 장면·GPU 렌더·Android BuildPlayer/launcher Lint와 내려받은 기존 v2 서명 APK를 검증해 전달한다. 실제 폰의0.8.0 외형·설정 보존·숨김 복귀·FPS/발열은 설치 후 확인이며 PC/Editor 결과로 대체하지 않는다.
+
+### 구현과 범위
+
+- 기존 **Sedan/SportCoupe/Suv/Taxi4종·차량24대**의 metre 크기와 unit scale을 유지한다. 보닛 ridge와 crowned/tapered roof를 만들고 위치를 움직이지 않는55도 paint normal smoothing으로 곡면에 빛이 이어지게 했다. tyre shoulder를 둥글게 만들고65도 normals로 tread seam을 연결하며 radius와 road contact를 유지한다. 휠 spoke는 두께가 있는 tapered face로 바꾸고 가려지는 box 면을 줄여 예산을 확보했다. fender lip을 실제 tyre 바깥에 보이게 배치하고 front/rear lamp에 chamfered silhouette를 추가했다.
+- 기존14renderer/car 및4모델 shared mesh/46material을 유지한다. 유리에UV와공유 **64×64 authored sky-tint/highlight texture**를 추가했다. 실시간 반사 probe가 아니며 새 per-car material/texture를 만들지 않는다. 곡면 계산은 Editor 생성시에만 수행한다. 휴대폰 camera/신호·보행/시간·날씨/우산·물보라/NativeAndroid 서비스·UI·저장소/appID·15/30FPS 목표는 유지한다. 모델은 기존 generic4종이며 별도 브랜드 신차를 추가한 패치가 아니다.
+- 범위 **7소스/meta**: Editor VehicleGeometry/TrafficFleet/CityPreview/StarterScene/VehicleDetailChecks(.meta),Runtime StarterConfig. `VehicleDetail-0.8.0.unity`/`Generated/VehicleDetail080`,code9를 사용한다. native0.48 및누적 dirty/real index를 보존했고 임시 index whitelist로 게시했다.72빌드 입력 SHA가 최종source와 일치한다.
+
+### 실제 과정·수정
+
+base01e70ec78bb5ce25154f4c499d33ef1a3c1a834e에서 시작하고 시작 Git 상태/index·수정 전 SHA를 기록했다. 첫 source70323806cab8098afbdb739e813b600feb9d6a87의 Validate38013153642/job114097483337는 geometry/모델 검사PASS였으나 새 확대 캡처의 OpenScene이 임시 readback Texture2D를 unload하여 MissingReferenceException이 났다. Capture가 선택 단계여서 overall success여도 preview-result FAILED였으며 렌더 성공으로 기록하지 않았다. CityPreview를 같은 unsaved scene의 ResetModel/ApplyViews 동기화로 수정했다.
+
+다음 source3f453bf1453f7a978a98835d6651a4f662daa1e3의 Validate38013490732/job114098566506는 PNG22장 생성까지PASS였다. 실제 이미지 관찰에서 후면 camera가 인도 canopy 안에 있어 녹색 잎에 가려졌음을 발견했다. black/pink 자동검사PASS를 시각검증으로 대체하지 않고 후면 camera x를-8.6→-1m 도로 안으로 옮겼다. 수정은 촬영용 unsaved Editor pose이며 앱 camera/geometry에는 영향을 주지 않는다.
+
+최종 source **ed853b6d354fdffe75aac1f3a07684d27efd3674**, tag **unity-apk-0.8.0-build1**에서 mainValidate 및APK를 실제 재검사했다. 문서-only 최종 게시에는 빌드 입력이 같으므로 동일 검사를 반복하지 않는다. 이번 실제 geometry/Android 컴파일 실패는 없었고 위2캡처 문제를 해결했다.
+
+### 실제 확인
+
+| 검사 | 결과 |
+| --- | --- |
+| 최종 Unity | [Validate38013804973](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38013804973),job114099550164 success. 검사 후 원본 장면 재열기·임시 상태 제거 |
+| 차량 새 geometry | 4종24대/49,080tri/14renderer씩,유한 vertex·unit normals/degenerate triangle 없음/UV·mesh 공유/crowned roof/tyre shoulder·contact PASS. checked vertices10,544/curved seam3,667 |
+| 차량 기존 계약 | 600초 주행,15/30/60/120Hz oracle/차선·방향·unit scale/4wheel 회전·접지/순환·숨김 복귀·간격 PASS. 최소bumper gap46.754677m. Sedan2.22×1.49×4.752m, Sport2.28×1.28×4.652m,SUV2.30×1.91×5.072m,Taxi2.22×1.715×4.752m(폭×높이×길이),0.7.0과float 허용범위 일치 |
+| 신호·보행·날씨 | 4/32/100명200/600/600초,223횡단/33신호주기/foot≥0.399999m/bumper≥1.799999m. 날씨4/32/100명각810초,퇴장92/복귀92/viewport 밖 active변경/횡단 유지/감속·인도·장애물·복귀 PASS |
+| 시간·효과 | 180generic oracle,15/30/60/120Hz낮→노을2초→밤2초/밤→낮4초/retarget·반복·저장snap·freeze,18endpoints/100우산/96spray/32canopy/신문지3~5초 PASS |
+| 모바일 geometry 예산 | 기본108,018tri/2163renderer/46material,맑음100명116,994/2231/46,100우산 **119,394/2331/46**,기존120000/2400/48제한 내.0.7 대비fleet 전체+480tri/renderer·material 증가 없음 |
+| 실제 GPU | D3D11 Editor540×1200 PNG22장: 기존도시·diagnostic/6weather/전환0~4초/200초storm14 +모델4종front/rear8. 최종 source8확대/전체도시·야간·비·노을2초를 실제 관찰; APK 빌드도 previewPASS/22PNG. 폰 screenshot/FPS 증거 아님 |
+| 실제 Android | [BuildApk38014126469](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38014126469),job114100541906 success; BuildPlayer errors0/warnings0,launcher Lint errors0/warnings8 |
+| 변경 없는 host | NativeAndroid Java/res 및Bridge/AndroidWallpaperBuild/Atmosphere.shader SHA 불변. [host Lint38008378207](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38008378207)의 실제 errors0/warnings10/nativeFilesMatched8을 재사용하며 새host 검사를 했다고 기록하지 않음 |
+| 내려받은 APK | Reports/APK ZIP digest·CRC/APK SHA·bytes,실제aapt0.8.0/code9/min29/target36/ARM64/SettingsActivity launcher/BIND_WALLPAPER/:wallpaper/meta/providerfalse/UnityActivitydisabled,원본 v2cert PASS |
+
+launcher 경고8와 기존host 경고10은 유지한다. host 경고는Unity/Android 호환·ABI·의존성9 및기존 ApplicationContext StaticFieldLeak1이며 오류0을 경고0으로 바꾸지 않는다. 0.8.0 폰 측정은 미실행이다.
+
+### 산출물·추적
+
+- APK **`/workspace/artifacts/pixel-traffic-unity-prototype-0.8.0.apk`**, **29778264bytes**, SHA256 **`8bbb76e92b737eff0ff1f80382560cdab225c697a345528239bfae8b74367c1b`**.
+- 원본 v2 cert SHA256 **`a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6`**. PC DPAPI 설정을 재사용하며 키/토큰을 게시하지 않았다.
+- 최종Validate artifact11654573087/10434160bytes/SHA`110d4c14386b79f952cf600b8e3b680245e7e4b3e3cf8d7a33e3ec177617310d`;Reports`/workspace/artifacts/unity-0.8.0-final-render-reports/`.
+- APK artifact11655403920,build reports artifact11655643864;digest·bytes·로컬 ZIP 경로는`/workspace/artifacts/unity-0.8.0-source-manifest.json`에 기록했다. 실제 추출Reports`/workspace/artifacts/unity-prototype-0.8.0-reports/`,다운로드 검증`unity-prototype-0.8.0-download-verification.json`.
+- 문서 저장/원격 source게시/태그/검증·APK 전달은 실제 각 단계 결과로 구분한다. 최종docs 커밋 및72입력 동일 확인은source manifest에 별도 기록한다. 실제 폰 사진을 생성했다고 기록하지 않는다.
+
+### 집 PC 설치
+
+APK를`C:\Users\김백현\Desktop\AI`에 다운로드하고 PowerShell에서 실행한다. SDK 경로는 이전 설치에 사용한 Unity6000.3.26f1의adb다.
+
+```powershell
+$unityAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $unityAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.8.0.apk"
+if ($LASTEXITCODE -eq 0) {
+    & $unityAdb shell am start -W -n "com.s20plus.pixeltraffic.unityprototype/com.s20plus.pixeltraffic.unitywallpaper.WallpaperSettingsActivity"
+}
+```
+
+설정에서 적용한 뒤차체·휠/램프/유리,낮·노을·밤/비/우산·통행,저장 설정/숨김·재부팅 복원/FPS·발열을 폰에서 확인한다. 다음 후보는 도시 1층 상점·간판과 도로 생활 디테일이다. 다음geometry 추가 전현재100우산 조건에서추가가능한최대605tri/68renderer/1material(strict less-than 제한)을 고려해 mesh 합치기/atlas로 비용을 줄인다. 이번패치가새상점/브랜드차량을완료했다고기록하지않는다.
+
 ## 2026-10-10 — Unity 0.8.0 실제 확대 렌더 관찰·후면 camera 가림 보정
 
 source3f453bf1453f7a978a98835d6651a4f662daa1e3의 Validate38013490732/job114098566506는 장면/렌더 모두 실제 PASS이며22PNG를 작성했다. artifact11655602445/8,781,715bytes/SHA b0711af6bffa9b4e9a04d3b07a20ffa069fa62b9b6c768486a0b1df21fab9d68를 내려받아CRC와result를 확인했다. 앞면 Sedan/SUV/Taxi에서 보닛 곡면의 빛/유리 gradient/휠·lamp를 관찰했다. 후면 확대 camera가 인도 canopy 안에 들어가 SportCoupe rear PNG가 녹색 잎에 가려져 있었으므로, 단순 black/pink 자동검사 PASS를 시각 검증 완료로 취급하지 않는다.
