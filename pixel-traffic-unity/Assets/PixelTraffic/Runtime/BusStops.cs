@@ -10,7 +10,7 @@ namespace PixelTraffic.UnityPrototype
         public enum RiderStage { Queue, Boarding, Onboard, Alighting, Returning }
         public sealed class Rider
         {
-            public int stop,slot,owner=-1,lastAlightOwner=-1,eligibleAt;public RiderStage stage;public Vector2 position,velocity;
+            public int stop,slot,owner=-1,lastAlightOwner=-1,lastAlightArrival,eligibleAt;public RiderStage stage;public Vector2 position,velocity;
             public float distance;public bool Visible=>stage!=RiderStage.Onboard;
         }
         public const int DwellTicks=240,DoorTicks=24;
@@ -63,7 +63,7 @@ namespace PixelTraffic.UnityPrototype
             return Mathf.Max(0,(float)(c.Direction*(CenterZ(c.Direction<0?0:1)-c.z)));
         }
         public void Wrapped(StreetModel.Car c)
-        {c.busServed=false;c.busStage=Stage.Cruising;c.busTicks=0;c.busDoor=0;c.busOffset=0;}
+        {c.busServed=false;c.busStage=Stage.Cruising;c.busTicks=0;c.busArrivalTick=0;c.busDoor=0;c.busOffset=0;}
         public bool Blocks(Vector2 a,Vector2 b)
         {
             foreach(var r in Riders)if(r!=null&&r.Visible&&StreetModel.SegmentDistanceSquared(a,b,r.position)<StreetModel.Separation*StreetModel.Separation-1e-6f)return true;
@@ -111,7 +111,7 @@ namespace PixelTraffic.UnityPrototype
                 {
                     c.busOffset=c.Direction*.12f*Mathf.SmoothStep(0,1,Mathf.Clamp01((8-ahead)/8));
                     if(ahead<.003f&&c.speed<.001f&&owners[stop]<0)
-                    {owners[stop]=i;c.busStage=Stage.Boarding;c.busTicks=0;c.busServed=true;alighted[stop]=false;boarded[stop]=0;c.hazardTicks=0;Arrivals++;}
+                    {owners[stop]=i;c.busStage=Stage.Boarding;c.busTicks=0;c.busArrivalTick=model.ActiveTicks;c.busServed=true;alighted[stop]=false;boarded[stop]=0;c.hazardTicks=0;Arrivals++;}
                 }
                 else if(c.busStage==Stage.Boarding)
                 {
@@ -178,10 +178,10 @@ namespace PixelTraffic.UnityPrototype
                 {
                     alighted[stop]=true;
                     foreach(var r in Riders)if(r.stop==stop&&r.stage==RiderStage.Onboard&&(r.owner<0||r.owner==owner))
-                    {r.owner=owner;r.lastAlightOwner=owner;r.eligibleAt=model.ActiveTicks+450;r.position=new Vector2(c.Direction*5.82f,door.y);r.stage=RiderStage.Alighting;break;}
+                    {r.owner=owner;r.lastAlightOwner=owner;r.lastAlightArrival=c.busArrivalTick;r.eligibleAt=model.ActiveTicks+450;r.position=new Vector2(c.Direction*5.82f,door.y);r.stage=RiderStage.Alighting;break;}
                 }
                 else if(boarded[stop]<2&&c.busTicks<DwellTicks+360)
-                    foreach(var r in Riders)if(r.stop==stop&&r.stage==RiderStage.Queue&&r.lastAlightOwner!=owner&&model.ActiveTicks>=r.eligibleAt){r.owner=owner;r.stage=RiderStage.Boarding;break;}
+                    foreach(var r in Riders)if(r.stop==stop&&r.stage==RiderStage.Queue&&(r.lastAlightOwner!=owner||r.lastAlightArrival!=c.busArrivalTick)&&model.ActiveTicks>=r.eligibleAt){r.owner=owner;r.stage=RiderStage.Boarding;break;}
             }
             foreach(var r in Riders)if(r.stop==stop)
             {

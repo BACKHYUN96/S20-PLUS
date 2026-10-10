@@ -11,7 +11,7 @@ namespace PixelTraffic.UnityPrototype
         public sealed class Car
         {
             public int lane;public double z;public float cruise,speed,length,distance;public float width=2.2f,height=1.9f;public bool committed,active=true;public int rank;
-            public bool bus,busServed;public BusStops.Stage busStage;public int busTicks,hazardTicks;public float busDoor,busOffset;
+            public bool bus,busServed;public BusStops.Stage busStage;public int busTicks,hazardTicks,busArrivalTick;public float busDoor,busOffset;
             public LaneChanges.Stage maneuver;public int targetLane=-1,signalTicks,mergeTicks,blinks,requestTick;
             public double nextChangeTick,totalDistance;public uint rearMask;public bool braking;
             // A conservative longitudinal envelope covers any yaw up to eight degrees.

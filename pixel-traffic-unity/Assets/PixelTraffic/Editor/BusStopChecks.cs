@@ -41,17 +41,17 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Need(count>1,"Shelter blocks the sidewalk route.");
                 for(int i=1;i<count;i++)Need(SidewalkRoutes.SegmentAllowed(routes.Node(path[i-1],side),routes.Node(path[i],side)),"Sidewalk graph uses obstacles from the opposite side.");
             }
-            int boards=0,alights=0,departures=0,hazardFrames=0;float minimum=float.MaxValue;
+            int boards=0,alights=0,departures=0,hazardFrames=0,lateBoardings=0;float minimum=float.MaxValue;
             foreach(int population in new[]{4,32,100})
             {
                 var cars=new[]{Bus(0,BusStops.CenterZ(0)+18,6),Bus(3,BusStops.CenterZ(1)-18,5.8f),
                     new StreetModel.Car{lane=1,z=BusStops.CenterZ(0)+30,cruise=9,speed=9,length=4.8f},
                     new StreetModel.Car{lane=2,z=BusStops.CenterZ(1)-30,cruise=9,speed=9,length=4.8f}};
                 var m=new StreetModel(population,cars);m.AutomaticLaneChanges=false;
-                var positions=new Vector2[8];var visible=new bool[8];var lastStage=new LaneChanges.Stage[4];var previousBusStage=new BusStops.Stage[4];var departureAt=new int[4];var wasOn=new bool[4];var pulses=new int[4];
+                var positions=new Vector2[8];var visible=new bool[8];var riderStages=new BusStops.RiderStage[8];var lateByStop=new int[2];var lastStage=new LaneChanges.Stage[4];var previousBusStage=new BusStops.Stage[4];var departureAt=new int[4];var wasOn=new bool[4];var pulses=new int[4];
                 for(int tick=0;tick<18000;tick++)
                 {
-                    for(int i=0;i<8;i++){positions[i]=m.Stops.Riders[i].position;visible[i]=m.Stops.Riders[i].Visible;}
+                    for(int i=0;i<8;i++){positions[i]=m.Stops.Riders[i].position;visible[i]=m.Stops.Riders[i].Visible;riderStages[i]=m.Stops.Riders[i].stage;}
                     for(int i=0;i<cars.Length;i++){lastStage[i]=cars[i].maneuver;previousBusStage[i]=cars[i].busStage;}
                     m.Tick();
                     for(int i=0;i<cars.Length;i++)
@@ -74,8 +74,8 @@ namespace PixelTraffic.UnityPrototype.Editor
                     if(m.CanEnter||m.Signal==StreetModel.Phase.PedestrianClearance)Need(!m.RoadOccupied(),"Stopped/departing bus obstructs pedestrian green.");
                     for(int i=0;i<8;i++)
                     {
-                        var rider=m.Stops.Riders[i];if(!rider.Visible)continue;
-                        if(rider.stage==BusStops.RiderStage.Boarding)Need(rider.owner!=rider.lastAlightOwner&&m.ActiveTicks>=rider.eligibleAt,"Alighted passenger immediately boards the same bus again.");
+                        var rider=m.Stops.Riders[i];if(tick>=9000&&riderStages[i]==BusStops.RiderStage.Boarding&&rider.stage==BusStops.RiderStage.Onboard)lateByStop[rider.stop]++;if(!rider.Visible)continue;
+                        if(rider.stage==BusStops.RiderStage.Boarding)Need((rider.owner!=rider.lastAlightOwner||rider.lastAlightArrival!=cars[rider.owner].busArrivalTick)&&m.ActiveTicks>=rider.eligibleAt,"Alighted passenger reboards during the same visit or before cooldown.");
                         if(visible[i])Need(Vector2.Distance(rider.position,positions[i])<1.22f*StreetModel.Dt+.0001f,"Visible bus passenger teleports.");
                         if(Mathf.Abs(rider.position.x)<6.79f)
                         {var car=cars[rider.owner];Need(car.busDoor==1&&car.busStage==BusStops.Stage.Boarding&&car.speed==0,"Passenger crosses curb without a stopped, open bus.");}
@@ -91,6 +91,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     }
                 }
                 Need(m.Stops.Arrivals>=2&&m.Stops.Boardings>=4&&m.Stops.Alightings>=2&&m.Stops.Departures>=2,"Bus service does not complete: population="+population+" arrivals="+m.Stops.Arrivals+" boarded="+m.Stops.Boardings+" alighted="+m.Stops.Alightings+" departed="+m.Stops.Departures+" states="+cars[0].busStage+"/"+cars[1].busStage);
+                Need(lateByStop[0]>0&&lateByStop[1]>0,"Pooled passengers stop boarding on later loops: population="+population+" late="+lateByStop[0]+"/"+lateByStop[1]);lateBoardings+=lateByStop[0]+lateByStop[1];
                 boards+=m.Stops.Boardings;alights+=m.Stops.Alightings;departures+=m.Stops.Departures;
             }
             // Exercise the complete serialized fleet, including queues on both lanes during service.
@@ -151,9 +152,9 @@ namespace PixelTraffic.UnityPrototype.Editor
             var stopPipeline=(UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset)UnityEngine.Rendering.GraphicsSettings.defaultRenderPipeline;
             var peak=CityEnvironment.Validate(Camera.main,stopPipeline);
             stopClimate.Preview(0,0);controller.ResetModel();controller.ApplyViews();
-            return new Report{result="PASS: two shelters, real open doorways, pooled walk-on/off riders, both-side hazard lamps, closed-door three-pulse safe departures, queues/curb/crosswalk/foot safety, 600sec 4/32/100 people, fixed clock and pause; phone test pending",stops=2,riders=8,productionSignalCycles=productionStops.Cycles,productionLaneChanges=productionStops.Maneuvers.Completed,clearanceDepartures=clearanceDepartures,productionDepartures=productionStops.Stops.Departures,productionArrivals=productionStops.Stops.Arrivals,productionMinimumGap=productionGap,peakRiderBudget=peak,stormDepartures=weatherModel.Stops.Departures,boardings=boards,alightings=alights,departures=departures,hazardFrames=hazardFrames,minimumFootDistance=minimum,dwellSeconds=8,doorSeconds=.8f,departureBlinkCount=3,departureBlinkSeconds=1.8f,departureReturnSeconds=6,frameRates=new[]{15,30,60,120}};
+            return new Report{result="PASS: two shelters, real open doorways, pooled walk-on/off riders, both-side hazard lamps, closed-door three-pulse safe departures, queues/curb/crosswalk/foot safety, 600sec 4/32/100 people, fixed clock and pause; phone test pending",stops=2,riders=8,productionSignalCycles=productionStops.Cycles,productionLaneChanges=productionStops.Maneuvers.Completed,clearanceDepartures=clearanceDepartures,productionDepartures=productionStops.Stops.Departures,productionArrivals=productionStops.Stops.Arrivals,productionMinimumGap=productionGap,peakRiderBudget=peak,stormDepartures=weatherModel.Stops.Departures,lateBoardings=lateBoardings,boardings=boards,alightings=alights,departures=departures,hazardFrames=hazardFrames,minimumFootDistance=minimum,dwellSeconds=8,doorSeconds=.8f,departureBlinkCount=3,departureBlinkSeconds=1.8f,departureReturnSeconds=6,frameRates=new[]{15,30,60,120}};
         }
         [Serializable]internal sealed class Report
-        {public string result;public CityEnvironment.Report peakRiderBudget;public int productionSignalCycles,productionLaneChanges,clearanceDepartures,stormDepartures,productionDepartures,productionArrivals;public float productionMinimumGap;public int stops,riders,boardings,alightings,departures,hazardFrames,departureBlinkCount;public float minimumFootDistance,dwellSeconds,doorSeconds,departureBlinkSeconds,departureReturnSeconds;public int[] frameRates;}
+        {public string result;public CityEnvironment.Report peakRiderBudget;public int productionSignalCycles,productionLaneChanges,clearanceDepartures,stormDepartures,productionDepartures,productionArrivals;public float productionMinimumGap;public int stops,riders,lateBoardings,boardings,alightings,departures,hazardFrames,departureBlinkCount;public float minimumFootDistance,dwellSeconds,doorSeconds,departureBlinkSeconds,departureReturnSeconds;public int[] frameRates;}
     }
 }

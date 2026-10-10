@@ -1,5 +1,9 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-10 — Unity 0.15.0 반복 운행의 승객 pool 재사용 보정
+
+600초 서비스 수치를 검토하니 같은버스 영구재승차 금지가 단일버스노선의 pool을 소진시킬 수 있었다(boarding18/alighting24/departures43). 하차 직후 같은 정차 방문에서 다시타는 것은 금지하되, 버스가한바퀴돌아새로방문하고15초cooldown이지났다면 pool을다음승객으로재사용하도록 lastAlightArrival/busArrivalTick를 추가한다. 새 rig/우산/재질은 늘리지 않는다. 4/32/100명 각각600초 검사에서 뒤300초에도양쪽정류장에실제탑승완료가있는지assert하고lateBoardings를기록한다. 같은방문재승차/15초 cooldown/foot/curb/open-door/정지/3pulse/6초/clock/pause 요건을 유지한다. 최종Runtime/GPU/서명APK는 재검증대기이며 초기방문PASS만으로영구운행승차를주장하지않는다.
+
 ## 2026-10-10 — Unity 0.15.0 서쪽 정류장 실제 차체 clearance 여유 보강
 
 실제 버스 safetyLength에는8°회전 envelope가 포함된다. 서쪽 기존 centerZ=-.425는 crossingZ10에서10.425m지난위치로, 약10.49m인5m+SafetyLength/2 출발조건보다조금짧았다. 동쪽은충분히떨어져있으나서쪽버스가빨간신호에서Ready로정차한채뒤차의교차로비우기를막을수있다. west doorZ를-4.5에서-5.5로1m앞으로옮겨centerZ=-1.425와추가.3m이상의검증된여유를확보한다. 신호/차체/foot gap기준을낮추지않으며실제모든busdefinition에서stopclearance를검사한다. serialized24대600초검사에signalCycles>=2와실제완료laneChanges측정도추가해서비스횟수만으로장기교통정체를놓치지않는다. 이전Runtime횟수PASS는장기signal진행전체검증과동일하지않음을정정하며최종Runtime/GPU/서명APK는재검증대기다.
