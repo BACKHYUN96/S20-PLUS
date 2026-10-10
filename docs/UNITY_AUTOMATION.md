@@ -1,5 +1,72 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-10 — Unity 0.7.0 노을 경유·날씨 반응 도시 APK 전달 완료 (KST)
+
+사용자가 **0.6.0 실제 폰 적용 성공**을 확인했고, 낮→밤 직접 선택에 노을을 거치게 하면서 이전에 추천한 날씨별 통행량·우산/보행·차량 감속/물보라 패치를 승인했다. **0.7.0/code8**의 실제 PC 장면·GPU 렌더·Android 빌드/Lint 및 내려받은 기존 v2 서명 APK를 검증해 전달한다. 0.7.0 폰에서의 업데이트·저장 설정·표현·FPS/발열·숨김 복귀는 설치 후 사용자 확인이다.
+
+### 구현과 범위
+
+- **낮→노을 2초→밤 2초**의 총4초 active-time 전환을 추가한다. 밤→낮/나머지 선택은 기존4초 직행이다. 노을 경유 도중 새 선택은 현재 가중치에서 이어지고 같은 야간 선택 반복은 경유를 재시작하지 않는다. 두 구간 모두 취소/재선택, 저장된 야간으로 처음 시작하는 snap, 숨김 정지를 보존한다. 날씨 blend는 기존 독립4초 smoothstep이다.
+- 기존 **차량24개/사람100개 pool**을 재사용한다. 날씨 가중치에 따라 인원 목표/차선당 차량 목표/속도를 연결한다. 비바람은 사람 설정 인원의30%(최소4명), 기본32→10명/100→30명, 차량 차선당3대·총12대, 주행 속도60%/걸음118%가 목표다. 약한 비/강한 비/눈/안개도 각각 인원/차량·속도 계수를 적용하며 차량수는 차선별 정수 반올림이다. 인원 UI의4~100명 값과 저장소를 덮어쓰지 않는다.
+- 날씨로 퇴장할 때 보이는 사람은 인도 길을 걷고 횡단 중이면 인도까지 건넌다. **3×3.2×6m 보수적 카메라 bounds 밖**에서만 active를 끈다. 차량도 기존 순환도로를 유지하며 bounds 밖에서 빠진다. 복귀 사람은 인도 입구에서1.5초 간격, 차량은 순환도로 입구에서 앞뒤 간격을 확인한 뒤 다시 나타난다. 화면 안의 사람을 순간 이동시키지 않는다. 퇴장 거리에 따라 감소 시간이 걸리며 즉시 목표 수가 되는 것은 아니다. 맑아지면 남은 퇴장을 취소하고 서서히 복귀한다.
+- 공유 **24tri 우산 mesh100개**를 추가한다. 비에 맞춰 펴지고, 올린 오른손에 shaft를 맞추고, 비바람에는 세계 바람 방향으로 기울인다.4종 tint/광택을 runtime MaterialPropertyBlock으로 연결한다. 빗길의 이동 차량에는 rear wheel2개/4billboard씩 **96quad 단일 mesh pool** 물보라를 사용하며 비 강도/차량 속도에 반응하고 정차/맑음에는 꺼진다. 기존 alpha lamp material/texture를 공유하고100개 새 material을 만들지 않는다.
+- 범위 **14소스/meta**: Runtime SceneBlend/CityClimate/StreetModel/StreetSimulation/StarterConfig/WetTraffic(.meta), Editor StreetScene/ClimateScene/ClimateChecks/WeatherLifeChecks(.meta)/CityPreview/StarterScene. `WeatherLife-0.7.0.unity`/`Generated/WeatherLife070`, code8을 사용한다. 도시·차선 생성/VehicleGeometry/TrafficFleet/SidewalkRoutes/NativeAndroid/Surface·서비스·설정 저장소/appID·15/30FPS 목표를 유지한다. native0.48·누적 dirty/index는 보존했고 임시 index로 Unity 관련 범위만 게시한다.
+
+### 과정과 결정
+
+base **6d32fb9794ecf9b0b3dd24a365e33a83c1aa6e1b**에서 시작했다. 첫 sourceb8ac7743f8c88f74134a3893657be5888e48ec50의 실제 Validate38010587500/job114089410451와 렌더가 success였다. 코드 검토에서 car 앞뒤/우산을 덮는 viewport bounds 및 재진입 guard를 보강했다.100우산 예산 검사는 이전 날씨 퇴장 상태를 이어받지 않도록 새 모델을 준비하여 최악 조건으로 검사한다. 손 위치를 보정하고 실제 감속 상한도 검사했다. source2c1267216c7148b1425f7a77a8b1befe90077d4f의 Validate38010821738/job114090332600도 success였다.
+
+첫 실제 PNG에서 우산 색이 동일하게 보였다. Editor 생성시의 MaterialPropertyBlock은 scene에 serialize되지 않으므로 runtime ApplyViews에서 색/광택을 복원하고 실제 로드된100개 renderer의 block을 확인했다. 전환 PNG에는 직전 storm preset의 우산이 남아 있어, Editor 캡처 시작시 Street.Advance(0)/ApplyViews로 맑음 우산·물보라·pose를 동기화했다. Runtime은 이미 매프레임 이를 수행하므로 캡처의 문제를 폰 버그라고 기록하지 않는다. 이 보정이 모두 포함된 최종 source **b5e74a16fe4548a68bdbc622a3990595388f85c6**, tag **unity-apk-0.7.0-build1**을 실제 재검사/빌드했다. 최종 문서 게시만 별도 수행하며70빌드 입력이 같으면 검사하지 않는다.
+
+중간 pending source7ea0ab2 run38010708155와 sourceb22d655 run38011021957은 concurrency의 최신 pending 교체로 cancelled이며 컴파일 실패가 아니다. 이번 실제 컴파일/장면/빌드 실패는 없었다. 중간 source의 성공을 최종 APK의 결과로 대체하지 않았다.
+
+### 실제 확인
+
+| 검사 | 실제 결과 |
+| --- | --- |
+| 최종 Unity | [Validate38011110267](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38011110267), job114091262710 success; 원본 장면 재열기/임시 검사 상태 제거 포함 |
+| 시간대·날씨 | 180 generic smoothstep oracle,15/30/60/120Hz 노을 양구간/밤→낮 직행/양구간 retarget·같은 선택·저장 night snap·숨김 freeze,18 actual endpoints PASS.32canopy 최소sway4.602755도/신문지8회·마지막 예약3.146284초 유지 |
+| 새 날씨 교통 | 4/32/100명 각각810초(초기25초+비바람600초+맑음185초), 퇴장92/복귀92, viewport 안 active 변경 없음/횡단 유지/감속/인도·장애물·간격·복귀 PASS. 최소 foot0.4000002146m/bumper1.7999997139m |
+| 실제 우산·물보라 | 실제100 umbrella renderer의 runtime tint/비 활성·맑음 비활성, 물보라96quad/주행 활성/정차·맑음 OFF PASS. 최대100우산118914triangles/2331renderers/46materials로120000/2400/48 제한 내 |
+| 기존 교통·도시 | 기존4/32/100명200/600/600초,223횡단/33신호주기,foot0.3999990523m/bumper1.7999997139m PASS. 기본107538tri/2163renderers/46mats; 맑음100명116514/2231/46.12zebra/94차선 비중첩/24차량4모델·차체 크기 유지 |
+| 실제 렌더 | D3D11 Editor540×1200 PNG14장(기본/diagnostic/6selected weather endpoints/전환0·1·2·3·4초/200초비바람) PASS. 최종 source와 APK 빌드 rain/노을·야간,4종 우산색/손 위치·기울기/안개·비·줄어든 통행을 관찰. 폰 screenshot/영상/FPS 증거 아님 |
+| Android | [BuildApk38011593176](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38011593176), job114092600811 success. BuildPlayer errors0/warnings0, launcher Lint errors0/warnings8 |
+| 변경 없는 host | NativeAndroid8 Java/res 및Bridge/AndroidWallpaperBuild/Atmosphere.shader가0.6.0과 SHA 동일. [host Lint38008378207](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38008378207)의 실제 errors0/warnings10/nativeFilesMatched8을 재사용하며 새 host 검사를 했다고 기록하지 않음 |
+| 다운로드 APK | Reports/APK ZIP digest·CRC/APK hash·bytes, aapt0.7.0/code8/min29/target36/ARM64/SettingsActivity launcher/BIND_WALLPAPER/:wallpaper/service meta/providerfalse/UnityActivitydisabled, 원본 v2 cert PASS |
+
+host 경고10은 기존 Unity/Android 호환·의존성/ABI9 및 ApplicationContext StaticFieldLeak1이다. launcher 경고8도 기록대로 남기며 오류0을 경고0으로 바꾸지 않는다. 실제 폰 성능은 여전히 설치 후 확인이다.
+
+### 파일·추적
+
+- APK **`/workspace/artifacts/pixel-traffic-unity-prototype-0.7.0.apk`**, **29746064 bytes**, SHA256 **`897b6da16efa34d10b22d42477c710afd4da8d10f855ffbaec33444dd5838e14`**.
+- 기존 v2 certificate SHA256 **`a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6`**. PC DPAPI 서명 설정을 재사용했고 키 백업을 다시 복원하거나 게시하지 않았다.
+- 최종 Validate artifact11653167624/6495769bytes ZIP SHA256`ed0367fe83c149bcf9a0f83c9f294dc82f760ae1f9f9d562af9e33b384616ee7`; Build reports artifact11654086515/6529199bytes ZIP SHA256`a2455e49855a012005f80ccb8c31e161ca436e921936baa0d343c5f65d494f35`; APK artifact11653632134/28784210bytes ZIP SHA256`16dfe7443b8b41e7149e723096549bed832496c7aa22063f8c389a400f5cd4fe`. API digest/CRC 일치.
+- 보고서 **`/workspace/artifacts/unity-prototype-0.7.0-reports/`**, night PNG SHA256`5b1ba84804646902261fe4fc351d463a29b65654784359691639776028b70fea`. 같은 artifacts의source-manifest70입력/download-verification JSON과 main Validate 보고서에 원본 근거를 남긴다. 클라우드 파일이 다른 인스턴스에도 남는다고 가정하지 않으며 GitHub 소스와 Actions artifacts7일 보존도 참조한다.
+
+### 집 PC 설치·확인
+
+APK를 **`C:\Users\김백현\Desktop\AI`**에 다운로드한 뒤 PowerShell에서 실행한다.
+
+```powershell
+$unityAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $unityAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.7.0.apk"
+if ($LASTEXITCODE -eq 0) {
+    & $unityAdb shell am start -W -n "com.s20plus.pixeltraffic.unityprototype/com.s20plus.pixeltraffic.unitywallpaper.WallpaperSettingsActivity"
+}
+```
+
+필요하면 **배경화면 미리보기 및 적용**으로 시스템 화면에서 적용한다. 낮→밤을 선택하여 노을을 거치는지, 밤→낮이 바로 이어지는지 확인한다. 비/비바람에서 우산·물보라/감속과 서서히 줄어드는 통행량, 맑음 복귀, 중간 재선택/화면 OFF·복귀/기존 설정 유지와32/100명 FPS·발열을 폰에서 확인한다. 이 명령이나 시스템 적용을 클라우드에서 사용자 폰에 실행했다고 주장하지 않는다.
+
+다음은 사용자 기기 피드백을 반영한 뒤 차량3D 외형/거리 디테일 고도화를 후보로 삼는다. 자동 시각·기상 API와 다음 외형 패치를 이번 완료 범위로 기록하지 않는다.
+
+## 2026-10-10 — Unity 0.7.0 최종 Unity 장면·렌더 PASS / APK 빌드 시작
+
+최종 sourceb5e74a16fe4548a68bdbc622a3990595388f85c6의 [Validate38011110267](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38011110267)/job114091262710 success. 180 generic smoothstep oracle cases와15/30/60/120Hz 노을2초+야간2초/밤→낮 직행/두 구간 retarget·저장 night snap,18 actual endpoints/숨김 freeze/32나무/신문지3~5초 PASS. 신규 weather model810초×4/32/100명: 퇴장92/복귀92,viewport 안 active 변경없음/횡단 유지/비바람 감속/foot0.4000002146m·bumper1.7999997139m PASS. 실제 우산100개·물보라96quad,정차/맑음 spray 꺼짐과runtime색block/100우산 예산118914tri·2331renderers·46materials PASS. 기존223횡단/33신호주기·foot0.3999990523m·기본107538tri/2163renderers/46mats·12zebra/94차선 비중첩 유지.
+
+최종 D3D11 Editor540×1200 PNG14장 PASS. rain 이미지의4종 우산색과shaft손위치,2초노을/4초밤,맑음 전환에서 우산·spray 정리,200초비바람의 줄어든 통행량/기울어진 우산·비·안개를 관찰했다. 실제폰 screenshot/FPS검증은 아니다. artifact11653167624/6495769bytes ZIP SHA256ed0367fe83c149bcf9a0f83c9f294dc82f760ae1f9f9d562af9e33b384616ee7/CRC 확인; `/workspace/artifacts/unity-0.7.0-validate-reports/` 및source-manifest70빌드 입력 SHA에 근거가 있다. 같은 최종 source의unity-apk-0.7.0-build1 태그를 게시하여 BuildApk를 시작한다. 실제Android/Lint/원본v2서명·버전/다운로드 확인은 진행 중이다. Java/res/Bridge/AndroidWallpaperBuild/Shader 불변 SHA와0.6.0 hostLint38008378207의errors0/warnings10을 재사용하며 변경없는hostLint를 다시 실행하지 않는다.
+
+중간source2c1267216c7148b1425f7a77a8b1befe90077d4f의Validate38010821738/job114090332600도success였다. source7ea0ab2 run38010708155와sourceb22d655 run38011021957은 실행대기 중 newer pending 교체로cancelled이며compile실패가아니다. 최종 source가다르므로중간검사를최종APK근거로대체하지않는다.
+
 ## 2026-10-10 — Unity 0.7.0 실제 전환 PNG 관찰·캡처 상태 동기화
 
 첫 source의 transition-2s/4s 실제PNG를 관찰해2초 노을/4초 야간을 확인했다. 다만 Editor 캡처의 바로 앞 storm-night preset에서 열린 우산이, 모델을 고정하고 조명만 바꾸는 전환 PNG에 남아 있었다. 실제 runtime은 매프레임 StreetSimulation.ApplyViews를 수행하므로 런타임 결함이라고 기록하지 않는다. CityPreview에서 맑음 전환 시작 직전에 Street.Advance(0)/ApplyViews를 호출해 우산·물보라·걸음 pose를 실제 선택 상태에 동기화한 뒤 고정 교통 pose의5장 전환 캡처를 생성한다. 캡처의 날씨/표시를 일치시키는 관련 Editor 변경이며 최종 source의 장면·렌더 확인 후 같은 source APK를 빌드한다. 우산 runtime색 보정 sourceb22d65596104db92f4666faa175c6c3d89fa1bea 검사는 대기 중이다.

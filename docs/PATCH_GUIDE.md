@@ -1,5 +1,13 @@
 # 작은 패치 작업 안내
 
+## Unity 0.7.0 — 노을 경유·날씨 반응 도시 (2026-10-10)
+
+- Runtime SceneBlend/CityClimate/StreetModel/StreetSimulation/StarterConfig/WetTraffic(.meta), Editor StreetScene/ClimateScene/ClimateChecks/WeatherLifeChecks(.meta)/CityPreview/StarterScene의14소스/meta만 변경한다. Generated/WeatherLife070,WeatherLife-0.7.0.unity,code8을 사용한다. 원본 도시/차선·차량 geometry/SidewalkRoutes/NativeAndroid·Surface host를 유지한다.
+- 낮→밤은2초 낮→노을+2초 노을→밤; 밤→낮/다른 선택은4초. 전체 active-time,같은 Target 반복/양구간 retarget/저장 night snap/숨김 freeze를15/30/60/120Hz 독립 oracle와 actual scene에서 확인한다.
+- 기존24car/100rig pool에날씨별 목표·감속/빠른 걸음을 연결한다. viewport3×3.2×6m 보수적 bounds 밖에서만날씨 active변경,횡단자는인도까지이동,보행재진입1.5초/차량간격을유지한다. count4/32/100각810초 storm600+recovery185초를기존1400초 모델검사와함께실행한다. 비바람 사람30%(최소4)/차선당3차량/주행60%/걸음118%이다. 퇴장시간이필요하다.
+- 공유24tri umbrella100개와96quad spray 단일mesh,4색 runtime MPB/손에맞춘shaft/바람 tilt/정차·맑음 sprayOFF를검사한다. 100우산 포함120000tri/2400renderer/48material 제한과D3D11 Editor PNG14장을관찰한다. Editor이미지를실제폰/FPS증거로기록하지않는다.
+- mainValidate뒤같은source APKtag, 실제BuildPlayer/launcher Lint/v2기존cert/0.7.0/code8/min29/ARM64/서비스manifest/다운로드SHA를확인한다. NativeJava/res와Bridge/AndroidWallpaperBuild/Atmosphere.shader SHA불변을근거로hostLint38008378207(errors0/warnings10)을재사용한다. 신규host source가바뀌면재실행한다. docs-only최종게시에는동일빌드검사를반복하지않는다.
+
 ## Unity 0.6.0 — 시간대·날씨 전환 (2026-10-10 KST)
 
 관련 범위는 Runtime SceneBlend/CityClimate/ClimateEffects/AndroidWallpaperBridge/StarterConfig/StreetSimulation(신호 emission), Editor ClimateScene/ClimateChecks/StarterScene/CityPreview/CityEnvironment(shader 허용 검사), Shaders/Atmosphere.shader 및 meta, NativeAndroid WallpaperPreferences/WallpaperSettingsActivity/values XML이다. 도시·차선 생성 geometry, VehicleGeometry/TrafficFleet/StreetModel/SidewalkRoutes, Surface host 및 서비스/IPC 보안 코드는 유지한다.
