@@ -1,12 +1,31 @@
-# Pixel Traffic Unity — 버스·박스 트럭 0.14.0
+# Pixel Traffic Unity — 정류장·승하차 0.15.0
 
-## 현재 패치 — 혼합 차량·긴 차체 주행 (2026-10-10)
+## 2026-10-10 — Unity 0.15.0 정류장·승하차·비상깜빡이: 실제 검증·서명 APK 전달 완료
+
+사용자는 폰 **0.14.0 적용 성공**을 확인했다. 이번 **0.15.0/code16**은 양측 정류장 표지·쉼터·벤치, 별도 8명 승객 pool, 버스의 실제 우측 문 opening/공유 sliding panels를 추가한다. 장면 `BusStops-0.15.0.unity`, generated `BusStops0150`. 정차 후 .8초 문 열림→하차/순차 승차→최소8초 대기 및 이동 승객 완료→.8초 문 닫힘이다. **승하차와 문 닫힘 중 양쪽 비상깜빡이**를 고정30Hz의9tick ON/9tick OFF로 켠다. 하차 승객은 같은 정차 방문에서 즉시 재승차하지 않는다. 버스의 다음 방문과15초 cooldown을 지난 뒤 pool을 다음 승객으로 재사용한다. 승객은 기존 보행자/쉼터/벤치/기둥과 발 간격을 지키고 우산을 접고 탑승한다.
+
+버스는 이미 바깥 차선 안에 정차하므로 앞뒤 안전간격 확인→왼쪽 방향 깜빡이 **3회/1.8초**→**6초 동안 현재 바깥 차선 중앙으로 복귀하며 가속**한다. 실제 다른 차선으로 변경할 때는 기존60m 범위 뒤차 모두 추월 대기·최종 앞뒤 gap·예약·새 뒤차 취소·긴 차량6초 변경 조건을 유지한다. 정류장은 횡단보도를 지난 위치다. 차체 전체가 실제 occupied crossing band(±2.5m)를 지나 추가2m rear여유를 확보한 버스는 빨간 신호 중에도 앞뒤 안전조건을 만족하면 현재 차선으로 출발해 뒤 차량의 횡단보도 clearance를 방해하지 않는다. upstream 차량의 정지선·보행 신호 요건은 유지한다.
+
+- **실제 검사:** source `a4fc34b83f8c08f78da1b8af01826676f9b81fa9` / [Validate 38053719608](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38053719608) / artifact 11670702853. 600초4/32/100 보행자 서비스 boarding 60/alighting 48/departures 44, 뒤300초에도 양쪽 실제승차 23회로 반복 운행을 확인했고, hazard 25405frames, 최소 발 간격 0.400056m. 실제 serialized24대600초 신호11순환/차선변경21회, arrivals 14/departures 14/최소 차체 gap 1.799999m; 비바람 출발 2회, 15/30/60/120Hz와 pause PASS. 양측 보도 graph를 독립적으로 만들고 실제 장애물에 대한 모든 edge를 검사한다. 기존18기후/180blend/교통·보행·바퀴·회전차체 안전검사를 유지한다.
+- **GPU·예산:** 실제 Unity6000.3.26f1/Direct3D11 **67PNG**(정류장 양쪽 하차/승차/밤 hazardON/OFF8장 포함)와 원래 폰 구도를 관찰했다. 차선변경 촬영은 실제 시뮬레이션 차량을 임시카메라로 따라가며 pose/camera 변경은 저장하지 않는다. 100기존 보행자/우산+8정류장 rig/우산 stress **118442tri/1579renderer/44material**, 기존 strict120000/2400/48 이내. 버스만19renderer(문2개), 다른 차량17, 추가 실시간 Light 없음. Editor 그림은 폰 스크린샷/FPS 측정과 구분한다.
+- **실패와 해결:** 단일 버스 노선에서 pool이 소진되는 영구 같은버스 금지를 방문별 재승차 금지와 cooldown으로 고쳐 후반300초에도 양측 탑승을 확인했다. 첫 컴파일의 두 local 이름 충돌은 각 scope 이름을 분리했다. 비대칭 정류장에 양측이 공유하던 navigation을 분리해 서쪽 보행자 정체를 해결했다. 첫 확대GPU의 수관 가림은 임시 카메라를 수관 아래로 옮겼다. 실제24대 검사에서 forced inner-lane 출발과 downstream green 대기가 교착을 만들었으므로 실제 바깥 차선 복귀와 crossing clearance 조건으로 해결했다. 촬영마다 serialized 초기위치를 복원하고 실제 차량을 추적한다. 서쪽 정류장1m이동의100명 보행 회귀 때문에 원래 위치를 복원했다. RoadOccupied의2.5m 대역 밖 추가2m rear여유와 회전차체 envelope를 포함해 downstream 출발을 판정하며 신호 여러 순환과 실제 차선변경 진행도 확인했다. 실패 이력을 아래에 보존하며 최종 source에서 다시 검증했다.
+- **Android·서명:** 같은 source의 tag `unity-apk-0.15.0-build1` / [BuildApk 38054287584](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38054287584) / reports artifact 11670319573, APK artifact 11670574374. BuildPlayer 오류0/경고0, launcher Lint 오류0/경고8. 다운로드한 APK의 v2 원본 인증서 `a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6`, version0.15.0/code16/min29/target36/ARM64 IL2CPP, settings launcher·exported BIND_WALLPAPER service·private provider·disabled Unity activity를 직접 확인했다. 변경 없는12 NativeAndroid/host 입력 SHA를 비교해 실제 host Lint38008378207(오류0/경고10)을 재사용한다.
+- **전달:** [APK 직접 다운로드](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/be2692cd9200f0fef7387d8e761961fa53a476d4/pixel-traffic-unity-prototype-0.15.0.apk) · [실제 Unity 전체 화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/be2692cd9200f0fef7387d8e761961fa53a476d4/bus-stops-preview.png) · [승차 확대](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/be2692cd9200f0fef7387d8e761961fa53a476d4/boarding-preview.png) · [야간 비상깜빡이](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/be2692cd9200f0fef7387d8e761961fa53a476d4/hazards-preview.png). APK 30018680bytes/SHA256 `8a1d2265a7a7ad88b7f94107d0cf3edffbafe60be694e1c2d6dcc35ae2366efb`. 일회성 `downloads/unity-0.15.0` branch의APK1개·실제PNG3개를 로그인 없는 HTTP200·redirect 없음·전체 bytes/SHA로 확인했다. main에는 binary/자동Release workflow를 추가하지 않았다.
+
+PC 설치:
+```powershell
+adb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.15.0.apk"
+```
+
+**미확인/다음:** 폰0.15 설치 후 정류장 문/승하차·hazard·장시간 주행/FPS·발열·전체 배경화면 lifecycle 확인. Drive 구성은 나중에 PC에서 재개한다. source23파일/110 build·capture입력과기존dirty/index를보존했다. 문서-only최종커밋은위검사입력을바꾸지않으므로같은검사를반복하지않는다. 이후 승객 분포·정류장 전경 시인성은 사용자 실제 폰 확인에 따라 조정할 수 있다.
+
+## 이전 패치 — 혼합 차량·긴 차체 주행 (2026-10-10)
 
 **0.14.0/code15**, `HeavyTraffic-0.14.0.unity`/`Generated/HeavyTraffic0140`. 총24대 중 파란 시내버스4대·흰 박스 트럭4대·기존 승용차16대를 섞습니다. 버스 옆창·문·옥상AC, 트럭 cab/cargo·뒤문 seam/잠금봉/힌지를 추가하고 기존 전조등·브레이크등·깜빡이를 연결했습니다. 긴 차체는6초에 걸쳐 차선을 바꾸며 실제 치수·회전범위·뒤차추월을 확인합니다. 시안camera·도시·시간/날씨·보행/신호·배경화면host는 유지합니다.
 
 실제 Unity검사/GPU59PNG·Android BuildPlayer오류0/경고0·launcherLint오류0/경고8·원본v2서명/버전/manifest·공개파일 전체SHA를 확인했습니다. 최대100우산 116642tri/1551renderer/44material이며 폰 FPS·발열은 설치후 확인합니다. 사용자는폰0.13 적용성공을확인했고Drive구성은나중에PC에서재개합니다.
 
-## 모바일 APK 다운로드
+## 이전 0.14.0 APK 다운로드
 
 [Unity0.14.0 APK 직접 다운로드](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/08fed474120a21f8908dc451a57388e4f7d7b586/pixel-traffic-unity-prototype-0.14.0.apk) · [실제 Unity 화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/08fed474120a21f8908dc451a57388e4f7d7b586/heavy-traffic-preview.png) · [설치·검증 기록](../docs/STATUS.md).
 
@@ -86,9 +105,9 @@ PC 빌드·Lint·실제 APK 서비스/서명 검증 결과와 최신 설치 명�
 
 ## 현재 빌드와 실행
 
-Unity 6000.3.26f1/Android 모듈을 사용합니다. `tools/run-pipeline.ps1 -Operation Validate`로 장면·production 모델·manifest 템플릿 검사를 수행하고, `-Operation BuildApk`로 Android 빌드/Lint/원본 v2 인증서 및 APK 메타데이터를 검사합니다. Gradle 생성 후 `AndroidWallpaperBuild`가 `NativeAndroid/src`와 `res`를 복사하고 service/provider/설정 Activity를 등록합니다. Export에도 같은 처리를 적용합니다. 실제 Android 컴파일은 PC BuildApk 결과로 확인합니다. 새 NativeAndroid 모듈은 `tools/check-wallpaper-lint.ps1`로 unityLibrary Lint를 추가 확인합니다. 이 도구는 생성된 Java/리소스 SHA가 현재 소스와 같은지 먼저 확인하며 APK를 다시 만들지 않습니다. 0.14.0의 실제 launcher Lint는 오류0/경고8입니다. 변경 없는 NativeAndroid/host 입력은0.6.0 SHA를 확인하고 실제 unityLibrary Lint 오류0/경고10을 재사용합니다.
+Unity 6000.3.26f1/Android 모듈을 사용합니다. `tools/run-pipeline.ps1 -Operation Validate`로 장면·production 모델·manifest 템플릿 검사를 수행하고, `-Operation BuildApk`로 Android 빌드/Lint/원본 v2 인증서 및 APK 메타데이터를 검사합니다. Gradle 생성 후 `AndroidWallpaperBuild`가 `NativeAndroid/src`와 `res`를 복사하고 service/provider/설정 Activity를 등록합니다. Export에도 같은 처리를 적용합니다. 실제 Android 컴파일은 PC BuildApk 결과로 확인합니다. 새 NativeAndroid 모듈은 `tools/check-wallpaper-lint.ps1`로 unityLibrary Lint를 추가 확인합니다. 이 도구는 생성된 Java/리소스 SHA가 현재 소스와 같은지 먼저 확인하며 APK를 다시 만들지 않습니다. 0.15.0의 실제 launcher Lint는 오류0/경고8입니다. 변경 없는 NativeAndroid/host 입력은0.6.0 SHA를 확인하고 실제 unityLibrary Lint 오류0/경고10을 재사용합니다.
 
-Editor 메뉴 **4. Build Signed Wallpaper APK**를 사용할 수 있습니다. APK는 `Builds/pixel-traffic-unity-prototype-0.14.0.apk`에 생성됩니다. 기존 `BuildActivityApk` 메서드 이름은 PowerShell 호출 호환용으로 유지하며 결과 앱은 라이브 배경화면입니다. 서명 환경 변수 및 PC runner 설정은 아래 초기 기록과 [자동화 안내](../docs/UNITY_AUTOMATION.md)를 참조합니다. 최신 안내가 아래 초기 0.1.0 기록보다 우선합니다.
+Editor 메뉴 **4. Build Signed Wallpaper APK**를 사용할 수 있습니다. APK는 `Builds/pixel-traffic-unity-prototype-0.15.0.apk`에 생성됩니다. 기존 `BuildActivityApk` 메서드 이름은 PowerShell 호출 호환용으로 유지하며 결과 앱은 라이브 배경화면입니다. 서명 환경 변수 및 PC runner 설정은 아래 초기 기록과 [자동화 안내](../docs/UNITY_AUTOMATION.md)를 참조합니다. 최신 안내가 아래 초기 0.1.0 기록보다 우선합니다.
 
 ## 이전 기록 — 0.4.0 및 초기 설정
 ## 이전 패치 — 신호·인도 보행·횡단 0.4.0 (2026-10-10 KST)
