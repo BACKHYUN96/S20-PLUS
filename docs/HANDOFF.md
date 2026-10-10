@@ -1,5 +1,11 @@
 # 새 채팅 인수인계 — 픽셀 트래픽 0.29.0
 
+## 2026-10-10 — Unity 0.7.0 첫 실제 검사·렌더 PASS / 우산 색 보정
+
+sourceb8ac7743f8c88f74134a3893657be5888e48ec50의 Validate38010587500/job114089410451 success 및 D3D11 Editor540×1200 실제PNG14장(기본/diagnostic/6 endpoints/전환0·1·2·3·4초/200초비바람)을 확인했다. artifact11652759860/6503654bytes ZIP SHA256f77957d0becb0f45881d0852a55ddd77b403bf068e62fb2b1ffecafd217120f8/CRC 일치. 실제 810초×4/32/100명 날씨 퇴장92/복귀92,foot0.3999992907m/bumper1.7999997139m,100개 우산+물보라 최대118914tri/2331renderers/46materials PASS. 기존 모델/차선/숨김·전환·바람 검사도 PASS다. viewport/우산 손 위치 보정 source2c1267216c7148b1425f7a77a8b1befe90077d4f 검사38010821738/job114090332600가 진행 중이며 최종결과로 첫 source를 재사용하지 않는다. 중간 source7ea0ab2의 pending38010708155는 concurrency의 newer pending 교체로 cancelled이며 compile실패가 아니다.
+
+실제 rain PNG에서 우산이 모두 같은 색으로 보였다. Editor 생성시 MaterialPropertyBlock은 scene에 serialize되지 않으므로 runtime ApplyViews에서 공유 palette의4종 우산 tint/광택을 직접 설정하고 로드된 실제100개 renderer의 block 존재를 검사한다. 새 Material100개를 만들지 않고46개 공유 재질 예산을 유지한다. 실제 폰 캡처나 FPS검증은 아니다. 보정 후 source의 실제 렌더·Android 빌드/서명 검증을 완료해야 전달한다.
+
 ## 2026-10-10 — Unity 0.7.0 우산 예산 검사 준비·손 위치 보정 (검사 중)
 
 실제 첫 검사38010587500는 진행 중이며 아직 성공/실패를 판정하지 않는다. 검토에서 우산100개 예산 검사가 바로 직전 비 상태에서 이미 퇴장한 사람의 pool 상태를 이어받을 수 있음을 확인했다. 실제 게임의 날씨 퇴장 조건을 무시하지 않고 이 예산 검사만 새 StreetModel을 준비한 뒤100명 모두 활성화해 최악 예산을 측정한다. 기존 별도810초×4/32/100 weather drain/recovery/viewport/collision 검사를 그대로 유지하고 비바람 감속도 실제 Car.speed≤cruise×0.6으로 확인한다. 우산 shaft의 시작을 올린 오른손 z위치0.32m로 맞춘다. 후속 source를 실제 PC 검사/렌더한 뒤 전달한다.

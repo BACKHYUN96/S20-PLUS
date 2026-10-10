@@ -23,6 +23,7 @@ namespace PixelTraffic.UnityPrototype
         private float settingsAt;
         private StreetModel.Phase lastPhase=(StreetModel.Phase)(-1);
         private MaterialPropertyBlock lightBlock;
+        private static readonly Color[] umbrellaColors={new Color(.45f,.65f,1),new Color(1,.4f,.3f),new Color(1,.83f,.4f),new Color(.5f,.83f,.6f)};
         public StreetModel Model => model;
         public WalkerView[] Walkers => walkers;
         public void Configure(PrototypeDrive[] cars,WalkerView[] views,Renderer[] signals,Renderer[] crossingSignals)
@@ -107,6 +108,7 @@ namespace PixelTraffic.UnityPrototype
                     bool open=rain>.015f;if(v.umbrella.gameObject.activeSelf!=open)v.umbrella.gameObject.SetActive(open);
                     float scale=Mathf.SmoothStep(0,1,Mathf.Clamp01(rain/.38f));v.umbrella.localScale=new Vector3(scale,1,scale);
                     v.umbrella.rotation=Quaternion.Euler(-wind*12,0,wind*10);
+                    if(open){lightBlock.Clear();lightBlock.SetColor("_BaseColor",umbrellaColors[i%4]);lightBlock.SetFloat("_Smoothness",.6f);v.umbrella.GetComponent<Renderer>().SetPropertyBlock(lightBlock);}
                 }
                 float angle=Mathf.Sin(p.walkDistance*8)*20*(p.velocity.sqrMagnitude>.01f?1:0);
                 for(int n=0;n<4;n++)v.limbs[n].localRotation=Quaternion.Euler(n==1&&rain>.015f?-65:(n%2==0?1:-1)*angle*(n < 2 ? .8f : 1),0,0);
