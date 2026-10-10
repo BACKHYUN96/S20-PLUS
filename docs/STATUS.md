@@ -1,5 +1,13 @@
 # 현재 상태
 
+## 2026-10-10 — Unity 0.11.0 시안 카메라 구도 구현 (검증·APK 대기)
+
+사용자는0.10.0실제폰적용성공을확인했고외출중모바일WORK에서원본시안6650.jpg를제공했다. 카메라→원경→나무/건물순서를미리설명한후이번카메라패치진행을승인했다. 시안은도로소실점이오른쪽위,횡단보도가아래쪽중간,전경차량과상단원경/하늘이함께보인다. 실제첨부 `/tmp/codex-remote-attachments/01a1148a-d85a-7329-b63f-154bf06c802b/93b2f3fc-8317-4832-bf9f-7214372258cd/1-6650.jpg`를관찰했다.
+
+- 카메라위치(3.2,14,-37),target(-3.1,1,68),44°FOV로내려다보는각도를줄이고소실점을오른쪽으로옮겼다. 시안의배경상세/강·구름은다음단계이며현재카메라와시안의화풍까지일치한다고주장하지않는다. 앱0.11.0/code12,ReferenceCamera-0.11.0.unity/Generated/ReferenceCamera0110.
+- 수정5소스 StarterConfig/StarterScene/CityEnvironment/DrivingChecks/CityPreview,build inputs84개. 새geometry/material/실제Light는없다. lower-band18groundray와upper6skyray,도로소실점/횡단보도projection을9:20/9:16두화면비로검사하고같은traffic/lightingstate의old/new/9:16실제렌더를추가한다. 카메라시야가날씨offscreen판정에영향을주므로기존weather/drain/생성·교통/보행검사도실행한다.
+- Source검토/WindowsValidate/실제GPU렌더관찰/서명APK/code12·원본cert/hash 확인은아직대기다. 새자동릴리스workflow/contents:write권한은추가하지않는다. 완료APK는직전에성공한일회성GitHub downloadbranch로배포하여모바일WORK의로컬파일다운로드문제를피한다.
+
 ## 2026-10-10 — 모바일 WORK APK 다운로드 오류: 외부 브라우저 링크 배포 완료
 
 사용자폰에서작업경로APK링크를열때 `Interrupted waiting for app-server response for seq_id 6`가발생했다. WORK의파일전송경로실패로추정하며모바일클라이언트자체를수정했다고주장하지않는다. 같은 **Unity0.10.0/code11** APK를GitHub공개파일링크로별도배포했고로그인없는HTTP200다운로드/bytes/SHA일치를실제로확인했다. 사용자폰에서새링크로받는것은확인대기다.

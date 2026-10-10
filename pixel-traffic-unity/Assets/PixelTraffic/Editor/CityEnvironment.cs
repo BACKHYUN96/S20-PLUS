@@ -252,13 +252,24 @@ namespace PixelTraffic.UnityPrototype.Editor
             Renderer road = GameObject.Find("Road").GetComponent<Renderer>();
             Renderer ground = GameObject.Find("City Ground").GetComponent<Renderer>();
             Need(road.bounds.min.z < -60 && road.bounds.max.z > 350,"Boulevard still ends inside the city view.");
-            int covered = 0; float oldAspect = camera.aspect;
+            int covered = 0,skyRays=0;float vanishingX=0,horizonY=0,crossingY=0; float oldAspect = camera.aspect;
             try
             {
                 foreach (float aspect in new[] {9f/20,9f/16})
                 {
                     camera.aspect = aspect;
-                    foreach(float x in new[]{.02f,.5f,.98f}) foreach(float y in new[]{.02f,.5f,.86f})
+                    // Composition oracle: world road direction and an independently fixed crossing.
+                    Vector3 vanishing=camera.WorldToViewportPoint(new Vector3(0,0,100000));
+                    Vector3 crossingPoint=camera.WorldToViewportPoint(new Vector3(0,0,10));
+                    Need(vanishing.x>.60f&&vanishing.x<.73f&&vanishing.y>.60f&&vanishing.y<.70f,"Road vanishing point lacks reference offset/sky room.");
+                    Need(crossingPoint.x>.3f&&crossingPoint.x<.7f&&crossingPoint.y>.22f&&crossingPoint.y<.36f,"Crossing leaves the lower-middle reference composition.");
+                    vanishingX=vanishing.x;horizonY=vanishing.y;crossingY=crossingPoint.y;
+                    foreach(float x in new[]{.02f,.5f,.98f})
+                    {
+                        Ray sky=camera.ViewportPointToRay(new Vector3(x,.9f,0));
+                        Need(sky.direction.y>0&&!new Plane(Vector3.up,Vector3.zero).Raycast(sky,out _),"Upper portrait band still points at the road rather than the distant background/sky.");skyRays++;
+                    }
+                    foreach(float x in new[]{.02f,.5f,.98f}) foreach(float y in new[]{.02f,.26f,.55f})
                     {
                         Ray ray=camera.ViewportPointToRay(new Vector3(x,y,0));
                         Need(new Plane(Vector3.up,Vector3.zero).Raycast(ray,out float distance),"Visible street ray misses city ground.");
@@ -298,13 +309,13 @@ namespace PixelTraffic.UnityPrototype.Editor
                 var texture=AssetDatabase.LoadAssetAtPath<Texture2D>(StarterScene.Generated+"/"+name+".asset");
                 Need(texture!=null&&texture.mipmapCount>1&&texture.filterMode==FilterMode.Trilinear,"Surface loses mipmap filtering at distance.");
             }
-            return new Report {roadLength=road.bounds.size.z,coveredPortraitRays=covered,trees=trees,buildings=buildings,streetLamps=lamps,skylineTowers=towers,triangles=triangles,renderers=renderers.Length,materials=materials.Count,softShadows=pipeline.supportsSoftShadows,crossingStripes=stripes,roadMarkingsOutsideCrossing=markings};
+            return new Report {roadLength=road.bounds.size.z,coveredPortraitRays=covered,skyPortraitRays=skyRays,roadVanishingX=vanishingX,horizonY=horizonY,crossingViewportY=crossingY,trees=trees,buildings=buildings,streetLamps=lamps,skylineTowers=towers,triangles=triangles,renderers=renderers.Length,materials=materials.Count,softShadows=pipeline.supportsSoftShadows,crossingStripes=stripes,roadMarkingsOutsideCrossing=markings};
         }
 
         [Serializable] public sealed class Report
         {
-            public float roadLength;
-            public int coveredPortraitRays,trees,buildings,streetLamps,skylineTowers,triangles,renderers,materials;
+            public float roadLength,roadVanishingX,horizonY,crossingViewportY;
+            public int coveredPortraitRays,skyPortraitRays,trees,buildings,streetLamps,skylineTowers,triangles,renderers,materials;
             public int crossingStripes, roadMarkingsOutsideCrossing;
             public bool softShadows;
         }

@@ -14,7 +14,7 @@ namespace PixelTraffic.UnityPrototype.Editor
     // Generated geometry stays in its own scene; existing scenes are never rebuilt in place.
     public static class StarterScene
     {
-        internal const string Generated = "Assets/PixelTraffic/Generated/Driving0100";
+        internal const string Generated = "Assets/PixelTraffic/Generated/ReferenceCamera0110";
         private const string PipelinePath = Generated + "/MobileURP.asset";
         private static readonly Dictionary<string, Material> materials = new Dictionary<string, Material>();
 
@@ -67,8 +67,8 @@ namespace PixelTraffic.UnityPrototype.Editor
 
             var camera = new GameObject("Portrait Camera").AddComponent<Camera>();
             camera.tag = "MainCamera";
-            camera.transform.position = new Vector3(-1.2f, 20.5f, -27);
-            camera.transform.LookAt(new Vector3(0, 1.6f, 23));
+            camera.transform.position = new Vector3(3.2f, 14, -37);
+            camera.transform.LookAt(new Vector3(-3.1f, 1, 68));
             camera.fieldOfView = 44;
             camera.nearClipPlane = .3f;
             camera.farClipPlane = 500;

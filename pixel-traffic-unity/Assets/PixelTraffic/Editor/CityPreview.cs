@@ -117,6 +117,20 @@ namespace PixelTraffic.UnityPrototype.Editor
                     pipeline.useSRPBatcher = oldBatcher;
                     GraphicsSettings.useScriptableRenderPipelineBatching = oldGraphicsBatcher;
                 }
+                var cameraPreviews=new System.Collections.Generic.List<string>();
+                // Identical traffic state, lighting and resolution: only camera pose changes.
+                camera.transform.position=new Vector3(-1.2f,20.5f,-27);camera.transform.LookAt(new Vector3(0,1.6f,23));camera.fieldOfView=44;
+                cameraPreviews.Add(CaptureState(camera,request,target,image,"camera-previous"));
+                camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);camera.fieldOfView=roadFov;
+                cameraPreviews.Add(CaptureState(camera,request,target,image,"camera-reference"));
+                var referenceTarget=new RenderTexture(720,1280,24,RenderTextureFormat.ARGB32){antiAliasing=2};referenceTarget.Create();
+                var referenceImage=new Texture2D(720,1280,TextureFormat.RGB24,false);
+                try
+                {
+                    camera.aspect=9f/16;
+                    cameraPreviews.Add(CaptureState(camera,new UniversalRenderPipeline.SingleCameraRequest{destination=referenceTarget},referenceTarget,referenceImage,"camera-reference-9x16"));
+                }
+                finally{camera.aspect=.45f;referenceTarget.Release();UnityEngine.Object.DestroyImmediate(referenceTarget);UnityEngine.Object.DestroyImmediate(referenceImage);}
                 var climate = UnityEngine.Object.FindFirstObjectByType<CityClimate>();
                 var previews = new System.Collections.Generic.List<string>();
                 int[] themes = { 1, 2, 0, 0, 0, 2 }; int[] weather = { 0, 0, 2, 3, 4, 5 };
@@ -219,7 +233,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     result = "PASS", version = StarterConfig.VersionName, editor = Application.unityVersion,
                     graphicsApi = SystemInfo.graphicsDeviceType.ToString(), width = width, height = height,
                     image = output, source = "Unity Editor URP camera; not a phone screenshot or FPS test"
-                    , materialColors = colors, climateImages = previews.ToArray(), vehicleImages = vehiclePreviews.ToArray(),frontageImages=frontagePreviews.ToArray(),drivingImages=drivingPreviews.ToArray()
+                    , materialColors = colors, climateImages = previews.ToArray(), vehicleImages = vehiclePreviews.ToArray(),frontageImages=frontagePreviews.ToArray(),drivingImages=drivingPreviews.ToArray(),cameraImages=cameraPreviews.ToArray()
                 }, true));
                 Debug.Log("PASS: real city camera preview saved: " + output);
             }
@@ -259,7 +273,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         {
             public string result, version, editor, graphicsApi, image, source;
             public int width, height;
-            public string[] materialColors, climateImages, vehicleImages,frontageImages,drivingImages;
+            public string[] materialColors, climateImages, vehicleImages,frontageImages,drivingImages,cameraImages;
         }
     }
 }

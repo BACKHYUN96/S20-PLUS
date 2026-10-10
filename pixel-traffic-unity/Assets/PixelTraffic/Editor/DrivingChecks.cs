@@ -75,7 +75,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 foreach(string part in new[]{"Left Turn Signals","Right Turn Signals","Headlight Road Beams"})
                 {Mesh mesh=drive.transform.Find(part).GetComponent<MeshFilter>().sharedMesh;string key=drive.Model+part;if(meshes.TryGetValue(key,out var old))Need(old==mesh,"Vehicle lighting mesh is copied per vehicle.");else meshes.Add(key,mesh);}
             }
-            Need(Camera.main.transform.position==new Vector3(-1.2f,20.5f,-27)&&Camera.main.fieldOfView==44,"Driving camera framing missing.");
+            Need(Camera.main.transform.position==new Vector3(3.2f,14,-37)&&Camera.main.fieldOfView==44,"Driving camera framing missing.");
             climate.Preview(0,0);UnityEngine.Object.FindFirstObjectByType<StreetSimulation>().ApplyViews();
             return new Report{result="PASS: rear passes, three pulses, final gap cancellation, 600-second shared-lane safety, actual light properties and camera; phone test pending",completedChanges=longRun.Maneuvers.Completed,rearWaits=longRun.Maneuvers.RearWaits,verifiedMergeStarts=verifiedStarts,simulatedSeconds=600,minimumBumperGap=gap,blinkCount=3,blinkSeconds=1.8f,mergeSeconds=3,renderersPerVehicle=17,fleetLightTriangles=288,realtimeStreetLights=lights};
         }
