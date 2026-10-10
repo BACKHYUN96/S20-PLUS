@@ -73,16 +73,24 @@ Shader "PixelTraffic/Distant"
                     float light=.52+.48*saturate(dot(normalize(i.normalWS),normalize(float3(-.5,.7,-.5))));
                     color=lerp(float3(.32,.48,.61),float3(.72,.78,.80),Hash(float2(seed*83,3)))*light*(day+dusk*.68+night*.17);
                     float2 grid=uv*float2(5,max(3,i.color.y));float2 cell=frac(grid);
-                    float window=step(.18,cell.x)*step(cell.x,.73)*step(.22,cell.y)*step(cell.y,.74);
+                    // Fade subpixel windows to their area average, including lighting.
+                    // Hard step/hash cells alias on narrow distant building side faces.
+                    float2 footprint=max(fwidth(grid),float2(.005,.005));
+                    float detail=1-smoothstep(.22,.85,max(footprint.x,footprint.y));
+                    float2 edge=min(footprint*.5,float2(.2,.2));
+                    float window=smoothstep(.18-edge.x,.18+edge.x,cell.x)*(1-smoothstep(.73-edge.x,.73+edge.x,cell.x))
+                        *smoothstep(.22-edge.y,.22+edge.y,cell.y)*(1-smoothstep(.74-edge.y,.74+edge.y,cell.y));
+                    window=lerp(.286,window,detail);
                     color=lerp(color,float3(.22,.40,.51)*(day+dusk*.5+night*.1),window*.72);
-                    float lit=step(.34,Hash(floor(grid)+seed*43));
+                    float lit=lerp(.66,step(.34,Hash(floor(grid)+seed*43)),detail);
                     float3 lamp=lerp(float3(1,.69,.27),float3(.46,.79,1),step(.66,Hash(floor(grid)+seed*71)));
+                    lamp=lerp(float3(.82,.72,.51),lamp,detail);
                     color+=window*lit*lamp*(night*.85+dusk*.28)*(1-fog*.8);
                     color=lerp(color,_HazeColor.rgb,saturate(.12+fog*.82+rain*.23+snow*.15));
                 }
                 else if(kind<3.5)
                 {
-                    color=float3(.14,.48,.72)*day+float3(.39,.36,.46)*dusk+float3(.018,.075,.15)*night;
+                    color=float3(.025,.29,.60)*day+float3(.39,.36,.46)*dusk+float3(.018,.075,.15)*night;
                     float distortion=Noise(uv*float2(130,37))*4;
                     float ripples=sin(uv.y*250+uv.x*39+distortion+_Motion.x*.65)+sin(uv.y*590-uv.x*67-distortion-_Motion.x*.43)*.38;
                     float glints=smoothstep(.88,1.33,ripples)*smoothstep(.32,.72,Noise(uv*float2(170,210)));

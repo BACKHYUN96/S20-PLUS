@@ -1,5 +1,9 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-11 — Unity 0.16.0 첫 실제 검증 통과·원경 창문 필터 보정
+
+사용자가UnityHub로그인/Personal활성을확인한뒤같은source836a03c의Validate38065914574/attempt2/job114256052286은PASS했다. reports11675745377의26628723bytes/digest3a49b3d700adddd56cb71945024f9f977bdec126697be9d16d7b72eaf3e26e3a/CRC/source와GPU71PNG를확인했다. 원래카메라낮/밤·강낮/밤사진을관찰해다리/산층/밤수면반사는확인했으나건물옆면의hard-step창문grid가subpixel에서거칠게alias되어shader만보정한다. fwidth기반edge와area-average창문/점등/색상을거리에서섞고낮강base를더푸르게맞춘다. 실제1778원경tri/8mesh/11lamp/65mdepth/7.781mdeckclearance,최대119112tri/1580renderer/44material로기존strict예산안이다. runtime/geometry/NativeAndroid/host입력은변하지않으며최종sourceGPU·서명APK는아직대기다. 숨김active clock/directional전환/18기후/기존교통·승하차검사는첫실제source에서PASS였고최종source에서도pipeline을실행한다.
+
 ## 2026-10-11 — Unity 0.16.0 강·도시·산 원경 보강 진행 중
 
 사용자는 폰0.15.0 적용 성공을 확인하고 시안의 강·다리·스카이라인·산 배경 보강을 승인했다. 기존0.11 원경 기반을 재사용해 산3층의 높이/봉우리를 분리하고,34개 건물과첨탑/12개 강변 저층군·양안, 실제 깊이65m를가진 stylized 강 표면과 물에잠기지않는 다리·11램프를 구현한다. 단일공유불투명shader/material과기존active clock을 유지하고 밤건물·교각램프 아래월드좌표 반사,노을 반짝임,비/눈/안개 흐림을 보강한다. 새실시간Light/반사카메라/물리collider를추가하지않는다. 기존차량/보행/정류장/서명/host/workflow는유지한다.
