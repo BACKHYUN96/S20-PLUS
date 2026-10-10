@@ -1,5 +1,9 @@
 # 작업 이력
 
+## 2026-10-10 — Unity 0.7.0 실제 전환 PNG 관찰·캡처 상태 동기화
+
+첫 source의 transition-2s/4s 실제PNG를 관찰해2초 노을/4초 야간을 확인했다. 다만 Editor 캡처의 바로 앞 storm-night preset에서 열린 우산이, 모델을 고정하고 조명만 바꾸는 전환 PNG에 남아 있었다. 실제 runtime은 매프레임 StreetSimulation.ApplyViews를 수행하므로 런타임 결함이라고 기록하지 않는다. CityPreview에서 맑음 전환 시작 직전에 Street.Advance(0)/ApplyViews를 호출해 우산·물보라·걸음 pose를 실제 선택 상태에 동기화한 뒤 고정 교통 pose의5장 전환 캡처를 생성한다. 캡처의 날씨/표시를 일치시키는 관련 Editor 변경이며 최종 source의 장면·렌더 확인 후 같은 source APK를 빌드한다. 우산 runtime색 보정 sourceb22d65596104db92f4666faa175c6c3d89fa1bea 검사는 대기 중이다.
+
 ## 2026-10-10 — Unity 0.7.0 첫 실제 검사·렌더 PASS / 우산 색 보정
 
 sourceb8ac7743f8c88f74134a3893657be5888e48ec50의 Validate38010587500/job114089410451 success 및 D3D11 Editor540×1200 실제PNG14장(기본/diagnostic/6 endpoints/전환0·1·2·3·4초/200초비바람)을 확인했다. artifact11652759860/6503654bytes ZIP SHA256f77957d0becb0f45881d0852a55ddd77b403bf068e62fb2b1ffecafd217120f8/CRC 일치. 실제 810초×4/32/100명 날씨 퇴장92/복귀92,foot0.3999992907m/bumper1.7999997139m,100개 우산+물보라 최대118914tri/2331renderers/46materials PASS. 기존 모델/차선/숨김·전환·바람 검사도 PASS다. viewport/우산 손 위치 보정 source2c1267216c7148b1425f7a77a8b1befe90077d4f 검사38010821738/job114090332600가 진행 중이며 최종결과로 첫 source를 재사용하지 않는다. 중간 source7ea0ab2의 pending38010708155는 concurrency의 newer pending 교체로 cancelled이며 compile실패가 아니다.

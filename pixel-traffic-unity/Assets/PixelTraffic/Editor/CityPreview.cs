@@ -126,7 +126,9 @@ namespace PixelTraffic.UnityPrototype.Editor
                     for (int n = 0; n < 50; n++) {climate.Advance(.1, true);street.Advance(.1);}street.ApplyViews();
                     previews.Add(CaptureState(camera, request, target, image, labels[i]));
                 }
-                climate.Preview(0, 0); climate.Advance(.01, true); climate.Select(2, 0);
+                climate.Preview(0, 0); climate.Advance(.01, true);
+                var transitionStreet=UnityEngine.Object.FindFirstObjectByType<StreetSimulation>();transitionStreet.Advance(0);transitionStreet.ApplyViews();
+                climate.Select(2, 0);
                 previews.Add(CaptureState(camera, request, target, image, "transition-0s"));
                 for(int second=1;second<=4;second++)
                 {
