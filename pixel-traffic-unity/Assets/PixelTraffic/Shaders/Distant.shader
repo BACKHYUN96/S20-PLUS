@@ -48,13 +48,14 @@ Shader "PixelTraffic/Distant"
                     color=lerp(low,high,pow(elevation,.65));
                     // Broad rounded lobes with smaller edges; all motion uses the
                     // visible wallpaper clock rather than Unity's global time.
-                    float2 p=uv*float2(8,13)-float2(_Motion.y,0);
+                    float2 p=uv*float2(18,24)-float2(_Motion.y,0);
                     float broad=Noise(p);
-                    float n=broad*.70+Noise(p*2.03)*.21+Noise(p*4.07)*.09;
-                    float mass=smoothstep(.52-cloud*.22,.64-cloud*.18,n);
+                    float n=broad*.56+Noise(p*2.03)*.30+Noise(p*4.07)*.14;
+                    float cloudAA=max(fwidth(n),.005);
+                    float mass=smoothstep(.55-cloud*.22-cloudAA,.60-cloud*.18+cloudAA,n);
                     float density=saturate((n-.48)*3.6+cloud*.50);
                     float sunward=saturate(.5+(Noise(p+float2(-.16,.22))-broad)*4);
-                    float3 cloudShade=float3(.57,.70,.82)*day+float3(.47,.33,.48)*dusk+float3(.045,.065,.12)*night;
+                    float3 cloudShade=float3(.40,.55,.70)*day+float3(.39,.24,.39)*dusk+float3(.035,.050,.10)*night;
                     float3 cloudLight=float3(1,.99,.95)*day+float3(1,.66,.37)*dusk+float3(.17,.21,.33)*night;
                     float3 clouds=lerp(cloudShade,cloudLight,saturate(sunward*.8+(1-density)*.35));
                     clouds*=1-cloud*.42;
