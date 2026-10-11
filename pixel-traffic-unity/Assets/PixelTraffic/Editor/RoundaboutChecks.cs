@@ -27,18 +27,17 @@ namespace PixelTraffic.UnityPrototype.Editor
         }
         static string Summary(StreetModel model)
         {
-            string result=" owner="+model.Roundabout.Owner;
             for(int i=0;i<model.Cars.Length;i++)
             {
-                var c=model.Cars[i];var state=model.Roundabout.States[i];if(!c.active||c.roundHidden)continue;
-                int blocker=-1;if(state.path!=null){var p=state.path.Pose(Mathf.Min(state.progress+.2f,state.path.Length),out float yaw);blocker=model.Roundabout.Blocker(i,p,yaw);}
-                result+="; car="+i+" pos="+RoundaboutTraffic.Position(c)+" yaw="+RoundaboutTraffic.Yaw(c)+" lane="+c.lane+" length="+c.length+" stage="+state.stage+" progress="+state.progress+" entry="+(state.path==null?-1:state.path.entry)+" exit="+(state.path==null?-1:state.path.exit)+" speed="+c.speed+" blocker="+blocker;
+                var c=model.Cars[i];var state=model.Roundabout.States[i];if(!c.active||c.roundHidden||state.path==null)continue;
+                int blocker=model.Roundabout.AdmissionBlocker(i,out float at);Vector2 p=state.path.Pose(at,out float yaw);
+                Debug.LogError("Roundabout diagnostic error: car="+i+" origin="+state.origin+" destination="+state.destination+" pose="+RoundaboutTraffic.Position(c)+" width="+c.width+" length="+c.length+" stage="+state.stage+" progress="+state.progress+" admissionBlocker="+blocker+" blockedAt="+p+" distance="+at+" owner="+model.Roundabout.Owner);
             }
-            return result;
+            return " owner="+model.Roundabout.Owner;
         }
         internal static Report Validate()
         {
-            var controller=UnityEngine.Object.FindFirstObjectByType<StreetSimulation>();Need(controller.Model.Roundabout!=null,"saved runtime controller omits the junction.");
+            var controller=UnityEngine.Object.FindFirstObjectByType<StreetSimulation>();controller.ResetModel();Need(controller.Model.Roundabout!=null,"saved runtime controller omits the junction.");
             Transform root=GameObject.Find("Roundabout Terrain").transform;var filters=root.GetComponentsInChildren<MeshFilter>();Need(filters.Length==5,"terrain loses material sharing.");
             int triangles=0;foreach(var f in filters)
             {
@@ -92,7 +91,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     }
                 }
                 var final=model.Roundabout;entries=final.Entries;completed=final.Completed;returns=final.Returns;yields=final.Yields;recycles=final.Recycles;destinations=(int[])final.Destinations.Clone();departures=model.Stops.Departures;
-                Need(entries>=8&&completed>=8&&returns>=8&&recycles>=4&&yields>0&&ringSamples>100&&signalFrames>100,"traffic stalls or skips entry/circulation/return/indicator stages: "+entries+"/"+completed+"/"+returns+"/"+recycles+Summary(model));
+                if(!(entries>=8&&completed>=8&&returns>=8&&recycles>=4&&yields>0&&ringSamples>100&&signalFrames>100))Need(false,"traffic stalls or skips entry/circulation/return/indicator stages: "+entries+"/"+completed+"/"+returns+"/"+recycles+Summary(model));
                 foreach(int count in destinations)Need(count>0,"one requested random destination never occurs.");
                 Need(model.Stops.Departures>=2&&model.Cycles>=2,"roundabout starves bus service or signals.");
                 // The actual fixed clock must retain route, heading, destination and progress at every frame rate.
