@@ -41,7 +41,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             var camera=Camera.main;float aspect=camera.aspect;foreach(float a in new[]{9f/20,9f/16}){camera.aspect=a;var p=camera.WorldToViewportPoint(new Vector3(0,0,235));Need(p.x>0&&p.x<1&&p.y>0&&p.y<1&&p.z>0,"junction outside saved portrait.");}camera.aspect=aspect;
             foreach(float a in new[]{9f/20,9f/16})
             {
-                camera.aspect=a;foreach(Vector3 point in new[]{new Vector3(-80,4,302),new Vector3(80,4,302),new Vector3(-80,4,230.2f),new Vector3(80,4,239.8f)})
+                camera.aspect=a;foreach(Vector3 point in new[]{new Vector3(-140,4,302),new Vector3(140,4,302),new Vector3(-140,4,230.2f),new Vector3(140,4,239.8f)})
                 {var q=camera.WorldToViewportPoint(point);Need(q.x<-.05f||q.x>1.05f||q.z<0,"recycle endpoint remains visible in saved portrait.");}
             }
             camera.aspect=aspect;
@@ -62,7 +62,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                         var c=model.Cars[i];if(!c.active||c.roundHidden)continue;
                         float step=Vector2.Distance(previous[i],RoundaboutTraffic.Position(c));
                         bool hiddenSpawn=oldHidden[i];bool bottomReset=!oldRound[i]&&!c.roundabout&&c.lane!=oldLane[i]&&c.z<StarterConfig.RouteStart+1;
-                        if(hiddenSpawn){Need(Mathf.Abs(c.X)>70,"visible junction source teleport.");hiddenResets++;}
+                        if(hiddenSpawn){Need(Mathf.Abs(c.X)>130,"visible junction source teleport.");hiddenResets++;}
                         else if(!bottomReset){maximumStep=Mathf.Max(maximumStep,step);Need(step<=c.distance+((oldRound[i]||c.roundabout) ? .001f : .055f),"visible route discontinuity: "+i+" step="+step+" travel="+c.distance);}
                         if(c.roundabout)
                         {

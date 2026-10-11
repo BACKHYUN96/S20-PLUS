@@ -47,7 +47,7 @@ namespace PixelTraffic.UnityPrototype
             for(int i=0;i<States.Length;i++)
             {
                 var c=model.Cars[i];States[i]=new State{random=(uint)(17239+i*1297),stage=Stage.Road};
-                if(c.Direction<0&&c.z>GateZ){c.roundabout=true;c.roundHidden=true;c.roundPosition=new Vector2(-90,CenterZ);c.z=CenterZ;States[i].stage=Stage.Hidden;States[i].origin=1+i%3;}
+                if(c.z>GateZ){c.roundabout=true;c.roundHidden=true;c.roundPosition=new Vector2(-90,CenterZ);c.z=CenterZ;States[i].stage=Stage.Hidden;States[i].origin=1+i%3;}
             }
         }
         static int Random(State s,int range){uint n=s.random;n^=n<<13;n^=n>>17;n^=n<<5;s.random=n;return (int)(n%(uint)range);}
@@ -68,9 +68,9 @@ namespace PixelTraffic.UnityPrototype
             var p=new List<Vector2>();Vector2 gate=World(new Vector2(x,-40),origin);
             if(origin==1||origin==3)
             {
-                Vector2 start=World(new Vector2(4.8f,-80),origin);Bezier(p,start,World(new Vector2(4.8f,-66),origin),World(new Vector2(4.8f,-48),origin),gate);
+                Vector2 start=World(new Vector2(4.8f,-140),origin);Bezier(p,start,World(new Vector2(4.8f,-100),origin),World(new Vector2(4.8f,-60),origin),gate);
             }
-            else if(origin==2)Bezier(p,new Vector2(-80,302),new Vector2(-40,302),new Vector2(-4.8f,295),gate);
+            else if(origin==2)Bezier(p,new Vector2(-140,302),new Vector2(-80,302),new Vector2(-4.8f,295),gate);
             else p.Add(gate);
             float entryAngle=(-45+origin*90)*Mathf.Deg2Rad;Vector2 entry=Ring(entryAngle);
             Bezier(p,gate,World(new Vector2(x,-30),origin),entry-Tangent(entryAngle)*7,entry);
@@ -83,8 +83,8 @@ namespace PixelTraffic.UnityPrototype
             end=World(new Vector2(outX,-40),destination);
             Bezier(p,Ring(exitAngle),Ring(exitAngle)+Tangent(exitAngle)*7,World(new Vector2(outX,-30),destination),end);
             int clearIndex=p.Count-1;
-            if(destination==1||destination==3)Bezier(p,end,World(new Vector2(-4.8f,-48),destination),World(new Vector2(-4.8f,-66),destination),World(new Vector2(-4.8f,-80),destination));
-            else if(destination==2)Bezier(p,end,new Vector2(4.8f,295),new Vector2(40,302),new Vector2(80,302));
+            if(destination==1||destination==3)Bezier(p,end,World(new Vector2(-4.8f,-60),destination),World(new Vector2(-4.8f,-100),destination),World(new Vector2(-4.8f,-140),destination));
+            else if(destination==2)Bezier(p,end,new Vector2(4.8f,295),new Vector2(80,302),new Vector2(140,302));
             result=new Path(p,entryIndex,exitIndex,clearIndex);paths.Add(key,result);return result;
         }
         // Expanded oriented rectangles test both longitudinal clearance and body width.

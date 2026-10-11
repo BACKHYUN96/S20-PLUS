@@ -45,8 +45,8 @@ namespace PixelTraffic.UnityPrototype.Editor
                     curb.Quad(Circle(19.5f,a,.17f),Circle(19.5f,b,.17f),Circle(19.75f,b,.17f),Circle(19.75f,a,.17f));
                 }
             }
-            asphalt.Rect(-100,-13,z-6.4f,z+6.4f,.006f);asphalt.Rect(13,100,z-6.4f,z+6.4f,.006f);
-            asphalt.Rect(-100,100,295.6f,308.4f,.006f);
+            asphalt.Rect(-160,-13,z-6.4f,z+6.4f,.006f);asphalt.Rect(13,160,z-6.4f,z+6.4f,.006f);
+            asphalt.Rect(-160,160,295.6f,308.4f,.006f);
             asphalt.Quad(new Vector3(-6.4f,.006f,275),new Vector3(-35,.006f,302),new Vector3(35,.006f,302),new Vector3(6.4f,.006f,275));
             for(int port=0;port<4;port++)
             {
@@ -57,7 +57,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             }
             foreach(float sign in new[]{-1f,1f})
             {
-                float x0=sign<0?-100:40,x1=sign<0?-40:100;
+                float x0=sign<0?-160:40,x1=sign<0?-40:160;
                 foreach(float edge in new[]{-1f,1f})
                 {
                     float band=z+edge*7.4f;
@@ -68,7 +68,7 @@ namespace PixelTraffic.UnityPrototype.Editor
 
             }
             foreach(float edge in new[]{-1f,1f})
-            {float p=302+edge*7.4f;paving.Rect(-100,100,p-1,p+1,.15f);float at=302+edge*6.52f;curb.Rect(-100,100,at-.12f,at+.12f,.17f);}
+            {float p=302+edge*7.4f;paving.Rect(-160,160,p-1,p+1,.15f);float at=302+edge*6.52f;curb.Rect(-160,160,at-.12f,at+.12f,.17f);}
             // Yield teeth at all four entries. The ring's single lane has no confusing centre line.
             for(int port=0;port<4;port++)for(int n=0;n<3;n++)
             {
