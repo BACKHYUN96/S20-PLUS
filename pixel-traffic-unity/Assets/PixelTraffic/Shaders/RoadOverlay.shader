@@ -56,7 +56,7 @@ Shader "PixelTraffic/RoadOverlay"
                     float falloff=(1-smoothstep(.48,1,i.uv.y))*smoothstep(0,.035,i.uv.y);
                     float detail=1-smoothstep(.8,2.5,fwidth(i.world.z*24));
                     float ripple=lerp(.5,.5+.5*sin(i.world.z*24+_Ground.w*.6),detail);
-                    alpha=edge*falloff*(.09+.10*ripple)*_Ground.x*_Ground.y*(1-_Ground.z);colour=i.color.rgb;
+                    alpha=edge*falloff*(.022+.008*ripple)*_Ground.x*_Ground.y*(1-_Ground.z);colour=i.color.rgb;
                 }
                 return half4(MixFog(colour,i.fog),alpha);
             }

@@ -1,5 +1,9 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-11 — Unity 0.19.0 실제 화면 보정: 젖은 반사 밝기·줄무늬 완화
+
+Source bac6a5738e217df7ffcf23fe745ece60fe22ec2f / Validate38101131240/job114357112826의 Unity 검사와 실제 GPU82사진이 통과했다. Artifact11687438537와 PNG3묶음의 bytes/SHA/CRC/source를 확인하고 건조/젖은 회전 확대·야간 전체 화면을 관찰했다. 두 램프의 부채꼴과 차량 회전은 확인됐지만 젖은 노면의 전조등 반사 줄무늬가 과도하게 밝았다. RoadOverlay의 해당 마스크 밝기를 .09+.10*ripple에서 .022+.008*ripple로 줄여 부드러운 보조 반짝임으로 보정한다. 첫 사진은 unity-0.19.0-first-gpu-reports에 보존하고 최종 source에서 다시 촬영·확인한다. APK는 대기다.
+
 ## 2026-10-11 — Unity 0.19.0 전조등 재질 검사 갱신
 
 두 번째 source8a49190a9ccf4f11c7a27dd474b380025b259731 / Validate38100958927/job114356613524은 컴파일 후 TrafficFleet의 기존 재질 검사에서 멈췄다. Redacted artifact11687822229의 bytes/SHA/CRC/source를 확인했다. 차량 불빛을 가로등용 Atmosphere에서 HeadlightFan으로 분리했으므로, 실제 호출되는 TrafficFleet도 정확히 새 shader 이름을 요구하도록 갱신한다. 검사를 제거하거나 허용 범위를 넓히지 않는다. 관련 검사 1파일을 포함해 최종 범위는 12 source/meta(신규 2)이며 118입력·기존 상태를 보존한다. GPU 촬영·APK는 계속 대기다.
