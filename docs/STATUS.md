@@ -1,5 +1,13 @@
 # 현재 상태
 
+## 2026-10-11 — Unity 0.21.0 빗길 반사 다듬기: 구현 완료·검증 대기
+
+사용자가 0.20.0 적용 성공을 확인했고, 다음 패치로 가로등·차량 반사의 규칙적인 줄무늬 개선과 노면 젖음에 맞춘 반사 강도 조절을 승인했다. 0.21.0/code22, WetReflections-0.21.0.unity / Generated/WetReflections0210. RoadOverlay에서 반복 sine 띠를 world 좌표의 부드러운 noise로 교체했다. 노면 패턴은 고정하고 비가 내릴 때만 작은 움직임을 섞으며, 거리별 미세 패턴을 derivative로 필터링한다. 반사 밝기는 wet*(.28+.72*wet)로 젖음에 따라 조절하고 최대 강도를 낮춰 차선/횡단보도의 과한 번짐을 줄인다. 기존 차종별 CCT·후미등색, 가로등 원색, 부채꼴 기하와 시간/날씨 전환은 유지한다.
+
+범위는 RoadOverlay.shader, RoadSurface, StarterConfig, GroundScene, CityPreview, StarterScene의 6파일이며 새 파일/mesh/material/renderer/실시간 Light/자산은 추가하지 않는다. 기존 293파일·실제 Git index/전체 미추적 상태, 118 입력과 Native Android/host/workflow 12 입력을 기록해 사용자 변경을 보존한다.
+
+실제 날씨/시간 상태 18개와 160전환 샘플에서 젖음·램프·빗방울 gain 전달 및 연속성을 검증한다. 실제 URP shader를 작은 Editor 전용 RenderTexture로 16회 렌더링해 1,048,576픽셀에서 건조/불꺼짐/눈 반사 제거, 젖음 반응, 비 없는 정적 반사와 비 내릴 때만 약한 움직임·유한/밝기 상한을 검증한다. 임시 probe는 finally에서 제거하고 기존 제품 구도에 저장하지 않는다. 기존94 PNG와 새 빗길/약한비/폭우/안개/낮/마르는 전환 8장, 총102 실제 화면을 확인할 예정이다. Unity/GPU 관찰·Android 빌드/Lint·서명·APK 전달은 아직 대기다. 실제 폰 FPS/발열은 미측정이고 Drive 설정은 기존 보류 상태다.
+
 ## 2026-10-11 — Unity 0.20.0 차종별 전조등 색상: 실제 화면 검증·서명 APK 전달 완료
 
 사용자 요청에 따라 버스·트럭 전조등은 약 3200K의 따뜻한 노란빛, 일반 승용차·SUV·택시는 중립적인 흰색, 스포츠카는 요청한 6500–8000K 범위의 7500K 차가운 흰색으로 변경했다. **0.20.0/code21**, `HeadlightColors-0.20.0.unity` / `Generated/HeadlightColors0200`. 사용자가 첨부한 주황색 도로 가장자리 불빛은 젖은 노면에 반사된 가로등이며 가로등 색상·반사는 그대로 유지한다.

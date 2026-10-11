@@ -61,6 +61,7 @@ namespace PixelTraffic.UnityPrototype
             mesh.SetVertices(vertices);mesh.SetColors(colours);
             mesh.bounds=new Bounds(new Vector3(0,0,100),new Vector3(24,2,450));
             material.SetVector("_Ground",new Vector4(climate.Wetness,climate.LampGain,(float)climate.WeatherBlend.Weights[3],climate.ActiveSeconds));
+            material.SetFloat("_Rain",climate.RainGain);
         }
         private void Place(int first,Transform car,Vector3 centre,float width,float length)
         {

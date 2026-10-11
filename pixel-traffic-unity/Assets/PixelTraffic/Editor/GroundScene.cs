@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 namespace PixelTraffic.UnityPrototype.Editor
 {
@@ -145,10 +146,11 @@ namespace PixelTraffic.UnityPrototype.Editor
                         Need(Vector3.Distance(centre,actual)<.0001f,"Contact does not follow actual wheel/turned vehicle.");contactSamples++;
                     }
                 }
-                Vector3[] before=ground.RuntimeMesh.vertices;Vector4 parameters=ground.RuntimeMaterial.GetVector("_Ground");
+                Vector3[] before=ground.RuntimeMesh.vertices;Vector4 parameters=ground.RuntimeMaterial.GetVector("_Ground");float heldRain=ground.RuntimeMaterial.GetFloat("_Rain");
                 cars[0].transform.position+=Vector3.forward;UnityEngine.Object.FindFirstObjectByType<CityClimate>().Advance(.1,true);ground.Sync(false);
                 Vector3[] after=ground.RuntimeMesh.vertices;for(int i=0;i<before.Length;i++)Need(before[i]==after[i],"Hidden ground mesh advances.");
                 Need(parameters==ground.RuntimeMaterial.GetVector("_Ground"),"Hidden wet reflection clock advances.");
+                Need(heldRain==ground.RuntimeMaterial.GetFloat("_Rain"),"Hidden reflection rain gain advances.");
                 cars[0].gameObject.SetActive(false);ground.Sync(true);after=ground.RuntimeMesh.vertices;
                 for(int v=0;v<28;v++)Need(after[v]==Vector3.zero,"Hidden vehicle leaves a shadow/reflection ghost.");cars[0].gameObject.SetActive(true);
             }
@@ -174,11 +176,73 @@ namespace PixelTraffic.UnityPrototype.Editor
             var climate=UnityEngine.Object.FindFirstObjectByType<CityClimate>();climate.Preview(2,2);ground.Sync(true);var wet=ground.RuntimeMaterial.GetVector("_Ground");
             Need(wet.x>.99f&&wet.y>.99f&&wet.z==0,"Wet nighttime reflection mapping missing.");
             climate.Preview(0,0);ground.Sync(true);Need(ground.RuntimeMaterial.GetVector("_Ground").x==0,"Dry road retains wet reflections.");
-            return new Report{result="PASS: six mipmapped textures, seamless asphalt, four merged ground renderers, actual wheel-following contacts at three yaw poses, hidden/disabled ghost prevention, one runtime material and dry/wet mapping; GPU appearance/device test separate",vehicles=cars.Length,contactSamples=contactSamples,textures=textures,renderers=4,fleetTriangles=336,drains=24,reflectionPools=20};
+            int reflectionStates=0,reflectionTransitions=0;
+            foreach(int theme in new[]{0,1,2})foreach(int weather in new[]{0,1,2,3,4,5})
+            {
+                climate.Preview(theme,weather);ground.Sync(true);var p=ground.RuntimeMaterial.GetVector("_Ground");
+                Need(Mathf.Abs(p.x-climate.Wetness)<.00001f&&Mathf.Abs(p.y-climate.LampGain)<.00001f&&Mathf.Abs(ground.RuntimeMaterial.GetFloat("_Rain")-climate.RainGain)<.00001f,"Reflection misses the real weather/light/rain state.");reflectionStates++;
+            }
+            foreach(int destination in new[]{0,2,3,4})
+            {
+                climate.Preview(2,destination==2?0:2);ground.Sync(true);climate.Select(2,destination);
+                for(int frame=0;frame<40;frame++)
+                {
+                    float previousWet=ground.RuntimeMaterial.GetVector("_Ground").x,previousRain=ground.RuntimeMaterial.GetFloat("_Rain");climate.Advance(.1,true);ground.Sync(true);
+                    float actualWet=ground.RuntimeMaterial.GetVector("_Ground").x,actualRain=ground.RuntimeMaterial.GetFloat("_Rain");
+                    Need(float.IsFinite(actualWet)&&actualWet>=0&&actualWet<=1&&Mathf.Abs(actualWet-previousWet)<.08f&&Mathf.Abs(actualRain-previousRain)<.08f,"Reflection wetness/ripple strength jumps during weather blending.");reflectionTransitions++;
+                }
+            }
+            climate.Preview(0,0);ground.Sync(true);Need(asset.GetFloat("_Rain")==0,"Rain preview mutates the shared ground asset.");
+            return new Report{result="PASS: seamless mipmapped asphalt, four ground renderers, wheel contacts, hidden/disabled prevention, 18 actual wet/light/rain states and 160 continuous weather transition samples; actual GPU shader checks are in preview-result",vehicles=cars.Length,contactSamples=contactSamples,textures=textures,renderers=4,fleetTriangles=336,drains=24,reflectionPools=20,reflectionStates=reflectionStates,reflectionTransitions=reflectionTransitions};
         }
         private static void Need(bool condition,string why){if(!condition)throw new InvalidOperationException(why);}
         [Serializable] internal sealed class Report
-        {public string result;public int vehicles,contactSamples,textures,renderers,fleetTriangles,drains,reflectionPools;}
+        {public string result;public int vehicles,contactSamples,textures,renderers,fleetTriangles,drains,reflectionPools,reflectionStates,reflectionTransitions;}
+        [Serializable]internal sealed class ReflectionGpuReport
+        {public string result;public int cases,pixels;public float peak,idleDelta,rainMeanDelta;}
+        internal static ReflectionGpuReport CheckReflectionGpu()
+        {
+            var root=new GameObject("Temporary reflection GPU probe");root.layer=30;
+            var mesh=new Mesh{vertices=new[]{new Vector3(-.625f,0,-4),new Vector3(.625f,0,-4),new Vector3(.625f,0,4),new Vector3(-.625f,0,4)},uv=new[]{Vector2.zero,Vector2.right,Vector2.one,Vector2.up},triangles=new[]{0,2,1,0,3,2}};
+            mesh.RecalculateBounds();root.AddComponent<MeshFilter>().sharedMesh=mesh;
+            var material=new Material(Shader.Find("PixelTraffic/RoadOverlay"));root.AddComponent<MeshRenderer>().sharedMaterial=material;
+            var cameraObject=new GameObject("Temporary reflection probe camera");var camera=cameraObject.AddComponent<Camera>();camera.enabled=false;camera.cullingMask=1<<30;
+            camera.transform.SetPositionAndRotation(new Vector3(0,10,0),Quaternion.Euler(90,0,0));camera.orthographic=true;camera.orthographicSize=4.5f;camera.aspect=1;camera.nearClipPlane=.1f;camera.farClipPlane=20;
+            camera.clearFlags=CameraClearFlags.SolidColor;camera.backgroundColor=Color.clear;camera.allowHDR=false;camera.allowMSAA=false;camera.GetUniversalAdditionalCameraData().renderPostProcessing=false;
+            var target=new RenderTexture(256,256,24,RenderTextureFormat.ARGB32);target.Create();var image=new Texture2D(256,256,TextureFormat.RGBA32,false);
+            var previous=RenderTexture.active;bool fog=RenderSettings.fog;RenderSettings.fog=false;var report=new ReflectionGpuReport();
+            try
+            {
+                float[] Probe(float wet,float lamps,float snow,float rain,float seconds)
+                {
+                    material.SetVector("_Ground",new Vector4(wet,lamps,snow,seconds));material.SetFloat("_Rain",rain);
+                    RenderPipeline.SubmitRenderRequest(camera,new UniversalRenderPipeline.SingleCameraRequest{destination=target});RenderTexture.active=target;
+                    image.ReadPixels(new Rect(0,0,256,256),0,0);image.Apply();Color[] colours=image.GetPixels();var values=new float[colours.Length];
+                    for(int i=0;i<values.Length;i++){Color c=target.sRGB?colours[i].linear:colours[i];values[i]=Mathf.Max(c.r,c.g,c.b);Need(float.IsFinite(values[i])&&values[i]>=0&&values[i]<.35f,"Actual reflection shader is nonfinite or washes out the road.");report.peak=Mathf.Max(report.peak,values[i]);}
+                    report.cases++;report.pixels+=values.Length;return values;
+                }
+                float Mean(float[] values){float sum=0;foreach(float value in values)sum+=value;return sum/values.Length;}
+                foreach(float kind in new[]{1f,3f})
+                {
+                    var colour=new Color(1,1,1,kind);mesh.colors=new[]{colour,colour,colour,colour};
+                    Need(Mean(Probe(0,1,0,1,0))<.00001f,"Dry road still reflects lamps.");
+                    Need(Mean(Probe(1,0,0,1,0))<.00001f,"Unlit road still reflects lamps.");
+                    Need(Mean(Probe(1,1,1,1,0))<.00001f,"Snow-covered road retains wet reflection glare.");
+                    float[] full=Probe(1,1,0,0,0),idle=Probe(1,1,0,0,10),damp=Probe(.35f,1,0,0,0),rain=Probe(1,1,0,1,0),later=Probe(1,1,0,1,2);
+                    Need(Mean(full)>.0001f&&Mean(full)>Mean(damp)*2,"Actual reflection does not respond to road wetness.");
+                    float idleDelta=0,rainDelta=0;
+                    for(int i=0;i<full.Length;i++){idleDelta=Mathf.Max(idleDelta,Mathf.Abs(full[i]-idle[i]));rainDelta+=Mathf.Abs(rain[i]-later[i]);}
+                    rainDelta/=full.Length;Need(idleDelta<.00001f,"Wet road shimmers without rain.");Need(rainDelta>.0000001f&&rainDelta<.035f,"Actual rain reflection is frozen or flickers too strongly.");
+                    report.idleDelta=Mathf.Max(report.idleDelta,idleDelta);report.rainMeanDelta=Mathf.Max(report.rainMeanDelta,rainDelta);
+                }
+                report.result="PASS: actual URP RoadOverlay pixels, dry/unlit/snow removal, bounded wetness gain, rain-only subtle motion and no idle shimmer";return report;
+            }
+            finally
+            {
+                RenderSettings.fog=fog;RenderTexture.active=previous;target.Release();UnityEngine.Object.DestroyImmediate(target);UnityEngine.Object.DestroyImmediate(image);
+                UnityEngine.Object.DestroyImmediate(cameraObject);UnityEngine.Object.DestroyImmediate(root);UnityEngine.Object.DestroyImmediate(material);UnityEngine.Object.DestroyImmediate(mesh);
+            }
+        }
         private sealed class Geometry
         {
             private readonly List<Vector3> p=new List<Vector3>();private readonly List<Vector2> uv=new List<Vector2>();private readonly List<Color> colours=new List<Color>();private readonly List<int> t=new List<int>();

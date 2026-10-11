@@ -174,6 +174,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
                 var sceneryPreviews=new System.Collections.Generic.List<string>();
                 var groundPreviews=new System.Collections.Generic.List<string>();
+                var reflectionPreviews=new System.Collections.Generic.List<string>();
                 var groundTarget=new RenderTexture(960,720,24,RenderTextureFormat.ARGB32){antiAliasing=2};groundTarget.Create();
                 var groundImage=new Texture2D(960,720,TextureFormat.RGB24,false);
                 var groundStreet=UnityEngine.Object.FindFirstObjectByType<StreetSimulation>();
@@ -187,6 +188,18 @@ namespace PixelTraffic.UnityPrototype.Editor
                     groundPreviews.Add(CaptureState(camera,groundRequest,groundTarget,groundImage,"ground-ripple-motion"));
                     landscapeClimate.Preview(0,0);groundStreet.ApplyViews();camera.transform.position=new Vector3(4.4f,4,-28);camera.transform.LookAt(new Vector3(7.7f,.13f,-22));
                     groundPreviews.Add(CaptureState(camera,groundRequest,groundTarget,groundImage,"ground-paving"));
+                    camera.transform.position=new Vector3(0,8,-23);camera.transform.LookAt(new Vector3(3,0,6));
+                    foreach(int reflectionWeather in new[]{0,1,2,4,5})
+                    {
+                        landscapeClimate.Preview(2,reflectionWeather);groundStreet.ApplyViews();
+                        reflectionPreviews.Add(CaptureState(camera,groundRequest,groundTarget,groundImage,"wet-reflections-weather-"+reflectionWeather));
+                    }
+                    landscapeClimate.Preview(0,2);groundStreet.ApplyViews();reflectionPreviews.Add(CaptureState(camera,groundRequest,groundTarget,groundImage,"wet-reflections-rain-day"));
+                    landscapeClimate.Preview(2,2);landscapeClimate.Select(2,0);
+                    for(int frame=0;frame<20;frame++)landscapeClimate.Advance(.1,true);
+                    groundStreet.ApplyViews();reflectionPreviews.Add(CaptureState(camera,groundRequest,groundTarget,groundImage,"wet-reflections-drying-2s"));
+                    for(int frame=0;frame<40;frame++)landscapeClimate.Advance(.1,true);
+                    groundStreet.ApplyViews();reflectionPreviews.Add(CaptureState(camera,groundRequest,groundTarget,groundImage,"wet-reflections-drying-6s"));
                 }
                 finally
                 {
@@ -422,11 +435,12 @@ namespace PixelTraffic.UnityPrototype.Editor
                     stopTarget.Release();UnityEngine.Object.DestroyImmediate(stopTarget);UnityEngine.Object.DestroyImmediate(stopImage);
                     for(int i=0;i<originalCars.Length;i++)originalCars[i].ResetPosition(originalZ[i]);detailStreet.ResetModel();climate.Preview(0,0);detailStreet.ApplyViews();camera.aspect=.45f;camera.fieldOfView=roadFov;camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);
                 }
+                var reflectionGpu=GroundScene.CheckReflectionGpu();
                 File.WriteAllText("Reports/preview-result.json", JsonUtility.ToJson(new Report {
                     result = "PASS", version = StarterConfig.VersionName, editor = Application.unityVersion,
                     graphicsApi = SystemInfo.graphicsDeviceType.ToString(), width = width, height = height,
                     image = output, source = "Unity Editor URP camera; not a phone screenshot or FPS test"
-                    , materialColors = colors, climateImages = previews.ToArray(), vehicleImages = vehiclePreviews.ToArray(),frontageImages=frontagePreviews.ToArray(),drivingImages=drivingPreviews.ToArray(),headlightColourImages=colourPreviews.ToArray(),cameraImages=cameraPreviews.ToArray(),landscapeImages=landscapePreviews.ToArray(),skyImages=skyPreviews.ToArray(),groundImages=groundPreviews.ToArray(),sceneryImages=sceneryPreviews.ToArray(),heavyImages=heavyPreviews.ToArray(),busStopImages=stopPreviews.ToArray()
+                    , reflectionGpu=reflectionGpu,wetReflectionImages=reflectionPreviews.ToArray(),materialColors = colors, climateImages = previews.ToArray(), vehicleImages = vehiclePreviews.ToArray(),frontageImages=frontagePreviews.ToArray(),drivingImages=drivingPreviews.ToArray(),headlightColourImages=colourPreviews.ToArray(),cameraImages=cameraPreviews.ToArray(),landscapeImages=landscapePreviews.ToArray(),skyImages=skyPreviews.ToArray(),groundImages=groundPreviews.ToArray(),sceneryImages=sceneryPreviews.ToArray(),heavyImages=heavyPreviews.ToArray(),busStopImages=stopPreviews.ToArray()
                 }, true));
                 Debug.Log("PASS: real city camera preview saved: " + output);
             }
@@ -475,6 +489,8 @@ namespace PixelTraffic.UnityPrototype.Editor
             public string result, version, editor, graphicsApi, image, source;
             public int width, height;
             public string[] headlightColourImages;
+            public string[] wetReflectionImages;
+            public GroundScene.ReflectionGpuReport reflectionGpu;
             public string[] materialColors, climateImages, vehicleImages,frontageImages,drivingImages,cameraImages,landscapeImages,skyImages,groundImages,sceneryImages,heavyImages,busStopImages;
         }
     }

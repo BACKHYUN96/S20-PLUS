@@ -1,6 +1,6 @@
 Shader "PixelTraffic/RoadOverlay"
 {
-    Properties { _Ground("Wetness Lamp Snow Active seconds",Vector)=(0,0,0,0) }
+    Properties { _Ground("Wetness Lamp Snow Active seconds",Vector)=(0,0,0,0) _Rain("Rain ripple strength",Range(0,1))=0 }
     SubShader
     {
         Tags {"RenderPipeline"="UniversalPipeline" "RenderType"="Transparent" "Queue"="Transparent"}
@@ -17,6 +17,7 @@ Shader "PixelTraffic/RoadOverlay"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             CBUFFER_START(UnityPerMaterial)
                 float4 _Ground;
+                float _Rain;
             CBUFFER_END
             struct Attributes{float4 positionOS:POSITION;float2 uv:TEXCOORD0;float4 color:COLOR;};
             struct Varyings{float4 positionCS:SV_POSITION;float2 uv:TEXCOORD0;float3 world:TEXCOORD1;float4 color:COLOR;half fog:TEXCOORD2;};
@@ -25,9 +26,20 @@ Shader "PixelTraffic/RoadOverlay"
                 Varyings o;o.positionCS=TransformObjectToHClip(v.positionOS.xyz);o.world=TransformObjectToWorld(v.positionOS.xyz);
                 o.uv=v.uv;o.color=v.color;o.fog=ComputeFogFactor(o.positionCS.z);return o;
             }
+            float Hash(float2 p)
+            {
+                p=frac(p*float2(.1031,.11369));p+=dot(p,p.yx+33.33);
+                return frac((p.x+p.y)*p.x);
+            }
+            float Noise(float2 p)
+            {
+                float2 cell=floor(p),f=frac(p);f=f*f*(3-2*f);
+                return lerp(lerp(Hash(cell),Hash(cell+float2(1,0)),f.x),lerp(Hash(cell+float2(0,1)),Hash(cell+1),f.x),f.y);
+            }
             half4 Frag(Varyings i):SV_Target
             {
                 float2 d=(i.uv-.5)*2;float alpha;float3 colour;
+                float wet=saturate(_Ground.x);float wetGain=wet*(.28+.72*wet);
                 if(i.color.a<.5)
                 {
                     // Compact underbody and four darker tyre contacts, not a
@@ -36,12 +48,15 @@ Shader "PixelTraffic/RoadOverlay"
                 }
                 else if(i.color.a<1.5)
                 {
-                    float ripple=sin(i.world.z*11+_Ground.w*.55)+sin(i.world.z*29+i.world.x*8-_Ground.w*.34)*.4;
+                    // World-anchored roughness breaks up light without regular horizontal bands.
+                    float2 grainUV=i.world.xz*float2(2.6,4.6);
+                    float detail=1-smoothstep(.6,1.6,max(length(ddx(grainUV)),length(ddy(grainUV))));
+                    float grain=lerp(.5,Noise(grainUV),detail);
+                    float patches=Noise(i.world.xz*float2(.62,.9));
+                    float ripple=Noise(i.world.xz*float2(1.1,2.2)+float2(_Ground.w*.09,-_Ground.w*.12));
                     float edge=pow(saturate(1-d.x*d.x),2)*pow(saturate(1-d.y*d.y),1.3);
-                    float broken=smoothstep(-.5,1.2,ripple);
-                    float detail=1-smoothstep(.8,2.5,max(fwidth(i.world.z*29),fwidth(i.world.x*8)));
-                    broken=lerp(.4,broken,detail);
-                    alpha=edge*(.16+broken*.26)*_Ground.x*_Ground.y*(1-_Ground.z);colour=i.color.rgb;
+                    float shimmer=lerp(1,.88+.12*ripple,saturate(_Rain));
+                    alpha=edge*(.095+.12*patches)*lerp(.72,1,grain)*shimmer*wetGain*_Ground.y*(1-_Ground.z);colour=i.color.rgb;
                 }
                 else if(i.color.a<2.5)
                 {
@@ -51,12 +66,16 @@ Shader "PixelTraffic/RoadOverlay"
                 }
                 else
                 {
-                    // Forward tapered mesh, with a soft far cutoff and small wet streaks.
+                    // Forward tapered mesh with soft cutoff and the same road roughness.
                     float edge=1-smoothstep(.62,1,abs(d.x));
                     float falloff=(1-smoothstep(.48,1,i.uv.y))*smoothstep(0,.035,i.uv.y);
-                    float detail=1-smoothstep(.8,2.5,fwidth(i.world.z*24));
-                    float ripple=lerp(.5,.5+.5*sin(i.world.z*24+_Ground.w*.6),detail);
-                    alpha=edge*falloff*(.022+.008*ripple)*_Ground.x*_Ground.y*(1-_Ground.z);colour=i.color.rgb;
+                    float2 grainUV=i.world.xz*float2(2.6,4.6);
+                    float detail=1-smoothstep(.6,1.6,max(length(ddx(grainUV)),length(ddy(grainUV))));
+                    float grain=lerp(.5,Noise(grainUV),detail);
+                    float patches=Noise(i.world.xz*float2(.62,.9));
+                    float ripple=Noise(i.world.xz*float2(1.1,2.2)+float2(_Ground.w*.09,-_Ground.w*.12));
+                    float shimmer=lerp(1,.88+.12*ripple,saturate(_Rain));
+                    alpha=edge*falloff*(.014+.014*patches)*lerp(.72,1,grain)*shimmer*wetGain*_Ground.y*(1-_Ground.z);colour=i.color.rgb;
                 }
                 return half4(MixFog(colour,i.fog),alpha);
             }
