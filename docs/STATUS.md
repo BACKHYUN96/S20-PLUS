@@ -1,5 +1,29 @@
 # 현재 상태
 
+## 2026-10-11 — Unity0.24.0 차량 와이퍼: 실제 검증·서명 APK 전달 완료
+
+사용자는 폰0.23.0 적용 성공을 확인하고 와이퍼 패치를 요청했다. **0.24.0/code25**, `Wipers-0.24.0.unity` / `Generated/Wipers0240`. 승용차·스포츠카·SUV·택시·버스·트럭의 실제 앞유리 모서리를 기준으로24대/48날을 배치했다. 유리의 기울기·폭·높이에 맞춰 길이와 회전면을 잡았고, 같은 차종끼리 메시를 공유한다. 각 날은 arm/blade2얇은 quad/4tri이며 기존 VehicleTrim 재질을 사용한다. 기존보다192tri/48renderer를 추가해 최대 강우/승객 장면 119346triangles/1637renderers/47materials, 기존120000/2400/48제한 미만이다. renderer 계약검사는 실제 추가2개에 맞춰 승용19/버스21로 갱신하되 메시·총량 제한은 유지했다.
+
+**동작:** 약한 비(RainGain.38)는1.265초 왕복 후6초 대기, 강한 비(1)는.8초 연속 왕복이며 중간 세기는 대기시간/다음 왕복 속도를 조절한다. 부드러운 cos 왕복으로8도 아래쪽에서95도 위쪽까지 닦고 돌아온다. 차량별 첫 시작 지연은0~.7초다. 진행 중 속도 변경은 다음 왕복부터 적용해 각도가 튀지 않는다. 비가 그치면 진행 중인 왕복을 마치고, 간헐 대기 중이면 마지막1회를 닦은 뒤 아래쪽에 정지한다. 정차 중인 활성 차량도 동작한다. 건조와 눈에서는 작동하지 않는다. StreetSimulation의 같은 elapsed clock에서만 움직이고 pause/focus/wallpaper rendering gate를 따른다. 독립 Update/coroutine이나 실시간 Light/Collider는 추가하지 않았다.
+
+**범위·보존:** 기존10C#(VehicleGeometry,HeavyVehicleGeometry,DrivingScene,DrivingChecks,VehicleDetailChecks,HeavyVehicleChecks,StreetSimulation,StarterScene,StarterConfig,CityPreview), 새 VehicleWipers/WiperChecks와2meta, 총14파일이다. 시작293파일/index/status·기존 host12SHA를 기록했고122빌드입력(기존118+새4)과 무관한 사용자 변경을 보존했다. 정적 구분자 검사에서 새2클래스의 namespace 닫는 brace 누락을 발견해 게시 전에 수정했다. 첫 실제 Validate38117305459는 DrivingChecks가 와이퍼 추가 전 renderer17/19를 기대해 Fleet light parts incomplete로 실패했다. 실제19/21로 계약만 갱신한 최종 Validate38117615753는 통과했다. 초기 실패와 수정은 아래 진행 이력에도 보존한다.
+
+**실제 Unity 검증:** source `dffcdd1cc5a2a1c058cd64135431fa744ab86ab0` / [Validate 38117615753](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38117615753). 와이퍼 profile이 실제 glass vertices와 일치하며 모든 회전각에서 날이 유리 안/위에 있는지6528vertex를 검사했다. 15/30/60/120fps의30초 일정 강우 시 동일 왕복 횟수/각도, 약비 총96회/강비 총884회, 움직임·간헐 대기에서 비가 그친 마지막 닦기48case, 건조/0delta/강도 변화 연속성, 정차 중24활성 차량과 실제 street pause 연동 PASS. 기존 기둥4곳/신호6상태/4·32·100명 보행/기후·우비·승하차/CCT·부채꼴·노면GPU 검사도 PASS.
+
+**실제 화면:** Unity6000.3.26f1/D3D11 전체133PNG 중 와이퍼24장(6차종×건조 주차/중간/최대/비 그친 정지)을 촬영했다. 같은 장면·카메라에서 runtime 와이퍼 각도만 바꾼 중간/최대 사진의 픽셀 변화[3646, 1230, 882, 3735, 1779, 1686]를 확인했다. 실제 제품 카메라와 승용/스포츠/SUV/택시/버스/트럭 확대를 직접 관찰했다. 확대는 주변 가림을 제거하는 임시 layer에서 실제 차량 rig를 촬영한 것이며 끝나면 배치·layer·기후·와이퍼·카메라를 복구한다. 제품에는 확대 카메라/임시 layer가 저장되지 않는다. 폰 스크린샷이나 FPS 측정은 아니다.
+
+**Android:** tag `unity-apk-0.24.0-build1` / [BuildApk 38118234099](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38118234099). BuildPlayer 오류0/경고0, launcherLint 오류0/경고8. 내려받은 실제 APK의0.24.0/code25/min29/target36/ARM64IL2CPP, wallpaper service/private provider/settings launcher와 원본 v2인증서 `a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6`를 SDK로 확인했다. 바뀌지 않은 host12입력은 기존hostLint38008378207(오류0/경고10)을 재사용했다.
+
+**전달:** [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/f47ead0ed58a0c2c45b2c94d3315ed67a6c032da/pixel-traffic-unity-prototype-0.24.0.apk) · [제품 구도](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/f47ead0ed58a0c2c45b2c94d3315ed67a6c032da/wiper-city-preview.png) · [승용 중간](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/f47ead0ed58a0c2c45b2c94d3315ed67a6c032da/wiper-sedan-preview.png) · [승용 최대](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/f47ead0ed58a0c2c45b2c94d3315ed67a6c032da/wiper-sedan-upper-preview.png) · [버스](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/f47ead0ed58a0c2c45b2c94d3315ed67a6c032da/wiper-bus-preview.png) · [트럭](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/f47ead0ed58a0c2c45b2c94d3315ed67a6c032da/wiper-truck-preview.png). APK 31156331bytes/SHA256 `58150d5242e9e812a7ebe14c76aad53f421c9df3e5ba687216921b818f132cc3`. root다운로드 branch `downloads/unity-0.24.0`의6파일을 로그인 없는 HTTP200/no redirect/fullbytes/SHA로 확인했다. main에는 APK binary나 새 workflow를 추가하지 않았다. 문서 전용 최종 게시가122빌드입력을 보존하므로 통과한 검사를 반복하지 않는다.
+
+PC 설치(이 폴더로 다운로드한 경우):
+```powershell
+$trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $trafficAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.24.0.apk"
+```
+
+미확인: 실제 폰0.24.0 와이퍼 가독성/움직임·FPS/발열/장시간 lifecycle. 폰0.23.0 적용 성공은 사용자 확인이다. 와이퍼 기능 패치를 마쳤으며 이후 사용자 방침에 따라 새 기능보다 시안의 건물 외관 그래픽부터 집중한다. 다음 그래픽 패치는 별도 사용자 요청으로 진행한다. Drive PC설정 보류는 유지한다.
+
 ## 2026-10-11 — Unity0.24.0 기존 차량 renderer 계약 누락 보정: 재검증 준비
 
 첫sourceb60684e/Validate38117305459는 실제C#컴파일·차량·보행·기후 검사를 진행한 뒤DrivingChecks의 `Fleet light parts incomplete`로 실패했다. VehicleDetailChecks/HeavyVehicleChecks의 추가2와이퍼 계약은 반영했으나 DrivingChecks에 남아 있던 총renderer17/19조건을 빠뜨렸다. 실제새구성19/21로 strict계약과report를 갱신하고 기존삼각형/재질/차량안전/램프 검사 제한은 유지한다. 와이퍼 동작 검사는 이 단계 뒤에 있어 아직통과로 주장하지 않는다.
