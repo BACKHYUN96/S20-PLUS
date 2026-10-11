@@ -102,7 +102,7 @@ namespace PixelTraffic.UnityPrototype
         bool Free(int index,Vector2 point,float yaw)
         {
             var c=model.Cars[index];for(int j=0;j<model.Cars.Length;j++)
-            {var other=model.Cars[j];if(j==index||!other.active||other.roundHidden)continue;if(!Separated(point,yaw,c.length,c.width,Position(other),Yaw(other),other.length,other.width))return false;}
+            {var other=model.Cars[j];if(j==index||!other.active||other.roundHidden)continue;if(!Separated(point,yaw,c.SafetyLength,c.width,Position(other),Yaw(other),other.SafetyLength,other.width))return false;}
             return true;
         }
         void Start(int i,int origin)

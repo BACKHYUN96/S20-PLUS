@@ -113,7 +113,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     {
                         var cb=productionStops.Cars[cj];if(!cb.active||!LaneChanges.SharesLane(ca,cb))continue;
                         double cd=Math.Abs(ca.z-cb.z);cd=Math.Min(cd,310-cd);float clearance=(float)cd-(ca.SafetyLength+cb.SafetyLength)/2;
-                        productionGap=Mathf.Min(productionGap,clearance);Need(clearance>=1.79f,"Full-fleet stop reservation overlaps another vehicle.");
+                        productionGap=Mathf.Min(productionGap,clearance);Need(clearance>=1.79f,"Full-fleet stop reservation overlaps another vehicle: pair="+ci+"/"+cj+" tick="+productionTick+" gap="+clearance+" lane="+ca.lane+"/"+cb.lane+" z="+ca.z+"/"+cb.z+" stages="+ca.busStage+"/"+cb.busStage);
                     }
                 }
             }
