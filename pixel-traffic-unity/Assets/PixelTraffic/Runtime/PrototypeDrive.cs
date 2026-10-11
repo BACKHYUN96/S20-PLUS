@@ -59,8 +59,8 @@ namespace PixelTraffic.UnityPrototype
         }
         public void ApplyTraffic(StreetModel.Car car)
         {
-            routePosition=car.z;float yaw=LaneChanges.Yaw(car);
-            transform.position=new Vector3(car.X,0,(float)car.z);transform.rotation=Quaternion.Euler(0,(Direction<0?180:0)+yaw,0);
+            routePosition=car.z;float yaw=car.roundabout?0:LaneChanges.Yaw(car);
+            transform.position=new Vector3(car.X,0,(float)car.z);transform.rotation=Quaternion.Euler(0,car.roundabout?car.roundYaw:(car.Direction<0?180:0)+yaw,0);
             wheelRoll=Mathf.Repeat(wheelRoll+car.distance/wheelRadius*Mathf.Rad2Deg,360);
             foreach(var wheel in wheels)if(wheel!=null)wheel.localRotation=Quaternion.Euler(0,wheel.localPosition.z>0?yaw*1.25f:0,0)*Quaternion.AngleAxis(wheelRoll,Vector3.right);
         }

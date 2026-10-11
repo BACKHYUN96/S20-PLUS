@@ -548,8 +548,46 @@ namespace PixelTraffic.UnityPrototype.Editor
                     for(int i=0;i<originalCars.Length;i++)originalCars[i].ResetPosition(originalZ[i]);climate.Preview(0,0);detailStreet.ResetModel();detailStreet.ApplyViews();
                     camera.aspect=.45f;camera.fieldOfView=roadFov;camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);
                 }
+                var roundaboutPreviews=new System.Collections.Generic.List<string>();
+                var roundaboutPixelChanges=new System.Collections.Generic.List<int>();
+                var roundaboutMotionPositions=new System.Collections.Generic.List<Vector3>();
+                try
+                {
+                    for(int i=0;i<originalCars.Length;i++)originalCars[i].ResetPosition(originalZ[i]);climate.Preview(0,0);detailStreet.ResetModel();
+                    camera.aspect=.45f;camera.transform.position=new Vector3(0,46,161);camera.transform.LookAt(new Vector3(0,0,241));camera.fieldOfView=60;
+                    detailStreet.Advance(60);detailStreet.ApplyViews();
+                    foreach(int theme in new[]{0,2})
+                    {climate.Preview(theme,0);detailStreet.ApplyViews();roundaboutPreviews.Add(CaptureState(camera,request,target,image,"roundabout-"+(theme==0?"day":"night")));}
+                    climate.Preview(0,5);detailStreet.ApplyViews();roundaboutPreviews.Add(CaptureState(camera,request,target,image,"roundabout-storm"));
+                    climate.Preview(0,0);detailStreet.ApplyViews();
+                    camera.transform.position=new Vector3(28,38,177);camera.transform.LookAt(new Vector3(0,0,235));
+                    roundaboutPreviews.Add(CaptureState(camera,request,target,image,"roundabout-oblique"));
+                    camera.transform.position=new Vector3(0,46,161);camera.transform.LookAt(new Vector3(0,0,241));
+                    int tracked=detailStreet.Model.Roundabout.Owner;
+                    for(int wait=0;tracked<0&&wait<1800;wait++){detailStreet.Advance(1d/30);tracked=detailStreet.Model.Roundabout.Owner;}
+                    if(tracked<0)throw new InvalidOperationException("No actual circulating vehicle for junction captures.");
+                    Color32[] previousPixels=null;
+                    for(int frame=0;frame<4;frame++)
+                    {
+                        if(frame>0)detailStreet.Advance(1);detailStreet.ApplyViews();
+                        var car=detailStreet.Model.Cars[tracked];roundaboutMotionPositions.Add(new Vector3(car.X,car.roundabout?car.roundYaw:(car.Direction<0?180:0),(float)car.z));
+                        roundaboutPreviews.Add(CaptureState(camera,request,target,image,"roundabout-motion-"+frame));
+                        var currentPixels=image.GetPixels32();if(previousPixels!=null)
+                        {
+                            int changed=0;for(int n=0;n<currentPixels.Length;n++)if(Math.Abs(currentPixels[n].r-previousPixels[n].r)+Math.Abs(currentPixels[n].g-previousPixels[n].g)+Math.Abs(currentPixels[n].b-previousPixels[n].b)>20)changed++;
+                            if(changed<=16)throw new InvalidOperationException("Real junction motion is not visible in GPU captures.");roundaboutPixelChanges.Add(changed);
+                        }
+                        previousPixels=currentPixels;
+                    }
+                }
+                finally
+                {
+                    for(int i=0;i<originalCars.Length;i++)originalCars[i].ResetPosition(originalZ[i]);climate.Preview(0,0);detailStreet.ResetModel();detailStreet.ApplyViews();
+                    camera.aspect=.45f;camera.fieldOfView=roadFov;camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);
+                }
                 var reflectionGpu=GroundScene.CheckReflectionGpu();
                 File.WriteAllText("Reports/preview-result.json", JsonUtility.ToJson(new Report {
+                    roundaboutImages=roundaboutPreviews.ToArray(),roundaboutPixelChanges=roundaboutPixelChanges.ToArray(),roundaboutMotionPositions=roundaboutMotionPositions.ToArray(),
                     result = "PASS", version = StarterConfig.VersionName, editor = Application.unityVersion,
                     graphicsApi = SystemInfo.graphicsDeviceType.ToString(), width = width, height = height,
                     image = output, source = "Unity Editor URP camera; not a phone screenshot or FPS test"
@@ -607,6 +645,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         {
             public string result, version, editor, graphicsApi, image, source;
             public int width, height;
+            public string[] roundaboutImages;public int[] roundaboutPixelChanges;public Vector3[] roundaboutMotionPositions;
             public string[] headlightColourImages;
             public string[] wetReflectionImages,koreanSignalImages;
             public string[] wiperImages;public int[] wiperPixelChanges;

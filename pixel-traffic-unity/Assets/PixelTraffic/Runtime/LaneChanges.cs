@@ -28,7 +28,7 @@ namespace PixelTraffic.UnityPrototype
         bool Context(StreetModel model,StreetModel.Car car)
         {
             if(car.busStage!=BusStops.Stage.Cruising||model.Stops.NearUnservedStop(car))return false;
-            return car.active&&model.Signal==StreetModel.Phase.VehicleGreen&&model.PhaseSeconds<12&&model.DrivingPace>.85f&&car.speed>2&&
+            return car.active&&!car.roundabout&&(model.Roundabout==null||car.z<RoundaboutTraffic.GateZ-30-car.SafetyLength)&&model.Signal==StreetModel.Phase.VehicleGreen&&model.PhaseSeconds<12&&model.DrivingPace>.85f&&car.speed>2&&
                 Math.Abs(car.z-StarterConfig.CrossingZ)>50+car.SafetyLength/2&&car.z>StarterConfig.RouteStart+22+car.SafetyLength/2&&car.z<StarterConfig.RouteEnd-22-car.SafetyLength/2;
         }
         public bool Request(StreetModel model,int index)
@@ -59,7 +59,7 @@ namespace PixelTraffic.UnityPrototype
         {
             for(int i=0;i<cars.Length;i++)
             {
-                var car=cars[i];if(!car.active){if(car.maneuver!=Stage.Idle)Cancel(car,model.ActiveTicks);continue;}
+                var car=cars[i];if(!car.active||car.roundabout){if(car.maneuver!=Stage.Idle)Cancel(car,model.ActiveTicks);continue;}
                 if(car.maneuver==Stage.Merging)
                 {
                     car.mergeTicks++;

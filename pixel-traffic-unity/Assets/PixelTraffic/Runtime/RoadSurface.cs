@@ -59,7 +59,7 @@ namespace PixelTraffic.UnityPrototype
                 for(int v=24;v<28;v++)colours[start+v]=new Color(.56f+brake*.34f,.035f,.016f,1);
             }
             mesh.SetVertices(vertices);mesh.SetColors(colours);
-            mesh.bounds=new Bounds(new Vector3(0,0,100),new Vector3(24,2,450));
+            mesh.bounds=new Bounds(new Vector3(0,0,100),new Vector3(220,2,450));
             material.SetVector("_Ground",new Vector4(climate.Wetness,climate.LampGain,(float)climate.WeatherBlend.Weights[3],climate.ActiveSeconds));
             material.SetFloat("_Rain",climate.RainGain);
         }

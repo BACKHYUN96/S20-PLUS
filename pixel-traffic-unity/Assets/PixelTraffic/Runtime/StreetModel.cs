@@ -11,6 +11,7 @@ namespace PixelTraffic.UnityPrototype
         public sealed class Car
         {
             public int lane;public double z;public float cruise,speed,length,distance;public float width=2.2f,height=1.9f;public bool committed,active=true;public int rank;
+            public bool roundabout,roundHidden,roundSignal;public Vector2 roundPosition;public float roundYaw;public int roundSignalTicks;
             public bool bus,busServed;public BusStops.Stage busStage;public int busTicks,hazardTicks,busArrivalTick;public float busDoor,busOffset;
             public LaneChanges.Stage maneuver;public int targetLane=-1,signalTicks,mergeTicks,blinks,requestTick;
             public double nextChangeTick,totalDistance;public uint rearMask;public bool braking;
@@ -19,8 +20,8 @@ namespace PixelTraffic.UnityPrototype
             public float SafetyLength => length+width*Mathf.Sin(8*Mathf.Deg2Rad);
             public int MergeDuration => length>6?180:LaneChanges.MergeTicks;
             public int Direction => lane<2?-1:1;
-            public float X => (lane-1.5f)*StarterConfig.LaneWidth+busOffset+(maneuver==LaneChanges.Stage.Merging?(targetLane-lane)*StarterConfig.LaneWidth*Mathf.SmoothStep(0,1,mergeTicks/(float)MergeDuration):0);
-            public bool Occupies(int value)=>lane==value||((maneuver==LaneChanges.Stage.Signaling||maneuver==LaneChanges.Stage.Merging)&&targetLane==value);
+            public float X => roundabout?roundPosition.x:(lane-1.5f)*StarterConfig.LaneWidth+busOffset+(maneuver==LaneChanges.Stage.Merging?(targetLane-lane)*StarterConfig.LaneWidth*Mathf.SmoothStep(0,1,mergeTicks/(float)MergeDuration):0);
+            public bool Occupies(int value)=>!roundabout&&(lane==value||((maneuver==LaneChanges.Stage.Signaling||maneuver==LaneChanges.Stage.Merging)&&targetLane==value));
         }
         public sealed class Person
         {
@@ -38,6 +39,8 @@ namespace PixelTraffic.UnityPrototype
         public readonly LaneChanges Maneuvers;
         public readonly BusStops Stops;
         public bool AutomaticLaneChanges=true;
+        public RoundaboutTraffic Roundabout {get;private set;}
+        public void EnableRoundabout()=>Roundabout=new RoundaboutTraffic(this);
         public Func<Vector2,Vector3,bool> VisibleVehicle;
         public bool VehicleVisible(Car car,double z)
         {
@@ -194,7 +197,7 @@ namespace PixelTraffic.UnityPrototype
         }
         public void Tick()
         {
-            tick++;phaseTime+=Dt;WeatherPopulation();UpdateSignal();Stops.Tick();Maneuvers.Tick(this);MoveCars();
+            tick++;phaseTime+=Dt;WeatherPopulation();UpdateSignal();Stops.Tick();Maneuvers.Tick(this);MoveCars();Roundabout?.Tick();
             // Rotating update order removes a permanent priority bias; pairs never share a foot disc.
             for(int n=0;n<People.Length;n++)MovePerson((tick+n)%People.Length);
             if(tick%30==0)SetPopulation(RequestedPeople);
@@ -239,23 +242,23 @@ namespace PixelTraffic.UnityPrototype
             for(int i=0;i<Cars.Length;i++)oldZ[i]=Cars[i].z;
             for(int i=0;i<Cars.Length;i++)
             {
-                Car car=Cars[i];car.distance=0;if(!car.active)continue;
+                Car car=Cars[i];car.distance=0;if(!car.active||car.roundabout)continue;
                 if(car.rank>=WeatherCarsPerLane&&car.maneuver!=LaneChanges.Stage.Merging&&car.maneuver!=LaneChanges.Stage.Signaling&&!Stops.Holds(car)&&!VehicleVisible(car,car.z))
                 {car.active=false;car.committed=false;car.speed=0;car.braking=false;Maneuvers.Cancel(car,tick);continue;}
                 float room=float.MaxValue;
                 for(int j=0;j<Cars.Length;j++)if(j!=i&&Cars[j].active&&LaneChanges.SharesLane(car,Cars[j]))
                 {
-                    double gap=car.Direction*(oldZ[j]-oldZ[i]);gap=(gap%span+span)%span;
+                    double gap=car.Direction*(oldZ[j]-oldZ[i]);if(Roundabout!=null){if(gap<0)continue;}else gap=(gap%span+span)%span;
                     room=Mathf.Min(room,(float)gap-(car.SafetyLength+Cars[j].SafetyLength)/2-1.8f);
                 }
                 if(Signal!=Phase.VehicleGreen&&!car.committed)
                 {
                     double distance=car.Direction*(StopCenter(car)-oldZ[i]);
                     if(distance<0&&distance>-.001)distance=0; // Round-off at a stop line is not a completed route loop.
-                    distance=(distance%span+span)%span;
+                    if(Roundabout!=null&&distance<0)distance=double.MaxValue;else distance=(distance%span+span)%span;
                     room=Mathf.Min(room,(float)distance);
                 }
-                room=Mathf.Min(room,Stops.Room(car));
+                room=Mathf.Min(room,Stops.Room(car));if(Roundabout!=null)room=Mathf.Min(room,Roundabout.RoadRoom(car));
                 float yield=car.maneuver==LaneChanges.Stage.Waiting&&car.rearMask!=0?.72f:1;
                 float target=Mathf.Min(car.cruise*drivingPace*yield,Mathf.Sqrt(Mathf.Max(0,6.8f*room)));
                 float previousSpeed=car.speed;
@@ -264,7 +267,7 @@ namespace PixelTraffic.UnityPrototype
                 double next=oldZ[i]+car.Direction*travel;
                 if(Signal!=Phase.VehicleGreen&&!car.committed&&Math.Abs(next-StopCenter(car))<.001)
                 { next=StopCenter(car);travel=Mathf.Max(0,(float)(car.Direction*(next-oldZ[i])));car.speed=0; }
-                next=StarterConfig.RouteStart+((next-StarterConfig.RouteStart)%span+span)%span;
+                if(Roundabout==null)next=StarterConfig.RouteStart+((next-StarterConfig.RouteStart)%span+span)%span;
                 if(Math.Abs(next-oldZ[i])>span/2&&car.bus)Stops.Wrapped(car);
                 car.distance=travel;car.totalDistance+=travel;car.z=next;
                 car.braking=previousSpeed-car.speed>.015f||(car.speed<.1f&&room<.3f);

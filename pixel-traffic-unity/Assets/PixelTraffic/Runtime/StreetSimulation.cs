@@ -9,6 +9,7 @@ namespace PixelTraffic.UnityPrototype
         [SerializeField] private PrototypeDrive[] vehicles;
         [SerializeField] private WalkerView[] walkers;
         [SerializeField] private Renderer[] vehicleLights,walkLights;
+        [SerializeField] private bool roundaboutEnabled=true;
         [SerializeField] private int people=StarterConfig.DefaultPeople;
         [SerializeField] private WetTraffic spray;
         [SerializeField] private VehicleWipers[] wipers;
@@ -52,7 +53,7 @@ namespace PixelTraffic.UnityPrototype
                 var vehicle=vehicles[i];vehicle.gameObject.SetActive(true);vehicle.ResetPosition(vehicle.transform.position.z);Bounds bounds=vehicle.BodyBounds();
                 cars[i]=new StreetModel.Car {lane=vehicle.Lane,z=vehicle.transform.position.z,cruise=vehicle.Speed,speed=vehicle.Speed,length=bounds.size.z,width=bounds.size.x,height=bounds.size.y,bus=vehicle.Model=="CityBus"};
             }
-            model=new StreetModel(people,cars);
+            model=new StreetModel(people,cars);if(roundaboutEnabled)model.EnableRoundabout();
             if(wipers!=null)foreach(var pair in wipers)if(pair!=null)pair.ResetState();
             portraitCamera=Camera.main;if(portraitCamera!=null){GeometryUtility.CalculateFrustumPlanes(portraitCamera,viewPlanes);model.Visible=Visible;model.VisibleVehicle=VisibleVehicle;}
             accumulator=0;lastPhase=(StreetModel.Phase)(-1);
@@ -88,7 +89,7 @@ namespace PixelTraffic.UnityPrototype
                 model.Tick();accumulator-=1d/30;
                 for(int i=0;i<vehicles.Length;i++)
                 {
-                    var car=model.Cars[i];if(vehicles[i].gameObject.activeSelf!=car.active)vehicles[i].gameObject.SetActive(car.active);
+                    var car=model.Cars[i];bool visible=car.active&&!car.roundHidden;if(vehicles[i].gameObject.activeSelf!=visible)vehicles[i].gameObject.SetActive(visible);
                     vehicles[i].ApplyTraffic(car);
                 }
             }

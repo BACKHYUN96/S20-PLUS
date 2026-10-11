@@ -1,0 +1,91 @@
+using System;
+using System.Collections.Generic;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.Rendering;
+
+namespace PixelTraffic.UnityPrototype.Editor
+{
+    internal static class RoundaboutScene
+    {
+        sealed class Shape
+        {
+            readonly List<Vector3> points=new List<Vector3>();readonly List<Vector2> uv=new List<Vector2>();readonly List<int> indices=new List<int>();
+            void Vertex(Vector3 p){points.Add(p);uv.Add(new Vector2(p.x/6,p.z/6));}
+            internal void Quad(Vector3 a,Vector3 b,Vector3 c,Vector3 d)
+            {int n=points.Count;Vertex(a);Vertex(b);Vertex(c);Vertex(d);indices.AddRange(new[]{n,n+1,n+2,n,n+2,n+3});}
+            internal void Triangle(Vector3 a,Vector3 b,Vector3 c)
+            {int n=points.Count;Vertex(a);Vertex(b);Vertex(c);indices.AddRange(new[]{n,n+1,n+2});}
+            internal void Rect(float x0,float x1,float z0,float z1,float y)=>Quad(new Vector3(x0,y,z0),new Vector3(x0,y,z1),new Vector3(x1,y,z1),new Vector3(x1,y,z0));
+            internal void Save(string name,Transform parent,Material material)
+            {
+                var mesh=new Mesh{name=name};mesh.SetVertices(points);mesh.SetUVs(0,uv);mesh.SetTriangles(indices,0);mesh.RecalculateNormals();mesh.RecalculateBounds();
+                AssetDatabase.CreateAsset(mesh,StarterScene.Generated+"/"+name.Replace(" ","")+".asset");
+                var obj=new GameObject(name,typeof(MeshFilter),typeof(MeshRenderer));obj.transform.SetParent(parent,false);obj.GetComponent<MeshFilter>().sharedMesh=mesh;
+                var view=obj.GetComponent<MeshRenderer>();view.sharedMaterial=material;view.shadowCastingMode=ShadowCastingMode.Off;
+            }
+        }
+        static Vector3 Circle(float r,float angle,float y)=>new Vector3(Mathf.Cos(angle)*r,y,RoundaboutTraffic.CenterZ+Mathf.Sin(angle)*r);
+        internal static void Create(Transform road)
+        {
+            Transform root=new GameObject("Roundabout Terrain").transform;root.SetParent(road,false);
+            var asphalt=new Shape();var paving=new Shape();var curb=new Shape();var lawn=new Shape();var white=new Shape();
+            const int segments=24;float z=RoundaboutTraffic.CenterZ;
+            for(int i=0;i<segments;i++)
+            {
+                float a=i*Mathf.PI*2/segments,b=(i+1)*Mathf.PI*2/segments;
+                asphalt.Triangle(new Vector3(0,.008f,z),Circle(19.5f,b,.008f),Circle(19.5f,a,.008f));
+                lawn.Triangle(new Vector3(0,.235f,z),Circle(10,b,.235f),Circle(10,a,.235f));
+                curb.Quad(Circle(10,a,.25f),Circle(10,b,.25f),Circle(10.28f,b,.25f),Circle(10.28f,a,.25f));
+                curb.Quad(Circle(10.28f,a,.25f),Circle(10.28f,b,.25f),Circle(10.28f,b,0),Circle(10.28f,a,0));
+                float mid=(i+.5f)*360/segments,cardinal=Mathf.Abs(Mathf.DeltaAngle(mid,Mathf.Round(mid/90)*90));
+                if(cardinal>22)
+                {
+                    paving.Quad(Circle(19.5f,a,.15f),Circle(19.5f,b,.15f),Circle(21.5f,b,.15f),Circle(21.5f,a,.15f));
+                    curb.Quad(Circle(19.5f,a,.17f),Circle(19.5f,b,.17f),Circle(19.75f,b,.17f),Circle(19.75f,a,.17f));
+                }
+            }
+            asphalt.Rect(-100,-13,z-6.4f,z+6.4f,.006f);asphalt.Rect(13,100,z-6.4f,z+6.4f,.006f);
+            asphalt.Rect(-100,100,295.6f,308.4f,.006f);
+            asphalt.Quad(new Vector3(-6.4f,.006f,275),new Vector3(-35,.006f,302),new Vector3(35,.006f,302),new Vector3(6.4f,.006f,275));
+            for(int port=0;port<4;port++)
+            {
+                Vector3 P(float x,float v,float y){Vector2 p=new Vector2(x,v);for(int k=0;k<port;k++)p=new Vector2(-p.y,p.x);return new Vector3(p.x,y,z+p.y);}
+                asphalt.Quad(P(-6.4f,-40,.006f),P(-13,-13,.006f),P(13,-13,.006f),P(6.4f,-40,.006f));
+                paving.Quad(P(-10.4f,-40,.15f),P(-15,-13,.15f),P(-13,-13,.15f),P(-6.4f,-40,.15f));
+                paving.Quad(P(6.4f,-40,.15f),P(13,-13,.15f),P(15,-13,.15f),P(10.4f,-40,.15f));
+            }
+            foreach(float sign in new[]{-1f,1f})
+            {
+                float x0=sign<0?-100:40,x1=sign<0?-40:100;
+                foreach(float edge in new[]{-1f,1f})
+                {
+                    float band=z+edge*7.4f;
+                    paving.Rect(x0,x1,band-1,band+1,.15f);
+                    float at=z+edge*6.52f;curb.Rect(x0,x1,at-.12f,at+.12f,.17f);
+                }
+                // Continue the main-road pavements around the roundabout and to the river road.
+
+            }
+            foreach(float edge in new[]{-1f,1f})
+            {float p=302+edge*7.4f;paving.Rect(-100,100,p-1,p+1,.15f);float at=302+edge*6.52f;curb.Rect(-100,100,at-.12f,at+.12f,.17f);}
+            // Yield teeth at all four entries. The ring's single lane has no confusing centre line.
+            for(int port=0;port<4;port++)for(int n=0;n<3;n++)
+            {
+                float x=1.1f+n*1.35f;Vector3 P(float u,float v){Vector2 p=new Vector2(u,v);for(int k=0;k<port;k++)p=new Vector2(-p.y,p.x);return new Vector3(p.x,.022f,z+p.y);}
+                white.Triangle(P(x-.4f,-23),P(x+.4f,-23),P(x,-23.8f));
+            }
+            // Small clockwise-facing arrows are avoided: these arrows follow the actual CCW tangent.
+            for(int port=0;port<4;port++)
+            {
+                float angle=(port*90+20)*Mathf.Deg2Rad;Vector3 p=Circle(14,angle,.022f);
+                Vector3 forward=new Vector3(-Mathf.Sin(angle),0,Mathf.Cos(angle)),side=new Vector3(forward.z,0,-forward.x);
+                white.Quad(p-forward*1.1f-side*.12f,p+forward*.5f-side*.12f,p+forward*.5f+side*.12f,p-forward*1.1f+side*.12f);
+                white.Triangle(p+forward*1.3f,p+forward*.35f+side*.6f,p+forward*.35f-side*.6f);
+            }
+            Material Existing(string name)=>AssetDatabase.LoadAssetAtPath<Material>(StarterScene.Generated+"/"+name.Replace(" ","")+".mat");
+            asphalt.Save("Roundabout Asphalt",root,Existing("Asphalt"));paving.Save("Roundabout Paving",root,Existing("Paving"));
+            curb.Save("Roundabout Curb",root,Existing("Curb"));lawn.Save("Roundabout Island",root,Existing("Leaves 0"));white.Save("Roundabout Markings",root,Existing("Road White"));
+        }
+    }
+}

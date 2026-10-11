@@ -102,9 +102,9 @@ namespace PixelTraffic.UnityPrototype.Editor
             bank.Box(new Vector3(0,25.6f,397),new Vector3(360,1.2f,3),new Color(5,0,0,1));
             for(int i=0;i<12;i++)
             {
-                float x=-100+i*18;
-                bank.Box(new Vector3(x,5,314+i%3),new Vector3(10,5+i%4,6),new Color(2,3,i/12f,1));
-                bank.Quad(new Vector3(x-6,7.8f,319),new Vector3(x-6,9.3f,319),new Vector3(x+6,9.3f,319),new Vector3(x+6,7.8f,319),new Color(5,1,0,1));
+                float x=-110+i*20;float height=5+i%4;
+                bank.Box(new Vector3(x,height*.5f,318+i%3),new Vector3(10,height,6),new Color(2,3,i/12f,1));
+                bank.Quad(new Vector3(x-6,height+.05f,318+i%3),new Vector3(x-6,height+.65f,318+i%3),new Vector3(x+6,height+.65f,318+i%3),new Vector3(x+6,height+.05f,318+i%3),new Color(5,1,0,1));
             }
             views.Add(bank.Save("River Banks",root,material));
             var bridge=new Geometry();

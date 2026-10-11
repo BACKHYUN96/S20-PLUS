@@ -16,12 +16,12 @@ namespace PixelTraffic.UnityPrototype
         public void Configure(MeshFilter filter,PrototypeDrive[] cars){pool=filter;vehicles=cars;}
         public void Advance(float dt,StreetModel model,float rain)
         {
-            if(mesh==null){mesh=Instantiate(pool.sharedMesh);pool.sharedMesh=mesh;mesh.MarkDynamic();mesh.bounds=new Bounds(new Vector3(0,1,100),new Vector3(26,6,320));vertices=new Vector3[Capacity*4];block=new MaterialPropertyBlock();}
+            if(mesh==null){mesh=Instantiate(pool.sharedMesh);pool.sharedMesh=mesh;mesh.MarkDynamic();mesh.bounds=new Bounds(new Vector3(0,1,100),new Vector3(220,6,370));vertices=new Vector3[Capacity*4];block=new MaterialPropertyBlock();}
             clock+=dt;EmittingVehicles=0;
             Vector3 right=Camera.main.transform.right,up=Camera.main.transform.up;
             for(int i=0;i<vehicles.Length;i++)
             {
-                var car=model.Cars[i];float gain=car.active&&car.speed>.25f?rain*Mathf.Clamp01(car.speed/6):0;
+                var car=model.Cars[i];float gain=car.active&&!car.roundHidden&&car.speed>.25f?rain*Mathf.Clamp01(car.speed/6):0;
                 if(gain>.01f)EmittingVehicles++;
                 for(int q=0;q<4;q++)
                 {

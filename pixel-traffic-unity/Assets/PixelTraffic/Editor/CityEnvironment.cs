@@ -9,7 +9,7 @@ namespace PixelTraffic.UnityPrototype.Editor
     // Editor-built, deterministic city geometry. No per-frame scenery generation.
     internal static class CityEnvironment
     {
-        private const float RoadStart = -65, RoadEnd = 355;
+        private const float RoadStart = -65, RoadEnd = 305;
         private static Material Mat(string name, Color color, float metallic = 0, float smoothness = .18f)
             => StarterScene.Surface(name, color, metallic, smoothness);
         private static GameObject Box(string name, Transform parent, Vector3 position, Vector3 scale, Material material)
@@ -32,9 +32,9 @@ namespace PixelTraffic.UnityPrototype.Editor
             Material curb = Mat("Curb", new Color(.73f, .73f, .67f));
             foreach (float side in new[] { -1f, 1f })
             {
-                Box("Sidewalk", road, new Vector3(side * 8.4f, .08f, centre), new Vector3(4, .16f, length), paving);
-                Box("Curb", road, new Vector3(side * 6.52f, .13f, centre), new Vector3(.24f, .26f, length), curb);
-                Box("Building Apron", road, new Vector3(side * 11, -.02f, centre), new Vector3(1.8f, .16f, length), Mat("Apron", new Color(.60f, .58f, .51f)));
+                Box("Sidewalk", road, new Vector3(side * 8.4f, .08f, (RoadStart+RoundaboutTraffic.GateZ)*.5f), new Vector3(4, .16f, RoundaboutTraffic.GateZ-RoadStart), paving);
+                Box("Curb", road, new Vector3(side * 6.52f, .13f, (RoadStart+RoundaboutTraffic.GateZ)*.5f), new Vector3(.24f, .26f, RoundaboutTraffic.GateZ-RoadStart), curb);
+                Box("Building Apron", road, new Vector3(side * 11, -.02f, (RoadStart+RoundaboutTraffic.GateZ)*.5f), new Vector3(1.8f, .16f, RoundaboutTraffic.GateZ-RoadStart), Mat("Apron", new Color(.60f, .58f, .51f)));
             }
             Material yellow = Mat("Road Yellow", new Color(.96f, .66f, .08f));
             Material white = Mat("Road White", new Color(.88f, .88f, .82f));
@@ -50,9 +50,9 @@ namespace PixelTraffic.UnityPrototype.Editor
                 if (end > crossingEnd) Segment(Mathf.Max(start, crossingEnd), end);
             }
             foreach (float x in new[] { -.14f, .14f })
-                Marking("Centre Line", x, RoadStart, RoadEnd, .12f, yellow);
+                Marking("Centre Line", x, RoadStart, RoundaboutTraffic.GateZ+16, .12f, yellow);
             foreach (float x in new[] { -3.2f, 3.2f })
-                for (float z = RoadStart + 3; z < RoadEnd - 3; z += 9)
+                for (float z = RoadStart + 3; z < RoundaboutTraffic.GateZ+16; z += 9)
                     Marking("Lane Dash", x, z - 1.7f, z + 1.7f, .14f, white);
             for (int i = 0; i < 12; i++)
                 Box("Zebra Stripe", road, new Vector3(-5.9f + i * 1.07f, .022f, StarterConfig.CrossingZ), new Vector3(.64f, .018f, 4), white);
@@ -66,6 +66,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             for (int i = 0; i < 10; i++)
                 foreach (float side in new[] { -1f, 1f }) StreetLamp(scenery, side * StarterConfig.CurbFurnitureX, -15 + i * 20);
             DistantScene.Create(scenery);
+            RoundaboutScene.Create(road);
             foreach (Transform root in new[] { road, scenery })
                 foreach (Renderer renderer in root.GetComponentsInChildren<Renderer>())
                     GameObjectUtility.SetStaticEditorFlags(renderer.gameObject, StaticEditorFlags.BatchingStatic);
@@ -189,7 +190,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             void Need(bool condition,string message) {if(!condition)throw new InvalidOperationException(message);}
             Renderer road = GameObject.Find("Road").GetComponent<Renderer>();
             Renderer ground = GameObject.Find("City Ground").GetComponent<Renderer>();
-            Need(road.bounds.min.z < -60 && road.bounds.max.z > 350,"Boulevard still ends inside the city view.");
+            Need(road.bounds.min.z < -60 && road.bounds.max.z > 300,"Boulevard still ends inside the city view.");
             int covered = 0,skyRays=0;float vanishingX=0,horizonY=0,crossingY=0,foregroundX=0; float oldAspect = camera.aspect;
             try
             {
