@@ -143,7 +143,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 int n=i*28+20;var a=drives[i].transform.InverseTransformPoint(wetPoints[n]);var b=drives[i].transform.InverseTransformPoint(wetPoints[n+1]);var c=drives[i].transform.InverseTransformPoint(wetPoints[n+2]);var d=drives[i].transform.InverseTransformPoint(wetPoints[n+3]);
                 Need((c-d).magnitude>(b-a).magnitude+3&&Mathf.Abs(c.z-a.z-8.68f)<.001f,"Wet headlight sheen remains an oval rectangle or points backwards.");
                 Need(wetColours[n].a==3,"Wet fan uses the oval tail/street reflection mask.");
-                Color reflected=wetColours[n],expected=drives[i].Lighting.HeadlightColour;
+                Color reflected=wetColours[n],expected=QualitySettings.activeColorSpace==ColorSpace.Linear?drives[i].Lighting.HeadlightColour.linear:drives[i].Lighting.HeadlightColour;
                 Need(Mathf.Abs(reflected.r-expected.r)<.0001f&&Mathf.Abs(reflected.g-expected.g)<.0001f&&Mathf.Abs(reflected.b-expected.b)<.0001f,"Wet road reflection differs from actual vehicle headlight colour.");
             }
             Need(Camera.main.transform.position==new Vector3(1.4f,14,-37)&&Camera.main.fieldOfView==44,"Driving camera framing missing.");

@@ -7,8 +7,9 @@ namespace PixelTraffic.UnityPrototype
         [SerializeField]Renderer head,tail,left,right,beams;
         MaterialPropertyBlock block;
         PrototypeDrive vehicle;
-        static readonly Color warmHeadlight=Mathf.CorrelatedColorTemperatureToRGB(3200);
-        static readonly Color ledHeadlight=Mathf.CorrelatedColorTemperatureToRGB(SportHeadlightKelvin);
+        // CCT yields linear RGB; SetColor takes sRGB and converts for linear rendering.
+        static readonly Color warmHeadlight=Mathf.CorrelatedColorTemperatureToRGB(3200).gamma;
+        static readonly Color ledHeadlight=Mathf.CorrelatedColorTemperatureToRGB(SportHeadlightKelvin).gamma;
         public Color HeadlightColour
         {
             get

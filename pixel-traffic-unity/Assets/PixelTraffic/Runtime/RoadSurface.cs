@@ -46,7 +46,8 @@ namespace PixelTraffic.UnityPrototype
                 }
                 // A tapered wet sheen follows the same forward direction as the two lamp fans.
                 float near=body.max.z+.12f,far=body.max.z+8.8f;
-                Color headlight=car.Lighting.HeadlightColour;headlight.a=3;
+                // Vertex colours bypass SetColor's sRGB conversion.
+                Color headlight=QualitySettings.activeColorSpace==ColorSpace.Linear?car.Lighting.HeadlightColour.linear:car.Lighting.HeadlightColour;headlight.a=3;
                 for(int corner=0;corner<4;corner++)
                 {
                     bool end=corner>=2;float half=end?body.size.x*.5f+2.1f:body.size.x*.4f;
