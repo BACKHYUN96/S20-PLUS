@@ -1,5 +1,7 @@
 # S20+
 
+Unity 라이브 배경화면 **0.32.0**: 뒤쪽 도로에 회전교차로를 연결하고 실제 차량이 반시계 순환·무작위 진출·복귀하도록 구현했습니다. 실제 Unity/GPU158장·Android/Lint·원본서명·공개다운로드 확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9e4d3bcc63e610b93aabcbd1e7ff4285a28580b5/pixel-traffic-unity-prototype-0.32.0.apk) · [실제 화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9e4d3bcc63e610b93aabcbd1e7ff4285a28580b5/roundabout-city-preview.png) · [설치 명령](docs/UNITY_AUTOMATION.md). 0.32.0 폰 적용 확인 대기.
+
 Unity 라이브 배경화면 **0.31.0**: 산 능선과 표면 명암, 거리별 색·안개로 원경 깊이를 보강했습니다. 실제 Unity/GPU150장·Android/Lint·원본 서명·공개 다운로드 확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/1b3e4b269aea190adb5b5b9a5857119e7d4869cb/pixel-traffic-unity-prototype-0.31.0.apk) · [실제화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/1b3e4b269aea190adb5b5b9a5857119e7d4869cb/mountain-city-preview.png) · [설치명령](docs/UNITY_AUTOMATION.md). 폰 0.30.0 사용자 적용 확인, 0.31.0 확인 대기.
 
 Unity 라이브 배경화면 **0.30.0**: 가까운가로수15작은곡면잎군집과높이에따른햇빛/그늘명암. 실제Unity/GPU150장·Android/Lint·원본서명·공개다운로드확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/b4b3810c4665cebfb12166b3fe45d9c7a6974d8c/pixel-traffic-unity-prototype-0.30.0.apk) · [실제화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/b4b3810c4665cebfb12166b3fe45d9c7a6974d8c/foliage-city-preview.png) · [설치명령](docs/UNITY_AUTOMATION.md). 폰0.29.0 사용자성공확인,0.30.0확인대기.
