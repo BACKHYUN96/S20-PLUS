@@ -1,5 +1,11 @@
 # 작업 이력
 
+## 2026-10-11 — Unity0.22.0 최종 신호 사진 확인·우비 동프레임 촬영 보정
+
+Validate38112523546/source3e5115d0286f6fd718db28fcc948f8ca65565046의 실제검사·108PNG·보행자 점등 픽셀 검사가 PASS다. 사진에서 차량 빨강왼쪽/초록오른쪽과 빨간정지/초록보행 사람 표시를 확인했다. 단 우비 actor0은 원래 offscreen 위치에서 mesh 교체 직후 임시 촬영 위치로 옮겨져 같은 Editor frame의 skinned culling/pose 갱신이 늦어 detail사진에 보이지 않았다. 제품의 runtime 기능 검사에서는 coatMesh/우산닫힘/맑음복구가 PASS이나 사진은 전달하지 않는다.
+
+Editor 확대촬영만 actual rig의 현재 스킨을 BakeMesh해 동일 재질의 임시Renderer로 렌더링하도록 바꿨다. 실제 제품기하/골격 pose를 사용하며 AI그림/가상 모델로 대체하지 않는다. 임시mesh/renderer는 finally에서 삭제하고 기존skin/layer/camera를 복구한다. 제품소스/예산/움직임은 바꾸지 않는다. 새 사진 검증 후 APK를 빌드한다. 실제폰 우비 표시/FPS는 여전히 사용자 확인 대상이다.
+
 ## 2026-10-11 — Unity0.22.0 이동 검사 통과·실제 사진 관찰 후 외형/촬영 보정
 
 Validate38111916537/source6f94b50535c88119a3480b1d59abd1c98a4b5bbb과108개GPU PNG/artifact SHA/CRC 검사는 통과했다. 4/32/100명 횡단보도±18m 평균 인원2.2167/15.5667/19.2289, 전체240횡단, 최소발간격.3999993m, 신호6상태, 우비25/우산75,최대119154tri/1589renderer/47material을 확인했다. 기존장기안전/승하차/기후/CCT/노면 검사도 PASS다.

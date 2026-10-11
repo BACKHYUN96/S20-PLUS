@@ -437,6 +437,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
                 var koreanPreviews=new System.Collections.Generic.List<string>();
                 int koreanMask=camera.cullingMask;var koreanLayers=new System.Collections.Generic.Dictionary<GameObject,int>();
+                var outfitProbes=new System.Collections.Generic.List<GameObject>();var outfitMeshes=new System.Collections.Generic.List<Mesh>();var outfitSkins=new System.Collections.Generic.List<SkinnedMeshRenderer>();
                 void PreviewLayer(Transform root,int layer){foreach(var child in root.GetComponentsInChildren<Transform>(true)){if(!koreanLayers.ContainsKey(child.gameObject))koreanLayers.Add(child.gameObject,child.gameObject.layer);child.gameObject.layer=layer;}}
                 try
                 {
@@ -467,11 +468,21 @@ namespace PixelTraffic.UnityPrototype.Editor
                     coatPerson.root.SetPositionAndRotation(new Vector3(-10.0f,.16f,10),Quaternion.identity);
                     umbrellaPerson.root.SetPositionAndRotation(new Vector3(-9.0f,.16f,10),Quaternion.identity);
                     camera.transform.position=new Vector3(-9.5f,2.4f,14);camera.transform.LookAt(new Vector3(-9.5f,1.1f,10));camera.fieldOfView=60;
+                    // Bake the tested rig's current skin pose for a same-frame Editor closeup.
+                    // A newly swapped offscreen skin can retain its previous culling bounds until the next frame.
+                    foreach(var view in new[]{coatPerson,umbrellaPerson})
+                    {
+                        var baked=new Mesh{name="Outfit detail pose"};view.body.BakeMesh(baked);outfitMeshes.Add(baked);
+                        var probe=new GameObject("Actual outfit detail");probe.layer=31;probe.transform.SetPositionAndRotation(view.root.position,view.root.rotation);
+                        probe.AddComponent<MeshFilter>().sharedMesh=baked;probe.AddComponent<MeshRenderer>().sharedMaterial=view.body.sharedMaterial;outfitProbes.Add(probe);
+                        view.body.enabled=false;outfitSkins.Add(view.body);
+                    }
                     koreanPreviews.Add(CaptureState(camera,request,target,image,"raincoat-and-umbrella"));
                 }
                 finally
                 {
                     camera.cullingMask=koreanMask;foreach(var pair in koreanLayers)pair.Key.layer=pair.Value;
+                    foreach(var skin in outfitSkins)skin.enabled=true;foreach(var probe in outfitProbes)UnityEngine.Object.DestroyImmediate(probe);foreach(var mesh in outfitMeshes)UnityEngine.Object.DestroyImmediate(mesh);
                     for(int i=0;i<originalCars.Length;i++)originalCars[i].ResetPosition(originalZ[i]);detailStreet.ResetModel();climate.Preview(0,0);detailStreet.ApplyViews();
                     camera.aspect=.45f;camera.fieldOfView=roadFov;camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);
                 }
