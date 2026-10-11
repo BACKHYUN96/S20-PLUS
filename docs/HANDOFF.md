@@ -1,5 +1,9 @@
 # 새 채팅 인수인계 — 픽셀 트래픽 0.29.0
 
+## 2026-10-11 — Unity 0.19.0 전조등 재질 검사 갱신
+
+두 번째 source8a49190a9ccf4f11c7a27dd474b380025b259731 / Validate38100958927/job114356613524은 컴파일 후 TrafficFleet의 기존 재질 검사에서 멈췄다. Redacted artifact11687822229의 bytes/SHA/CRC/source를 확인했다. 차량 불빛을 가로등용 Atmosphere에서 HeadlightFan으로 분리했으므로, 실제 호출되는 TrafficFleet도 정확히 새 shader 이름을 요구하도록 갱신한다. 검사를 제거하거나 허용 범위를 넓히지 않는다. 관련 검사 1파일을 포함해 최종 범위는 12 source/meta(신규 2)이며 118입력·기존 상태를 보존한다. GPU 촬영·APK는 계속 대기다.
+
 ## 2026-10-11 — Unity 0.19.0 검사 재시도: 촬영 변수 충돌 수정
 
 첫 source cb326483974b59a6b94fcacea85f9e6f8bdcbd4a / Validate38100787579/job114356116058은 CityPreview의 CS0136으로 실패했다. 내려받은 redacted artifact11687726893의 bytes/SHA/CRC/source를 확인했다. 기존 함수의 weather 변수와 새 확대 촬영 loop 변수의 이름이 겹쳤으며 fanWeather로 변경했다. 라이선스 경고도 포함됐지만 실제 중단 원인은 C# 컴파일 오류다. GPU 외형·Unity PASS·APK는 아직 대기이며 동일 범위의 수정본을 재검사한다.

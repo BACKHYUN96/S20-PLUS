@@ -122,7 +122,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 var renderers=car.GetComponentsInChildren<Renderer>();Bounds bounds=car.BodyBounds();
                 foreach(var r in renderers)
                 {
-                    Need(r.sharedMaterial!=null&&r.sharedMaterial.shader.name==(r.name=="Headlight Road Beams"?"PixelTraffic/Atmosphere":"Universal Render Pipeline/Lit"),"Car has missing material.");
+                    Need(r.sharedMaterial!=null&&r.sharedMaterial.shader.name==(r.name=="Headlight Road Beams"?"PixelTraffic/HeadlightFan":"Universal Render Pipeline/Lit"),"Car has missing material.");
                     Need(GameObjectUtility.GetStaticEditorFlags(r.gameObject)==0,"Moving car is statically batched.");
                 }
                 Need(bounds.min.x>car.LaneX-StarterConfig.LaneWidth/2&&bounds.max.x<car.LaneX+StarterConfig.LaneWidth/2,"Vehicle exceeds its own lane.");
