@@ -160,12 +160,14 @@ namespace PixelTraffic.UnityPrototype
                     continue;
                 }
                 if(s.stage==Stage.Hidden){Start(i,s.origin);continue;}
+                // Keep waiting noses outside the full circulating bus swept envelope.
+                float hold=Mathf.Max(0,s.path.entry-c.length*.5f-16);
                 float limit=s.path.Length;
                 if(s.progress<s.path.entry&&owner!=i)
                 {
-                    if(owner>=0&&owner!=i){limit=s.path.entry-1.8f;s.stage=Stage.Waiting;s.waitTicks++;Yields++;}
-                    else if(s.progress>=s.path.entry-1.8f&&Free(i,s.path.Pose(s.path.entry,out float heading),heading)){owner=i;Entries++;s.stage=Stage.Circulating;}
-                    else limit=Mathf.Min(limit,s.path.entry-1.8f);
+                    if(owner>=0&&owner!=i){limit=hold;s.stage=Stage.Waiting;s.waitTicks++;Yields++;}
+                    else if(s.progress>=hold-.001f&&Free(i,s.path.Pose(s.path.entry,out float heading),heading)){owner=i;Entries++;s.stage=Stage.Circulating;}
+                    else limit=Mathf.Min(limit,hold);
                 }
                 if(s.progress>=s.path.exit-12)
                 {if(!c.roundSignal)c.roundSignalTicks=0;c.roundSignal=true;c.roundSignalTicks++;}
