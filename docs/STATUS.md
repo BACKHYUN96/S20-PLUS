@@ -1,5 +1,32 @@
 # 현재 상태
 
+## 2026-10-11 — Unity0.22.0 한국식 신호등·우비·보행자 몰림: 검증·서명 APK 전달 완료
+
+사용자가 폰0.21.0 적용 성공을 확인하고 차량/보행자 신호등 참조와 우비·보행자 몰림 점검을 요청했다. **0.22.0/code23**, `KoreanSignals-0.22.0.unity` / `Generated/KoreanSignals0220`. 기존 기능과 제품 카메라를 유지하며 다음을 적용했다.
+
+- 차량: 5.8m지주·6.7m가로대에 가로형4구 외함, 원형 렌즈와 차광 후드. 각 정면은 해당 차선의 접근 운전자를 향하며 빨강/노랑/직진초록은 실제 교통 상태와 연동한다. 좌회전 구는 미점등이며 새 좌회전 운행을 추가하지 않는다.
+- 보행자: 같은 지주에 세로3단 차광 후드, 위 빨간 정지 사람/아래 초록 보행 사람 아이콘. 가운데는 미점등 공간이며 타이머/숫자 기능은 추가하지 않는다. 기존 보행자 진입 허용/차량 구역 비움 주기를 그대로 사용한다.
+- 비 오는 보행자: 25%는 후드·긴 몸통·소매가 있는 우비, 나머지는 우산. 실제100명에서 우비25명·우산75명을 검사했다. 기존 공유팔레트/5뼈/renderer를 재사용하고 맑은 날 원래 메시로 돌아온다. 승객8명에도 같은 옷 규칙을 적용하며 우비 착용자는 우산을 들지 않는다.
+- 몰림: 첫 횡단 전 예약 실패 시에도 횡단보도 주변만 반복 선택하던 경로를 수정했다. 대기 자리가 없으면 잠시 다른 구간을 걷고 재시도하며, Roam 상태10초 실제 변위1m미만이면8m반대 방향 경로로 물러난다. 나무 옆 외측 통로는 발 간격보다 좁았던3열 대신 .5m간격2열로 정리하고 방향별stream을 유지한다. 순간 이동/인원 제거로 가리지 않는다. 4/32/100명 장기 검사에서 횡단보도±18m 평균 인원은 [2.2166666984558105, 15.566666603088379, 19.22888946533203]이며,32/100명에서는 전체80%미만임을 확인했다. 이 수치는 정의한 장기 시뮬레이션 밀집 지표이며 사용자 폰의 특정 몰림 화면을 직접 재현한 결과는 아니다.
+
+**범위·보존:** StreetScene,StreetSimulation,StreetModel,SidewalkRoutes,StreetChecks,WeatherLifeChecks,BusStopChecks,CityPreview,StarterConfig,StarterScene의10소스이며 새 코드 파일은 없다. 시작293파일·실제index·미추적 상태·118입력·host12SHA를 기록하고 무관한 사용자 변경을 보존했다. 우비/신호 메시 자산은 버전별 Generated에 생성하며 재질/실시간Light는 추가하지 않는다. 최대 강우/승객 장면 119154triangles/1589renderers/47materials, 기존 제한120000/2400/48미만이다. 차종CCT/부채꼴/젖은 반사/날씨/승하차/비상등 동작을 보존했다.
+
+**검증:** source `ec221563729b9f301a186db1100b82dfb25b1bf1` / [Validate 38113184005](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38113184005). 실제 신호6상태의16차량/8보행 램프 제어·기하·아이콘,4/32/100명 최대600초 횡단/걸음 이동/발 간격/장애물/차량 안전·frame clock/pause,810초 기후별 인원 복구, 우비/우산 실제 mesh·색상·맑음 회복, 승하차/출발 안전 검사 PASS. 기존18기후/180전환,96CCT/144부채꼴/24wet색상,노면16실제GPU렌더링 검사도 PASS. 새 촬영6장 포함 전체108장의 실제 Unity6000.3.26f1/D3D11 PNG를 받았고 신호 색상·사람 아이콘·우비와 우산을 직접 관찰했다. 보행자 신호등과 우비 확대사진은 주변 가림을 제거한 임시layer의 실제 제품rig detail렌더이며 전체사진은 제품구도다. 우비 확대는 offscreen mesh교체 직후 same-frame skin culling/pose 갱신 지연으로 추정한 사진 누락을 피하기 위해 실제 스킨pose를 Bake한 임시Renderer로 촬영했다. 임시Renderer/mesh는 삭제하고 기존skin과 배치/카메라/layer를 복구하며 저장하지 않는다. Editor 촬영이며 폰 screenshot/FPS 측정은 아니다.
+
+**실패·수정:** 첫 Validate38111482726은 CityPreview 촬영 변수 captured 이름 중복(CS0136)으로 컴파일 실패했다. koreanCaptured로 수정하고 실제 검사를 재실행했다. 다음 Validate38111613706은100명 나무 옆 통로 정체를 검출했다. SidewalkRoutes 간격과 방향 유지/정체 후 retreat를 보정하고 재검사했다. Validate38111916537은 이동·108사진 검사를 통과했지만 실제관찰에서 정면색순서와 확대사진가림을 발견해 보정 후 다시 검증했다. Validate38112523546은 신호사진/픽셀도 통과했으나 우비가 확대사진에 누락된 것을 관찰해 실제 BakeMesh 확대촬영으로 수정했다.
+
+**Android:** tag `unity-apk-0.22.0-build1` / [BuildApk 38113857641](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38113857641). BuildPlayer 오류0/경고0, launcherLint 오류0/경고8. 실제 내려받은 APK의 버전0.22.0/code23/min29/target36/ARM64IL2CPP,wallpaper service/private provider/settings launcher와 원본v2인증서 `a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6`를 확인했다. 바뀌지 않은host12입력은 기존 hostLint38008378207(오류0/경고10)을 재사용했다.
+
+**전달:** [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/65b1ebf4444cbf7ce42c557a11cc0b90c3fbc80f/pixel-traffic-unity-prototype-0.22.0.apk) · [제품 구도](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/65b1ebf4444cbf7ce42c557a11cc0b90c3fbc80f/korean-city-preview.png) · [차량 신호등](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/65b1ebf4444cbf7ce42c557a11cc0b90c3fbc80f/korean-vehicle-preview.png) · [보행자 신호등](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/65b1ebf4444cbf7ce42c557a11cc0b90c3fbc80f/korean-pedestrian-preview.png) · [우비·우산](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/65b1ebf4444cbf7ce42c557a11cc0b90c3fbc80f/raincoat-preview.png). APK 31144631bytes/SHA256 `366c5c4010924c1afe73f3fe767d4baeee193de3e06b82c891e8c959161d7d5b`. root다운로드 branch `downloads/unity-0.22.0`의5파일을 로그인 없는 HTTP200/no redirect/fullbytes/SHA로 확인했다. main에는 APK binary를 넣지 않았다.
+
+PC 설치(이 폴더로 다운로드한 경우):
+```powershell
+$trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $trafficAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.22.0.apk"
+```
+
+미확인: 실제 폰0.22.0 외형·문제 위치의 몰림 해소·FPS/발열/장시간 lifecycle. 사용자0.21.0적용성공은 확인됐으나 성능 수치를 측정한 것은 아니다. 와이퍼는 별도 다음 기능 패치로 남아 있다. 이후 사용자 방침은 새 기능보다 시안의 그래픽 개선에 집중하는 것이다. Drive PC설정은 보류를 유지한다. 최종 문서 전용 게시가118입력을 바꾸지 않으므로 통과한 검사를 반복하지 않는다.
+
 ## 2026-10-11 — Unity0.22.0 신호등 정면을 실제 접근 차량 방향에 맞춤
 
 기존 세로형에서 이어받은 차량 신호등 정면은 해당 차선의 접근 차량 반대쪽을 보고 있었다. 한국식 가로형으로 바꾸는 범위에서 정면을 접근 운전자 쪽으로 수정했다: 방향-z의 왼쪽 차선에는+z를 보는 신호, 방향+z의 오른쪽 차선에는-z를 보는 신호를 배치한다. 실제head.forward 검사를 추가하고 제품오른쪽 신호를 정면으로 촬영한다. 교통 주기/차선/제품카메라/보행자 신호는 바꾸지 않는다. 이전 촬영 source ea329dfae460dbc83118d66e933be382f53df5b0은 APK로 게시하지 않으며 이 수정 source를 검증·촬영 후 빌드한다.
