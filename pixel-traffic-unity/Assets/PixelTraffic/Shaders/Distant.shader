@@ -94,7 +94,8 @@ Shader "PixelTraffic/Distant"
                     float broad=Noise(terrain+i.color.z);
                     float sunward=saturate(.5+(Noise(terrain+float2(-.37,.24)+i.color.z)-broad)*2.7);
                     float relief=Noise(terrain*2.17+float2(broad,-broad));
-                    float shade=.65+broad*.13+sunward*.28+relief*.09;
+                    float fold=sin(terrain.x*2.4+terrain.y*.9+broad*4+i.color.z*2);
+                    float shade=.44+broad*.26+sunward*.54+relief*.22+fold*.18;
                     shade=lerp(1,shade,_MountainDepth.w*(1-far*.46));
                     float3 evening=lerp(float3(.255,.245,.225),float3(.55,.45,.58),far);
                     float3 nocturnal=lerp(float3(.018,.044,.057),float3(.065,.095,.155),far);

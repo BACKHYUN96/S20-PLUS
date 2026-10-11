@@ -1,5 +1,9 @@
 # Pixel Traffic — Unity 전환 준비
 
+## 2026-10-11 — Unity 0.31.0 실제 산 화면 확인 후 비탈 명암 보완
+
+초기 source e4f87edc2525267c658d5223c164de4968bb50a4 / Validate38146222498 PASS, 실제150PNG 전송SHA/CRC 확인. 전체와 산 day/sunset/night/fog/storm 6장을 직접 확인, 이전0.30.0 전체/day 2장 비교: 층과 색은 분리됐지만 가까운 산표면 명암이 약함. 같은 world-space relief와 거리 감쇠에 연속비탈fold를 더하고 contrast 강화. 메시/재질/renderer/Light 증가 없음. 변경후 Unity 검증/실제GPU화면/서명APK는 진행중, 폰미검증.
+
 ## 2026-10-11 — Unity 0.31.0 산 능선·원경 깊이: 구현·검증 대기
 
 폰0.30.0 성공확인후 사용자가산/원경그래픽작업승인. 기존3산mesh/각64strip·128tri유지하면서peak/shoulder/능선리듬을달리해층분리. world-space연속relief/sunward/valley haze,near진한녹색→far옅은푸른색·명암감쇠. 낮/노을/밤palette·안개/강우/눈 기존기후weights로연동. _MountainDepth기본값실제shader/3layers192strip depth/seam/data/topology검사보강. 삼각형/renderers/materials증가없이 기존최대119938/1609/47예산유지예상. DistantScene/DistantChecks/Distant.shader/StarterScene/StarterConfig5소스,0.31.0/code32,MountainDepth-0.31.0.unity/Generated/MountainDepth0310.
