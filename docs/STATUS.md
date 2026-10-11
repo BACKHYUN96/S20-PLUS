@@ -1,5 +1,15 @@
 # 현재 상태
 
+## 2026-10-11 — Unity 0.20.0 차종별 전조등 색상: 구현 완료, 실제 검증 대기
+
+요청: 버스·트럭 전조등은 노란색, 일반 승용차는 흰색, 스포츠카는 6500~8000K 범위의 HID/LED 느낌으로 변경한다. 사용자가 보여준 도로 가장자리의 길고 주황색인 반짝임은 젖은 노면에 비친 가로등 불빛이며, 해당 가로등 표현은 유지한다.
+
+0.20.0/code21, 새 장면 `HeadlightColors-0.20.0.unity` / `Generated/HeadlightColors0200`. VehicleLighting에서 차종별 공통 RGB 프로필을 제공한다. 버스/박스 트럭은 Unity CCT 변환의 3200K, SportCoupe는 7500K, Sedan/Suv/Taxi는 중립 흰색이다. 색온도 RGB는 한 번 계산하며 실제 램프·발광·부채꼴과 RoadSurface의 젖은 전조등 반사가 같은 값을 사용한다. 기존 밤 밝기·날씨·전환·비활성 제어와 후미등·브레이크·방향지시·가로등 색상은 유지한다. 디스플레이의 실제 색온도를 측정한 값은 아니다.
+
+범위: VehicleLighting, RoadSurface, StarterConfig, DrivingChecks, CityPreview, StarterScene의 6소스. 기존 293파일·실제 index·전체 미추적 상태와 118 빌드/촬영 입력을 기록하고 사용자 변경을 보존한다. 새 renderer/재질/실시간 Light/삼각형 및 Native Android·host·workflow 변경은 없다.
+
+관련 검사는 실제 24대의 차종 분류와 밤 밝기 2단계×건조/젖음의 96사례, 발광·부채꼴·반사의 RGB 일치 및 밝기 연속성을 검사한다. 기존 회전 부채꼴·교통/날씨/승하차·접지 검사를 유지한다. 같은 구도의 6차종×건조/젖은 밤 12개 확대 촬영을 추가해 총94 PNG로 확인할 예정이다. Unity·GPU 관찰·Android 빌드/Lint·서명·APK 전달은 현재 대기이며 실제 폰 성능·발열은 별도 확인한다.
+
 ## 2026-10-11 — Unity 0.19.0 부채꼴 전조등: 실제 화면 검증·서명 APK 전달 완료
 
 사용자 요청에 따라 차량 앞의 타원형 불빛을 좌우 램프에서 넓어지는 부채꼴로 변경했다. **0.19.0/code20**, `HeadlightFans-0.19.0.unity` / `Generated/HeadlightFans0190`.

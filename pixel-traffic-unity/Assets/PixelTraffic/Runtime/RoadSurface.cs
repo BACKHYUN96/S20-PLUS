@@ -46,11 +46,12 @@ namespace PixelTraffic.UnityPrototype
                 }
                 // A tapered wet sheen follows the same forward direction as the two lamp fans.
                 float near=body.max.z+.12f,far=body.max.z+8.8f;
+                Color headlight=car.Lighting.HeadlightColour;headlight.a=3;
                 for(int corner=0;corner<4;corner++)
                 {
                     bool end=corner>=2;float half=end?body.size.x*.5f+2.1f:body.size.x*.4f;
                     Vector3 p=car.transform.TransformPoint(new Vector3((corner==1||corner==2?1:-1)*half,0,end?far:near));p.y=.042f;
-                    vertices[start+20+corner]=p;colours[start+20+corner]=new Color(.94f,.88f,.64f,3);
+                    vertices[start+20+corner]=p;colours[start+20+corner]=headlight;
                 }
                 Place(start+24,car.transform,new Vector3(0,0,body.min.z-1.8f),body.size.x*.83f,3.2f);
                 float brake=car.Lighting==null?.1f:Mathf.Clamp01(car.Lighting.BrakeGain*.35f);

@@ -118,16 +118,37 @@ namespace PixelTraffic.UnityPrototype.Editor
                 foreach(string part in new[]{"Left Turn Signals","Right Turn Signals","Headlight Road Beams"})
                 {Mesh mesh=drive.transform.Find(part).GetComponent<MeshFilter>().sharedMesh;string key=drive.Model+part;if(meshes.TryGetValue(key,out var old))Need(old==mesh,"Vehicle lighting mesh is copied per vehicle.");else meshes.Add(key,mesh);}
             }
+            int headlightColourChecks=0,warmHeadlights=0,whiteHeadlights=0,ledHeadlights=0;
+            foreach(var drive in drives)
+            {
+                var tint=drive.Lighting.HeadlightColour;
+                bool heavyLamp=drive.Model=="CityBus"||drive.Model=="BoxTruck",sportLamp=drive.Model=="SportCoupe";
+                if(heavyLamp){Need(tint.r>tint.g&&tint.g>tint.b&&tint.r-tint.b>.3f,"Bus/truck headlights are not warm yellow.");warmHeadlights++;}
+                else if(sportLamp){Need(tint.b>tint.r+.06f&&tint.b>=tint.g&&VehicleLighting.SportHeadlightKelvin>=6500&&VehicleLighting.SportHeadlightKelvin<=8000,"Sport HID/LED headlights lose the requested cool white temperature.");ledHeadlights++;}
+                else{Need(Mathf.Abs(tint.r-tint.g)<.0001f&&Mathf.Abs(tint.g-tint.b)<.0001f,"Passenger headlights are not neutral white.");whiteHeadlights++;}
+                foreach(float level in new[]{.25f,1f})foreach(float damp in new[]{0f,1f})
+                {
+                    drive.Lighting.Apply(new StreetModel.Car{active=true},level,damp);
+                    drive.Lighting.Head.GetPropertyBlock(block);Color emitted=block.GetColor("_EmissionColor");
+                    Need((new Vector3(emitted.r,emitted.g,emitted.b)/(.16f+level*1.65f)-new Vector3(tint.r,tint.g,tint.b)).sqrMagnitude<.00001f,"Actual lamp emission has a different colour from its profile.");
+                    drive.Lighting.Beams.GetPropertyBlock(block);var fanColour=block.GetColor("_BaseColor");
+                    Need(Mathf.Abs(fanColour.r-tint.r)<.0001f&&Mathf.Abs(fanColour.g-tint.g)<.0001f&&Mathf.Abs(fanColour.b-tint.b)<.0001f,"Actual headlight fan differs from the lamp colour.");
+                    Need(Mathf.Abs(fanColour.a-level*(.14f+damp*.08f))<.0001f,"Colour profiles changed the smooth beam brightness.");headlightColourChecks++;
+                }
+            }
+            Need(warmHeadlights==8&&ledHeadlights>0&&whiteHeadlights>0,"Actual fleet misses a requested light colour category.");
             var ground=UnityEngine.Object.FindFirstObjectByType<RoadSurface>();ground.Sync(true);var wetPoints=ground.RuntimeMesh.vertices;var wetColours=ground.RuntimeMesh.colors;
             for(int i=0;i<drives.Length;i++)
             {
                 int n=i*28+20;var a=drives[i].transform.InverseTransformPoint(wetPoints[n]);var b=drives[i].transform.InverseTransformPoint(wetPoints[n+1]);var c=drives[i].transform.InverseTransformPoint(wetPoints[n+2]);var d=drives[i].transform.InverseTransformPoint(wetPoints[n+3]);
                 Need((c-d).magnitude>(b-a).magnitude+3&&Mathf.Abs(c.z-a.z-8.68f)<.001f,"Wet headlight sheen remains an oval rectangle or points backwards.");
                 Need(wetColours[n].a==3,"Wet fan uses the oval tail/street reflection mask.");
+                Color reflected=wetColours[n],expected=drives[i].Lighting.HeadlightColour;
+                Need(Mathf.Abs(reflected.r-expected.r)<.0001f&&Mathf.Abs(reflected.g-expected.g)<.0001f&&Mathf.Abs(reflected.b-expected.b)<.0001f,"Wet road reflection differs from actual vehicle headlight colour.");
             }
             Need(Camera.main.transform.position==new Vector3(1.4f,14,-37)&&Camera.main.fieldOfView==44,"Driving camera framing missing.");
             climate.Preview(0,0);UnityEngine.Object.FindFirstObjectByType<StreetSimulation>().ApplyViews();
-            return new Report{result="PASS: heavy rear passes, three pulses, final gap cancellation, 600-second mixed fleet/rotated-envelope safety, actual light properties, tapered lamp origins/turning fans/day and inactive gating and camera; phone test pending",completedChanges=longRun.Maneuvers.Completed,rearWaits=longRun.Maneuvers.RearWaits,verifiedMergeStarts=verifiedStarts,simulatedSeconds=600,minimumBumperGap=gap,heavyMergeStarts=heavyStarts,heavyRearPassCases=1,heavySweepCases=sweepCases,blinkCount=3,blinkSeconds=1.8f,mergeSeconds=3,heavyMergeSeconds=6,renderersPerVehicle=17,busRenderersPerVehicle=19,fleetLightTriangles=288,headlightFanChecks=fanChecks,wetFanChecks=drives.Length,realtimeStreetLights=lights};
+            return new Report{result="PASS: heavy rear passes, three pulses, final gap cancellation, 600-second mixed fleet/rotated-envelope safety, actual lamp/fan/reflection colour profiles and smooth brightness, tapered lamp origins/turning fans/day and inactive gating and camera; phone test pending",completedChanges=longRun.Maneuvers.Completed,rearWaits=longRun.Maneuvers.RearWaits,verifiedMergeStarts=verifiedStarts,simulatedSeconds=600,minimumBumperGap=gap,heavyMergeStarts=heavyStarts,heavyRearPassCases=1,heavySweepCases=sweepCases,blinkCount=3,blinkSeconds=1.8f,mergeSeconds=3,heavyMergeSeconds=6,renderersPerVehicle=17,busRenderersPerVehicle=19,fleetLightTriangles=288,headlightColourChecks=headlightColourChecks,warmHeadlights=warmHeadlights,whiteHeadlights=whiteHeadlights,ledHeadlights=ledHeadlights,sportKelvin=VehicleLighting.SportHeadlightKelvin,headlightFanChecks=fanChecks,wetFanChecks=drives.Length,realtimeStreetLights=lights};
         }
         static void Gap(StreetModel model,ref float minimum)
         {
@@ -140,6 +161,6 @@ namespace PixelTraffic.UnityPrototype.Editor
         }
         static void Need(bool value,string message){if(!value)throw new InvalidOperationException(message);}
         [Serializable]internal sealed class Report
-        {public int wetFanChecks;public int headlightFanChecks;public int busRenderersPerVehicle;public string result;public int completedChanges,rearWaits,verifiedMergeStarts,simulatedSeconds,blinkCount,renderersPerVehicle,fleetLightTriangles,realtimeStreetLights,heavyMergeStarts,heavyRearPassCases,heavySweepCases;public float minimumBumperGap,blinkSeconds,mergeSeconds,heavyMergeSeconds;}
+        {public int headlightColourChecks,warmHeadlights,whiteHeadlights,ledHeadlights,sportKelvin;public int wetFanChecks;public int headlightFanChecks;public int busRenderersPerVehicle;public string result;public int completedChanges,rearWaits,verifiedMergeStarts,simulatedSeconds,blinkCount,renderersPerVehicle,fleetLightTriangles,realtimeStreetLights,heavyMergeStarts,heavyRearPassCases,heavySweepCases;public float minimumBumperGap,blinkSeconds,mergeSeconds,heavyMergeSeconds;}
     }
 }
