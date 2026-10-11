@@ -43,11 +43,20 @@ Shader "PixelTraffic/RoadOverlay"
                     broken=lerp(.4,broken,detail);
                     alpha=edge*(.16+broken*.26)*_Ground.x*_Ground.y*(1-_Ground.z);colour=i.color.rgb;
                 }
-                else
+                else if(i.color.a<2.5)
                 {
                     float edge=smoothstep(.08,.30,i.uv.x)*(1-smoothstep(.70,.92,i.uv.x));
                     float wear=.5+.5*sin(i.world.z*.21+sin(i.world.z*.61)*.4);
                     alpha=edge*(.025+wear*.045)*(1-_Ground.z);colour=float3(.045,.047,.05);
+                }
+                else
+                {
+                    // Forward tapered mesh, with a soft far cutoff and small wet streaks.
+                    float edge=1-smoothstep(.62,1,abs(d.x));
+                    float falloff=(1-smoothstep(.48,1,i.uv.y))*smoothstep(0,.035,i.uv.y);
+                    float detail=1-smoothstep(.8,2.5,fwidth(i.world.z*24));
+                    float ripple=lerp(.5,.5+.5*sin(i.world.z*24+_Ground.w*.6),detail);
+                    alpha=edge*falloff*(.09+.10*ripple)*_Ground.x*_Ground.y*(1-_Ground.z);colour=i.color.rgb;
                 }
                 return half4(MixFog(colour,i.fog),alpha);
             }

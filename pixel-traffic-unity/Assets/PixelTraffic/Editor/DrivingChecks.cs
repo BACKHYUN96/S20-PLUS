@@ -86,18 +86,48 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Need(left==(tick%18<9)&&!right,"Actual front/rear signal side or pulse timing differs for approaching traffic.");
             }
             state.lane=2;state.targetLane=3;state.signalTicks=0;probe.Apply(state,1,1);probe.Right.GetPropertyBlock(block);Need(block.GetColor("_EmissionColor").r>1,"Away-going signal side is reversed.");
-            Need(probe.Beams.enabled&&probe.Beams.sharedMaterial.shader.name=="PixelTraffic/Atmosphere","Road beam missing or using an extra light.");
+            Need(probe.Beams.enabled&&probe.Beams.sharedMaterial.shader.name=="PixelTraffic/HeadlightFan","Road beam missing or using an extra light.");
             int lights=0;foreach(var light in UnityEngine.Object.FindObjectsByType<Light>(FindObjectsSortMode.None))if(light.type!=LightType.Directional)lights++;Need(lights==4,"Fleet adds per-car realtime lights.");
-            var meshes=new System.Collections.Generic.Dictionary<string,Mesh>();
+            int fanChecks=0;var meshes=new System.Collections.Generic.Dictionary<string,Mesh>();
             foreach(var drive in drives)
             {
                 Need(drive.Lighting!=null&&drive.GetComponentsInChildren<Renderer>().Length==(drive.Model=="CityBus"?19:17),"Fleet light parts incomplete.");
+                var beam=drive.Lighting.Beams.GetComponent<MeshFilter>().sharedMesh;var points=beam.vertices;
+                Need(points.Length==8&&beam.triangles.Length==12,"Two headlight fans must retain the four-triangle budget.");
+                var lamps=drive.Lighting.Head.GetComponent<MeshFilter>().sharedMesh.bounds;
+                for(int side=0;side<2;side++)
+                {
+                    int n=side*4;var tip=(points[n]+points[n+1])*.5f;
+                    Need(Mathf.Abs(points[n+1].x-points[n].x-.28f)<.001f&&Mathf.Abs(points[n+2].x-points[n+3].x-4.2f)<.001f,"Headlight fan does not widen from its source.");
+                    Need(tip.z>lamps.max.z&&tip.z<lamps.max.z+.13f&&tip.x>=lamps.min.x&&tip.x<=lamps.max.x,"Fan origin is detached from the real front lamps.");
+                    Need(Mathf.Abs(points[n+2].z-points[n].z-8.68f)<.001f,"Fan reach differs by vehicle.");
+                    var rotation=drive.transform.rotation;
+                    try
+                    {
+                        foreach(float yaw in new[]{-8f,0f,8f})
+                        {
+                            drive.transform.rotation=rotation*Quaternion.Euler(0,yaw,0);
+                            Vector3 origin=drive.transform.TransformPoint(tip),end=drive.transform.TransformPoint((points[n+2]+points[n+3])*.5f);
+                            Need(Vector3.Dot((end-origin).normalized,drive.transform.forward)>.9999f,"Turning headlight fan faces away from the car.");fanChecks++;
+                        }
+                    }
+                    finally{drive.transform.rotation=rotation;}
+                }
+                drive.Lighting.Apply(new StreetModel.Car{active=true},0,0);Need(!drive.Lighting.Beams.enabled,"Daylight leaves a road fan visible.");
+                drive.Lighting.Apply(new StreetModel.Car{active=false},1,1);Need(!drive.Lighting.Beams.enabled,"Inactive car leaves a beam ghost.");
                 foreach(string part in new[]{"Left Turn Signals","Right Turn Signals","Headlight Road Beams"})
                 {Mesh mesh=drive.transform.Find(part).GetComponent<MeshFilter>().sharedMesh;string key=drive.Model+part;if(meshes.TryGetValue(key,out var old))Need(old==mesh,"Vehicle lighting mesh is copied per vehicle.");else meshes.Add(key,mesh);}
             }
+            var ground=UnityEngine.Object.FindFirstObjectByType<RoadSurface>();ground.Sync(true);var wetPoints=ground.RuntimeMesh.vertices;var wetColours=ground.RuntimeMesh.colors;
+            for(int i=0;i<drives.Length;i++)
+            {
+                int n=i*28+20;var a=drives[i].transform.InverseTransformPoint(wetPoints[n]);var b=drives[i].transform.InverseTransformPoint(wetPoints[n+1]);var c=drives[i].transform.InverseTransformPoint(wetPoints[n+2]);var d=drives[i].transform.InverseTransformPoint(wetPoints[n+3]);
+                Need((c-d).magnitude>(b-a).magnitude+3&&Mathf.Abs(c.z-a.z-8.68f)<.001f,"Wet headlight sheen remains an oval rectangle or points backwards.");
+                Need(wetColours[n].a==3,"Wet fan uses the oval tail/street reflection mask.");
+            }
             Need(Camera.main.transform.position==new Vector3(1.4f,14,-37)&&Camera.main.fieldOfView==44,"Driving camera framing missing.");
             climate.Preview(0,0);UnityEngine.Object.FindFirstObjectByType<StreetSimulation>().ApplyViews();
-            return new Report{result="PASS: heavy rear passes, three pulses, final gap cancellation, 600-second mixed fleet/rotated-envelope safety, actual light properties and camera; phone test pending",completedChanges=longRun.Maneuvers.Completed,rearWaits=longRun.Maneuvers.RearWaits,verifiedMergeStarts=verifiedStarts,simulatedSeconds=600,minimumBumperGap=gap,heavyMergeStarts=heavyStarts,heavyRearPassCases=1,heavySweepCases=sweepCases,blinkCount=3,blinkSeconds=1.8f,mergeSeconds=3,heavyMergeSeconds=6,renderersPerVehicle=17,busRenderersPerVehicle=19,fleetLightTriangles=288,realtimeStreetLights=lights};
+            return new Report{result="PASS: heavy rear passes, three pulses, final gap cancellation, 600-second mixed fleet/rotated-envelope safety, actual light properties, tapered lamp origins/turning fans/day and inactive gating and camera; phone test pending",completedChanges=longRun.Maneuvers.Completed,rearWaits=longRun.Maneuvers.RearWaits,verifiedMergeStarts=verifiedStarts,simulatedSeconds=600,minimumBumperGap=gap,heavyMergeStarts=heavyStarts,heavyRearPassCases=1,heavySweepCases=sweepCases,blinkCount=3,blinkSeconds=1.8f,mergeSeconds=3,heavyMergeSeconds=6,renderersPerVehicle=17,busRenderersPerVehicle=19,fleetLightTriangles=288,headlightFanChecks=fanChecks,wetFanChecks=drives.Length,realtimeStreetLights=lights};
         }
         static void Gap(StreetModel model,ref float minimum)
         {
@@ -110,6 +140,6 @@ namespace PixelTraffic.UnityPrototype.Editor
         }
         static void Need(bool value,string message){if(!value)throw new InvalidOperationException(message);}
         [Serializable]internal sealed class Report
-        {public int busRenderersPerVehicle;public string result;public int completedChanges,rearWaits,verifiedMergeStarts,simulatedSeconds,blinkCount,renderersPerVehicle,fleetLightTriangles,realtimeStreetLights,heavyMergeStarts,heavyRearPassCases,heavySweepCases;public float minimumBumperGap,blinkSeconds,mergeSeconds,heavyMergeSeconds;}
+        {public int wetFanChecks;public int headlightFanChecks;public int busRenderersPerVehicle;public string result;public int completedChanges,rearWaits,verifiedMergeStarts,simulatedSeconds,blinkCount,renderersPerVehicle,fleetLightTriangles,realtimeStreetLights,heavyMergeStarts,heavyRearPassCases,heavySweepCases;public float minimumBumperGap,blinkSeconds,mergeSeconds,heavyMergeSeconds;}
     }
 }

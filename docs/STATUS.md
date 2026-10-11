@@ -1,5 +1,17 @@
 # 현재 상태
 
+## 2026-10-11 — Unity 0.19.0 차량 전조등 부채꼴: 구현 완료, 실제 검증 대기
+
+요청: 차량 앞의 타원형 불빛을 GTA5처럼 앞으로 넓어지는 부채꼴로 변경한다. 0.19.0/code20, 새 장면 `HeadlightFans-0.19.0.unity`와 `Generated/HeadlightFans0190`을 사용한다.
+
+기존 차량 불빛은 가로등의 RadialTexture 재질을 공유했다. 실제 앞 램프 메시에서 좌우 발광 위치를 찾아 각각 0.28m 폭에서 4.2m 폭으로 펼쳐지는 8.68m 길이의 사다리꼴을 만든다. 새 `HeadlightFan` 공유 셰이더는 가장자리와 먼 끝을 부드럽게 흐리고 중앙을 밝게 한다. 두 빛이 겹치며 차체의 방향·차선 변경 회전을 따라간다. 가로등 번짐은 기존 재질을 유지한다.
+
+젖은 노면의 전조등 반사도 좁은 시작점에서 넓어지는 메시와 별도 마스크로 바꾸며, 후미등·가로등의 물결 반사는 유지한다. 불빛은 기존 VehicleLighting의 야간/날씨·비활성 제어와 RoadSurface의 visible clock/숨김 제어를 사용한다. 실시간 Light·차량 renderer·삼각형을 추가하지 않고 공유 재질 1개만 늘린다. GTA5와 같은 물리 조명 엔진을 도입하는 작업은 아니며 부채꼴의 시각적 표현을 목표로 한다.
+
+범위는 DrivingScene, DrivingChecks, ClimateScene, CityEnvironment, CityPreview, StarterScene, RoadSurface, StarterConfig, RoadOverlay.shader, HeadlightFan.shader/meta의 11파일이다. 시작 때 기존 291파일·실제 index·전체 미추적 Git 상태를 기록했다. 신규 2파일을 포함한 118 빌드/촬영 입력을 추적하고 기존 변경을 보존한다. Native Android·host·workflow는 변경하지 않는다.
+
+검증은 실제 24대의 램프 위치·좁은 시작/넓은 끝·양 방향과 ±8도 회전의 144사례, 낮/비활성 불빛 제거, 24대 젖은 반사 방향·마스크를 검사한다. 기존 교통/날씨/승하차/예산 검사를 유지하며 실제 GPU 촬영에 건조한 밤과 회전한 비 오는 밤의 확대 2장을 추가해 총 82장을 확인할 예정이다. 현재 구현 단계이며 Unity 검사·GPU 외형·Android 빌드/Lint·서명·APK 전달은 아직 대기다. 실제 폰 설치/FPS·발열은 별도 확인한다.
+
 ## 2026-10-11 — Unity 0.18.0 도로·보도 마감과 접지감: 실제 GPU 검증·서명 APK 전달 완료
 
 사용자는 폰 **0.17.0 적용 성공**을 확인하고 도로·보도 패치를 승인했다. **0.18.0/code19**, `GroundFinish-0.18.0.unity` / `Generated/GroundFinish0180`. 아스팔트512 색/미세 normal과 seam 없는주기적 grain/macro, 보도256의엇갈린블록/줄눈, 경계석 joint를 보강했다. 기존4맨홀은32tri disc+철판 ring/hatch로꾸미고 도로 가장자리24배수구를48tri병합메시로표현한다. 옅은8타이어흔적과전체24대의차체/4바퀴 접지 그림자·젖은전조등/후미등반사를 하나의672vertex/336tri 메시로갱신한다. 가로등20곳의길게끊어진노면반짝임도더했다. authored 반사이며실제reflectioncamera가아니다. Ground overlay는한번복제한공유재질/동적mesh로구현하고CityClimate wetness/lamp/snow/visibleclock을사용한다. 차량별renderer/실시간Light/콜라이더추가없음. 숨김/화면OFF에는mesh·반사clock을갱신하지않고inactive차량의shadow/reflection을제거한다.

@@ -44,7 +44,14 @@ namespace PixelTraffic.UnityPrototype
                     Vector3 centre=car.Wheels[wheel].localPosition;
                     Place(start+4+wheel*4,car.transform,centre,.48f,.62f);
                 }
-                Place(start+20,car.transform,new Vector3(0,0,body.max.z+2.8f),body.size.x*.86f,5.2f);
+                // A tapered wet sheen follows the same forward direction as the two lamp fans.
+                float near=body.max.z+.12f,far=body.max.z+8.8f;
+                for(int corner=0;corner<4;corner++)
+                {
+                    bool end=corner>=2;float half=end?body.size.x*.5f+2.1f:body.size.x*.4f;
+                    Vector3 p=car.transform.TransformPoint(new Vector3((corner==1||corner==2?1:-1)*half,0,end?far:near));p.y=.042f;
+                    vertices[start+20+corner]=p;colours[start+20+corner]=new Color(.94f,.88f,.64f,3);
+                }
                 Place(start+24,car.transform,new Vector3(0,0,body.min.z-1.8f),body.size.x*.83f,3.2f);
                 float brake=car.Lighting==null?.1f:Mathf.Clamp01(car.Lighting.BrakeGain*.35f);
                 for(int v=24;v<28;v++)colours[start+v]=new Color(.56f+brake*.34f,.035f,.016f,1);

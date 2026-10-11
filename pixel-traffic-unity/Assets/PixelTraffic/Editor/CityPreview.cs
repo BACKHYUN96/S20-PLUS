@@ -334,6 +334,19 @@ namespace PixelTraffic.UnityPrototype.Editor
                     lightState.braking=label=="lights-brake-rear-night";lightState.targetLane=3;lightState.maneuver=label.Contains("indicator")?LaneChanges.Stage.Signaling:LaneChanges.Stage.Idle;lightState.signalTicks=label.EndsWith("off")?9:0;
                     lightCar.Lighting.Apply(lightState,1,0);drivingPreviews.Add(CaptureState(camera,request,target,image,label));
                 }
+                // Temporary isolated top views show the fan footprint and turning wet sheen.
+                var fanActive=new bool[originalCars.Length];for(int i=0;i<originalCars.Length;i++){fanActive[i]=originalCars[i].gameObject.activeSelf;originalCars[i].gameObject.SetActive(originalCars[i]==lightCar);}
+                try
+                {
+                    lightCar.transform.position=new Vector3(-3.2f,0,0);camera.transform.position=new Vector3(-3.2f,13,5);camera.transform.LookAt(new Vector3(-3.2f,0,5));camera.fieldOfView=52;
+                    foreach(int weather in new[]{0,2})
+                    {
+                        climate.Preview(2,weather);lightCar.transform.rotation=Quaternion.Euler(0,weather==0?0:8,0);
+                        lightCar.Lighting.Apply(new StreetModel.Car{lane=2,active=true},1,weather==0?0:1);
+                        drivingPreviews.Add(CaptureState(camera,request,target,image,weather==0?"headlight-fans-dry":"headlight-fans-wet-turn"));
+                    }
+                }
+                finally{for(int i=0;i<originalCars.Length;i++)originalCars[i].gameObject.SetActive(fanActive[i]);}
                 for(int i=0;i<originalCars.Length;i++)originalCars[i].ResetPosition(originalZ[i]);
                 detailStreet.ResetModel();climate.Preview(0,0);camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);camera.fieldOfView=roadFov;
                 int tracked=-1,captured=0,laneSignals=0,laneMerges=0;
