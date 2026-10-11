@@ -91,7 +91,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             int fanChecks=0;var meshes=new System.Collections.Generic.Dictionary<string,Mesh>();
             foreach(var drive in drives)
             {
-                Need(drive.Lighting!=null&&drive.GetComponentsInChildren<Renderer>().Length==(drive.Model=="CityBus"?19:17),"Fleet light parts incomplete.");
+                Need(drive.Lighting!=null&&drive.GetComponentsInChildren<Renderer>().Length==(drive.Model=="CityBus"?21:19),"Fleet light parts incomplete.");
                 var beam=drive.Lighting.Beams.GetComponent<MeshFilter>().sharedMesh;var points=beam.vertices;
                 Need(points.Length==8&&beam.triangles.Length==12,"Two headlight fans must retain the four-triangle budget.");
                 var lamps=drive.Lighting.Head.GetComponent<MeshFilter>().sharedMesh.bounds;
@@ -148,7 +148,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             }
             Need(Camera.main.transform.position==new Vector3(1.4f,14,-37)&&Camera.main.fieldOfView==44,"Driving camera framing missing.");
             climate.Preview(0,0);UnityEngine.Object.FindFirstObjectByType<StreetSimulation>().ApplyViews();
-            return new Report{result="PASS: heavy rear passes, three pulses, final gap cancellation, 600-second mixed fleet/rotated-envelope safety, actual lamp/fan/reflection colour profiles and smooth brightness, tapered lamp origins/turning fans/day and inactive gating and camera; phone test pending",completedChanges=longRun.Maneuvers.Completed,rearWaits=longRun.Maneuvers.RearWaits,verifiedMergeStarts=verifiedStarts,simulatedSeconds=600,minimumBumperGap=gap,heavyMergeStarts=heavyStarts,heavyRearPassCases=1,heavySweepCases=sweepCases,blinkCount=3,blinkSeconds=1.8f,mergeSeconds=3,heavyMergeSeconds=6,renderersPerVehicle=17,busRenderersPerVehicle=19,fleetLightTriangles=288,headlightColourChecks=headlightColourChecks,warmHeadlights=warmHeadlights,whiteHeadlights=whiteHeadlights,ledHeadlights=ledHeadlights,sportKelvin=VehicleLighting.SportHeadlightKelvin,headlightFanChecks=fanChecks,wetFanChecks=drives.Length,realtimeStreetLights=lights};
+            return new Report{result="PASS: heavy rear passes, three pulses, final gap cancellation, 600-second mixed fleet/rotated-envelope safety, actual lamp/fan/reflection colour profiles and smooth brightness, tapered lamp origins/turning fans/day and inactive gating and camera; phone test pending",completedChanges=longRun.Maneuvers.Completed,rearWaits=longRun.Maneuvers.RearWaits,verifiedMergeStarts=verifiedStarts,simulatedSeconds=600,minimumBumperGap=gap,heavyMergeStarts=heavyStarts,heavyRearPassCases=1,heavySweepCases=sweepCases,blinkCount=3,blinkSeconds=1.8f,mergeSeconds=3,heavyMergeSeconds=6,renderersPerVehicle=19,busRenderersPerVehicle=21,fleetLightTriangles=288,headlightColourChecks=headlightColourChecks,warmHeadlights=warmHeadlights,whiteHeadlights=whiteHeadlights,ledHeadlights=ledHeadlights,sportKelvin=VehicleLighting.SportHeadlightKelvin,headlightFanChecks=fanChecks,wetFanChecks=drives.Length,realtimeStreetLights=lights};
         }
         static void Gap(StreetModel model,ref float minimum)
         {

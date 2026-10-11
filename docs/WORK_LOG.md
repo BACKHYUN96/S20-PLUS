@@ -1,5 +1,11 @@
 # 작업 이력
 
+## 2026-10-11 — Unity0.24.0 기존 차량 renderer 계약 누락 보정: 재검증 준비
+
+첫sourceb60684e/Validate38117305459는 실제C#컴파일·차량·보행·기후 검사를 진행한 뒤DrivingChecks의 `Fleet light parts incomplete`로 실패했다. VehicleDetailChecks/HeavyVehicleChecks의 추가2와이퍼 계약은 반영했으나 DrivingChecks에 남아 있던 총renderer17/19조건을 빠뜨렸다. 실제새구성19/21로 strict계약과report를 갱신하고 기존삼각형/재질/차량안전/램프 검사 제한은 유지한다. 와이퍼 동작 검사는 이 단계 뒤에 있어 아직통과로 주장하지 않는다.
+
+변경범위에DrivingChecks를 더해 기존10C#+새2C#/2meta=14파일이다. 소스/122입력SHA를 갱신하고 새source에서 실제전체검사·133GPU·APK빌드/서명을 확인할 예정이다.
+
 ## 2026-10-11 — Unity0.24.0 차량 와이퍼: 구현 완료·실제 검증 준비
 
 사용자는0.23.0 폰 적용 성공을 확인하고 와이퍼 패치를 요청했다. 0.24.0/code25/Wipers-0.24.0.unity/Generated/Wipers0240.6차종24대의 실제 앞유리 모서리를 기준으로2날씩48와이퍼를 배치했다. 각 날2quad/4tri로 총192tri/48renderer를 추가하고 기존VehicleTrim재질과 차종별메시를 공유한다. 예상 최대119346tri/1637renderer/47material은 실제PC에서 확인한다. 기존renderer 계약검사에 날2개 추가를 반영하되 삼각형·재질 총량 제한은 유지한다.
