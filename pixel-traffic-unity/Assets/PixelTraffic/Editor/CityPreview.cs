@@ -450,7 +450,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                         string vehicle=phase==StreetModel.Phase.VehicleGreen?"green":phase==StreetModel.Phase.VehicleYellow?"amber":"red";
                         if(koreanCaptured.Add("vehicle-"+vehicle))
                         {
-                            camera.cullingMask=koreanMask;camera.transform.position=new Vector3(-3.38f,6.0f,0);camera.transform.LookAt(new Vector3(-3.38f,5.61f,7));camera.fieldOfView=35;
+                            camera.cullingMask=koreanMask;camera.transform.position=new Vector3(3.38f,6.0f,0);camera.transform.LookAt(new Vector3(3.38f,5.61f,7));camera.fieldOfView=35;
                             koreanPreviews.Add(CaptureState(camera,request,target,image,"korean-vehicle-"+vehicle));
                         }
                         string pedestrian=detailStreet.Model.CanEnter?"walk":"stop";

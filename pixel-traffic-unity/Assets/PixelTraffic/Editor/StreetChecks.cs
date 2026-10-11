@@ -124,6 +124,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Need(parent.name=="Vehicle Signal"&&parent.Find("Signal Housing").localScale.x>parent.Find("Signal Housing").localScale.y*3,"Vehicle housing is not horizontal.");
                 Need(r.GetComponent<MeshFilter>().sharedMesh.triangles.Length==36&&r.bounds.center.y>5,"Vehicle lens is not round or overhead.");
                 Need(Mathf.Abs(r.transform.localPosition.x-(.66f-i%4*.44f))<.001f,"Red/green face-view order is reversed.");
+                Need(Vector3.Dot(parent.forward,parent.parent.position.x<0?Vector3.forward:Vector3.back)>.999f,"Signal faces away from its approaching drivers.");
             }
             for(int i=0;i<people.arraySize;i++)
             {var r=(Renderer)people.GetArrayElementAtIndex(i).objectReferenceValue;Need(r.GetComponent<MeshFilter>().sharedMesh.name==(i%2==0?"KoreanStopIcon":"KoreanWalkIcon"),"Pedestrian lamp lacks standing/walking icon.");}

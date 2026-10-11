@@ -39,7 +39,8 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Transform pole=new GameObject("Signal Pole").transform;pole.SetParent(root.transform,false);pole.position=new Vector3(side*10.08f,.16f,z);
                 StarterScene.Box("Signal Mast",pole,new Vector3(0,2.9f,0),new Vector3(.18f,5.8f,.18f),metal);
                 Transform head=new GameObject("Vehicle Signal").transform;head.SetParent(pole,false);head.localPosition=new Vector3(-side*6.7f,5.45f,0);
-                head.localRotation=Quaternion.Euler(0,side<0?180:0,0);
+                // Each face looks upstream, towards the drivers who must obey it.
+                head.localRotation=Quaternion.Euler(0,side<0?0:180,0);
                 StarterScene.Box("Signal Arm",pole,new Vector3(-side*3.35f,5.78f,0),new Vector3(6.7f,.15f,.15f),metal);
                 StarterScene.Box("Signal Housing",head,Vector3.zero,new Vector3(1.82f,.50f,.26f),metal);
                 for(int n=0;n<4;n++)
