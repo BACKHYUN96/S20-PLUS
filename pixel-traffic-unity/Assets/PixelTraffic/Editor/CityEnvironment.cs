@@ -25,7 +25,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             float length = RoadEnd - RoadStart, centre = (RoadStart + RoadEnd) * .5f;
             Box("City Ground", scenery, new Vector3(0, -.3f, 170), new Vector3(420, .24f, 520), Mat("City Ground", new Color(.49f, .48f, .43f)));
             Material asphalt = Mat("Asphalt", new Color(.22f, .235f, .25f), 0, .12f);
-            Texture(asphalt, "Asphalt", 0, new Vector2(StarterConfig.RoadWidth / 3, length / 3));
+            Texture(asphalt, "Asphalt", 0, new Vector2(StarterConfig.RoadWidth / 6, length / 6));
             Box("Road", road, new Vector3(0, -.12f, centre), new Vector3(StarterConfig.RoadWidth, .24f, length), asphalt);
             Material paving = Mat("Paving", new Color(.78f, .70f, .56f));
             Texture(paving, "Pavers", 1, new Vector2(2, length / 4));
@@ -57,7 +57,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             for (int i = 0; i < 12; i++)
                 Box("Zebra Stripe", road, new Vector3(-5.9f + i * 1.07f, .022f, StarterConfig.CrossingZ), new Vector3(.64f, .018f, 4), white);
             for (int i = 0; i < 4; i++)
-                Cylinder("Manhole", road, new Vector3(i % 2 == 0 ? -1.6f : 4.8f, .005f, 24 + i * 34), new Vector3(.7f, .004f, .7f), Mat("Iron", new Color(.17f, .18f, .18f), .15f));
+                GroundScene.Manhole(road,new Vector3(i % 2 == 0 ? -1.6f : 4.8f,.012f,24+i*34),Mat("Iron",new Color(.23f,.25f,.26f),.15f));
 
             for (int i = 0; i < 16; i++)
                 foreach (float side in new[] { -1f, 1f }) Tree(scenery, FoliageScene.Canopy(i%3), side * 8.6f, -24 + i * 13, i);
@@ -73,6 +73,7 @@ namespace PixelTraffic.UnityPrototype.Editor
 
         private static void Texture(Material material, string name, int style, Vector2 scale)
         {
+            if(style<2){GroundScene.SurfaceTexture(material,name,style,scale);return;}
             string path = StarterScene.Generated + "/" + name + ".asset";
             Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
             if (texture == null)
@@ -233,7 +234,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             {
                 if(transform.name=="City Tree")trees++;if(transform.name=="City Building")buildings++;if(transform.name=="Street Lamp")lamps++;if(transform.name=="Skyline Tower")towers++;
             }
-            foreach(var renderer in renderers) {Need(renderer.sharedMaterial!=null&&(renderer.sharedMaterial.shader.name=="Universal Render Pipeline/Lit" || renderer.sharedMaterial.shader.name=="PixelTraffic/Atmosphere" || renderer.sharedMaterial.shader.name=="PixelTraffic/Distant"),"City material is missing or pink.");materials.Add(renderer.sharedMaterial);}
+            foreach(var renderer in renderers) {Need(renderer.sharedMaterial!=null&&(renderer.sharedMaterial.shader.name=="Universal Render Pipeline/Lit" || renderer.sharedMaterial.shader.name=="PixelTraffic/Atmosphere" || renderer.sharedMaterial.shader.name=="PixelTraffic/Distant" || renderer.sharedMaterial.shader.name=="PixelTraffic/RoadOverlay"),"City material is missing or pink.");materials.Add(renderer.sharedMaterial);}
             Need(trees==32&&buildings==24&&lamps==20&&towers==34,"City scenery is incomplete.");
             Need(triangles<120000&&renderers.Length<2400&&materials.Count<48,"City geometry/material budget exceeded.");
             foreach(string name in new[]{"Asphalt","Pavers","Masonry"})

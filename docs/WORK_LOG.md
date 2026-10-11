@@ -1,5 +1,15 @@
 # 작업 이력
 
+## 2026-10-11 — Unity 0.18.0 도로·보도 마감과 접지감: 구현 완료, 실제 검사 대기
+
+사용자가 폰0.17 적용 성공을 확인하고 다음 도로·보도 패치를 승인했다. 0.18.0/code19, 새 GroundFinish-0.18.0 장면/Generated GroundFinish0180. 범위10 source/meta: GroundScene+meta, RoadSurface+meta, RoadOverlay.shader+meta, CityEnvironment, CityPreview, StarterScene, StarterConfig. 시작 시 이전dirty285파일/index/status와110입력/12host SHA를 기록했다. 신규6파일을 포함해 최종116입력을 추적한다.
+
+아스팔트512색/미세 normal·주기적 macro/grain·희미한8타이어 흔적, 보도256 줄눈/엇갈린 block·경계석128 joint, 기존4맨홀의32tri disc+철판 ring/hatch·도로 가장자리24배수구48tri를 공유 재질/병합메시로 구현한다. 차량별 renderer를 늘리지 않고 전체24대의 차체/4바퀴 접점과 전조등·후미등의젖은반사를 한672vertex/336tri 메시로 갱신한다. 가로등20곳의잘린반사40tri와8track16tri/배수구가추가되지만맨홀기존64tri를32tri로줄여budget여유를확보한다. Ground controller는mesh/재질을한번복제해원본asset를보존하고상태에는CityClimate의wetness/lamp/snow/visibleclock을사용한다. 숨김/화면OFF/정지 시메시·반사clock을갱신하지않고inactive차량의그림자/반사도제거한다. 반사는authored 효과이며실제reflectioncamera가아니다.
+
+관련검사는실제바퀴world좌표/±8도3pose의288contact, 숨김freeze/inactiveghost/원본asset/6miptexture/seams·배수구roadedge/기후endpoint를검사한다. 실제확대낮·비오는밤·2초ripple·보도4GPU사진을추가해총80장예정이며촬영카메라/기후는저장하지않는다. 기존18기후/180blend·낮→노을→밤·밤→낮·traffic/승하차/안전출발·strict120000tri/2400renderer/48material을유지해실제pipeline에서함께확인한다.
+
+현재로컬변경범위/116SHA와기존index/host12를보존했으며Unity실행·GPU외형·Android빌드/Lint·기존서명/APK전달은대기다. NativeAndroid/host/workflow변경없음;host12가같아기존실제hostLint를재사용한다. 폰0.18/FPS·발열은미확인,Drive PC구성은보류한다.
+
 ## 2026-10-11 — Unity 0.17.0 하늘·구름·해·달: 실제 GPU 검증·서명 APK 전달 완료
 
 사용자는 폰 **0.16.0 적용 성공**을 확인했고 하늘 패치를 승인했다. **0.17.0/code18**, `SkyClimate-0.17.0.unity` / `Generated/SkyClimate0170`. Distant.shader에서 넓고 둥근 구름의 밀도·내부 음영·밝은 가장자리와 노을빛을 표현한다. 낮의 원형 해/halo는 노을에 낮아지고, 밤에는 질감 있는 달/halo와 antialias 별이 나타난다. 구름은 해·달·별/halo를 가리며 비·안개·눈은 하늘과 천체의 선명도를 줄인다. 기존 CityClimate의 visible clock과 햇빛 dim/복구를 재사용한다. 추가 실시간 Light·reflection camera·모델 없이 기존 공유 불투명 셰이더로 처리한다. 제품 카메라/산·강·도시/차량24대·보행100명·정류장8명/승하차·hazard·안전 출발, NativeAndroid/host/workflow는 유지했다.

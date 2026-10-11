@@ -14,7 +14,7 @@ namespace PixelTraffic.UnityPrototype.Editor
     // Generated geometry stays in its own scene; existing scenes are never rebuilt in place.
     public static class StarterScene
     {
-        internal const string Generated = "Assets/PixelTraffic/Generated/SkyClimate0170";
+        internal const string Generated = "Assets/PixelTraffic/Generated/GroundFinish0180";
         private const string PipelinePath = Generated + "/MobileURP.asset";
         private static readonly Dictionary<string, Material> materials = new Dictionary<string, Material>();
 
@@ -93,6 +93,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             TrafficFleet.Create();
             StreetScene.Create();
             ClimateScene.Create();
+            GroundScene.Create();
             EditorSceneManager.SaveScene(scene, StarterConfig.ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(StarterConfig.ScenePath, true) };
             AssetDatabase.SaveAssets();
@@ -218,6 +219,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             FrontageChecks.Report frontage = FrontageChecks.Validate();
             DrivingChecks.Report driving = DrivingChecks.Validate();
             DistantChecks.Report distant = DistantChecks.Validate();
+            GroundScene.Report ground = GroundScene.Validate();
             SceneryChecks.Report scenery = SceneryChecks.Validate();
             HeavyVehicleChecks.Report heavy = HeavyVehicleChecks.Validate();
             BusStopChecks.Report busStops=BusStopChecks.Validate();
@@ -227,7 +229,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             File.WriteAllText("Reports/scene-validation.json", JsonUtility.ToJson(new ValidationReport {
                 editor = Application.unityVersion, applicationId = StarterConfig.ExperimentAppId,
                 utc = DateTime.UtcNow.ToString("O"), traffic = traffic, street = street,
-                version = StarterConfig.VersionName, environment = environment, climate = climate, vehicleDetail = vehicleDetail, frontage = frontage, driving=driving, distant=distant, scenery=scenery, heavy=heavy,busStops=busStops,
+                version = StarterConfig.VersionName, environment = environment, climate = climate, vehicleDetail = vehicleDetail, frontage = frontage, driving=driving, distant=distant, ground=ground, scenery=scenery, heavy=heavy,busStops=busStops,
                 result = "PASS: actual city and two-way fleet geometry, material, lane bounds, motion, wrap, wheels and lifecycle; not an Android/device test"
             }, true));
             Debug.Log("PASS: city and two-way traffic geometry and motion. Reports/scene-validation.json");
@@ -257,6 +259,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             public SceneryChecks.Report scenery;
             public HeavyVehicleChecks.Report heavy;
             public BusStopChecks.Report busStops;
+            public GroundScene.Report ground;
         }
     }
 }
