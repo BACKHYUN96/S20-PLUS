@@ -81,7 +81,7 @@ namespace PixelTraffic.UnityPrototype
             int exitIndex=p.Count-1;Vector2 end;
             float outX=destination==0?(lane-1.5f)*StarterConfig.LaneWidth:-4.8f;
             end=World(new Vector2(outX,-40),destination);
-            Bezier(p,Ring(exitAngle),Ring(exitAngle)+Tangent(exitAngle)*7,World(new Vector2(outX,-30),destination),end);
+            Bezier(p,Ring(exitAngle),Ring(exitAngle)+Tangent(exitAngle)*3,World(new Vector2(outX,-30),destination),end);
             int clearIndex=p.Count-1;
             if(destination==1||destination==3)Bezier(p,end,World(new Vector2(-4.8f,-60),destination),World(new Vector2(-4.8f,-100),destination),World(new Vector2(-4.8f,-140),destination));
             else if(destination==2)Bezier(p,end,new Vector2(4.8f,295),new Vector2(80,302),new Vector2(140,302));
@@ -103,14 +103,21 @@ namespace PixelTraffic.UnityPrototype
         {
             var c=model.Cars[index];for(int j=0;j<model.Cars.Length;j++)
             {var other=model.Cars[j];if(j==index||!other.active||other.roundHidden)continue;if(!Separated(point,yaw,c.SafetyLength,c.width,Position(other),Yaw(other),other.SafetyLength,other.width))return j;}
-            return -1;
+            return ReservationBlocker(index,point,yaw);
+        }
+        int ReservationBlocker(int index,Vector2 point,float yaw)
+        {
+            if(owner<0||owner==index)return -1;var own=model.Cars[owner];var route=States[owner];var c=model.Cars[index];
+            for(float d=route.progress;d<=route.path.clear;d+=.75f)
+            {Vector2 p=route.path.Pose(d,out float heading);if(!Separated(point,yaw,c.SafetyLength,c.width,p,heading,own.SafetyLength,own.width))return owner;}
+            Vector2 end=route.path.Pose(route.path.clear,out float angle);return Separated(point,yaw,c.SafetyLength,c.width,end,angle,own.SafetyLength,own.width)?-1:owner;
         }
         bool Free(int index,Vector2 point,float yaw)=>Blocker(index,point,yaw)<0;
-        bool ClearApproach(int index,State state)
+        bool ClearRoute(int index,State state)
         {
-            for(float d=state.progress;d<state.path.entry;d+=.75f)
+            for(float d=state.progress;d<state.path.clear;d+=.75f)
             {Vector2 p=state.path.Pose(d,out float yaw);if(!Free(index,p,yaw))return false;}
-            Vector2 end=state.path.Pose(state.path.entry,out float heading);return Free(index,end,heading);
+            Vector2 end=state.path.Pose(state.path.clear,out float heading);return Free(index,end,heading);
         }
         void Start(int i,int origin)
         {
@@ -149,6 +156,8 @@ namespace PixelTraffic.UnityPrototype
                 float ahead=c.Direction*((float)other.z-(float)c.z);
                 if(ahead>=0&&Mathf.Abs(c.X-other.X)<(c.width+wide)*.5f+.05f)room=Mathf.Min(room,ahead-(c.SafetyLength+length)*.5f-1.8f);
             }
+            if(owner>=0)
+            {int index=Array.IndexOf(model.Cars,c);Vector2 next=new Vector2(c.X,(float)c.z+c.Direction*Mathf.Min(Mathf.Max(0,room),c.cruise*StreetModel.Dt));if(ReservationBlocker(index,next,Yaw(c))>=0)room=0;}
             return Mathf.Max(0,room);
         }
         public void Tick()
@@ -167,13 +176,13 @@ namespace PixelTraffic.UnityPrototype
                     continue;
                 }
                 if(s.stage==Stage.Hidden){Start(i,s.origin);continue;}
-                // Keep waiting noses outside the full circulating bus swept envelope.
-                float hold=Mathf.Max(0,s.path.entry-c.length*.5f-16);
+                // Reserve before approach lanes converge; keep the entire route clear.
+                float hold=Mathf.Max(0,s.path.entry-32);
                 float limit=s.path.Length;
                 if(s.progress<s.path.entry&&owner!=i)
                 {
                     if(owner>=0&&owner!=i){limit=hold;s.stage=Stage.Waiting;s.waitTicks++;Yields++;}
-                    else if(s.progress>=hold-.001f&&ClearApproach(i,s)){owner=i;Entries++;s.stage=Stage.Circulating;}
+                    else if(s.progress>=hold-.001f&&ClearRoute(i,s)){owner=i;Entries++;s.stage=Stage.Circulating;}
                     else limit=Mathf.Min(limit,hold);
                 }
                 if(s.progress>=s.path.exit-12)

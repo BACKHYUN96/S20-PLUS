@@ -32,7 +32,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             {
                 var c=model.Cars[i];var state=model.Roundabout.States[i];if(!c.active||c.roundHidden)continue;
                 int blocker=-1;if(state.path!=null){var p=state.path.Pose(Mathf.Min(state.progress+.2f,state.path.Length),out float yaw);blocker=model.Roundabout.Blocker(i,p,yaw);}
-                result+="\n car="+i+" pos="+RoundaboutTraffic.Position(c)+" yaw="+RoundaboutTraffic.Yaw(c)+" lane="+c.lane+" length="+c.length+" stage="+state.stage+" progress="+state.progress+" entry="+(state.path==null?-1:state.path.entry)+" exit="+(state.path==null?-1:state.path.exit)+" speed="+c.speed+" blocker="+blocker;
+                result+="; car="+i+" pos="+RoundaboutTraffic.Position(c)+" yaw="+RoundaboutTraffic.Yaw(c)+" lane="+c.lane+" length="+c.length+" stage="+state.stage+" progress="+state.progress+" entry="+(state.path==null?-1:state.path.entry)+" exit="+(state.path==null?-1:state.path.exit)+" speed="+c.speed+" blocker="+blocker;
             }
             return result;
         }
