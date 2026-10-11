@@ -1,5 +1,9 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-11 — Unity 0.19.0 검사 재시도: 촬영 변수 충돌 수정
+
+첫 source cb326483974b59a6b94fcacea85f9e6f8bdcbd4a / Validate38100787579/job114356116058은 CityPreview의 CS0136으로 실패했다. 내려받은 redacted artifact11687726893의 bytes/SHA/CRC/source를 확인했다. 기존 함수의 weather 변수와 새 확대 촬영 loop 변수의 이름이 겹쳤으며 fanWeather로 변경했다. 라이선스 경고도 포함됐지만 실제 중단 원인은 C# 컴파일 오류다. GPU 외형·Unity PASS·APK는 아직 대기이며 동일 범위의 수정본을 재검사한다.
+
 ## 2026-10-11 — Unity 0.19.0 차량 전조등 부채꼴: 구현 완료, 실제 검증 대기
 
 요청: 차량 앞의 타원형 불빛을 GTA5처럼 앞으로 넓어지는 부채꼴로 변경한다. 0.19.0/code20, 새 장면 `HeadlightFans-0.19.0.unity`와 `Generated/HeadlightFans0190`을 사용한다.

@@ -339,11 +339,11 @@ namespace PixelTraffic.UnityPrototype.Editor
                 try
                 {
                     lightCar.transform.position=new Vector3(-3.2f,0,0);camera.transform.position=new Vector3(-3.2f,13,5);camera.transform.LookAt(new Vector3(-3.2f,0,5));camera.fieldOfView=52;
-                    foreach(int weather in new[]{0,2})
+                    foreach(int fanWeather in new[]{0,2})
                     {
-                        climate.Preview(2,weather);lightCar.transform.rotation=Quaternion.Euler(0,weather==0?0:8,0);
-                        lightCar.Lighting.Apply(new StreetModel.Car{lane=2,active=true},1,weather==0?0:1);
-                        drivingPreviews.Add(CaptureState(camera,request,target,image,weather==0?"headlight-fans-dry":"headlight-fans-wet-turn"));
+                        climate.Preview(2,fanWeather);lightCar.transform.rotation=Quaternion.Euler(0,fanWeather==0?0:8,0);
+                        lightCar.Lighting.Apply(new StreetModel.Car{lane=2,active=true},1,fanWeather==0?0:1);
+                        drivingPreviews.Add(CaptureState(camera,request,target,image,fanWeather==0?"headlight-fans-dry":"headlight-fans-wet-turn"));
                     }
                 }
                 finally{for(int i=0;i<originalCars.Length;i++)originalCars[i].gameObject.SetActive(fanActive[i]);}
