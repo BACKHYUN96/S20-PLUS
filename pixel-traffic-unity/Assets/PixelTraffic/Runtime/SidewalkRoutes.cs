@@ -6,7 +6,9 @@ namespace PixelTraffic.UnityPrototype
     public sealed class SidewalkRoutes
     {
         public const float Radius = .16f;
-        public const int Columns = 12;
+        public const int Columns = 10;
+        // Two separated outer streams, rather than three grid columns closer than a foot disc.
+        private static readonly float[] columnX={6.80f,7.21f,7.62f,8.03f,8.44f,8.85f,9.26f,9.65f,10.05f,10.55f};
         private const int Rows = 401;
         private readonly bool[] open = new bool[Columns * Rows*2];
         private readonly int[] seen = new int[Columns * Rows], previous = new int[Columns * Rows], queue = new int[Columns * Rows];
@@ -27,7 +29,7 @@ namespace PixelTraffic.UnityPrototype
                 }
             }
         }
-        public Vector2 Node(int index,int side) => new Vector2(side*(6.80f+.355f*(index%Columns)),-28+.45f*(index/Columns));
+        public Vector2 Node(int index,int side) => new Vector2(side*columnX[index%Columns],-28+.45f*(index/Columns));
         public bool IsOpen(int index,int side=1) => open[(side<0?0:Count)+index];
         public static bool Allowed(Vector2 p)
         {

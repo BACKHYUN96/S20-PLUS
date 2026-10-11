@@ -277,7 +277,13 @@ namespace PixelTraffic.UnityPrototype
                 if(p.progressSeconds>=10)
                 {
                     if(Vector2.Distance(p.progressAnchor,p.position)<1)
-                    {p.retrySeconds=15;p.cooldown=12+Random(p)*12;p.detourSeconds=0;Roam(p);}
+                    {
+                        float direction=p.goal.y>=p.position.y?-1:1;
+                        p.retrySeconds=0;p.cooldown=8+Random(p)*8;p.detourSeconds=0;
+                        float column=p.side*direction>0?10.55f:10.05f;
+                        Path(p,new Vector2(p.side*column,Mathf.Clamp(p.position.y+direction*8,-27.5f,151.5f)));
+                        p.progressAnchor=p.position;p.progressSeconds=0;
+                    }
                     else {p.progressAnchor=p.position;p.progressSeconds=0;}
                 }
             }
@@ -331,7 +337,7 @@ namespace PixelTraffic.UnityPrototype
             }
             // The tight outer tree-bed corridor fits two 0.40m foot streams.
             // Keep right in world travel direction so opposing pedestrians do not share its centre.
-            if(Mathf.Abs(p.position.x)>9.86f&&Mathf.Abs(target.x)>9.86f&&Mathf.Abs(target.y-p.position.y)>.5f)
+            if(Mathf.Abs(p.position.x)>9.86f&&Mathf.Abs(target.x)>9.86f&&Mathf.Abs(target.y-p.position.y)>.12f)
             {
                 float stream=p.side*(target.y-p.position.y)>0?10.55f:10.05f;
                 Vector2 passing=new Vector2(p.side*stream,target.y);
