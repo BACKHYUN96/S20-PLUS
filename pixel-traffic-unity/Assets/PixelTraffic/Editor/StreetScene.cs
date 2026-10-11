@@ -44,7 +44,8 @@ namespace PixelTraffic.UnityPrototype.Editor
                 StarterScene.Box("Signal Housing",head,Vector3.zero,new Vector3(1.82f,.50f,.26f),metal);
                 for(int n=0;n<4;n++)
                 {
-                    var center=new Vector3(-.66f+n*.44f,0,.141f);
+                    // Viewed from the illuminated face: red left, straight green right.
+                    var center=new Vector3(.66f-n*.44f,0,.141f);
                     vehicleLights.Add(SignalPart("Signal Lens",head,CircleLens(),center,lens));
                     SignalPart("Signal Hood",head,Hood(.40f,.38f),new Vector3(center.x,0,.135f),metal);
                 }

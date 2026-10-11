@@ -436,35 +436,42 @@ namespace PixelTraffic.UnityPrototype.Editor
                     for(int i=0;i<originalCars.Length;i++)originalCars[i].ResetPosition(originalZ[i]);detailStreet.ResetModel();climate.Preview(0,0);detailStreet.ApplyViews();camera.aspect=.45f;camera.fieldOfView=roadFov;camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);
                 }
                 var koreanPreviews=new System.Collections.Generic.List<string>();
+                int koreanMask=camera.cullingMask;var koreanLayers=new System.Collections.Generic.Dictionary<GameObject,int>();
+                void PreviewLayer(Transform root,int layer){foreach(var child in root.GetComponentsInChildren<Transform>(true)){if(!koreanLayers.ContainsKey(child.gameObject))koreanLayers.Add(child.gameObject,child.gameObject.layer);child.gameObject.layer=layer;}}
                 try
                 {
-                    climate.Preview(0,0);detailStreet.ResetModel();var koreanCaptured=new System.Collections.Generic.HashSet<string>();
+                    climate.Preview(0,0);detailStreet.ResetModel();
+                    foreach(var pole in UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))if(pole.name=="Signal Pole"&&pole.position.x<0&&Mathf.Abs(pole.position.z-7)<.01f)PreviewLayer(pole,30);
+                    var koreanCaptured=new System.Collections.Generic.HashSet<string>();
                     for(int frame=0;frame<1200&&koreanCaptured.Count<5;frame++)
                     {
                         detailStreet.Advance(.1);detailStreet.ApplyViews();var phase=detailStreet.Model.Signal;
                         string vehicle=phase==StreetModel.Phase.VehicleGreen?"green":phase==StreetModel.Phase.VehicleYellow?"amber":"red";
                         if(koreanCaptured.Add("vehicle-"+vehicle))
                         {
-                            camera.transform.position=new Vector3(-3.38f,6.0f,0);camera.transform.LookAt(new Vector3(-3.38f,5.61f,7));camera.fieldOfView=35;
+                            camera.cullingMask=koreanMask;camera.transform.position=new Vector3(-3.38f,6.0f,0);camera.transform.LookAt(new Vector3(-3.38f,5.61f,7));camera.fieldOfView=35;
                             koreanPreviews.Add(CaptureState(camera,request,target,image,"korean-vehicle-"+vehicle));
                         }
                         string pedestrian=detailStreet.Model.CanEnter?"walk":"stop";
                         if(koreanCaptured.Add("pedestrian-"+pedestrian))
                         {
-                            camera.transform.position=new Vector3(-8.4f,2.70f,7);camera.transform.LookAt(new Vector3(-10.08f,2.61f,7));camera.fieldOfView=42;
+                            camera.cullingMask=1<<30;camera.transform.position=new Vector3(-7.0f,2.75f,7);camera.transform.LookAt(new Vector3(-10.08f,2.61f,7));camera.fieldOfView=42;
                             koreanPreviews.Add(CaptureState(camera,request,target,image,"korean-pedestrian-"+pedestrian));
                         }
                     }
                     if(koreanCaptured.Count!=5)throw new InvalidOperationException("Korean signal capture cycle incomplete.");
                     climate.Preview(0,2);detailStreet.ResetModel();detailStreet.Model.SetWeather(1,1,1,1);detailStreet.Model.SetPopulation(100);detailStreet.ApplyViews();
                     var coatPerson=detailStreet.Walkers[0];var umbrellaPerson=detailStreet.Walkers[1];
-                    coatPerson.root.SetPositionAndRotation(new Vector3(-10.25f,.16f,0),Quaternion.identity);
-                    umbrellaPerson.root.SetPositionAndRotation(new Vector3(-10.25f,.16f,1.5f),Quaternion.identity);
-                    camera.transform.position=new Vector3(-7.8f,2.4f,3.4f);camera.transform.LookAt(new Vector3(-10.25f,1.05f,.6f));camera.fieldOfView=42;
+                    if(!coatPerson.wearsCoat||coatPerson.body.sharedMesh!=coatPerson.coatMesh||coatPerson.umbrella.gameObject.activeSelf)throw new InvalidOperationException("Capture coat rig differs from tested state.");
+                    PreviewLayer(coatPerson.root,31);PreviewLayer(umbrellaPerson.root,31);camera.cullingMask=1<<31;
+                    coatPerson.root.SetPositionAndRotation(new Vector3(-10.0f,.16f,10),Quaternion.identity);
+                    umbrellaPerson.root.SetPositionAndRotation(new Vector3(-9.0f,.16f,10),Quaternion.identity);
+                    camera.transform.position=new Vector3(-9.5f,2.4f,14);camera.transform.LookAt(new Vector3(-9.5f,1.1f,10));camera.fieldOfView=60;
                     koreanPreviews.Add(CaptureState(camera,request,target,image,"raincoat-and-umbrella"));
                 }
                 finally
                 {
+                    camera.cullingMask=koreanMask;foreach(var pair in koreanLayers)pair.Key.layer=pair.Value;
                     for(int i=0;i<originalCars.Length;i++)originalCars[i].ResetPosition(originalZ[i]);detailStreet.ResetModel();climate.Preview(0,0);detailStreet.ApplyViews();
                     camera.aspect=.45f;camera.fieldOfView=roadFov;camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);
                 }
@@ -502,6 +509,12 @@ namespace PixelTraffic.UnityPrototype.Editor
             int visible = 0, pink = 0; foreach (Color32 pixel in image.GetPixels32())
             { if (pixel.r + pixel.g + pixel.b > 15) visible++; if (pixel.r > 220 && pixel.b > 220 && pixel.g < 50) pink++; }
             if (visible < image.width * image.height / 3 || pink > image.width * image.height / 100) throw new InvalidOperationException("Climate preview is black or pink: " + label);
+            if(label=="korean-pedestrian-stop"||label=="korean-pedestrian-walk")
+            {
+                int lit=0;bool walk=label.EndsWith("walk");
+                foreach(var p in image.GetPixels32())if(walk?p.g>100&&p.g>p.r*2&&p.g>p.b*2:p.r>100&&p.r>p.g*2&&p.r>p.b*2)lit++;
+                if(lit<100)throw new InvalidOperationException("Pedestrian icon is obscured in actual GPU pixels: "+label);
+            }
             string path = "Reports/city-preview-" + StarterConfig.VersionName + "-" + label + ".png"; File.WriteAllBytes(path, image.EncodeToPNG()); return path;
         }
 
