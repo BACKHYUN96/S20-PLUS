@@ -1,5 +1,26 @@
 # 작은 패치 작업 안내
 
+## 2026-10-11 — Unity 0.19.0 부채꼴 전조등: 실제 화면 검증·서명 APK 전달 완료
+
+사용자 요청에 따라 차량 앞의 타원형 불빛을 좌우 램프에서 넓어지는 부채꼴로 변경했다. **0.19.0/code20**, `HeadlightFans-0.19.0.unity` / `Generated/HeadlightFans0190`.
+
+실제 앞 램프 메시의 발광 위치에서 시작하는 두 사다리꼴을 생성한다. 각 불빛은 시작 폭 0.28m, 끝 폭 4.2m, 길이 8.68m이며 차량 회전 방향을 따라간다. 새 공유 HeadlightFan 셰이더가 중앙 밝기와 측면·먼 끝의 부드러운 감쇠를 처리한다. 가로등용 둥근 빛 번짐 재질과 분리해 가로등 외형을 유지했다. 젖은 도로의 전조등 반사도 같은 방향으로 넓어지는 메시·전용 마스크로 변경한다. 후미등·가로등 반사는 유지한다. GTA5의 부채꼴 외형을 참고한 가벼운 노면 표현이며 물리 조명·장애물 차폐 시스템은 구현하지 않았다.
+
+- **범위와 보존:** DrivingScene, DrivingChecks, TrafficFleet, ClimateScene, CityEnvironment, CityPreview, StarterScene, RoadSurface, StarterConfig, RoadOverlay.shader, HeadlightFan.shader/meta의 12파일(신규 2). 시작 상태 291파일·실제 index·전체 미추적 Git 상태와 118 빌드/촬영 입력을 기록하고 관련 없는 사용자 변경을 보존했다. Native Android·host·workflow 입력은 그대로다.
+- **동작·예산:** 차량별 renderer/Light/삼각형을 늘리지 않고 공유 재질 1개만 추가한다. 최대 우산·정류장 스트레스 장면은 119424 triangles / 1584 renderers / 47 materials로 기존 제한 이내다. 기존 낮·노을·밤의 부드러운 밝기와 비활성/화면 숨김 제어를 재사용한다. 같은 geometry 예산이 실제 폰 FPS·발열 동일을 보장하지는 않는다.
+- **Unity 검사:** source `5ca655836083a05785c6ed12b02baa9028a12630` / [Validate 38101648688](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38101648688). 실제 차량 24대의 램프 위치·좁은 시작/넓은 끝·양 방향과 ±8도 회전 144사례, 낮/비활성 불빛 제거 및 젖은 반사 24대의 방향·마스크를 검증했다. 기존 600초 교통 안전, 18기후·180전환, 승하차·비상깜빡이·안전 출발과 접지 검사도 PASS다.
+- **실제 GPU:** Unity 6000.3.26f1 / Direct3D11의 82 PNG. 야간 제품 화면·램프 확대와 새 위에서 보는 건조/젖은 회전 불빛 2장을 직접 관찰했다. 임시 촬영 구도·차량 배치는 저장하지 않는다. Editor 촬영은 실제 폰 screenshot/FPS 측정과 구분한다. 보고서 core와 PNG 3묶음의 bytes/SHA/CRC/source를 확인했다.
+- **Android·서명:** 같은 source tag `unity-apk-0.19.0-build1` / [BuildApk 38102122530](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38102122530). BuildPlayer 오류0/경고0, launcher Lint 오류0/경고8. 내려받은 실제 APK의 version0.19.0/code20/min29/target36/ARM64 IL2CPP, wallpaper service·private provider·settings launcher와 원본 v2 인증서 `a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6`를 확인했다. 변경 없는 12 host 입력의 SHA가 같아 기존 host Lint38008378207(오류0/경고10)을 재사용했다.
+- **전달:** [APK 직접 다운로드](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/ad21ba9e3b2ce6275259ce4e1f0eadc3185cfb83/pixel-traffic-unity-prototype-0.19.0.apk) · [전체 화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/ad21ba9e3b2ce6275259ce4e1f0eadc3185cfb83/headlight-city-preview.png) · [젖은 도로·회전 부채꼴](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/ad21ba9e3b2ce6275259ce4e1f0eadc3185cfb83/headlight-wet-preview.png) · [건조한 도로 부채꼴](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/ad21ba9e3b2ce6275259ce4e1f0eadc3185cfb83/headlight-fan-preview.png). APK 31118519 bytes / SHA256 `084278b313f29cd2faa32d8a0802ef700eed9780201854d1db5e53a0a21be7ba`. 일회성 `downloads/unity-0.19.0`의 APK·실제 사진을 로그인 없는 HTTP200/redirect 없음/전체 bytes/SHA로 확인했다. main에는 APK binary를 추가하지 않았다.
+
+PC 설치(아래 폴더로 다운로드한 경우):
+```powershell
+$trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $trafficAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.19.0.apk"
+```
+
+미확인: 실제 폰 0.19.0 불빛 외형·성능·발열·장시간 lifecycle. APK 설치는 사용자 PC/폰에서 수행하며 여기서 설치했다고 주장하지 않는다. Drive 설정은 기존 보류 상태다. 최종 문서 전용 commit의 118 입력 SHA가 같으므로 통과한 검사를 반복하지 않는다.
+
 ## 2026-10-11 — Unity 0.18.0 도로·보도 마감과 접지감: 실제 GPU 검증·서명 APK 전달 완료
 
 사용자는 폰 **0.17.0 적용 성공**을 확인하고 도로·보도 패치를 승인했다. **0.18.0/code19**, `GroundFinish-0.18.0.unity` / `Generated/GroundFinish0180`. 아스팔트512 색/미세 normal과 seam 없는주기적 grain/macro, 보도256의엇갈린블록/줄눈, 경계석 joint를 보강했다. 기존4맨홀은32tri disc+철판 ring/hatch로꾸미고 도로 가장자리24배수구를48tri병합메시로표현한다. 옅은8타이어흔적과전체24대의차체/4바퀴 접지 그림자·젖은전조등/후미등반사를 하나의672vertex/336tri 메시로갱신한다. 가로등20곳의길게끊어진노면반짝임도더했다. authored 반사이며실제reflectioncamera가아니다. Ground overlay는한번복제한공유재질/동적mesh로구현하고CityClimate wetness/lamp/snow/visibleclock을사용한다. 차량별renderer/실시간Light/콜라이더추가없음. 숨김/화면OFF에는mesh·반사clock을갱신하지않고inactive차량의shadow/reflection을제거한다.
