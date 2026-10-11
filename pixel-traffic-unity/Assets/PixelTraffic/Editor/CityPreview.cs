@@ -563,14 +563,14 @@ namespace PixelTraffic.UnityPrototype.Editor
                     camera.transform.position=new Vector3(28,38,177);camera.transform.LookAt(new Vector3(0,0,235));
                     roundaboutPreviews.Add(CaptureState(camera,request,target,image,"roundabout-oblique"));
                     camera.transform.position=new Vector3(0,46,161);camera.transform.LookAt(new Vector3(0,0,241));
-                    int tracked=detailStreet.Model.Roundabout.Owner;
-                    for(int wait=0;tracked<0&&wait<1800;wait++){detailStreet.Advance(1d/30);tracked=detailStreet.Model.Roundabout.Owner;}
-                    if(tracked<0)throw new InvalidOperationException("No actual circulating vehicle for junction captures.");
+                    int junctionTracked=detailStreet.Model.Roundabout.Owner;
+                    for(int wait=0;junctionTracked<0&&wait<1800;wait++){detailStreet.Advance(1d/30);junctionTracked=detailStreet.Model.Roundabout.Owner;}
+                    if(junctionTracked<0)throw new InvalidOperationException("No actual circulating vehicle for junction captures.");
                     Color32[] previousPixels=null;
                     for(int frame=0;frame<4;frame++)
                     {
                         if(frame>0)detailStreet.Advance(1);detailStreet.ApplyViews();
-                        var car=detailStreet.Model.Cars[tracked];roundaboutMotionPositions.Add(new Vector3(car.X,car.roundabout?car.roundYaw:(car.Direction<0?180:0),(float)car.z));
+                        var car=detailStreet.Model.Cars[junctionTracked];roundaboutMotionPositions.Add(new Vector3(car.X,car.roundabout?car.roundYaw:(car.Direction<0?180:0),(float)car.z));
                         roundaboutPreviews.Add(CaptureState(camera,request,target,image,"roundabout-motion-"+frame));
                         var currentPixels=image.GetPixels32();if(previousPixels!=null)
                         {

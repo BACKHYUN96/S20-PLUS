@@ -1,5 +1,9 @@
 # 작업 이력
 
+## 2026-10-11 — 0.32.0 컴파일 수정
+
+첫 실제 PC Validate38150762827에서 CS0136 CityPreview tracked 변수명이 기존 local과 충돌하여 실패했다. 회전교차로 촬영 변수만 junctionTracked로 바꾸고 이동 연속성 검사 ternary 괄호/공백을 명시했다. 아직 실제 경로/GPU/APK PASS 없음. 수정된 source128 입력 SHA로 자동검증 재개.
+
 ## 2026-10-11 — Unity 0.32.0 회전교차로 작업 시작
 
 사용자가 뒤쪽 회전교차로와 좌·우·직진·카메라 방향 복귀, 회전차 우선 양보, 차간 거리 및 출구 깜빡이, 낮은 중앙 화단을 승인했다. 기존24차량과30Hz clock을 재사용하고 뒤쪽 순환만 실제 경로로 대체한다. 버스 정류장/승하차, 기후와 숨김·pause를 유지한다. 시작296파일/index/status와host12SHA를 기록했다. 회전교차로 지형/순환/관련검사3소스+meta 및 기존 StreetModel/StreetSimulation/PrototypeDrive/LaneChanges/VehicleLighting/CityEnvironment/DistantScene/StarterScene/StarterConfig/CityPreview를 수정 대상으로 한다. 도로 주변 원경 건물의 바닥을 지면에 맞추고 통로에서 옮긴다. 0.31.0의산 적용은 사용자 확인. 0.32.0 구현·Unity/실제GPU/Android/서명 검증은 진행중이며 PASS를 주장하지 않는다.

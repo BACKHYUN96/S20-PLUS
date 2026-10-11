@@ -63,7 +63,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                         float step=Vector2.Distance(previous[i],RoundaboutTraffic.Position(c));
                         bool hiddenSpawn=oldHidden[i];bool bottomReset=!oldRound[i]&&!c.roundabout&&c.lane!=oldLane[i]&&c.z<StarterConfig.RouteStart+1;
                         if(hiddenSpawn){Need(Mathf.Abs(c.X)>70,"visible junction source teleport.");hiddenResets++;}
-                        else if(!bottomReset){maximumStep=Mathf.Max(maximumStep,step);Need(step<=c.distance+(oldRound[i]||c.roundabout?.001f:.055f),"visible route discontinuity: "+i+" step="+step+" travel="+c.distance);}
+                        else if(!bottomReset){maximumStep=Mathf.Max(maximumStep,step);Need(step<=c.distance+((oldRound[i]||c.roundabout) ? .001f : .055f),"visible route discontinuity: "+i+" step="+step+" travel="+c.distance);}
                         if(c.roundabout)
                         {
                             var p=RoundaboutTraffic.Position(c);var state=round.States[i];
