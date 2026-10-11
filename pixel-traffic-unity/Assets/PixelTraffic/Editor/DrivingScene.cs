@@ -29,6 +29,8 @@ namespace PixelTraffic.UnityPrototype.Editor
             Quad(p,uv,t,new Vector3(0,-.006f,0),new Vector3(length*.73f,-.006f,0),new Vector3(length*.73f,.006f,0),new Vector3(0,.006f,0),Vector3.forward);
             Quad(p,uv,t,new Vector3(length*.35f,-.012f,.002f),new Vector3(length,-.012f,.002f),new Vector3(length,.012f,.002f),new Vector3(length*.35f,.012f,.002f),Vector3.forward);
             Mesh mesh=Save(model+"Wiper",p,uv,t);Material trim=root.Find("Grille and Trim").GetComponent<Renderer>().sharedMaterial;
+            // All other trim keeps zero emission; only wiper property blocks get a dim grey floor.
+            trim.EnableKeyword("_EMISSION");trim.SetColor("_EmissionColor",Color.black);EditorUtility.SetDirty(trim);
             var pivots=new Transform[2];
             for(int i=0;i<2;i++)
             {var renderer=Part(plane,i==0?"Wiper Left":"Wiper Right",mesh,trim);

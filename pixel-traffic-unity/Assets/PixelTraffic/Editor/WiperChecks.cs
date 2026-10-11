@@ -24,13 +24,17 @@ namespace PixelTraffic.UnityPrototype.Editor
                         var blade=pivot.GetComponent<Renderer>();blade.GetPropertyBlock(tint);Color grey=tint.GetColor("_BaseColor");
                         Need(Mathf.Abs(grey.r-.52f)<.001f&&Mathf.Abs(grey.g-.55f)<.001f&&Mathf.Abs(grey.b-.58f)<.001f,"Wiper tint is not the requested contrasting grey.");
                         Need(blade.sharedMaterial==car.transform.Find("Grille and Trim").GetComponent<Renderer>().sharedMaterial,"Wiper creates a separate material instance.");
+                        Color floor=tint.GetColor("_EmissionColor");
+                        Need(blade.sharedMaterial.IsKeywordEnabled("_EMISSION")&&blade.sharedMaterial.GetColor("_EmissionColor").grayscale==0,"Shared trim has an unintended emission colour.");
+                        Need(Mathf.Abs(floor.r-.075f)+Mathf.Abs(floor.g-.08f)+Mathf.Abs(floor.b-.085f)<.001f,"Wiper night brightness floor missing.");
                         var glassMaterial=car.transform.Find("Sloped Windows").GetComponent<Renderer>().sharedMaterial;
                         var glassTexture=glassMaterial.GetTexture("_BaseMap") as Texture2D;
                         Need(glassTexture!=null&&(glassTexture.GetPixel(32,32)*glassMaterial.GetColor("_BaseColor")).grayscale<grey.grayscale-.15f,"Wiper grey blends with windshield texture.");
                         // Recreate a scene/player load where property blocks start empty.
                         blade.SetPropertyBlock(null);pair.SendMessage("Awake",SendMessageOptions.RequireReceiver);blade.GetPropertyBlock(tint);
                         Color restored=tint.GetColor("_BaseColor");
-                        Need(Mathf.Abs(restored.r-grey.r)+Mathf.Abs(restored.g-grey.g)+Mathf.Abs(restored.b-grey.b)<.003f,"Player load loses the nonserialized wiper tint.");greyBlades++;
+                        Need(Mathf.Abs(restored.r-grey.r)+Mathf.Abs(restored.g-grey.g)+Mathf.Abs(restored.b-grey.b)<.003f,"Player load loses the nonserialized wiper tint.");Color restoredFloor=tint.GetColor("_EmissionColor");
+                        Need(Mathf.Abs(restoredFloor.r-floor.r)+Mathf.Abs(restoredFloor.g-floor.g)+Mathf.Abs(restoredFloor.b-floor.b)<.003f,"Player load loses the wiper night brightness floor.");greyBlades++;
                     }
                     var s=pair.Screen;Need(s.Length==4,"Wiper windshield profile missing.");
                     var glass=car.transform.Find("Sloped Windows").GetComponent<MeshFilter>().sharedMesh;

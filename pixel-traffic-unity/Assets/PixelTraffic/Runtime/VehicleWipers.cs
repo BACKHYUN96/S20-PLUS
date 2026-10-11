@@ -25,6 +25,7 @@ namespace PixelTraffic.UnityPrototype
         {
             if(pivots==null)return;
             var tint=new MaterialPropertyBlock();tint.SetColor("_BaseColor",new Color(.52f,.55f,.58f));
+            tint.SetColor("_EmissionColor",new Color(.075f,.08f,.085f));
             foreach(var pivot in pivots)if(pivot!=null)pivot.GetComponent<Renderer>().SetPropertyBlock(tint);
         }
         public void Configure(Transform[] value,Vector3[] windshield,float seed)

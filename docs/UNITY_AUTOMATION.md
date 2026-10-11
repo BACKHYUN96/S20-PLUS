@@ -1,5 +1,11 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-11 — Unity 0.25.0 실제 야간 관찰 후 와이퍼 최소 밝기 보완
+
+- source3e4edf4 / Validate38120423048/job114413826655 실제 모든 검사 및140PNG PASS. 야간 전체 신호 구도를 직접 보고 방향별1개로 중복 해소 확인. Sedan/CityBus 야간 확대 관찰에서 baseColor 회색만으로는 야간 조명에서 여전히 어둡게 묻히는 점을 발견했다. 검사 실패가 아니라 실제 화면 관찰에 따른 보완이다.
+- 와이퍼48날에만 낮은 emission RGB(.075,.08,.085)을 PropertyBlock으로 적용한다. 기존 공유 VehicleTrim shader의 emission variant를 활성화하되 공유 emission색은 검정(0)으로 유지해 다른 trim은 빛나지 않는다. 새재질/Light/geometry/블룸효과 추가 없이 회색 최저 가독성을 준다. Awake 복원 검사에 emissionfloor/공유재질 검정도 포함한다.
+- 실제 Unity/GPU 재검증 후 밝기 관찰을 다시 해야 하며 APK는 아직 미빌드. 사용자 변경/index/status/host12 보존.
+
 ## 2026-10-11 — Unity 0.25.0 회색 와이퍼·중복 차량 신호등 구현 완료, 실제 검증 대기
 
 사용자는 폰0.24.0 와이퍼 동작 성공을 확인했고 어두운 유리와 겹치는 색 및 중복 차량 신호등을 지적했다. 새0.25.0/code26, Visibility-0.25.0.unity/Generated/Visibility0250에 생성한다.
