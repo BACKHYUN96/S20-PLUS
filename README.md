@@ -1,5 +1,7 @@
 # S20+
 
+Unity 라이브 배경화면 **0.31.0**: 산 능선과 표면 명암, 거리별 색·안개로 원경 깊이를 보강했습니다. 실제 Unity/GPU150장·Android/Lint·원본 서명·공개 다운로드 확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/1b3e4b269aea190adb5b5b9a5857119e7d4869cb/pixel-traffic-unity-prototype-0.31.0.apk) · [실제화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/1b3e4b269aea190adb5b5b9a5857119e7d4869cb/mountain-city-preview.png) · [설치명령](docs/UNITY_AUTOMATION.md). 폰 0.30.0 사용자 적용 확인, 0.31.0 확인 대기.
+
 Unity 라이브 배경화면 **0.30.0**: 가까운가로수15작은곡면잎군집과높이에따른햇빛/그늘명암. 실제Unity/GPU150장·Android/Lint·원본서명·공개다운로드확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/b4b3810c4665cebfb12166b3fe45d9c7a6974d8c/pixel-traffic-unity-prototype-0.30.0.apk) · [실제화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/b4b3810c4665cebfb12166b3fe45d9c7a6974d8c/foliage-city-preview.png) · [설치명령](docs/UNITY_AUTOMATION.md). 폰0.29.0 사용자성공확인,0.30.0확인대기.
 
 Unity 라이브 배경화면 **0.29.0**: 별도보행자전용2기둥을제거하고 양쪽차량·보행결합기둥각1개만유지했습니다. 실제Unity/GPU150장·Android/Lint·원본서명·공개다운로드확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/2910337728d7649aad511dd01655c008870ed2bb/pixel-traffic-unity-prototype-0.29.0.apk) · [실제화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/2910337728d7649aad511dd01655c008870ed2bb/signal-city-preview.png) · [설치명령](docs/UNITY_AUTOMATION.md). 폰0.29.0 확인대기.

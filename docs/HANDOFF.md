@@ -1,5 +1,47 @@
 # 새 채팅 인수인계 — 픽셀 트래픽 0.29.0
 
+## 2026-10-11 — Unity 0.31.0 산 능선·원경 깊이: 검증과 서명 APK 전달 완료
+
+사용자가 0.30.0의 폰 적용 성공을 확인하고 산·원경 그래픽 작업을 승인했다. 산 세 겹의 봉우리, 어깨와 능선 리듬을 달리하고, 가까운 산의 녹색과 먼 산의 푸른색·안개를 분리했다. 연속된 world-space 표면 명암과 비탈 패턴을 적용하고 거리가 멀수록 대비를 줄인다. 낮·노을·밤의 색과 비·안개·눈은 기존 기후 가중치에 따라 변한다.
+
+변경 소스는 DistantScene, DistantChecks, Distant.shader, StarterScene, StarterConfig 5개다. 버전 0.31.0/code32, 장면 MountainDepth-0.31.0.unity, 생성 경로 Generated/MountainDepth0310. 각 산의 64 strip/128 triangle과 원경 8 mesh·단일 runtime 재질을 유지했다. 카메라, 강·하늘 shader 분기, 도시 34동·다리, 가로수·건물·결합 신호등 2개, 기능, Android host와 workflow는 변경하지 않았다. 산 shader의 fragment 계산은 추가됐으며 폰 성능은 아직 측정하지 않았다.
+
+**실제 검증:** 최종 source `678d6055af58307b179dca4cbcec5f5f5d09b352` / [Validate](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38146868380). 산 3층/192 strip의 높이·깊이·seam 연속성·거리별 tone data·topology와 실제 shader _MountainDepth 기본값 검사 PASS. 기존 18 기후, 15/30/60/120Hz 전환, 낮→노을→밤·hidden clock·retarget와 차량·와이퍼·보행·승하차·반사·신호 검사를 통과했다. 기본 108592 triangles, 최대 119938 triangles/1609 renderers/47 materials로 기존 예산 110000/120000/2400/48 미만이다. 시작 시 296파일·실제 index/status·122입력·host12 SHA를 보존했다. 실패 기록: [].
+
+**실제 화면과 보완:** 초기 Validate38146222498는 통과했지만, 실제 GPU 화면을 확인하니 가까운 산의 표면 명암이 약했다. 연속된 비탈 패턴과 대비를 보강한 최종 source로 다시 검증했다. Unity6000.3.26f1/D3D11의 최종 150 PNG를 source SHA·bytes·SHA·ZIP CRC로 확인했다. 전체 구도와 산 day/sunset/night/fog/storm 6장을 직접 관찰하고 0.30.0 전체/day 2장과 비교했다. 기존 캡처 코드를 재사용했다. 실제 Editor 화면이며 폰·FPS 측정이나 AI 시안이 아니다. 시안과 같은 완성 수준을 달성했다고 주장하지 않는다.
+
+**Android:** `unity-apk-0.31.0-build1` / [BuildApk](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38147479517). BuildPlayer 오류0/경고0, launcher Lint 오류0/경고8. APK를 SDK apksigner/aapt/ZIP CRC로 검사해 0.31.0/code32/min29/target36/ARM64 IL2CPP, wallpaper service, private provider, settings launcher와 비활성 Unity Activity를 확인했다. 원본 v2 서명 인증서 SHA256은 a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6이다. 변경 없는 host12 SHA에 대해 hostLint38008378207의 오류0/경고10 결과를 재사용했다.
+
+**전달:** [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/1b3e4b269aea190adb5b5b9a5857119e7d4869cb/pixel-traffic-unity-prototype-0.31.0.apk) · [전체 화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/1b3e4b269aea190adb5b5b9a5857119e7d4869cb/mountain-city-preview.png) · [산 확대](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/1b3e4b269aea190adb5b5b9a5857119e7d4869cb/mountain-day-preview.png) · [노을](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/1b3e4b269aea190adb5b5b9a5857119e7d4869cb/mountain-sunset-preview.png) · [밤](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/1b3e4b269aea190adb5b5b9a5857119e7d4869cb/mountain-night-preview.png) · [안개](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/1b3e4b269aea190adb5b5b9a5857119e7d4869cb/mountain-fog-preview.png). APK 31227127 bytes/SHA256 `9ac47dc95f54d8b64a29367593a7713bdec8187106d3e8535b16a4cbb70e51d8`. 다운로드 branch `downloads/unity-0.31.0`의 8파일은 로그인 없는 HTTP200/no redirect/full bytes/SHA 확인을 통과했다. main에는 APK나 새 workflow를 추가하지 않았다.
+
+USB 폰 1대를 연결하고 디버깅을 허용한 뒤 아래 Windows PowerShell 블록 전체를 실행한다. 사용자 지정 C:\Users\김백현\Desktop\AI 폴더로 다운로드하고 SHA를 검증한 뒤 기존 앱을 업데이트한다. 클라우드에서 사용자 폰에 설치했다고 주장하지 않는다.
+```powershell
+& {
+    $ErrorActionPreference = "Stop"
+    $apkFolder = "C:\Users\김백현\Desktop\AI"
+    $apkPath = Join-Path $apkFolder "pixel-traffic-unity-prototype-0.31.0.apk"
+    $apkUrl = "https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/1b3e4b269aea190adb5b5b9a5857119e7d4869cb/pixel-traffic-unity-prototype-0.31.0.apk"
+    $trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+    if (-not (Test-Path -LiteralPath $trafficAdb)) { throw "Unity의 adb.exe를 찾을 수 없습니다." }
+    & $trafficAdb start-server
+    if ($LASTEXITCODE -ne 0) { throw "ADB 시작 실패" }
+    $deviceLines = & $trafficAdb devices
+    if ($LASTEXITCODE -ne 0) { throw "폰 연결 확인 실패" }
+    $connectedDevices = @($deviceLines | Where-Object { $_ -match '^\S+\s+device$' })
+    if ($connectedDevices.Count -ne 1) { throw "폰 1대를 USB로 연결하고 USB 디버깅을 허용해주세요." }
+    New-Item -ItemType Directory -Force -Path $apkFolder | Out-Null
+    Write-Host "0.31.0 APK 다운로드 중..."
+    Invoke-WebRequest -UseBasicParsing -Uri $apkUrl -OutFile $apkPath
+    if ((Get-FileHash -LiteralPath $apkPath -Algorithm SHA256).Hash -ne "9ac47dc95f54d8b64a29367593a7713bdec8187106d3e8535b16a4cbb70e51d8") { throw "파일 검증 실패. 다시 실행해주세요." }
+    Write-Host "폰에 앱 설치 중..."
+    & $trafficAdb install -r $apkPath
+    if ($LASTEXITCODE -ne 0) { throw "앱 설치 실패. 위 오류를 확인해주세요." }
+    Write-Host "완료! 0.31.0 설치 성공." -ForegroundColor Green
+}
+```
+
+0.30.0은 사용자가 폰 적용 성공을 확인했다. 0.31.0의 폰 외형·FPS·발열·장시간 동작은 사용자 확인 대기다. PC Drive 설정 보류는 유지한다. 다음 작업은 사용자 확인과 요청에 따른다.
+
 ## 2026-10-11 — Unity 0.31.0 실제 산 화면 확인 후 비탈 명암 보완
 
 초기 source e4f87edc2525267c658d5223c164de4968bb50a4 / Validate38146222498 PASS, 실제150PNG 전송SHA/CRC 확인. 전체와 산 day/sunset/night/fog/storm 6장을 직접 확인, 이전0.30.0 전체/day 2장 비교: 층과 색은 분리됐지만 가까운 산표면 명암이 약함. 같은 world-space relief와 거리 감쇠에 연속비탈fold를 더하고 contrast 강화. 메시/재질/renderer/Light 증가 없음. 변경후 Unity 검증/실제GPU화면/서명APK는 진행중, 폰미검증.
