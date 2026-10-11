@@ -1,5 +1,29 @@
 # 작업 이력
 
+## 2026-10-11 — Unity0.23.0 신호등 기둥을 가로등과 같은 차도 쪽 보도 위치로 이동: 검증·서명 APK 전달 완료
+
+사용자는 신호등 기둥이 기존 가로등과 같은 차도 앞쪽 보도 위치에서 뻗어나오도록 요청했다. **0.23.0/code24**, `CurbSignals-0.23.0.unity` / `Generated/CurbSignals0230`. 신호등4기둥의 좌우 위치를 x±10.08m→±7.1m로 옮겨 가로등과 같은 보도 라인으로 맞췄다. 횡단보도 옆 z7/13m와5.8m 기둥 높이는 유지한다. 가로대는6.7m→3.72m로 줄여 차량 신호등은 원래 차선 위 x±3.38m/y5.61m에 남고, 보행자 신호등은 옮겨진 같은 기둥에 붙는다.
+
+가로등·신호등 생성과 보행 경로는 공유 `CurbFurnitureX` 위치를 사용한다. 기존 기둥 위치는 열고 새 기둥 위치를 장애물로 등록했다. 실제 생성 장면에서 가로등과 신호등의 좌우/바닥 높이 일치, 차도 침범 없음, 가로대 끝 연결, 차량 신호 위치와 보행 신호 부착, 새 위치의 보행 경로 차단/기존 위치 개방을 검사한다. 보행자 확대 카메라를 새 위치에 맞추고, 보도·가로등·신호등을 함께 보는 실제 확대 촬영1장을 추가했다. 신호 주기/차량/승하차/날씨/우비 제어는 바꾸지 않았다.
+
+**범위·보존:** StreetScene,StreetChecks,CityEnvironment,CityPreview,StarterScene,SidewalkRoutes,StarterConfig,StreetModel의8소스. 새 코드·재질·renderer는 추가하지 않았다. 시작293파일·실제 index/status와118빌드입력·host12SHA를 기록하고 무관한 사용자 변경을 보존했다. 최대 강우/승객 장면 119154triangles/1589renderers/47materials, 기존120000/2400/48제한 미만이다.
+
+**실패·보정:** 첫 Validate38115121451은 기둥 배치 검사를 통과했으나100명600초 검사에서94번의 첫 횡단 실패를 검출했다. 첫 횡단 목표±24m는 진입 범위±18m 밖을 고를 수 있어 외측 나무 통로에서 retry/retreat 경로를 반복할 수 있었다. 첫 횡단 목표를 횡단보도±12m/보도 안쪽3열로 선택하도록 수정하고 검사 조건을 유지한 채 재검증했다. 신호등 기둥 자체 충돌로 단정한 것은 아니다.
+
+**실제 검증:** source `4f457e38998fc68c0a84f614027c985ed1e0dcd6` / [Validate 38115426333](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38115426333). 기둥4곳·신호6상태,4/32/100명 최대600초 횡단·발 간격·장애물·차량 안전·pause/frame clock, 기후별 인원 복구810초, 우비25명/우산75명과 승하차/출발 검사 PASS. 횡단보도±18m 평균 인원 지표 [2.1500000953674316, 14.981111526489258, 21.314443588256836], 최소 발 간격 0.40000003576278687m. 기존18기후/180전환·96CCT·144부채꼴·젖은 노면16실제GPU검사도 PASS. 총109장의 실제 Unity6000.3.26f1/D3D11 렌더를 받았고 제품 구도/기둥 배치 확대/보행 신호 확대를 직접 관찰했다. 기둥 배치 확대는 전체 제품 장면을 다른 카메라로 촬영했고 보행 신호 확대는 주변 가림을 제거한 실제 rig 촬영이다. 폰 스크린샷이나 FPS 측정은 아니다.
+
+**Android:** tag `unity-apk-0.23.0-build1` / [BuildApk 38115883636](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38115883636). BuildPlayer 오류0/경고0, launcherLint 오류0/경고8. 내려받은 실제 APK의0.23.0/code24/min29/target36/ARM64IL2CPP와 wallpaper service/private provider/settings launcher, 원본 v2인증서 `a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6`를 SDK로 확인했다. host12입력이 바뀌지 않아 기존 hostLint38008378207(오류0/경고10)을 재사용했다.
+
+**전달:** [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/63b9b3fa94e886c7a290f60d9508fb744a7201fd/pixel-traffic-unity-prototype-0.23.0.apk) · [제품 구도](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/63b9b3fa94e886c7a290f60d9508fb744a7201fd/curb-city-preview.png) · [가로등·기둥 배치](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/63b9b3fa94e886c7a290f60d9508fb744a7201fd/curb-signal-preview.png) · [보행 신호](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/63b9b3fa94e886c7a290f60d9508fb744a7201fd/korean-pedestrian-preview.png). APK 31148335bytes/SHA256 `dd04aebc632b9f36e10cf89338673e48847a9b358073e3a8760b6e0be4d04146`. root다운로드 branch `downloads/unity-0.23.0`의4파일을 로그인 없는 HTTP200/no redirect/fullbytes/SHA로 확인했다. main에는 APK binary나 새 workflow를 추가하지 않았다. 문서 전용 최종 게시에서118빌드입력이 보존되므로 통과한 검사를 반복하지 않는다.
+
+PC 설치(이 폴더로 다운로드한 경우):
+```powershell
+$trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $trafficAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.23.0.apk"
+```
+
+미확인: 실제 폰0.23.0 기둥 외형/보행 경로·FPS/발열/장시간 lifecycle. 사용자0.21.0 적용성공은 확인했지만0.22.0 적용 성공은 명시적으로 확인되지 않았다. 와이퍼는 별도 다음 기능 패치로 남아 있으며, 이후 새 기능보다 시안 그래픽 개선에 집중한다. Drive PC설정은 사용자 보류를 유지한다.
+
 ## 2026-10-11 — Unity0.23.0 신호등 기둥 배치 후 보행 경로 검사 실패 수정: 재검증 준비
 
 첫 source0ceceb0/Validate38115121451에서 실제 기둥4곳 배치/연결/장애물 검사를 통과했으나100명600초 시뮬레이션은94번의 첫 횡단 실패를 검출했다. 나무 옆 z34.45m에서 횡단을 시도하지 못하고 있었다. 기존 처음 횡단 목표 범위±24m는 진입 예약 범위±18m 바깥을 고를 수 있고, 외측 통로와 retry/retreat 경로로 계속 돌아다닐 수 있었다. 첫 횡단 대기시간이 끝났을 때는 목표를 횡단보도±12m/보도 안쪽3열로 선택하도록 보정했다. 기둥 이동 이후 달라진 보행 흐름에서 검출된 문제이며 원인이 기둥 자체 충돌이라는 뜻은 아니다. 순간이동/인원 제거/검사 완화 없이 실제 경로만 수정했다.
