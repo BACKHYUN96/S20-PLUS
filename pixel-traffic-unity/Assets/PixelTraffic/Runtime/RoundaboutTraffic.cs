@@ -153,8 +153,8 @@ namespace PixelTraffic.UnityPrototype
             {
                 if(!other.active||!other.roundabout||other.roundHidden)continue;
                 float angle=other.roundYaw*Mathf.Deg2Rad;
-                float wide=other.width*Mathf.Abs(Mathf.Cos(angle))+other.length*Mathf.Abs(Mathf.Sin(angle));
-                float length=other.length*Mathf.Abs(Mathf.Cos(angle))+other.width*Mathf.Abs(Mathf.Sin(angle));
+                float wide=other.width*Mathf.Abs(Mathf.Cos(angle))+other.SafetyLength*Mathf.Abs(Mathf.Sin(angle));
+                float length=other.SafetyLength*Mathf.Abs(Mathf.Cos(angle))+other.width*Mathf.Abs(Mathf.Sin(angle));
                 float ahead=c.Direction*((float)other.z-(float)c.z);
                 if(ahead>=0&&Mathf.Abs(c.X-other.X)<(c.width+wide)*.5f+.05f)room=Mathf.Min(room,ahead-(c.SafetyLength+length)*.5f-1.8f);
             }
