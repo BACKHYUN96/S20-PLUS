@@ -1,5 +1,25 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-11 — Unity 0.21.0 빗길 반사: 실제 GPU 검증·서명 APK 전달 완료
+
+사용자가 0.20.0 적용 성공을 확인하고 빗길·가로등 반사 개선을 승인했다. **0.21.0/code22**, `WetReflections-0.21.0.unity` / `Generated/WetReflections0210`. 가로등·후미등 반사의 규칙적인 sine 띠를 world 좌표에 고정한 부드러운 noise로 교체했다. 차량 전조등의 젖은 반사도 같은 노면 패턴을 사용하며, 비가 있을 때만 작은 움직임을 섞는다. 미세 패턴은 화면 거리/해상도에 따라 derivative로 필터링한다. 반사 gain은 wet*(.28+.72*wet)로 조절하고 최대 강도를 낮춰 젖은 도로에서도 차선·횡단보도의 과한 번짐을 줄인다. 기존 날씨의 4초 blend를 사용하며 별도 물리적인 물 고임/장기 건조 모델은 추가하지 않는다.
+
+- **범위·보존:** RoadOverlay.shader, RoadSurface, StarterConfig, GroundScene, CityPreview, StarterScene의 6파일이며 신규 파일은 없다. 시작 상태 293파일·실제 Git index·전체 미추적 상태와 118 빌드/촬영 입력을 기록하고 관련 없는 사용자 변경을 보존했다. Native Android·host·workflow 12 입력 SHA는 그대로다. 기존 버스/트럭 3200K·일반 승용차 흰색·스포츠카7500K, 부채꼴 기하·가로등 원색·브레이크/깜빡이/비상등·제품 카메라를 유지한다.
+- **예산:** 새로운 mesh/material/renderer/실시간 Light/자산을 추가하지 않는다. 최대 우산·정류장 스트레스 장면 119424 triangles / 1584 renderers / 47 materials로 기존 제한 이내다. Shader 연산 비용과 실제 폰 FPS·발열은 측정하지 않았다.
+- **Unity 검사:** source `22ccfdffb06e5ced3fdf92ec5b499e0887cb1bc9` / [Validate 38106654811](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38106654811). 실제 날씨/시간 상태 18개와 전환 160샘플의 wet/lamp/rain 전달·연속성, 숨김 clock/rain 정지와 disabled 차량 ghost 제거를 확인했다. 기존 차종별 색상/밝기96·부채꼴144·젖은 반사24대, 600초 교통 안전, 18기후·180전환, 승하차/비상등/안전 출발과 접지 검사도 PASS다.
+- **실제 GPU 검사:** Unity 6000.3.26f1 / Direct3D11에서 실제 RoadOverlay를 Editor 전용 작은 RenderTexture로 16회 렌더링해 1048576픽셀을 검사했다. 건조/불꺼짐/눈 상태에서 반사 제거, 낮은 젖음 대비 강도 증가, 비 없는 wet 표면 정지와 비가 있을 때 작은 움직임 및 유한값/밝기 상한을 확인했다. 최대 linear 밝기 0.138432, 비 없는 최대 차이 0.000000, 2초 rain 평균 차이 0.00004756. 임시 probe는 finally에서 제거하고 제품 장면에 저장하지 않는다.
+- **실제 화면:** 기존94 PNG와 새 8개 빗길/약한비/폭우/안개/낮/건조 전환 비교, 총102 PNG. 전체 제품 야간과 가까운 젖은 도로·약한비·2초/6초 맑아지는 전환을 직접 관찰해 반사의 규칙적인 띠 감소·차선 가독성을 확인했다. core와 PNG 3묶음의 bytes/SHA/CRC/source를 확인했다. Editor 사진이며 실제 폰 screenshot/FPS 측정은 아니다.
+- **Android·서명:** 같은 source tag `unity-apk-0.21.0-build1` / [BuildApk 38107158675](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38107158675). BuildPlayer 오류0/경고0, launcher Lint 오류0/경고8. 실제 APK version0.21.0/code22/min29/target36/ARM64 IL2CPP, wallpaper service·private provider·settings launcher와 원본 v2 인증서 `a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6`를 확인했다. 변하지 않은12 host 입력은 기존 host Lint38008378207(오류0/경고10)을 재사용했다.
+- **전달:** [APK 직접 다운로드](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/4b89e1992ea3150386aa6285ba586ddd9d616aa8/pixel-traffic-unity-prototype-0.21.0.apk) · [전체 화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/4b89e1992ea3150386aa6285ba586ddd9d616aa8/wet-city-preview.png) · [가까운 빗길 반사](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/4b89e1992ea3150386aa6285ba586ddd9d616aa8/wet-reflections-preview.png) · [약한비 반사](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/4b89e1992ea3150386aa6285ba586ddd9d616aa8/wet-drizzle-preview.png). APK 31128311 bytes / SHA256 `95f737f52d85efc6db61fa8867f72eb9c1d4364b06d80b706dfa7b70e677d90a`. 일회성 `downloads/unity-0.21.0`의 APK·실제 사진을 로그인 없는 HTTP200/redirect 없음/전체 bytes/SHA로 확인했다. main에는 APK binary를 추가하지 않았다.
+
+PC 설치(아래 폴더로 다운로드한 경우):
+```powershell
+$trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $trafficAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.21.0.apk"
+```
+
+미확인: 실제 폰0.21.0 외형·FPS·발열·장시간 lifecycle. 사용자는0.20.0 적용 성공을 확인했다. APK 설치는 사용자 PC/폰에서 수행한다. Drive 설정은 기존 보류 상태다. 최종 문서 전용 commit의 118 입력 SHA가 같으므로 통과한 검사를 반복하지 않는다.
+
 ## 2026-10-11 — Unity 0.21.0 빗길 반사 다듬기: 구현 완료·검증 대기
 
 사용자가 0.20.0 적용 성공을 확인했고, 다음 패치로 가로등·차량 반사의 규칙적인 줄무늬 개선과 노면 젖음에 맞춘 반사 강도 조절을 승인했다. 0.21.0/code22, WetReflections-0.21.0.unity / Generated/WetReflections0210. RoadOverlay에서 반복 sine 띠를 world 좌표의 부드러운 noise로 교체했다. 노면 패턴은 고정하고 비가 내릴 때만 작은 움직임을 섞으며, 거리별 미세 패턴을 derivative로 필터링한다. 반사 밝기는 wet*(.28+.72*wet)로 젖음에 따라 조절하고 최대 강도를 낮춰 차선/횡단보도의 과한 번짐을 줄인다. 기존 차종별 CCT·후미등색, 가로등 원색, 부채꼴 기하와 시간/날씨 전환은 유지한다.
