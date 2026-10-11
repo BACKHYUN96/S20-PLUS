@@ -1,5 +1,12 @@
 # Pixel Traffic — Unity 전환 준비
 
+## 2026-10-11 — Unity 0.25.0 야간 최소밝기 재질 검사 실패 보정
+
+- sourcef1a211f/Validate38120927994/job114415322309는 C# 및 기존 검사를 진행한 뒤 WiperChecks의 Shared trim has an unintended emission colour 조건에서 실패했다. 기존 trim에 emission keyword만 켜는 접근은 실제 초기화·검증 경로에서 요구조건을 만족하지 않았다. 이 소스의 GPU/APK 통과는 주장하지 않는다.
+- 와이퍼는 기존 Headlamp 공유재질로 전환해 CityClimate가 이미 사용하는 emission 초기화 경로를 재사용한다. 재질 수는 증가하지 않으며 와이퍼만 PropertyBlock 회색/낮은 emission(.075,.08,.085), metallic.05/smoothness.2를 적용한다. 그릴 등 trim과 기존 헤드라이트 색/밝기는 변경하지 않는다. 실제 Front Lamps와 동일한 재질 참조와 emission variant를 검사한다.
+- Editor에서 reserved Awake를 SendMessage로 부르면 ShouldRunBehaviour assertion이 기록돼 RestoreBladeTint 공개초기화경로를 Awake/ResetState에서 호출하고 검사에서도 같은 경로를 직접 호출하도록 바꿨다. Awake를 직접 실행한 것처럼 보고하지 않는다. 원래0.24와이퍼 clock/48날 geometry와2차량신호/4보행신호는 유지한다.
+- 수정8소스/122입력/host12/index/status 보존. 실제 Unity/GPU 재검증 및 APK 빌드 대기.
+
 ## 2026-10-11 — Unity 0.25.0 실제 야간 관찰 후 와이퍼 최소 밝기 보완
 
 - source3e4edf4 / Validate38120423048/job114413826655 실제 모든 검사 및140PNG PASS. 야간 전체 신호 구도를 직접 보고 방향별1개로 중복 해소 확인. Sedan/CityBus 야간 확대 관찰에서 baseColor 회색만으로는 야간 조명에서 여전히 어둡게 묻히는 점을 발견했다. 검사 실패가 아니라 실제 화면 관찰에 따른 보완이다.

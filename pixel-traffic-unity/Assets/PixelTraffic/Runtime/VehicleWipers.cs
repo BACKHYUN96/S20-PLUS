@@ -20,18 +20,19 @@ namespace PixelTraffic.UnityPrototype
         public float Angle {get;private set;}
         public int CompletedSweeps {get;private set;}
         // Property blocks are not serialized in the scene; restore the tint on player load.
-        private void Awake()=>ApplyBladeTint();
-        private void ApplyBladeTint()
+        private void Awake()=>RestoreBladeTint();
+        public void RestoreBladeTint()
         {
             if(pivots==null)return;
             var tint=new MaterialPropertyBlock();tint.SetColor("_BaseColor",new Color(.52f,.55f,.58f));
             tint.SetColor("_EmissionColor",new Color(.075f,.08f,.085f));
+            tint.SetFloat("_Metallic",.05f);tint.SetFloat("_Smoothness",.2f);
             foreach(var pivot in pivots)if(pivot!=null)pivot.GetComponent<Renderer>().SetPropertyBlock(tint);
         }
         public void Configure(Transform[] value,Vector3[] windshield,float seed)
         {pivots=value;screen=windshield;startDelay=Mathf.Clamp01(seed)*.7f;ResetState();}
         public void ResetState()
-        {requested=moving=finishing=false;first=true;sweepTime=waitTime=0;lastRain=0;CompletedSweeps=0;ApplyBladeTint();Pose(ParkAngle);}
+        {requested=moving=finishing=false;first=true;sweepTime=waitTime=0;lastRain=0;CompletedSweeps=0;RestoreBladeTint();Pose(ParkAngle);}
         private void Pose(float angle)
         {Angle=angle;foreach(var pivot in pivots)pivot.localRotation=Quaternion.AngleAxis(angle,Vector3.forward);}
         private void StartSweep(float rain)
