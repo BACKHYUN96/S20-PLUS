@@ -166,8 +166,11 @@ namespace PixelTraffic.UnityPrototype
             int row=Mathf.Clamp(Mathf.RoundToInt((p.position.y+28)/.45f)+(Random(p)<.5f?-1:1)*(25+(int)(Random(p)*55)),1,398);
             if(p.cooldown>0&&(p.crossings>0||p.retrySeconds>0)&&Mathf.Abs(p.position.y-StarterConfig.CrossingZ)<24)
                 row=Mathf.Clamp(Mathf.RoundToInt((p.position.y+28)/.45f)+(p.position.y<StarterConfig.CrossingZ?-1:1)*(55+(int)(Random(p)*30)),1,398);
-            if(p.cooldown<=0)row=Mathf.Clamp(Mathf.RoundToInt((StarterConfig.CrossingZ-24+Random(p)*48+28)/.45f),1,398);
-            int columns=SidewalkRoutes.Columns;int col=(int)(Random(p)*columns),node=row*columns+col;
+            // First-time crossing seekers aim inside the admission zone and toward the curb.
+            // An outer target beyond that zone can keep retry/retreat traffic circling a tree bed.
+            float seekingRange=p.crossings==0?12:24;
+            if(p.cooldown<=0)row=Mathf.Clamp(Mathf.RoundToInt((StarterConfig.CrossingZ-seekingRange+Random(p)*seekingRange*2+28)/.45f),1,398);
+            int columns=SidewalkRoutes.Columns;int col=(int)(Random(p)*(p.crossings==0&&p.cooldown<=0?3:columns)),node=row*columns+col;
             for(int trial=0;trial<columns&&!Routes.IsOpen(node,p.side);trial++)node=row*columns+(col+trial+1)%columns;
             if(!Routes.IsOpen(node,p.side))node=row*columns;
             Path(p,Routes.Node(node,p.side));
