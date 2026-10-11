@@ -11,6 +11,9 @@ namespace PixelTraffic.UnityPrototype.Editor
         internal static Report Validate()
         {
             var controller=UnityEngine.Object.FindFirstObjectByType<StreetSimulation>();Need(controller!=null,"Street controller missing.");
+            int signalStates;
+            {var all=UnityEngine.Object.FindObjectsByType<PrototypeDrive>(FindObjectsSortMode.None);var before=new float[all.Length];for(int i=0;i<all.Length;i++)before[i]=all[i].transform.position.z;
+             try{signalStates=CheckSignalRigs(controller);}finally{for(int i=0;i<all.Length;i++)all[i].ResetPosition(before[i]);controller.ResetModel();controller.ApplyViews();}}
             var drives=UnityEngine.Object.FindObjectsByType<PrototypeDrive>(FindObjectsSortMode.None);Array.Sort(drives,(a,b)=>string.CompareOrdinal(a.name,b.name));
             var definitions=new StreetModel.Car[drives.Length];var poses=new Vector3[drives.Length];var wheels=new Quaternion[drives.Length][];
             for(int i=0;i<drives.Length;i++)
@@ -23,10 +26,10 @@ namespace PixelTraffic.UnityPrototype.Editor
             {
                 var cars=new StreetModel.Car[definitions.Length];for(int i=0;i<cars.Length;i++){var c=definitions[i];cars[i]=new StreetModel.Car {lane=c.lane,z=c.z,cruise=c.cruise,speed=c.speed,length=c.length,width=c.width,height=c.height};}return new StreetModel(count,cars);
             }
-            float minimumPeople=float.MaxValue,minimumCars=float.MaxValue;int completed=0,cycles=0;var populations=new List<int>();
+            float minimumPeople=float.MaxValue,minimumCars=float.MaxValue;int completed=0,cycles=0;var populations=new List<int>();var crowdMeans=new List<float>();
             foreach(int count in new[]{4,32,100})
             {
-                var model=Create(count);int ticks=count==4?6000:18000;
+                var model=Create(count);int ticks=count==4?6000:18000;float crowdTotal=0;int crowdSamples=0;
                 int[] crossingCounts=new int[100];float[] firstDistances=new float[100];Vector2[] previous=new Vector2[100];StreetModel.Activity[] activities=new StreetModel.Activity[100];
                 for(int step=0;step<ticks;step++)
                 {
@@ -50,6 +53,8 @@ namespace PixelTraffic.UnityPrototype.Editor
                     }
                     if(step%10==0)
                     {
+                        if(step>=ticks/2)
+                        {int near=0;foreach(var person in model.People)if(person.active&&Mathf.Abs(person.position.y-StarterConfig.CrossingZ)<18)near++;crowdTotal+=near;crowdSamples++;}
                         int waiting=0;foreach(var p in model.People)if(p.active&&(p.activity==StreetModel.Activity.Wait||p.activity==StreetModel.Activity.Approach))waiting++;
                         Need(waiting<=12,"Crosswalk queue attracts the whole population.");
                         for(int i=0;i<model.Cars.Length;i++)for(int j=i+1;j<model.Cars.Length;j++)if(LaneChanges.SharesLane(model.Cars[i],model.Cars[j]))
@@ -67,6 +72,8 @@ namespace PixelTraffic.UnityPrototype.Editor
                     crossingCounts[i]=p.crossings;completed+=p.crossings;
                 }
                 Need(model.Cycles>=2,"Signal never returns to vehicle green.");cycles+=model.Cycles;populations.Add(count);
+                float crowdMean=crowdTotal/crowdSamples;crowdMeans.Add(crowdMean);
+                if(count>=32)Need(crowdMean<count*.8f,"Most pedestrians remain concentrated at the crossing: "+count+" average="+crowdMean);
                 // A reduction preserves road occupants until they reach a sidewalk.
                 model.SetPopulation(4);for(int n=0;n<1800;n++)model.Tick();
                 int active=0;foreach(var p in model.People)if(p.active)active++;
@@ -99,13 +106,38 @@ namespace PixelTraffic.UnityPrototype.Editor
                     Need(view.root.GetComponent<SkinnedMeshRenderer>().sharedMesh!=null&&view.limbs.Length==4,"Human rig incomplete.");
                     Vector3 foot=view.root.position;foreach(var bed in treeBeds)Need(foot.x<bed.min.x-.15f||foot.x>bed.max.x+.15f||foot.z<bed.min.z-.15f||foot.z>bed.max.z+.15f,"Actual tree bed differs from foot navigation.");
                 }
-                return new Report {result="PASS: actual runtime signal/following/crossing/avoidance,4/32/100 populations,600sec max,clock/pause and actual100-rig budget; device test pending",populations=populations.ToArray(),simulatedSeconds=new[]{200,600,600},minimumFootDistance=minimumPeople,minimumBumperGap=minimumCars,crossings=completed,signalCycles=cycles,maxPopulationBudget=budget};
+                return new Report {result="PASS: Korean signal geometry and actual lamps, distributed 4/32/100 walkers,600sec crossing/following/safety,clock/pause and actual100-rig budget; device test pending",koreanSignalStates=signalStates,crossingBandMean=crowdMeans.ToArray(),populations=populations.ToArray(),simulatedSeconds=new[]{200,600,600},minimumFootDistance=minimumPeople,minimumBumperGap=minimumCars,crossings=completed,signalCycles=cycles,maxPopulationBudget=budget};
             }
             finally
             {
                 controller.SetPaused(false);for(int i=0;i<drives.Length;i++){drives[i].ResetPosition(poses[i].z);for(int n=0;n<4;n++)drives[i].Wheels[n].localRotation=wheels[i][n];}
                 controller.ResetModel();controller.ApplyViews();
             }
+        }
+        private static int CheckSignalRigs(StreetSimulation controller)
+        {
+            var serialized=new SerializedObject(controller);var cars=serialized.FindProperty("vehicleLights");var people=serialized.FindProperty("walkLights");
+            Need(cars.arraySize==16&&people.arraySize==8,"Korean signal lamp ordering/count differs.");
+            for(int i=0;i<cars.arraySize;i++)
+            {
+                var r=(Renderer)cars.GetArrayElementAtIndex(i).objectReferenceValue;var parent=r.transform.parent;
+                Need(parent.name=="Vehicle Signal"&&parent.Find("Signal Housing").localScale.x>parent.Find("Signal Housing").localScale.y*3,"Vehicle housing is not horizontal.");
+                Need(r.GetComponent<MeshFilter>().sharedMesh.triangles.Length==36&&r.bounds.center.y>5,"Vehicle lens is not round or overhead.");
+            }
+            for(int i=0;i<people.arraySize;i++)
+            {var r=(Renderer)people.GetArrayElementAtIndex(i).objectReferenceValue;Need(r.GetComponent<MeshFilter>().sharedMesh.name==(i%2==0?"KoreanStopIcon":"KoreanWalkIcon"),"Pedestrian lamp lacks standing/walking icon.");}
+            var seen=new System.Collections.Generic.HashSet<StreetModel.Phase>();var block=new MaterialPropertyBlock();
+            controller.ResetModel();
+            for(int tick=0;tick<3600;tick++)
+            {
+                controller.Advance(1d/30);if(!seen.Add(controller.Model.Signal))continue;controller.ApplyViews();
+                bool green=controller.Model.Signal==StreetModel.Phase.VehicleGreen,amber=controller.Model.Signal==StreetModel.Phase.VehicleYellow;
+                for(int i=0;i<cars.arraySize;i++)
+                {int n=i%4;bool on=n==0?!green&&!amber:n==1?amber:n==3&&green;((Renderer)cars.GetArrayElementAtIndex(i).objectReferenceValue).GetPropertyBlock(block);Need((block.GetColor("_BaseColor").maxColorComponent>.5f)==on,"Korean vehicle lamp disagrees with actual signal.");}
+                for(int i=0;i<people.arraySize;i++)
+                {((Renderer)people.GetArrayElementAtIndex(i).objectReferenceValue).GetPropertyBlock(block);Need((block.GetColor("_BaseColor").maxColorComponent>.5f)==(i%2==1?controller.Model.CanEnter:!controller.Model.CanEnter),"Pedestrian icon disagrees with actual admission.");}
+            }
+            controller.ResetModel();controller.ApplyViews();Need(seen.Count==6,"Signal cycle states incomplete.");return seen.Count;
         }
         private static string CrossingSummary(StreetModel model)
         {
@@ -122,7 +154,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         private static void Need(bool value,string message){if(!value)throw new InvalidOperationException(message);}
         [Serializable] internal sealed class Report
         {
-            public string result;public int[] populations,simulatedSeconds;public float minimumFootDistance,minimumBumperGap;public int crossings,signalCycles;
+            public string result;public int[] populations,simulatedSeconds;public float[] crossingBandMean;public float minimumFootDistance,minimumBumperGap;public int crossings,signalCycles,koreanSignalStates;
             public CityEnvironment.Report maxPopulationBudget;
         }
     }

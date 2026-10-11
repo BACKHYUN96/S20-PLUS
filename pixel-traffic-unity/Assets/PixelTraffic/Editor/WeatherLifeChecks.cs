@@ -75,24 +75,27 @@ namespace PixelTraffic.UnityPrototype.Editor
             foreach(var car in street.Model.Cars)car.speed=0;
             street.Spray.Advance(.1f,street.Model,1);Need(street.Spray.EmittingVehicles==0&&!GameObject.Find("Tyre Spray Pool").GetComponent<Renderer>().enabled,"Stopped cars still spray.");
             street.ResetModel();street.Model.SetWeather(1,1,1,1);street.Model.SetPopulation(100);street.ApplyViews();int umbrellas=0;
-            foreach(var walker in street.Walkers)
+            int coats=0;foreach(var walker in street.Walkers)
             {
-                Need(walker.umbrella!=null&&walker.umbrella.gameObject.activeInHierarchy,"Rain walker lacks umbrella.");
+                Need(walker.body!=null&&walker.coatMesh!=null&&walker.dryMesh!=null,"Rain outfit rig missing.");
+                if(walker.wearsCoat){Need(walker.body.sharedMesh==walker.coatMesh&&!walker.umbrella.gameObject.activeSelf,"Raincoat wearer also holds umbrella or lacks coat.");coats++;continue;}
+                Need(walker.body.sharedMesh==walker.dryMesh&&walker.umbrella!=null&&walker.umbrella.gameObject.activeInHierarchy,"Rain walker lacks umbrella.");
                 var tint=new MaterialPropertyBlock();walker.umbrella.GetComponent<Renderer>().GetPropertyBlock(tint);
                 Need(tint.GetColor("_BaseColor").maxColorComponent>0,"Loaded umbrella loses its runtime color.");umbrellas++;
             }
             var pipeline=(UniversalRenderPipelineAsset)UnityEngine.Rendering.GraphicsSettings.defaultRenderPipeline;
             CityEnvironment.Report budget=CityEnvironment.Validate(Camera.main,pipeline);
             climate.Preview(0,0);street.Advance(.1);street.ApplyViews();
-            foreach(var walker in street.Walkers)Need(!walker.umbrella.gameObject.activeSelf,"Clear weather keeps umbrella open.");
+            foreach(var walker in street.Walkers)Need(!walker.umbrella.gameObject.activeSelf&&walker.body.sharedMesh==walker.dryMesh,"Clear weather keeps rain outfit.");
+            Need(coats==25&&umbrellas==75,"Rain outfit mix changes unexpectedly.");
             Need(street.Spray.EmittingVehicles==0,"Dry road produces spray.");
             street.ResetModel();street.ApplyViews();
-            return new Report {result="PASS: 4/32/100 weather drain/recovery, offscreen-only changes, collision/clearance, actual umbrella and spray renderer, 100-umbrella budget",simulatedSeconds=810,populations=new[]{4,32,100},departures=departures,arrivals=arrivals,minimumFootDistance=minimumFeet,minimumBumperGap=minimumGap,umbrellaCapacity=umbrellas,sprayCapacity=96,maxUmbrellaBudget=budget};
+            return new Report {result="PASS: 4/32/100 weather drain/recovery, offscreen-only changes, collision/clearance, 75 umbrellas/25 animated raincoats and dry recovery, bounded spray",simulatedSeconds=810,populations=new[]{4,32,100},departures=departures,arrivals=arrivals,minimumFootDistance=minimumFeet,minimumBumperGap=minimumGap,umbrellaCapacity=umbrellas,raincoatCapacity=coats,sprayCapacity=96,maxUmbrellaBudget=budget};
         }
         private static void Need(bool value,string message){if(!value)throw new InvalidOperationException(message);}
         [Serializable] internal sealed class Report
         {
-            public string result;public int simulatedSeconds,departures,arrivals,umbrellaCapacity,sprayCapacity;public int[] populations;
+            public string result;public int simulatedSeconds,departures,arrivals,umbrellaCapacity,raincoatCapacity,sprayCapacity;public int[] populations;
             public float minimumFootDistance,minimumBumperGap;public CityEnvironment.Report maxUmbrellaBudget;
         }
     }

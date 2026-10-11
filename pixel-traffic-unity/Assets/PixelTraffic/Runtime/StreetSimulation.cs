@@ -5,7 +5,7 @@ namespace PixelTraffic.UnityPrototype
 {
     public sealed class StreetSimulation : MonoBehaviour
     {
-        [Serializable] public sealed class WalkerView {public Transform root;public Transform[] limbs;public Transform umbrella;}
+        [Serializable] public sealed class WalkerView {public Transform root;public Transform[] limbs;public Transform umbrella;public SkinnedMeshRenderer body;public Mesh dryMesh,coatMesh;public bool wearsCoat;}
         [SerializeField] private PrototypeDrive[] vehicles;
         [SerializeField] private WalkerView[] walkers;
         [SerializeField] private Renderer[] vehicleLights,walkLights;
@@ -108,15 +108,16 @@ namespace PixelTraffic.UnityPrototype
                 if(p.velocity.sqrMagnitude>.001f)v.root.rotation=Quaternion.LookRotation(new Vector3(p.velocity.x,0,p.velocity.y));
                 float rain=climate!=null&&climate.WeatherBlend!=null?climate.RainGain:0;
                 float wind=climate!=null&&climate.WeatherBlend!=null?climate.WindGain:0;
+                Dress(v,rain);
                 if(v.umbrella!=null)
                 {
-                    bool open=rain>.015f;if(v.umbrella.gameObject.activeSelf!=open)v.umbrella.gameObject.SetActive(open);
+                    bool open=rain>.015f&&!v.wearsCoat;if(v.umbrella.gameObject.activeSelf!=open)v.umbrella.gameObject.SetActive(open);
                     float scale=Mathf.SmoothStep(0,1,Mathf.Clamp01(rain/.38f));v.umbrella.localScale=new Vector3(scale,1,scale);
                     v.umbrella.rotation=Quaternion.Euler(-wind*12,0,wind*10);
                     if(open){lightBlock.Clear();lightBlock.SetColor("_BaseColor",umbrellaColors[i%4]);lightBlock.SetFloat("_Smoothness",.6f);v.umbrella.GetComponent<Renderer>().SetPropertyBlock(lightBlock);}
                 }
                 float angle=Mathf.Sin(p.walkDistance*8)*20*(p.velocity.sqrMagnitude>.01f?1:0);
-                for(int n=0;n<4;n++)v.limbs[n].localRotation=Quaternion.Euler(n==1&&rain>.015f?-65:(n%2==0?1:-1)*angle*(n < 2 ? .8f : 1),0,0);
+                for(int n=0;n<4;n++)v.limbs[n].localRotation=Quaternion.Euler(n==1&&rain>.015f&&!v.wearsCoat?-65:(n%2==0?1:-1)*angle*(n < 2 ? .8f : 1),0,0);
             }
             if(riders!=null)for(int i=0;i<riders.Length;i++)
             {
@@ -128,7 +129,7 @@ namespace PixelTraffic.UnityPrototype
                 for(int n=0;n<4;n++)v.limbs[n].localRotation=Quaternion.Euler((n%2==0?1:-1)*swing,0,0);
                 if(v.umbrella!=null)
                 {
-                    float rain=climate!=null&&climate.WeatherBlend!=null?climate.RainGain:0;bool open=rain>.015f&&(p.stage==BusStops.RiderStage.Queue||p.stage==BusStops.RiderStage.Returning);
+                    float rain=climate!=null&&climate.WeatherBlend!=null?climate.RainGain:0;Dress(v,rain);bool open=rain>.015f&&!v.wearsCoat&&(p.stage==BusStops.RiderStage.Queue||p.stage==BusStops.RiderStage.Returning);
                     float passengerWind=climate!=null&&climate.WeatherBlend!=null?climate.WindGain:0;v.umbrella.rotation=Quaternion.Euler(-passengerWind*12,0,passengerWind*10);
                     v.umbrella.gameObject.SetActive(open);v.umbrella.localScale=new Vector3(Mathf.SmoothStep(0,1,Mathf.Clamp01(rain/.38f)),1,Mathf.SmoothStep(0,1,Mathf.Clamp01(rain/.38f)));
                 }
@@ -138,12 +139,18 @@ namespace PixelTraffic.UnityPrototype
             bool green=model.Signal==StreetModel.Phase.VehicleGreen,yellow=model.Signal==StreetModel.Phase.VehicleYellow;
             for(int i=0;i<vehicleLights.Length;i++)
             {
-                int lamp=i%3;bool on=lamp==0?!green&&!yellow:lamp==1?yellow:green;
+                // Four Korean lamps: red, amber, reserved left arrow, straight green.
+                int lamp=i%4;bool on=lamp==0?!green&&!yellow:lamp==1?yellow:lamp==3&&green;
                 Tint(vehicleLights[i],on?(lamp==0?new Color(1,.045f,.018f):lamp==1?new Color(1,.57f,.025f):new Color(.06f,.93f,.22f)):new Color(.028f,.035f,.04f));
             }
             for(int i=0;i<walkLights.Length;i++)Tint(walkLights[i],i%2==1?(model.CanEnter?new Color(.08f,1,.26f):new Color(.03f,.04f,.04f)):(model.CanEnter?new Color(.03f,.04f,.04f):new Color(1,.035f,.02f)));
         }
-        private void Tint(Renderer renderer,Color color){lightBlock.SetColor("_BaseColor",color);lightBlock.SetColor("_EmissionColor",color*.65f);renderer.SetPropertyBlock(lightBlock);}
+        private void Dress(WalkerView view,float rain)
+        {
+            if(view.body==null)return;Mesh mesh=view.wearsCoat&&rain>.015f?view.coatMesh:view.dryMesh;
+            if(mesh!=null&&view.body.sharedMesh!=mesh)view.body.sharedMesh=mesh;
+        }
+        private void Tint(Renderer renderer,Color color){lightBlock.Clear();lightBlock.SetColor("_BaseColor",color);lightBlock.SetColor("_EmissionColor",color*.65f);renderer.SetPropertyBlock(lightBlock);}
         public void SetPaused(bool value)=>paused=value;
         private void OnApplicationPause(bool value){SetPaused(value);if(!value)skipNextDelta=true;}
         private void OnApplicationFocus(bool value)=>focused=value;

@@ -27,6 +27,7 @@ namespace PixelTraffic.UnityPrototype
             public int side,slot=-1,crossings,pathCount,pathCursor;public bool active,retiring,weatherHidden;
             public Vector2 position,goal,velocity,detour;public Activity activity;public float detourSeconds;
             public float speed,cooldown,retrySeconds,routeRepairSeconds,walkDistance,waitingTime;
+            public Vector2 progressAnchor;public float progressSeconds;
             public uint random;public readonly int[] path=new int[600];
         }
         public const float Dt=1f/30, Separation=.40f;
@@ -161,8 +162,9 @@ namespace PixelTraffic.UnityPrototype
         }
         private void Roam(Person p)
         {
+            p.progressAnchor=p.position;p.progressSeconds=0;
             int row=Mathf.Clamp(Mathf.RoundToInt((p.position.y+28)/.45f)+(Random(p)<.5f?-1:1)*(25+(int)(Random(p)*55)),1,398);
-            if(p.cooldown>0&&p.crossings>0&&Mathf.Abs(p.position.y-StarterConfig.CrossingZ)<24)
+            if(p.cooldown>0&&(p.crossings>0||p.retrySeconds>0)&&Mathf.Abs(p.position.y-StarterConfig.CrossingZ)<24)
                 row=Mathf.Clamp(Mathf.RoundToInt((p.position.y+28)/.45f)+(p.position.y<StarterConfig.CrossingZ?-1:1)*(55+(int)(Random(p)*30)),1,398);
             if(p.cooldown<=0)row=Mathf.Clamp(Mathf.RoundToInt((StarterConfig.CrossingZ-24+Random(p)*48+28)/.45f),1,398);
             int columns=SidewalkRoutes.Columns;int col=(int)(Random(p)*columns),node=row*columns+col;
@@ -269,6 +271,16 @@ namespace PixelTraffic.UnityPrototype
         private void MovePerson(int i)
         {
             Person p=People[i];if(!p.active)return;p.velocity=Vector2.zero;
+            if(p.activity==Activity.Roam&&!p.retiring)
+            {
+                p.progressSeconds+=Dt;
+                if(p.progressSeconds>=10)
+                {
+                    if(Vector2.Distance(p.progressAnchor,p.position)<1)
+                    {p.retrySeconds=15;p.cooldown=12+Random(p)*12;p.detourSeconds=0;Roam(p);}
+                    else {p.progressAnchor=p.position;p.progressSeconds=0;}
+                }
+            }
             bool seekingStarts=p.cooldown>0&&p.cooldown<=Dt;p.cooldown-=Dt;p.retrySeconds-=Dt;p.routeRepairSeconds-=Dt;
             if(p.retiring)
             {
@@ -278,7 +290,8 @@ namespace PixelTraffic.UnityPrototype
             if(!p.retiring&&p.activity==Activity.Roam&&p.cooldown<=0&&p.retrySeconds<=0&&Mathf.Abs(p.position.y-StarterConfig.CrossingZ)<=18&&!Reserve(i))
             {
                 p.retrySeconds=8+Random(p)*12;
-                if(p.crossings>0)p.cooldown=45+Random(p)*60;
+                // A full crossing queue must not attract all first-time walkers indefinitely.
+                p.cooldown=p.crossings>0?45+Random(p)*60:12+Random(p)*12;
                 Roam(p);
             }
             if(p.activity==Activity.Approach||p.activity==Activity.Wait)p.waitingTime+=Dt;

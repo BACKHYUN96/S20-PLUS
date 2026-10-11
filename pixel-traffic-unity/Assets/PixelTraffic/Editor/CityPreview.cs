@@ -435,12 +435,45 @@ namespace PixelTraffic.UnityPrototype.Editor
                     stopTarget.Release();UnityEngine.Object.DestroyImmediate(stopTarget);UnityEngine.Object.DestroyImmediate(stopImage);
                     for(int i=0;i<originalCars.Length;i++)originalCars[i].ResetPosition(originalZ[i]);detailStreet.ResetModel();climate.Preview(0,0);detailStreet.ApplyViews();camera.aspect=.45f;camera.fieldOfView=roadFov;camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);
                 }
+                var koreanPreviews=new System.Collections.Generic.List<string>();
+                try
+                {
+                    climate.Preview(0,0);detailStreet.ResetModel();var captured=new System.Collections.Generic.HashSet<string>();
+                    for(int frame=0;frame<1200&&captured.Count<5;frame++)
+                    {
+                        detailStreet.Advance(.1);detailStreet.ApplyViews();var phase=detailStreet.Model.Signal;
+                        string vehicle=phase==StreetModel.Phase.VehicleGreen?"green":phase==StreetModel.Phase.VehicleYellow?"amber":"red";
+                        if(captured.Add("vehicle-"+vehicle))
+                        {
+                            camera.transform.position=new Vector3(-3.38f,6.0f,0);camera.transform.LookAt(new Vector3(-3.38f,5.61f,7));camera.fieldOfView=35;
+                            koreanPreviews.Add(CaptureState(camera,request,target,image,"korean-vehicle-"+vehicle));
+                        }
+                        string pedestrian=detailStreet.Model.CanEnter?"walk":"stop";
+                        if(captured.Add("pedestrian-"+pedestrian))
+                        {
+                            camera.transform.position=new Vector3(-8.4f,2.70f,7);camera.transform.LookAt(new Vector3(-10.08f,2.61f,7));camera.fieldOfView=42;
+                            koreanPreviews.Add(CaptureState(camera,request,target,image,"korean-pedestrian-"+pedestrian));
+                        }
+                    }
+                    if(captured.Count!=5)throw new InvalidOperationException("Korean signal capture cycle incomplete.");
+                    climate.Preview(0,2);detailStreet.ResetModel();detailStreet.Model.SetWeather(1,1,1,1);detailStreet.Model.SetPopulation(100);detailStreet.ApplyViews();
+                    var coatPerson=detailStreet.Walkers[0];var umbrellaPerson=detailStreet.Walkers[1];
+                    coatPerson.root.SetPositionAndRotation(new Vector3(-10.25f,.16f,0),Quaternion.identity);
+                    umbrellaPerson.root.SetPositionAndRotation(new Vector3(-10.25f,.16f,1.5f),Quaternion.identity);
+                    camera.transform.position=new Vector3(-7.8f,2.4f,3.4f);camera.transform.LookAt(new Vector3(-10.25f,1.05f,.6f));camera.fieldOfView=42;
+                    koreanPreviews.Add(CaptureState(camera,request,target,image,"raincoat-and-umbrella"));
+                }
+                finally
+                {
+                    for(int i=0;i<originalCars.Length;i++)originalCars[i].ResetPosition(originalZ[i]);detailStreet.ResetModel();climate.Preview(0,0);detailStreet.ApplyViews();
+                    camera.aspect=.45f;camera.fieldOfView=roadFov;camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);
+                }
                 var reflectionGpu=GroundScene.CheckReflectionGpu();
                 File.WriteAllText("Reports/preview-result.json", JsonUtility.ToJson(new Report {
                     result = "PASS", version = StarterConfig.VersionName, editor = Application.unityVersion,
                     graphicsApi = SystemInfo.graphicsDeviceType.ToString(), width = width, height = height,
                     image = output, source = "Unity Editor URP camera; not a phone screenshot or FPS test"
-                    , reflectionGpu=reflectionGpu,wetReflectionImages=reflectionPreviews.ToArray(),materialColors = colors, climateImages = previews.ToArray(), vehicleImages = vehiclePreviews.ToArray(),frontageImages=frontagePreviews.ToArray(),drivingImages=drivingPreviews.ToArray(),headlightColourImages=colourPreviews.ToArray(),cameraImages=cameraPreviews.ToArray(),landscapeImages=landscapePreviews.ToArray(),skyImages=skyPreviews.ToArray(),groundImages=groundPreviews.ToArray(),sceneryImages=sceneryPreviews.ToArray(),heavyImages=heavyPreviews.ToArray(),busStopImages=stopPreviews.ToArray()
+                    , koreanSignalImages=koreanPreviews.ToArray(),reflectionGpu=reflectionGpu,wetReflectionImages=reflectionPreviews.ToArray(),materialColors = colors, climateImages = previews.ToArray(), vehicleImages = vehiclePreviews.ToArray(),frontageImages=frontagePreviews.ToArray(),drivingImages=drivingPreviews.ToArray(),headlightColourImages=colourPreviews.ToArray(),cameraImages=cameraPreviews.ToArray(),landscapeImages=landscapePreviews.ToArray(),skyImages=skyPreviews.ToArray(),groundImages=groundPreviews.ToArray(),sceneryImages=sceneryPreviews.ToArray(),heavyImages=heavyPreviews.ToArray(),busStopImages=stopPreviews.ToArray()
                 }, true));
                 Debug.Log("PASS: real city camera preview saved: " + output);
             }
@@ -489,7 +522,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             public string result, version, editor, graphicsApi, image, source;
             public int width, height;
             public string[] headlightColourImages;
-            public string[] wetReflectionImages;
+            public string[] wetReflectionImages,koreanSignalImages;
             public GroundScene.ReflectionGpuReport reflectionGpu;
             public string[] materialColors, climateImages, vehicleImages,frontageImages,drivingImages,cameraImages,landscapeImages,skyImages,groundImages,sceneryImages,heavyImages,busStopImages;
         }

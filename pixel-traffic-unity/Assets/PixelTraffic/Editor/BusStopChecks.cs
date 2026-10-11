@@ -148,7 +148,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             // Stress all eight passenger rigs/umbrellas as well as the 100 ordinary walkers.
             foreach(var stressRider in controller.Model.Stops.Riders)stressRider.stage=BusStops.RiderStage.Queue;
             controller.ApplyViews();
-            foreach(var passengerView in controller.Riders)Need(passengerView.root.gameObject.activeSelf&&passengerView.umbrella.gameObject.activeSelf,"Waiting rain passenger lacks umbrella.");
+            foreach(var passengerView in controller.Riders)Need(passengerView.root.gameObject.activeSelf&&(passengerView.wearsCoat?passengerView.body.sharedMesh==passengerView.coatMesh&&!passengerView.umbrella.gameObject.activeSelf:passengerView.umbrella.gameObject.activeSelf),"Waiting rain passenger lacks coat or umbrella.");
             var stopPipeline=(UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset)UnityEngine.Rendering.GraphicsSettings.defaultRenderPipeline;
             var peak=CityEnvironment.Validate(Camera.main,stopPipeline);
             stopClimate.Preview(0,0);controller.ResetModel();controller.ApplyViews();
