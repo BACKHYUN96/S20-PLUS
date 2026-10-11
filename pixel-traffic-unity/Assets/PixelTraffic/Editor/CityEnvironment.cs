@@ -132,7 +132,7 @@ namespace PixelTraffic.UnityPrototype.Editor
 
         private static void Building(Transform parent, float x, float z, int index)
         {
-            int floors = 4 + index % 3; float height = floors * 2.8f + 1.2f;
+            int floors = index<3 ? (x<0 ? new[]{6,5,4} : new[]{4,6,5})[index] : 4+index%3; float height = floors * 2.8f + 1.2f;
             Transform root = new GameObject("City Building").transform;
             root.SetParent(parent, false); root.localPosition = new Vector3(x, .16f, z);
             Color[] colors = {new Color(.80f,.76f,.67f),new Color(.70f,.75f,.74f),new Color(.85f,.80f,.71f)};
@@ -152,13 +152,16 @@ namespace PixelTraffic.UnityPrototype.Editor
                     windows.Add(position,floor,column);
                 }
             }
+            if(index<3)
+                for(int floor=1;floor<floors;floor++)
+                    foreach(float cornerX in new[]{-1.4f,1.4f})windows.Side(cornerX,1.6f+floor*2.8f,floor);
             windows.Save();FrontageScene.Shop(root,index,streetSide,frame);
             Color[] awnings = {new Color(.34f,.23f,.15f),new Color(.17f,.40f,.25f),new Color(.25f,.34f,.44f)};
             Box("Shop Awning", root, new Vector3(streetSide + (x > 0 ? -.55f : .55f),2.8f,0), new Vector3(1.2f,.2f,12), Mat("Awning " + index % 3, awnings[index % 3]));
             Box("Roof", root, new Vector3(0,height + .1f,0), new Vector3(6.8f,.2f,14.3f), Mat("Roof",new Color(.39f,.40f,.38f)));
             foreach (float side in new[] {-1f,1f})
                 Box("Roof Parapet", root, new Vector3(side * 3.2f,height + .4f,0), new Vector3(.2f,.7f,14), stone);
-            Box("Roof Equipment", root, new Vector3(1,height + .65f,1.6f), new Vector3(1.5f,1.1f,2.3f), Mat("Roof Equipment",new Color(.45f,.46f,.42f)));
+            Box("Roof Equipment", root, new Vector3(1,height + .65f,index<3?-.5f:1.6f), new Vector3(1.5f,1.1f,2.3f), Mat("Roof Equipment",new Color(.45f,.46f,.42f)));
             if (index % 2 == 0)
                 Cylinder("Water Tank",root,new Vector3(-1,height + 1.1f,-3),new Vector3(1.4f,1.0f,1.4f),Mat("Tank",new Color(.46f,.49f,.48f),.35f));
             ArchitectureScene.Details(root,index,height,streetSide,stone,frame,facade);

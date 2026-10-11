@@ -231,6 +231,16 @@ namespace PixelTraffic.UnityPrototype.Editor
                     }
                     camera.transform.position=new Vector3(-4.8f,18,-13);camera.transform.LookAt(new Vector3(-13,12.8f,-22));landscapeClimate.Preview(0,0);
                     sceneryPreviews.Add(CaptureState(camera,sceneryRequest,sceneryTarget,sceneryImage,"architecture-roof-day"));
+                    foreach(float side in new[]{-1f,1f})
+                    {
+                        camera.transform.position=new Vector3(side*8.4f,10,-36);camera.transform.LookAt(new Vector3(side*14.1f,9.5f,-29));camera.fieldOfView=50;
+                        foreach(int theme in new[]{0,2})
+                        {
+                            landscapeClimate.Preview(theme,0);sceneryPreviews.Add(CaptureState(camera,sceneryRequest,sceneryTarget,sceneryImage,"building-corner-"+(side<0?"left":"right")+(theme==0?"-day":"-night")));
+                        }
+                    }
+                    camera.transform.position=new Vector3(-4.8f,24,-13);camera.transform.LookAt(new Vector3(-13,17.5f,-22));camera.fieldOfView=55;
+                    landscapeClimate.Preview(0,0);sceneryPreviews.Add(CaptureState(camera,sceneryRequest,sceneryTarget,sceneryImage,"building-terrace-day"));
                     camera.transform.position=new Vector3(3.8f,10,-10);camera.transform.LookAt(new Vector3(10.85f,7.5f,-5));camera.fieldOfView=48;
                     foreach(int theme in new[]{0,2})
                     {

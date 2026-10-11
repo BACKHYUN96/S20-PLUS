@@ -21,7 +21,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 bool near=index<3;
                 float front=x+outward*(near?.28f:.07f),back=x+outward*.025f;
                 // Four front strips and four recessed reveals, with a real glass plane behind them.
-                for(int side=0;side<4;side++)
+                for(int side=0;near&&side<4;side++)
                 {
                     Vector3 a=Corner(front,p,side,.9f),b=Corner(front,p,(side+1)%4,.9f);
                     Vector3 c=Corner(front,p,(side+1)%4,.82f),d=Corner(front,p,side,.82f);
@@ -29,6 +29,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     Vector3 inward=side==0?Vector3.up:side==1?Vector3.back:side==2?Vector3.down:Vector3.forward;
                     if(near)frames.Quad(d,c,Corner(back,p,(side+1)%4,.8f),Corner(back,p,side,.8f),Rect.MinMaxRect(0,0,1,1),inward);
                 }
+                if(!near)frames.Plane(x+outward*.019f,p.y-.9f,p.y+.9f,p.z-.9f,p.z+.9f,Rect.MinMaxRect(0,0,1,1),outward);
                 if(near)
                 {
                     // The nearer six buildings have deep reveals, a two-pane frame and a projecting sill.
@@ -38,6 +39,26 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
                 int variant=(index*17+floor*13+column*7+(outward<0?3:0))%8;
                 glass.Plane(back,p.y-.8f,p.y+.8f,p.z-.8f,p.z+.8f,Tile(variant%4,variant/4,4,2,256,128),outward);
+            }
+            internal void Side(float centreX,float y,int floor)
+            {
+                const float front=-7.25f,back=-7.035f;
+                Vector3 p=new Vector3(centreX,y,0);
+                Vector3 Point(float z,int side,float radius)=>new Vector3(p.x+(side==0||side==3?-radius:radius),p.y+(side==0||side==1?-.8f:.8f),z);
+                for(int side=0;side<4;side++)
+                {
+                    Vector3 a=Point(front,side,.65f),b=Point(front,(side+1)%4,.65f);
+                    Vector3 c=Point(front,(side+1)%4,.59f),d=Point(front,side,.59f);
+                    // Insets at both top and bottom leave an actual opening inside the outer ring.
+                    if(side==0){c.y+=.065f;d.y+=.065f;}if(side==2){c.y-=.065f;d.y-=.065f;}
+                    frames.Quad(a,b,c,d,Rect.MinMaxRect(0,0,1,1),Vector3.back);
+                    Vector3 e=c,f=d;e.z=back;f.z=back;
+                    Vector3 normal=side==0?Vector3.up:side==1?Vector3.left:side==2?Vector3.down:Vector3.right;
+                    frames.Quad(d,c,e,f,Rect.MinMaxRect(0,0,1,1),normal);
+                }
+                frames.Box(new Vector3(centreX,y-.88f,-7.13f),new Vector3(1.52f,.10f,.40f));
+                int variant=(index*11+floor*3+(centreX>0?5:1)+(outward<0?2:0))%8;
+                glass.Quad(new Vector3(centreX-.59f,y-.735f,back),new Vector3(centreX+.59f,y-.735f,back),new Vector3(centreX+.59f,y+.735f,back),new Vector3(centreX-.59f,y+.735f,back),Tile(variant%4,variant/4,4,2,256,128),Vector3.back);
             }
             static Vector3 Corner(float x,Vector3 p,int side,float radius)
             {return new Vector3(x,p.y+(side==0||side==1?-radius:radius),p.z+(side==0||side==3?-radius:radius));}
@@ -54,7 +75,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             float outward=Mathf.Sign(x),door=(index%3-1)*3.6f;
             var frames=new Geometry();var glass=new Geometry();
             void Box(float y,float z,float depth,float height,float width)
-            {frames.Box(new Vector3(x+outward*.09f,y,z),new Vector3(depth,height,width));}
+            {frames.Box(new Vector3(x+outward*.09f,y,z),new Vector3(depth,height,width),index>=3?(outward>0?2:3):-1);}
             foreach(float z in new[]{-5.9f,door-.86f,door+.86f,5.9f})Box(1.4f,z,.14f,2.6f,.11f);
             Box(2.6f,0,.14f,.12f,11.8f);Box(2.55f,door,.14f,.12f,1.65f);
             float left=(-5.78f+door-.8f)*.5f,right=(door+.8f+5.78f)*.5f;
@@ -192,11 +213,11 @@ namespace PixelTraffic.UnityPrototype.Editor
             }
             internal void Plane(float x,float bottom,float top,float start,float end,Rect rect,float outward)
             {Quad(new Vector3(x,bottom,start),new Vector3(x,bottom,end),new Vector3(x,top,end),new Vector3(x,top,start),rect,Vector3.right*outward,outward<0);}
-            internal void Box(Vector3 centre,Vector3 size)
+            internal void Box(Vector3 centre,Vector3 size,int omittedFace=-1)
             {
                 Vector3 h=size*.5f;Vector3[] p={new Vector3(-h.x,-h.y,-h.z),new Vector3(h.x,-h.y,-h.z),new Vector3(h.x,h.y,-h.z),new Vector3(-h.x,h.y,-h.z),new Vector3(-h.x,-h.y,h.z),new Vector3(h.x,-h.y,h.z),new Vector3(h.x,h.y,h.z),new Vector3(-h.x,h.y,h.z)};
                 int[] faces={0,3,2,1,4,5,6,7,0,4,7,3,1,2,6,5,0,1,5,4,3,7,6,2};
-                for(int f=0;f<6;f++)Quad(centre+p[faces[f*4]],centre+p[faces[f*4+1]],centre+p[faces[f*4+2]],centre+p[faces[f*4+3]],Rect.MinMaxRect(0,0,1,1),Vector3.zero);
+                for(int f=0;f<6;f++)if(f!=omittedFace)Quad(centre+p[faces[f*4]],centre+p[faces[f*4+1]],centre+p[faces[f*4+2]],centre+p[faces[f*4+3]],Rect.MinMaxRect(0,0,1,1),Vector3.zero);
             }
             internal void Save(Transform parent,string name,string asset,Material material,bool shadows)
             {

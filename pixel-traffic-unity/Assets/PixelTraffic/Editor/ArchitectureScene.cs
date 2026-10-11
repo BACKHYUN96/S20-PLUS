@@ -9,24 +9,34 @@ namespace PixelTraffic.UnityPrototype.Editor
     {
         internal static void Details(Transform root,int index,float height,float streetSide,Material stone,Material metal,Material facade)
         {
-            float outward=Mathf.Sign(streetSide);
+            float outward=Mathf.Sign(streetSide);int profile=index+(outward<0?3:0);bool near=index<3;int balconyCount=near?3:2;
             var trim=new Solids();var rails=new Solids();var plaster=new Solids();
             foreach(float z in new[]{-6.78f,6.78f})trim.Box(new Vector3(streetSide+outward*.04f,height*.5f,z),new Vector3(.23f,height,.22f));
             trim.Box(new Vector3(streetSide+outward*.05f,height-.5f,0),new Vector3(.28f,.22f,14.1f));
             foreach(float z in new[]{-6.9f,6.9f})trim.Box(new Vector3(0,height+.4f,z),new Vector3(6.4f,.7f,.2f));
-            for(int balcony=0;balcony<2;balcony++)
+            for(int balcony=0;balcony<balconyCount;balcony++)
             {
-                float z=balcony==0?-2.6f:2.6f,y=1.6f+(balcony+1)*2.8f-.9f;
-                trim.Box(new Vector3(streetSide+outward*.32f,y,z),new Vector3(.78f,.13f,2.12f));
-                float front=streetSide+outward*.69f;
-                rails.Box(new Vector3(front,y+.75f,z),new Vector3(.06f,.055f,2.12f));
-                foreach(float offset in new[]{-1f,-.34f,.34f,1f})rails.Box(new Vector3(front,y+.39f,z+offset),new Vector3(.045f,.68f,.045f));
-                foreach(float side in new[]{-1f,1f})rails.Box(new Vector3(streetSide+outward*.34f,y+.75f,z+side),new Vector3(.7f,.055f,.055f));
+                float z=balcony==2?(profile%2==0?-4f:4f):balcony==0?-2.6f:2.6f;
+                float y=balcony==2?height-3.3f:1.6f+(balcony+1)*2.8f-.9f;
+                float width=near?(balcony==2?4f:2.12f+(profile%3)*.32f):2.12f;
+                float depth=near?(balcony==2?1.05f:.78f+(profile%3)*.08f):.78f;
+                trim.Box(new Vector3(streetSide+outward*(depth*.5f-.07f),y,z),new Vector3(depth,.13f,width));
+                float front=streetSide+outward*(depth-.09f);
+                rails.Box(new Vector3(front,y+.75f,z),new Vector3(.06f,.055f,width));
+                int posts=balcony==2?6:4;
+                for(int post=0;post<posts;post++)
+                    rails.Box(new Vector3(front,y+.39f,z+Mathf.Lerp(-width*.5f+.06f,width*.5f-.06f,post/(float)(posts-1))),new Vector3(.045f,.68f,.045f));
+                foreach(float side in new[]{-1f,1f})rails.Box(new Vector3(streetSide+outward*(depth*.5f-.05f),y+.75f,z+side*(width*.5f-.06f)),new Vector3(depth-.08f,.055f,.055f));
             }
             // Slats are baked into the same metal mesh, without a renderer per slat.
-            float ventX=outward>0?1.76f:.24f;
-            for(int i=0;i<5;i++)rails.Box(new Vector3(ventX,height+.25f+i*.17f,1.6f),new Vector3(.025f,.065f,1.9f));
-            plaster.Box(new Vector3(1.5f,height+1.0f,-3.0f),new Vector3(1.65f,1.75f,2.0f));
+            float ventX=outward>0?1.76f:.24f,ventZ=near?-.5f:1.6f;
+            for(int i=0;i<5;i++)rails.Box(new Vector3(ventX,height+.25f+i*.17f,ventZ),new Vector3(.025f,.065f,1.9f));
+            plaster.Box(new Vector3(near?.9f:1.5f,height+1.0f,-3.0f),new Vector3(near?1.65f+profile*.12f:1.65f,1.75f,2.0f));
+            if(near)
+            {
+                float capHeight=1f+profile*.22f;
+                plaster.Box(new Vector3(profile%2==0?-.35f:.35f,height+.2f+capHeight*.5f,4f),new Vector3(2.8f+profile*.08f,capHeight,4f));
+            }
             if(index%3==0)
             {
                 rails.Box(new Vector3(-1.8f,height+1.15f,3.8f),new Vector3(.07f,1.8f,.07f));
@@ -41,15 +51,17 @@ namespace PixelTraffic.UnityPrototype.Editor
             if(index<3)
             {
                 var plants=new Solids();
-                for(int balcony=0;balcony<2;balcony++)
+                for(int balcony=0;balcony<balconyCount;balcony++)
                 {
-                    float z=balcony==0?-2.6f:2.6f,y=1.6f+(balcony+1)*2.8f-.9f;
-                    float plantX=streetSide+outward*.36f;
+                    float z=balcony==2?(profile%2==0?-4f:4f):balcony==0?-2.6f:2.6f;
+                    float y=balcony==2?height-3.3f:1.6f+(balcony+1)*2.8f-.9f;
+                    float plantX=streetSide+outward*(balcony==2?.45f:.36f+profile%3*.03f);
                     trim.Box(new Vector3(plantX,y+.25f,z),new Vector3(.47f,.38f,1.18f));
                     rails.Box(new Vector3(plantX,y+.45f,z),new Vector3(.49f,.045f,1.22f));
-                    plants.Append(FoliageScene.RoofShrub(),new Vector3(plantX,y+.44f,z),new Vector3(.35f,.55f,.72f));
+                    plants.Append(FoliageScene.RoofShrub(),new Vector3(plantX,y+.44f,z),new Vector3(.35f,.48f+profile%3*.07f,.72f));
+                    if(balcony==2)continue;
                     // Units sit beside, rather than in front of, the balcony openings.
-                    float unitY=y+.87f,unitZ=balcony==0?-4f:4f;
+                    float unitY=y+.87f,unitZ=balcony==0?-3.9f:3.9f;
                     plaster.Box(new Vector3(streetSide+outward*.27f,unitY,unitZ),new Vector3(.48f,.52f,.77f));
                     rails.Box(new Vector3(streetSide+outward*.52f,unitY,unitZ),new Vector3(.035f,.39f,.62f));
                     for(int slat=0;slat<4;slat++)

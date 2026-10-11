@@ -1,5 +1,18 @@
 # 새 채팅 인수인계 — 픽셀 트래픽 0.29.0
 
+## 2026-10-11 — Unity 0.27.0 앞6동 형태·옆면 창문·상층 테라스 구현, 실제 검증 대기
+
+사용자는 폰0.26.0 적용 성공/문제 없음을 확인하고 앞6동의 높이·옥상·발코니 다양화와 모서리/옆면 창문 보강을 승인했다. 0.27.0/code28, BuildingVariety-0.27.0.unity / Generated/BuildingVariety0270.
+
+앞6동은 왼쪽6/5/4층, 오른쪽4/6/5층으로 높이를 다르게 생성한다. 기존 주도로480창 중 가까운120창은 수를 유지하고, 보이는 건물 끝면에48창(각 층2개)을 추가한다. 실제 shell 바깥 유리/깊은 드러낸 창틀/돌출 창턱이며 기존Window Glass와Window Frame 메시에 합친다. 기존480창+끝면48창=528창의 shared atlas 조명/밤 variation·전환을 유지한다.
+
+앞6동은 발코니 폭/깊이를 profile별로 달리하고 상층에6post가 있는4m 넓은 테라스를 하나씩 추가한다. 전체54발코니/228railposts/발코니식물18곳/실외기12대를 예상하며 실제 geometry oracle로 검사한다. 옥상에6개 서로 다른 setback cap을 기존 Roof Access mesh에 더하고 기존 roof access 크기를 달리한다. Equipment와환기구를 함께 재배치해 새 옥상 cap과 겹치지 않도록 한다. 실외기 중심을 실제 창문 열 사이±3.9m로 맞춘다.
+
+성능 예산: 먼18동360창은 glass뒤의 얇은 프레임 backing quad로 간소화하고 먼 상가 프레임은 벽을 향한 face만 생략한다. renderer/material/Light/Collider/Update는 추가하지 않고 기존120000tri/2400renderer/48material 및110000기본예산을 그대로 검사한다. 산술 예상 최대119910tri는 실제검증을 대신하지 않는다.
+
+범위8소스: ArchitectureScene/CityEnvironment/FrontageScene/FrontageChecks/SceneryChecks/CityPreview/StarterScene/StarterConfig. 시작296파일·real index/status·122입력·host12SHA 기록/보존. 실제 끝면 유리 방향·wall밖 depth·528창·near/far frame geometry,6height/6roof/6upperterrace profiles·slab/railposts/청소foot clearance를 검사한다. 기존145실제GPU에 좌우 끝면 낮/밤4장+상층테라스1장을 보완해150장을 받을 예정이다. 코드·괄호 균형/도우미Python parse만 확인했으며 실제 C#·Unity/GPU·Android/Lint/서명·공개다운로드/폰 검증은 대기.
+
+APK 전달은 C:\Users\김백현\Desktop\AI에 다운로드·SHA256검증·USB ADB설치를 한 번에 실행하는 PowerShell 블록을 유지한다. 실제 명령 실행은 사용자 PC에서 한다. 별도Android기존앱/host/workflow/사용자 변경은 수정하지 않는다.
 ## 2026-10-11 — Unity 0.26.0 가까운 건물 외관: 실제 검증·서명 APK 전달 완료
 
 사용자는 폰0.25.0 적용 성공을 확인하고 앞쪽 대표 건물부터 시안처럼 정교하게 만드는 작업을 승인했다. **0.26.0/code27**, `Architecture-0.26.0.unity` / `Generated/Architecture0260`으로 생성했다. 앞으로 APK는 사용자 Windows 폴더 `C:\Users\김백현\Desktop\AI`로 다운로드·SHA256 검증·USB ADB 설치를 한 번에 실행하는 PowerShell 블록으로 전달한다. 실제 명령 실행은 사용자 PC에서 하며 클라우드에서 설치했다고 주장하지 않는다.
