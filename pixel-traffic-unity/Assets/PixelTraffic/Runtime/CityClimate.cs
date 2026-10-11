@@ -88,8 +88,10 @@ namespace PixelTraffic.UnityPrototype
             RenderSettings.ambientGroundColor = new Color(.25f, .24f, .22f) * day + new Color(.18f, .13f, .13f) * dusk + new Color(.045f, .055f, .095f) * night;
             Color sky = new Color(.72f, .78f, .81f) * day + new Color(.70f, .42f, .32f) * dusk + new Color(.055f, .075f, .145f) * night;
             RenderSettings.fogColor = Color.Lerp(sky, new Color(.57f, .62f, .66f) * (day + dusk * .6f + night * .22f), cloud * .65f);
-            RenderSettings.fogStartDistance = Mathf.Lerp(130, 10, fog);
-            RenderSettings.fogEndDistance = Mathf.Lerp(360 * day + 310 * dusk + 270 * night, 105, fog);
+            // Clear-weather haze starts beyond the main street; the junction at 235m
+            // must not reach full fog at night from the saved camera behind the street.
+            RenderSettings.fogStartDistance = Mathf.Lerp(200, 10, fog);
+            RenderSettings.fogEndDistance = Mathf.Lerp(490 * day + 470 * dusk + 450 * night, 105, fog);
             Camera.main.backgroundColor = RenderSettings.fogColor;
             if(distant!=null)distant.Apply(day,dusk,night,rain,snow,fog,cloud,clock);
             LampGain = Mathf.Clamp01(dusk * .72f + night + cloud * .4f);

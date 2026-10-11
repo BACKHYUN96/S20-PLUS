@@ -33,6 +33,11 @@ namespace PixelTraffic.UnityPrototype.Editor
             {
                 var pool = Quad("Warm Road Pool", root.transform, glow, false);
                 pool.transform.position = new Vector3(lamps[i].position.x, .035f, lamps[i].position.z); pool.transform.rotation = Quaternion.Euler(90, 0, 0); pool.transform.localScale = new Vector3(5, 9, 1); pools[i] = pool;
+                if(lamps[i].parent.name=="Roundabout Lamp")
+                {
+                    Vector3 inward=new Vector3(-pool.transform.position.x,0,RoundaboutTraffic.CenterZ-pool.transform.position.z).normalized;
+                    pool.transform.position+=inward*6;pool.transform.localScale=new Vector3(12,18,1);pool.name="Roundabout Road Pool";
+                }
                 if (i < lights.Length)
                 {
                     lights[i] = new GameObject("Local Street Light").AddComponent<Light>(); lights[i].transform.SetParent(lamps[i], false); lights[i].transform.localRotation = Quaternion.Euler(90, 0, 0);

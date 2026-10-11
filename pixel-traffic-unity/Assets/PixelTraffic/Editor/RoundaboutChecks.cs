@@ -47,6 +47,8 @@ namespace PixelTraffic.UnityPrototype.Editor
                 if(f.name=="Roundabout Asphalt")foreach(Vector3 normal in mesh.normals)Need(normal.y>.99f,"asphalt has an invisible back-facing road patch.");
             }
             Need(triangles<=400,"junction exceeds its reclaimed far-marking triangle budget.");
+            var lighting=GameObject.Find("Roundabout Lighting");Need(lighting!=null&&lighting.transform.childCount==2&&lighting.GetComponentsInChildren<Light>().Length==0&&lighting.GetComponentsInChildren<Collider>().Length==0,"junction lighting lacks two shared-material fixtures or adds realtime lights/obstacles.");
+            foreach(var lamp in lighting.GetComponentsInChildren<MeshRenderer>())Need(lamp.sharedMaterial!=null,"junction fixture misses shared material.");
             var island=root.Find("Roundabout Island").GetComponent<MeshFilter>().sharedMesh;
             Need(Mathf.Abs(island.bounds.center.z-235)<.001f&&Mathf.Abs(island.bounds.size.x-20)<.001f&&island.bounds.max.y<.3f,"central island obscures traffic or leaves the circle.");
             var camera=Camera.main;float aspect=camera.aspect;foreach(float a in new[]{9f/20,9f/16}){camera.aspect=a;var p=camera.WorldToViewportPoint(new Vector3(0,0,235));Need(p.x>0&&p.x<1&&p.y>0&&p.y<1&&p.z>0,"junction outside saved portrait.");}camera.aspect=aspect;

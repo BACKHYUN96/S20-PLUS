@@ -78,6 +78,13 @@ namespace PixelTraffic.UnityPrototype.Editor
                 climate.Preview(theme, weather); climate.Advance(.1, true);
                 Need(climate.TimeBlend.Weights[theme] == 1 && climate.WeatherBlend.Weights[weather] == 1, "Saved selection does not snap on initial load.");
                 Need(RenderSettings.sun.intensity > 0 && RenderSettings.fogEndDistance > RenderSettings.fogStartDistance && RenderSettings.fogEndDistance < Camera.main.farClipPlane, "Invalid lighting/fog endpoint.");
+                if(weather==0)
+                {
+                    float depth=Vector3.Dot(new Vector3(0,.25f,RoundaboutTraffic.CenterZ)-Camera.main.transform.position,Camera.main.transform.forward);
+                    float obscured=Mathf.Clamp01((depth-RenderSettings.fogStartDistance)/(RenderSettings.fogEndDistance-RenderSettings.fogStartDistance));
+                    Need(RenderSettings.fogMode==FogMode.Linear&&obscured<.4f,"Clear-weather saved camera loses the roundabout in distant haze.");
+                }
+                if(weather==4)Need(Mathf.Abs(RenderSettings.fogStartDistance-10)<.01f&&Mathf.Abs(RenderSettings.fogEndDistance-105)<.01f,"Selected fog weather was weakened.");
                 Need(GameObject.Find("Rain Pool").GetComponent<Renderer>().enabled == (weather == 1 || weather == 2 || weather == 5), "Actual rain pool visibility differs.");
                 Need(GameObject.Find("Snow Pool").GetComponent<Renderer>().enabled == (weather == 3), "Actual snow pool visibility differs.");
                 double expectedWet = weather == 1 ? .68 : weather == 2 || weather == 5 ? 1 : weather == 4 ? .35 : 0;

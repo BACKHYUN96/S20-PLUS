@@ -551,6 +551,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 var roundaboutPreviews=new System.Collections.Generic.List<string>();
                 var roundaboutPixelChanges=new System.Collections.Generic.List<int>();
                 var roundaboutMotionPositions=new System.Collections.Generic.List<Vector3>();
+                var junctionVisibilityPreviews=new System.Collections.Generic.List<string>();int savedNightChangedPixels=0;float savedNightPixelDelta=0,savedNightFogFraction=0;
                 try
                 {
                     for(int i=0;i<originalCars.Length;i++)originalCars[i].ResetPosition(originalZ[i]);climate.Preview(0,0);detailStreet.ResetModel();
@@ -585,9 +586,34 @@ namespace PixelTraffic.UnityPrototype.Editor
                     for(int i=0;i<originalCars.Length;i++)originalCars[i].ResetPosition(originalZ[i]);climate.Preview(0,0);detailStreet.ResetModel();detailStreet.ApplyViews();
                     camera.aspect=.45f;camera.fieldOfView=roadFov;camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);
                 }
+                // Reproduce the user's saved-camera night problem, rather than checking only an inspection camera.
+                try
+                {
+                    camera.aspect=.45f;camera.fieldOfView=roadFov;camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);
+                    climate.Preview(0,0);detailStreet.ApplyViews();junctionVisibilityPreviews.Add(CaptureState(camera,request,target,image,"roundabout-saved-day"));
+                    climate.Preview(2,0);detailStreet.ApplyViews();
+                    float clearStart=RenderSettings.fogStartDistance,clearEnd=RenderSettings.fogEndDistance;
+                    float depth=Vector3.Dot(new Vector3(0,.25f,RoundaboutTraffic.CenterZ)-camera.transform.position,camera.transform.forward);
+                    savedNightFogFraction=Mathf.Clamp01((depth-clearStart)/(clearEnd-clearStart));
+                    RenderSettings.fogStartDistance=130;RenderSettings.fogEndDistance=270;
+                    junctionVisibilityPreviews.Add(CaptureState(camera,request,target,image,"roundabout-saved-night-oldfog"));var hiddenPixels=image.GetPixels32();
+                    RenderSettings.fogStartDistance=clearStart;RenderSettings.fogEndDistance=clearEnd;
+                    junctionVisibilityPreviews.Add(CaptureState(camera,request,target,image,"roundabout-saved-night"));var clearPixels=image.GetPixels32();
+                    int x0=image.width,y0=image.height,x1=0,y1=0;
+                    foreach(float x in new[]{-22f,22f})foreach(float z in new[]{213f,257f})
+                    {var q=camera.WorldToViewportPoint(new Vector3(x,.25f,z));x0=Mathf.Min(x0,Mathf.FloorToInt(q.x*image.width));x1=Mathf.Max(x1,Mathf.CeilToInt(q.x*image.width));y0=Mathf.Min(y0,Mathf.FloorToInt(q.y*image.height));y1=Mathf.Max(y1,Mathf.CeilToInt(q.y*image.height));}
+                    x0=Mathf.Clamp(x0,0,image.width-1);x1=Mathf.Clamp(x1,0,image.width-1);y0=Mathf.Clamp(y0,0,image.height-1);y1=Mathf.Clamp(y1,0,image.height-1);int samples=0;
+                    for(int y=y0;y<=y1;y++)for(int x=x0;x<=x1;x++)
+                    {int n=y*image.width+x;int delta=Math.Abs(clearPixels[n].r-hiddenPixels[n].r)+Math.Abs(clearPixels[n].g-hiddenPixels[n].g)+Math.Abs(clearPixels[n].b-hiddenPixels[n].b);savedNightPixelDelta+=delta/(255f*3);if(delta>20)savedNightChangedPixels++;samples++;}
+                    savedNightPixelDelta/=Mathf.Max(1,samples);
+                    if(savedNightFogFraction>=.4f||savedNightChangedPixels<32||savedNightPixelDelta<.002f)throw new InvalidOperationException("Saved night-camera junction remains lost in fog: obscured="+savedNightFogFraction+" changed="+savedNightChangedPixels+" delta="+savedNightPixelDelta);
+                    climate.Preview(2,4);detailStreet.ApplyViews();junctionVisibilityPreviews.Add(CaptureState(camera,request,target,image,"roundabout-saved-fog"));
+                }
+                finally{climate.Preview(0,0);detailStreet.ApplyViews();}
                 var reflectionGpu=GroundScene.CheckReflectionGpu();
                 File.WriteAllText("Reports/preview-result.json", JsonUtility.ToJson(new Report {
                     roundaboutImages=roundaboutPreviews.ToArray(),roundaboutPixelChanges=roundaboutPixelChanges.ToArray(),roundaboutMotionPositions=roundaboutMotionPositions.ToArray(),
+                    junctionVisibilityImages=junctionVisibilityPreviews.ToArray(),savedNightChangedPixels=savedNightChangedPixels,savedNightPixelDelta=savedNightPixelDelta,savedNightFogFraction=savedNightFogFraction,
                     result = "PASS", version = StarterConfig.VersionName, editor = Application.unityVersion,
                     graphicsApi = SystemInfo.graphicsDeviceType.ToString(), width = width, height = height,
                     image = output, source = "Unity Editor URP camera; not a phone screenshot or FPS test"
@@ -646,6 +672,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             public string result, version, editor, graphicsApi, image, source;
             public int width, height;
             public string[] roundaboutImages;public int[] roundaboutPixelChanges;public Vector3[] roundaboutMotionPositions;
+            public string[] junctionVisibilityImages;public int savedNightChangedPixels;public float savedNightPixelDelta,savedNightFogFraction;
             public string[] headlightColourImages;
             public string[] wetReflectionImages,koreanSignalImages;
             public string[] wiperImages;public int[] wiperPixelChanges;

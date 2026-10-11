@@ -3,9 +3,9 @@ namespace PixelTraffic.UnityPrototype
     public static class StarterConfig
     {
         public const string EditorVersion = "6000.3.26f1";
-        public const string VersionName = "0.32.0";
-        public const int VersionCode = 33;
-        public const string ScenePath = "Assets/PixelTraffic/Scenes/Roundabout-0.32.0.unity";
+        public const string VersionName = "0.33.0";
+        public const int VersionCode = 34;
+        public const string ScenePath = "Assets/PixelTraffic/Scenes/RoundaboutVisibility-0.33.0.unity";
         public const string ExperimentAppId = "com.s20plus.pixeltraffic.unityprototype";
         public const string ReleaseAppId = "com.s20plus.pixeltraffic";
         public const float LaneWidth = 3.2f;

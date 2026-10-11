@@ -108,6 +108,20 @@ namespace PixelTraffic.UnityPrototype.Editor
             Material Existing(string name)=>AssetDatabase.LoadAssetAtPath<Material>(StarterScene.Generated+"/"+name.Replace(" ","")+".mat");
             asphalt.Save("Roundabout Asphalt",root,Existing("Asphalt"));paving.Save("Roundabout Paving",root,Existing("Paving"));
             curb.Save("Roundabout Curb",root,Existing("Curb"));lawn.Save("Roundabout Island",root,Existing("Leaves 0"));white.Save("Roundabout Markings",root,Existing("Road White"));
+            // Reuse the existing lens/metal and pooled glow; retain four realtime lights.
+            Transform lighting=new GameObject("Roundabout Lighting").transform;lighting.SetParent(road,false);
+            foreach(float side in new[]{-1f,1f})
+            {
+                Transform lamp=new GameObject("Roundabout Lamp").transform;lamp.SetParent(lighting,false);lamp.localPosition=new Vector3(side*18.5f,.15f,z-15.5f);
+                void Box(string name,Vector3 centre,Vector3 size,Material material)
+                {
+                    var obj=GameObject.CreatePrimitive(PrimitiveType.Cube);obj.name=name;obj.transform.SetParent(lamp,false);obj.transform.localPosition=centre;obj.transform.localScale=size;
+                    UnityEngine.Object.DestroyImmediate(obj.GetComponent<Collider>());var renderer=obj.GetComponent<MeshRenderer>();renderer.sharedMaterial=material;renderer.shadowCastingMode=ShadowCastingMode.Off;
+                }
+                Box("Roundabout Pole",new Vector3(0,2.3f,0),new Vector3(.17f,4.6f,.17f),Existing("Street Metal"));
+                Box("Roundabout Arm",new Vector3(-side*.5f,4.6f,0),new Vector3(1.1f,.13f,.2f),Existing("Street Metal"));
+                Box("Lamp Lens",new Vector3(-side,4.5f,0),new Vector3(.5f,.05f,.3f),Existing("Lamp Lens"));
+            }
         }
     }
 }
