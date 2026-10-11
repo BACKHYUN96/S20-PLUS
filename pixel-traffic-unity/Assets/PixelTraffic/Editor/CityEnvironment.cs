@@ -64,7 +64,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             for (int i = 0; i < 12; i++)
                 foreach (float side in new[] { -1f, 1f }) Building(scenery, side * 14.1f, -22 + i * 17, i);
             for (int i = 0; i < 10; i++)
-                foreach (float side in new[] { -1f, 1f }) StreetLamp(scenery, side * 7.1f, -15 + i * 20);
+                foreach (float side in new[] { -1f, 1f }) StreetLamp(scenery, side * StarterConfig.CurbFurnitureX, -15 + i * 20);
             DistantScene.Create(scenery);
             foreach (Transform root in new[] { road, scenery })
                 foreach (Renderer renderer in root.GetComponentsInChildren<Renderer>())

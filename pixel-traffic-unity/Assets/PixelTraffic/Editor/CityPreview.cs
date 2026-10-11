@@ -442,6 +442,8 @@ namespace PixelTraffic.UnityPrototype.Editor
                 try
                 {
                     climate.Preview(0,0);detailStreet.ResetModel();
+                    camera.cullingMask=koreanMask;camera.transform.position=new Vector3(1.0f,6.7f,-4.0f);camera.transform.LookAt(new Vector3(StarterConfig.CurbFurnitureX,2.9f,7));camera.fieldOfView=55;
+                    koreanPreviews.Add(CaptureState(camera,request,target,image,"curb-signal-placement"));
                     foreach(var pole in UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))if(pole.name=="Signal Pole"&&pole.position.x<0&&Mathf.Abs(pole.position.z-7)<.01f)PreviewLayer(pole,30);
                     var koreanCaptured=new System.Collections.Generic.HashSet<string>();
                     for(int frame=0;frame<1200&&koreanCaptured.Count<5;frame++)
@@ -456,7 +458,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                         string pedestrian=detailStreet.Model.CanEnter?"walk":"stop";
                         if(koreanCaptured.Add("pedestrian-"+pedestrian))
                         {
-                            camera.cullingMask=1<<30;camera.transform.position=new Vector3(-7.0f,2.75f,7);camera.transform.LookAt(new Vector3(-10.08f,2.61f,7));camera.fieldOfView=42;
+                            camera.cullingMask=1<<30;camera.transform.position=new Vector3(-4.02f,2.75f,7);camera.transform.LookAt(new Vector3(-StarterConfig.CurbFurnitureX,2.61f,7));camera.fieldOfView=42;
                             koreanPreviews.Add(CaptureState(camera,request,target,image,"korean-pedestrian-"+pedestrian));
                         }
                     }

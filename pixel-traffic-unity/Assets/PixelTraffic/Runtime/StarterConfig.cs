@@ -3,13 +3,14 @@ namespace PixelTraffic.UnityPrototype
     public static class StarterConfig
     {
         public const string EditorVersion = "6000.3.26f1";
-        public const string VersionName = "0.22.0";
-        public const int VersionCode = 23;
-        public const string ScenePath = "Assets/PixelTraffic/Scenes/KoreanSignals-0.22.0.unity";
+        public const string VersionName = "0.23.0";
+        public const int VersionCode = 24;
+        public const string ScenePath = "Assets/PixelTraffic/Scenes/CurbSignals-0.23.0.unity";
         public const string ExperimentAppId = "com.s20plus.pixeltraffic.unityprototype";
         public const string ReleaseAppId = "com.s20plus.pixeltraffic";
         public const float LaneWidth = 3.2f;
         public const float RoadWidth = LaneWidth * 4;
+        public const float CurbFurnitureX = 7.1f;
         public const float LaneCenter = -LaneWidth * 1.5f;
         public const float RouteStart = -55;
         public const float RouteEnd = 255;

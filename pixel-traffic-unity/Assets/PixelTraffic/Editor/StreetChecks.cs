@@ -11,6 +11,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         internal static Report Validate()
         {
             var controller=UnityEngine.Object.FindFirstObjectByType<StreetSimulation>();Need(controller!=null,"Street controller missing.");
+            int curbPoles=CheckCurbSignalPlacement();
             int signalStates;
             {var all=UnityEngine.Object.FindObjectsByType<PrototypeDrive>(FindObjectsSortMode.None);var before=new float[all.Length];for(int i=0;i<all.Length;i++)before[i]=all[i].transform.position.z;
              try{signalStates=CheckSignalRigs(controller);}finally{for(int i=0;i<all.Length;i++)all[i].ResetPosition(before[i]);controller.ResetModel();controller.ApplyViews();}}
@@ -106,13 +107,36 @@ namespace PixelTraffic.UnityPrototype.Editor
                     Need(view.root.GetComponent<SkinnedMeshRenderer>().sharedMesh!=null&&view.limbs.Length==4,"Human rig incomplete.");
                     Vector3 foot=view.root.position;foreach(var bed in treeBeds)Need(foot.x<bed.min.x-.15f||foot.x>bed.max.x+.15f||foot.z<bed.min.z-.15f||foot.z>bed.max.z+.15f,"Actual tree bed differs from foot navigation.");
                 }
-                return new Report {result="PASS: Korean signal geometry and actual lamps, distributed 4/32/100 walkers,600sec crossing/following/safety,clock/pause and actual100-rig budget; device test pending",koreanSignalStates=signalStates,crossingBandMean=crowdMeans.ToArray(),populations=populations.ToArray(),simulatedSeconds=new[]{200,600,600},minimumFootDistance=minimumPeople,minimumBumperGap=minimumCars,crossings=completed,signalCycles=cycles,maxPopulationBudget=budget};
+                return new Report {result="PASS: curb-aligned Korean signal poles and actual lamps, distributed 4/32/100 walkers,600sec crossing/following/safety,clock/pause and actual100-rig budget; device test pending",curbSignalPoles=curbPoles,koreanSignalStates=signalStates,crossingBandMean=crowdMeans.ToArray(),populations=populations.ToArray(),simulatedSeconds=new[]{200,600,600},minimumFootDistance=minimumPeople,minimumBumperGap=minimumCars,crossings=completed,signalCycles=cycles,maxPopulationBudget=budget};
             }
             finally
             {
                 controller.SetPaused(false);for(int i=0;i<drives.Length;i++){drives[i].ResetPosition(poses[i].z);for(int n=0;n<4;n++)drives[i].Wheels[n].localRotation=wheels[i][n];}
                 controller.ResetModel();controller.ApplyViews();
             }
+        }
+        private static int CheckCurbSignalPlacement()
+        {
+            var transforms=UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None);int count=0;
+            foreach(var pole in transforms)if(pole.name=="Signal Pole")
+            {
+                count++;Transform lamp=null;float nearest=float.MaxValue;
+                foreach(var candidate in transforms)if(candidate.name=="Street Lamp"&&Mathf.Sign(candidate.position.x)==Mathf.Sign(pole.position.x))
+                {float distance=Mathf.Abs(candidate.position.z-pole.position.z);if(distance<nearest){nearest=distance;lamp=candidate;}}
+                Need(lamp!=null&&Mathf.Abs(pole.position.x-lamp.position.x)<.001f&&Mathf.Abs(pole.position.y-lamp.position.y)<.001f,"Signal mast is not on the streetlights' curb line.");
+                var mast=pole.Find("Signal Mast").GetComponent<Renderer>();
+                Need(Mathf.Abs(pole.position.x)-mast.bounds.extents.x>StarterConfig.RoadWidth/2,"Signal mast extends into traffic.");
+                Need(Mathf.Abs(pole.position.z-7)<.001f||Mathf.Abs(pole.position.z-13)<.001f,"Signal moved away from the crosswalk.");
+                var head=pole.Find("Vehicle Signal");var arm=pole.Find("Signal Arm").GetComponent<Renderer>();
+                Need(Mathf.Abs(Mathf.Abs(head.position.x)-3.38f)<.001f&&Mathf.Abs(head.position.y-5.61f)<.001f,"Overhead signal moved away from its original lane position.");
+                float armLow=Mathf.Min(pole.position.x,head.position.x),armHigh=Mathf.Max(pole.position.x,head.position.x);
+                Need(Mathf.Abs(arm.bounds.min.x-armLow)<.001f&&Mathf.Abs(arm.bounds.max.x-armHigh)<.001f,"Signal arm does not join mast and vehicle head.");
+                Need(Mathf.Abs(pole.Find("Pedestrian Signal").position.x-pole.position.x)<.001f,"Pedestrian signal detached from mast.");
+                var foot=new Vector2(pole.position.x,pole.position.z);
+                Need(!SidewalkRoutes.Allowed(foot)&&!SidewalkRoutes.SegmentAllowed(foot+Vector2.up*.4f,foot-Vector2.up*.4f),"Pedestrian route passes through relocated mast.");
+                Need(SidewalkRoutes.Allowed(new Vector2(Mathf.Sign(pole.position.x)*10.08f,pole.position.z)),"Old signal footprint still blocks outer sidewalk.");
+            }
+            Need(count==4,"Curb-side signal pole count differs.");return count;
         }
         private static int CheckSignalRigs(StreetSimulation controller)
         {
@@ -156,7 +180,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         private static void Need(bool value,string message){if(!value)throw new InvalidOperationException(message);}
         [Serializable] internal sealed class Report
         {
-            public string result;public int[] populations,simulatedSeconds;public float[] crossingBandMean;public float minimumFootDistance,minimumBumperGap;public int crossings,signalCycles,koreanSignalStates;
+            public string result;public int[] populations,simulatedSeconds;public float[] crossingBandMean;public float minimumFootDistance,minimumBumperGap;public int crossings,signalCycles,koreanSignalStates,curbSignalPoles;
             public CityEnvironment.Report maxPopulationBudget;
         }
     }

@@ -34,14 +34,15 @@ namespace PixelTraffic.UnityPrototype.Editor
             Material metal=StarterScene.Surface("Vehicle Trim",new Color(.025f,.031f,.038f),.05f,.2f);
             Material lens=StarterScene.Surface("Headlamp",new Color(.97f,.94f,.79f),.1f,.6f);
             var vehicleLights=new List<Renderer>();var walkLights=new List<Renderer>();
+            float armReach=StarterConfig.CurbFurnitureX-3.38f;
             foreach(float side in new[]{-1f,1f})foreach(float z in new[]{7f,13f})
             {
-                Transform pole=new GameObject("Signal Pole").transform;pole.SetParent(root.transform,false);pole.position=new Vector3(side*10.08f,.16f,z);
+                Transform pole=new GameObject("Signal Pole").transform;pole.SetParent(root.transform,false);pole.position=new Vector3(side*StarterConfig.CurbFurnitureX,.16f,z);
                 StarterScene.Box("Signal Mast",pole,new Vector3(0,2.9f,0),new Vector3(.18f,5.8f,.18f),metal);
-                Transform head=new GameObject("Vehicle Signal").transform;head.SetParent(pole,false);head.localPosition=new Vector3(-side*6.7f,5.45f,0);
+                Transform head=new GameObject("Vehicle Signal").transform;head.SetParent(pole,false);head.localPosition=new Vector3(-side*armReach,5.45f,0);
                 // Each face looks upstream, towards the drivers who must obey it.
                 head.localRotation=Quaternion.Euler(0,side<0?0:180,0);
-                StarterScene.Box("Signal Arm",pole,new Vector3(-side*3.35f,5.78f,0),new Vector3(6.7f,.15f,.15f),metal);
+                StarterScene.Box("Signal Arm",pole,new Vector3(-side*armReach/2,5.78f,0),new Vector3(armReach,.15f,.15f),metal);
                 StarterScene.Box("Signal Housing",head,Vector3.zero,new Vector3(1.82f,.50f,.26f),metal);
                 for(int n=0;n<4;n++)
                 {
