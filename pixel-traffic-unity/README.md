@@ -1,4 +1,30 @@
-# Pixel Traffic Unity — 차량 와이퍼 0.24.0
+# Pixel Traffic Unity — 회색 와이퍼·신호 중복 수정 0.25.0
+
+## 2026-10-11 — Unity 0.25.0 회색 와이퍼·중복 차량 신호등 수정: 검증·서명 APK 전달 완료
+
+사용자는 폰0.24.0 와이퍼 움직임을 확인했지만 유리에 묻혀 잘 보이지 않는다고 했고, 같은 방향 차량 신호등이 두 개씩 나오는 사진을 제공했다. **0.25.0/code26**, `Visibility-0.25.0.unity` / `Generated/Visibility0250`로 새 장면을 생성했다.
+
+**와이퍼:** 6차종24대/48날만 RGB(.52,.55,.58)의 중간 밝기 회색으로 바꿨다. 이미 사용하는 Headlamp 발광 재질을 공유하고 MaterialPropertyBlock으로 날에만 색을 준다. PropertyBlock은 장면에 저장되지 않으므로 VehicleWipers.Awake와ResetState에서 복원한다. Editor에만 색을 적용하려던 접근을 게시 전에 player load 복원으로 보완했다. 야간 조명에서 여전히 묻혀 보이는 실제 Validate38120423048 사진(Sedan/CityBus)을 보고 와이퍼48날에만 낮은 emission RGB(.075,.08,.085)을 보완했다. 새재질/Light/번짐효과는 추가하지 않는다. Validate38120927994는 trim emission조건에서 실패해 기존 CityClimate의 Headlamp 발광 경로로 바꿨다. 회색·낮은 emission·metallic.05/smoothness.2는 와이퍼 PropertyBlock에만 적용하며 그릴/기존 라이트 값은 바꾸지 않는다. shader keyword와 날의 emission 및 초기화 복원 경로를 검사한다. Editor에서 reserved Awake SendMessage assertion을 발견해 공개 RestoreBladeTint 경로를 Awake와ResetState에서 호출하고 검사도 그 경로를 직접 호출한다. 첫 실제 검사는 통과했고 이 보완은 야간 관찰에 따른 결정이다. 기존 타이밍·유리 안쪽 geometry·정차/일시정지·마지막 닦기 동작은 유지한다.
+
+**중복 원인·수정:** StreetScene이 좌우×z7/13의4보행 신호 기둥 모두에 같은 방향 차량 head와 가로대를 생성했다. 차량 신호는 방향별 횡단보도 건너편에 한 개씩(x-3.38/z7, x+3.38/z13), 총2head/8렌즈/2가로대만 만든다. 보행 신호4head/8아이콘·4기둥은 유지한다. 이전 패치의 가로등과 같은 curb 위치 x±7.1, 보행 경로 장애물, 신호주기/차량 정차/보행 연동은 유지한다.
+
+**범위·보존:** Editor DrivingScene/StreetScene/StreetChecks/WiperChecks/CityPreview/StarterScene, Runtime VehicleWipers/StarterConfig의8소스. 새 파일/재질/Light/Android host/workflow 변경 없음. 시작296파일·실제 index/status·122입력·host12SHA를 기록하고 무관한 사용자 변경을 보존했다. 중복 head를 삭제한 최대 강우/승객 장면은 119154triangles/1617renderers/47materials, 기존120000/2400/48제한 이하다.
+
+**실제 Unity:** source `c506a38de943564e4452d6751e6f53ff3375f96e` / [Validate 38121450125](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38121450125). 회색48날/공유재질/유리 texture 대비와 PropertyBlock 삭제 후 player 초기화에 쓰는 RestoreBladeTint 경로의 복원 검사 PASS. 실제 topology의 방향별 head 유일성·장면 전체2head/2arm·4보행 기둥·8차량렌즈/8보행아이콘·6신호 상태 검사 PASS. 와이퍼 유리 간섭 6528정점, 15/30/60/120Hz 일정강우30초 동일 결과, 약비96회/강비884회, 마지막닦기48case/정차24차량/일시정지와 기존 보행·승하차·기후·노면GPU·CCT·차선 안전 검사도 PASS.
+
+**실제 화면:** Unity6000.3.26f1/D3D11 140PNG를 받았다. 기존133장에 6차종 야간 회색 와이퍼와 비오는 밤 제품 카메라 신호 구도1장을 추가했다. 전체 구도·야간 방향별 신호 하나씩·6차종 회색 날의 유리 대비와 중간/최대 각도 사진을 직접 관찰했다. 와이퍼30장은 건조/중간/최대/비그친정지/야간×6차종이며, 중간/최대 GPU 변화픽셀은 [4296, 4429, 3149, 4245, 2662, 4426]다. 확대 사진은 임시 layer로 주변 가림을 제외한 실제 rig 촬영이며 저장된 폰 카메라를 바꾸지 않는다. 이 사진은 폰 캡처나 FPS 검증이 아니다.
+
+**Android:** tag `unity-apk-0.25.0-build1` / [BuildApk 38121984513](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38121984513). BuildPlayer 오류0/경고0, launcherLint 오류0/경고8. artifact sourceSHA/bytes/SHA256/ZIPCRC와 실제 SDK apksigner/aapt 검사로0.25.0/code26/min29/target36/ARM64IL2CPP, wallpaper service/private provider/settings launcher/Unity Activity 비활성, 원본v2서명 `a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6` 확인. 변경 없는 host12SHA는 hostLint38008378207(오류0/경고10)을 재사용했다.
+
+**전달:** [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/fcf0acf3bebf48e99a6df22fdbaf36ea6c6ed662/pixel-traffic-unity-prototype-0.25.0.apk) · [야간 신호 전체](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/fcf0acf3bebf48e99a6df22fdbaf36ea6c6ed662/unique-signals-night-preview.png) · [승용 와이퍼](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/fcf0acf3bebf48e99a6df22fdbaf36ea6c6ed662/wiper-sedan-preview.png) · [야간 승용 와이퍼](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/fcf0acf3bebf48e99a6df22fdbaf36ea6c6ed662/wiper-sedan-night-preview.png) · [버스 와이퍼](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/fcf0acf3bebf48e99a6df22fdbaf36ea6c6ed662/wiper-bus-preview.png). APK 31153731bytes/SHA256 `ddcfb09d3ca0c943c09828f65605fb46795476f9bb271255bac2fb9ccf8612b4`. `downloads/unity-0.25.0`의8파일을 로그인 없는 HTTP200/no redirect/fullbytes/SHA로 검증했다. main에는 APK binary나 새 workflow를 추가하지 않았다. 최종 문서는 통과한122빌드입력을 보존한다.
+
+PC 설치(아래 폴더에 다운로드한 경우):
+```powershell
+$trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $trafficAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.25.0.apk"
+```
+
+미확인: 실제 폰0.25.0 가독성/신호 중복 해소/성능·발열·장시간 lifecycle. 사용자 폰0.24.0 와이퍼 움직임 성공은 확인됐다. 다음은 사용자 방침에 따라 시안의 건물 외관 그래픽이며 별도 요청으로 진행한다. PC Drive설정 보류 유지.
 
 ## 2026-10-11 — Unity0.24.0 차량 와이퍼: 실제 검증·서명 APK 전달 완료
 
