@@ -21,8 +21,8 @@ namespace PixelTraffic.UnityPrototype.Editor
                     trees++;var canopy=root.Find("Layered Canopy");Need(canopy!=null,"Tree canopy missing.");
                     var mesh=canopy.GetComponent<MeshFilter>().sharedMesh;meshes.Add(mesh);
                     Geometry(mesh,ref checkedVertices);
-                    bool near=root.position.z<16;
-                    Need(mesh.triangles.Length/3==(near?560:140),"Distance foliage topology changed.");
+                    bool treeNear=root.position.z<16;
+                    Need(mesh.triangles.Length/3==(treeNear?560:140),"Distance foliage topology changed.");
                     Need(canopy.localScale.x>=.72f&&canopy.localScale.x<1&&canopy.localScale.y>=.89f&&canopy.localScale.y<1.04f,"Tree crown variety or crossing clearance lost.");
                     Need(root.Find("Trunk")!=null&&root.Find("Trunk").GetComponent<Renderer>().bounds.max.y>4,"Tree trunk disconnected.");
                     Need(mesh.triangles.Length/3<=560&&mesh.bounds.min.y>3&&mesh.bounds.max.y<8,"Foliage blocks walking height or exceeds silhouette budget.");
@@ -50,11 +50,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 foreach(string name in new[]{"Facade Stonework","Balcony Metalwork","Roof Access"})
                 {
                     Transform detail=root.Find(name);Need(detail!=null,"Merged building detail missing: "+name);
-                    var mesh=detail.GetComponent<MeshFilter>().sharedMesh;Geometry(mesh,ref checkedVertices);
-                    bool near=root.position.z<16;
-                    Need(mesh.triangles.Length/3==(near?560:140),"Distance foliage topology changed.");
-                    Need(canopy.localScale.x>=.72f&&canopy.localScale.x<1&&canopy.localScale.y>=.89f&&canopy.localScale.y<1.04f,"Tree crown variety or crossing clearance lost.");
-                    Need(root.Find("Trunk")!=null&&root.Find("Trunk").GetComponent<Renderer>().bounds.max.y>4,"Tree trunk disconnected.");architectureTriangles+=mesh.triangles.Length/3;
+                    var mesh=detail.GetComponent<MeshFilter>().sharedMesh;Geometry(mesh,ref checkedVertices);architectureTriangles+=mesh.triangles.Length/3;
                     foreach(Vector3 vertex in mesh.vertices)
                     {
                         Vector3 world=detail.TransformPoint(vertex);
@@ -103,10 +99,6 @@ namespace PixelTraffic.UnityPrototype.Editor
                 if(garden!=null)
                 {
                     gardens++;var mesh=garden.GetComponent<MeshFilter>().sharedMesh;Geometry(mesh,ref checkedVertices);
-                    bool near=root.position.z<16;
-                    Need(mesh.triangles.Length/3==(near?560:140),"Distance foliage topology changed.");
-                    Need(canopy.localScale.x>=.72f&&canopy.localScale.x<1&&canopy.localScale.y>=.89f&&canopy.localScale.y<1.04f,"Tree crown variety or crossing clearance lost.");
-                    Need(root.Find("Trunk")!=null&&root.Find("Trunk").GetComponent<Renderer>().bounds.max.y>4,"Tree trunk disconnected.");
                     Need(mesh.triangles.Length/3<=80,"Small rooftop foliage exceeds its budget.");
                     foreach(Vector3 v in mesh.vertices)
                     {
