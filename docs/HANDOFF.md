@@ -1,5 +1,13 @@
 # 새 채팅 인수인계 — 픽셀 트래픽 0.29.0
 
+## 2026-10-11 — Unity0.24.0 차량 와이퍼: 구현 완료·실제 검증 준비
+
+사용자는0.23.0 폰 적용 성공을 확인하고 와이퍼 패치를 요청했다. 0.24.0/code25/Wipers-0.24.0.unity/Generated/Wipers0240.6차종24대의 실제 앞유리 모서리를 기준으로2날씩48와이퍼를 배치했다. 각 날2quad/4tri로 총192tri/48renderer를 추가하고 기존VehicleTrim재질과 차종별메시를 공유한다. 예상 최대119346tri/1637renderer/47material은 실제PC에서 확인한다. 기존renderer 계약검사에 날2개 추가를 반영하되 삼각형·재질 총량 제한은 유지한다.
+
+StreetSimulation의 pause/focus/wallpaper-rendering에 따라 같은 elapsed clock에서만 동작한다. 약한 비(.38)는1.265초 왕복 뒤6초 대기, 강한 비(1)는.8초 연속 왕복이며 차량마다 첫 시작 지연이 다르다. 진행 중 속도 변경은 다음 왕복에 적용해 각도가 튀지 않는다. 비가 그치면 진행 중인 왕복을 마저 하거나 대기 중이면 마지막1회를 닦고8도 아래쪽에 정지한다. 정차 차량도 동작하고 건조/눈에는 동작하지 않는다. pause/숨김 시 밀린 시간을 따라잡지 않는다.
+
+범위13파일: 기존9C#(VehicleGeometry,HeavyVehicleGeometry,DrivingScene,VehicleDetailChecks,HeavyVehicleChecks,StreetSimulation,StarterScene,StarterConfig,CityPreview), 새 VehicleWipers/WiperChecks 및2meta. 시작293파일/index/status/host12SHA와122빌드입력(기존118+새4)을 기록했다. 정적 구분자 검사에서 새2클래스의 namespace 닫는 brace 누락을 발견해 게시 전 수정했다. 실제glass와profile일치/전체각도테두리와depth/15·30·60·120fps/약비·강비/정차/일시정지/마지막 닦기 검사를 준비했다. 차종6×4상태24추가GPU사진과픽셀변화검사,기존109장을 합쳐133장 예상. 실제 Unity/Android빌드/Lint/서명/공개다운로드 확인은 이source게시 후 실행하며 아직PASS가 아니다. 이후 기능추가를 마치고 시안의 건물 그래픽 개선으로 넘어간다. Drive PC설정 보류는 유지한다.
+
 ## 2026-10-11 — Unity0.23.0 신호등 기둥을 가로등과 같은 차도 쪽 보도 위치로 이동: 검증·서명 APK 전달 완료
 
 사용자는 신호등 기둥이 기존 가로등과 같은 차도 앞쪽 보도 위치에서 뻗어나오도록 요청했다. **0.23.0/code24**, `CurbSignals-0.23.0.unity` / `Generated/CurbSignals0230`. 신호등4기둥의 좌우 위치를 x±10.08m→±7.1m로 옮겨 가로등과 같은 보도 라인으로 맞췄다. 횡단보도 옆 z7/13m와5.8m 기둥 높이는 유지한다. 가로대는6.7m→3.72m로 줄여 차량 신호등은 원래 차선 위 x±3.38m/y5.61m에 남고, 보행자 신호등은 옮겨진 같은 기둥에 붙는다.

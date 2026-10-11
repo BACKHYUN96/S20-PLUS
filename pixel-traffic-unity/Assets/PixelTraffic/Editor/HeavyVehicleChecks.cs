@@ -14,7 +14,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             {
                 bool bus=drive.Model=="CityBus",truck=drive.Model=="BoxTruck";if(!bus&&!truck)continue;
                 if(bus)buses++;else trucks++;
-                Need(drive.Wheels.Length==4&&drive.GetComponentsInChildren<Renderer>().Length==(bus?19:17),"Heavy wheel/renderer contract changed.");
+                Need(drive.Wheels.Length==4&&drive.GetComponentsInChildren<Renderer>().Length==(bus?21:19),"Heavy wheel/wiper renderer contract changed.");
                 Need(drive.GetComponentsInChildren<Collider>().Length==0&&drive.GetComponentsInChildren<Light>().Length==0,"Heavy fleet adds physics or real-time lights.");
                 float frontAxle=bus?3.64f:2.35f,rearAxle=bus?-3.10f:-2.22f;
                 int frontWheels=0,rearWheels=0;
@@ -76,7 +76,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
             }
             Need(buses==4&&trucks==4&&checkedModels.Count==2,"Mixed fleet lost bus/truck ratio.");
-            return new Report{result="PASS: actual straight metre bodies with curbside bus opening, four axle pivots, front/rear lamps, paired cargo seam/locks/hinges, bus windows/AC, shared opaque mesh topology; phone test pending",busRenderersPerVehicle=19,buses=buses,trucks=trucks,checkedVertices=vertices,cargoLockBars=doorLocks,cargoHinges=doorHinges};
+            return new Report{result="PASS: actual straight metre bodies with curbside bus opening, four axle pivots, front/rear lamps and paired wipers, paired cargo seam/locks/hinges, bus windows/AC, shared opaque mesh topology; phone test pending",busRenderersPerVehicle=21,buses=buses,trucks=trucks,checkedVertices=vertices,cargoLockBars=doorLocks,cargoHinges=doorHinges};
         }
         static bool Finite(float x)=>!float.IsNaN(x)&&!float.IsInfinity(x);
         static Vector3Int Key(Vector3 p)=>new Vector3Int(Mathf.RoundToInt(p.x*10000),Mathf.RoundToInt(p.y*10000),Mathf.RoundToInt(p.z*10000));

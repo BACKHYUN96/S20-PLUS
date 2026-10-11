@@ -94,7 +94,11 @@ namespace PixelTraffic.UnityPrototype.Editor
             return new VehicleGeometry.Shape{paint=paint.Save(prefix+"Paint",55),glass=glass.Save(prefix+"Glass"),
                 trim=trim.Save(prefix+"Trim"),metal=metal.Save(prefix+"Metal"),head=head.Save(prefix+"Head"),tail=tail.Save(prefix+"Tail"),
                 tyre=tyre.Save(prefix+"Tyre",65),rim=rim.Save(prefix+"Rim",55),radius=radius,axle=frontAxle,
-                wheelX=bus?1.23f:1.20f,frontAxle=frontAxle,rearAxle=rearAxle,lampX=lampX,frontLampY=frontY,rearLampY=rearY};
+                wheelX=bus?1.23f:1.20f,frontAxle=frontAxle,rearAxle=rearAxle,lampX=lampX,frontLampY=frontY,rearLampY=rearY,
+                screenBottomLeft=new Vector3(bus?-1.09f:-.97f,bus?1.485f:1.545f,front+.017f),
+                screenBottomRight=new Vector3(bus?1.09f:.97f,bus?1.485f:1.545f,front+.017f),
+                screenTopLeft=new Vector3(bus?-1.09f:-.97f,bus?2.755f:2.275f,front+.017f),
+                screenTopRight=new Vector3(bus?1.09f:.97f,bus?2.755f:2.275f,front+.017f)};
         }
 
         private static void BusBody(VehicleGeometry.Builder b,float half,float bottom,float top,float rear,float front,float bevel)

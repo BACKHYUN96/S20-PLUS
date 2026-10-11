@@ -14,6 +14,25 @@ namespace PixelTraffic.UnityPrototype.Editor
             Renderer r=Part(root,"Right Turn Signals",Signal(model+"RightSignals",1,front,rear,shape.lampX,shape.frontLampY,shape.rearLampY),lamp);
             Renderer b=Part(root,"Headlight Road Beams",Beam(model+"RoadBeams",front,shape.head),lamp);b.enabled=false;
             root.gameObject.AddComponent<VehicleLighting>().Configure(root.Find("Front Lamps").GetComponent<Renderer>(),root.Find("Rear Lamps").GetComponent<Renderer>(),l,r,b);
+            AttachWipers(root,shape,model);
+        }
+        static void AttachWipers(Transform root,VehicleGeometry.Shape shape,string model)
+        {
+            Vector3 bottom=(shape.screenBottomLeft+shape.screenBottomRight)*.5f;
+            Vector3 upward=(shape.screenTopLeft+shape.screenTopRight)*.5f-bottom;
+            float height=upward.magnitude,width=Vector3.Distance(shape.screenBottomLeft,shape.screenBottomRight);
+            Vector3 normal=Vector3.Cross(Vector3.right,upward.normalized).normalized;
+            var plane=new GameObject("Wiper Glass Plane").transform;plane.SetParent(root,false);
+            plane.localPosition=bottom+normal*.018f;plane.localRotation=Quaternion.LookRotation(normal,upward.normalized);
+            float length=Mathf.Min(width*.40f,height*.80f);
+            var p=new List<Vector3>();var uv=new List<Vector2>();var t=new List<int>();
+            Quad(p,uv,t,new Vector3(0,-.006f,0),new Vector3(length*.73f,-.006f,0),new Vector3(length*.73f,.006f,0),new Vector3(0,.006f,0),Vector3.forward);
+            Quad(p,uv,t,new Vector3(length*.35f,-.012f,.002f),new Vector3(length,-.012f,.002f),new Vector3(length,.012f,.002f),new Vector3(length*.35f,.012f,.002f),Vector3.forward);
+            Mesh mesh=Save(model+"Wiper",p,uv,t);Material trim=root.Find("Grille and Trim").GetComponent<Renderer>().sharedMaterial;
+            var pivots=new Transform[2];
+            for(int i=0;i<2;i++)
+            {var renderer=Part(plane,i==0?"Wiper Left":"Wiper Right",mesh,trim);pivots[i]=renderer.transform;pivots[i].localPosition=new Vector3(width*((i==0?.15f:.53f)-.5f),height*.03f,i*.004f);}
+            root.gameObject.AddComponent<VehicleWipers>().Configure(pivots,new[]{shape.screenBottomLeft,shape.screenBottomRight,shape.screenTopLeft,shape.screenTopRight},Mathf.Repeat(root.GetComponent<PrototypeDrive>().Lane*.21f+root.position.z*.037f,1));
         }
         static Mesh Signal(string name,float side,float front,float rear,float lampX,float frontY,float rearY)
         {

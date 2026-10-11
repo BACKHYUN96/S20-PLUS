@@ -13,6 +13,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         {
             public Mesh paint, glass, trim, metal, head, tail, tyre, rim;
             public float radius, axle, wheelX, frontAxle, rearAxle, lampX, frontLampY, rearLampY;
+            public Vector3 screenBottomLeft,screenBottomRight,screenTopLeft,screenTopRight;
         }
 
         internal static Shape Build(Kind kind)
@@ -156,7 +157,8 @@ namespace PixelTraffic.UnityPrototype.Editor
                 metal=metal.Save(prefix+"Metal"),head=head.Save(prefix+"Head"),tail=tail.Save(prefix+"Tail"),
                 tyre=tyre.Save(prefix+"Tyre",65),rim=rim.Save(prefix+"Rim"),radius=radius,axle=axle,
                 wheelX=suv?.94f:sport?.93f:.90f,frontAxle=axle,rearAxle=-axle,lampX=.78f,
-                frontLampY=headCenter(belt),rearLampY=belt*.78f };
+                frontLampY=headCenter(belt),rearLampY=belt*.78f,
+                screenBottomLeft=fl,screenBottomRight=fr,screenTopLeft=rfl,screenTopRight=rfr };
         }
 
         private static float headCenter(float belt) => belt*.77f;

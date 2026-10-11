@@ -488,12 +488,47 @@ namespace PixelTraffic.UnityPrototype.Editor
                     for(int i=0;i<originalCars.Length;i++)originalCars[i].ResetPosition(originalZ[i]);detailStreet.ResetModel();climate.Preview(0,0);detailStreet.ApplyViews();
                     camera.aspect=.45f;camera.fieldOfView=roadFov;camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);
                 }
+                var wiperPreviews=new System.Collections.Generic.List<string>();var wiperPixelChanges=new System.Collections.Generic.List<int>();
+                var wiperModelsSeen=new System.Collections.Generic.HashSet<string>();var wiperLayers=new System.Collections.Generic.Dictionary<GameObject,int>();int wiperMask=camera.cullingMask;
+                try
+                {
+                    detailStreet.ResetModel();detailStreet.ApplyViews();camera.cullingMask=1<<30;camera.fieldOfView=60;
+                    foreach(var vehicle in originalCars)if(wiperModelsSeen.Add(vehicle.Model))
+                    {
+                        foreach(var child in vehicle.GetComponentsInChildren<Transform>(true)){wiperLayers.Add(child.gameObject,child.gameObject.layer);child.gameObject.layer=30;}
+                        var wiperPair=vehicle.GetComponent<VehicleWipers>();var wiperScreen=wiperPair.Screen;
+                        Vector3 wiperBottom=(wiperScreen[0]+wiperScreen[1])*.5f,wiperTop=(wiperScreen[2]+wiperScreen[3])*.5f;
+                        Vector3 wiperUp=(wiperTop-wiperBottom).normalized,wiperNormal=Vector3.Cross(Vector3.right,wiperUp).normalized,wiperCentre=(wiperBottom+wiperTop)*.5f;
+                        float wiperWidth=Vector3.Distance(wiperScreen[0],wiperScreen[1]);
+                        camera.transform.position=vehicle.transform.TransformPoint(wiperCentre+wiperNormal*wiperWidth*2.1f+wiperUp*wiperWidth*.7f+Vector3.right*wiperWidth*.4f);
+                        camera.transform.LookAt(vehicle.transform.TransformPoint(wiperCentre));
+                        climate.Preview(0,0);detailStreet.ApplyViews();wiperPair.ResetState();wiperPair.Advance(12,0);
+                        wiperPreviews.Add(CaptureState(camera,request,target,image,"wiper-"+vehicle.Model+"-dry-parked"));
+                        climate.Preview(0,2);detailStreet.ApplyViews();wiperPair.Advance(wiperPair.StartDelay+.2,1);
+                        wiperPreviews.Add(CaptureState(camera,request,target,image,"wiper-"+vehicle.Model+"-mid-sweep"));var wiperMidPixels=image.GetPixels32();
+                        wiperPair.ResetState();wiperPair.Advance(wiperPair.StartDelay+.4,1);
+                        wiperPreviews.Add(CaptureState(camera,request,target,image,"wiper-"+vehicle.Model+"-upper-sweep"));var wiperUpperPixels=image.GetPixels32();int changedWiperPixels=0;
+                        for(int n=0;n<wiperMidPixels.Length;n++)if(Math.Abs(wiperMidPixels[n].r-wiperUpperPixels[n].r)+Math.Abs(wiperMidPixels[n].g-wiperUpperPixels[n].g)+Math.Abs(wiperMidPixels[n].b-wiperUpperPixels[n].b)>20)changedWiperPixels++;
+                        if(changedWiperPixels<=16)throw new InvalidOperationException("Actual GPU wiper motion is not visible: "+vehicle.Model+" pixels="+changedWiperPixels);
+                        wiperPixelChanges.Add(changedWiperPixels);wiperPair.Advance(2,0);climate.Preview(0,0);detailStreet.ApplyViews();
+                        if(wiperPair.Moving||Mathf.Abs(wiperPair.Angle-VehicleWipers.ParkAngle)>.001f)throw new InvalidOperationException("Captured wiper fails to park after rain.");
+                        wiperPreviews.Add(CaptureState(camera,request,target,image,"wiper-"+vehicle.Model+"-after-rain"));
+                        foreach(var pair in wiperLayers)pair.Key.layer=pair.Value;wiperLayers.Clear();
+                    }
+                    if(wiperPreviews.Count!=24)throw new InvalidOperationException("Wiper model captures incomplete.");
+                }
+                finally
+                {
+                    foreach(var pair in wiperLayers)pair.Key.layer=pair.Value;camera.cullingMask=wiperMask;
+                    for(int i=0;i<originalCars.Length;i++)originalCars[i].ResetPosition(originalZ[i]);climate.Preview(0,0);detailStreet.ResetModel();detailStreet.ApplyViews();
+                    camera.aspect=.45f;camera.fieldOfView=roadFov;camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);
+                }
                 var reflectionGpu=GroundScene.CheckReflectionGpu();
                 File.WriteAllText("Reports/preview-result.json", JsonUtility.ToJson(new Report {
                     result = "PASS", version = StarterConfig.VersionName, editor = Application.unityVersion,
                     graphicsApi = SystemInfo.graphicsDeviceType.ToString(), width = width, height = height,
                     image = output, source = "Unity Editor URP camera; not a phone screenshot or FPS test"
-                    , koreanSignalImages=koreanPreviews.ToArray(),reflectionGpu=reflectionGpu,wetReflectionImages=reflectionPreviews.ToArray(),materialColors = colors, climateImages = previews.ToArray(), vehicleImages = vehiclePreviews.ToArray(),frontageImages=frontagePreviews.ToArray(),drivingImages=drivingPreviews.ToArray(),headlightColourImages=colourPreviews.ToArray(),cameraImages=cameraPreviews.ToArray(),landscapeImages=landscapePreviews.ToArray(),skyImages=skyPreviews.ToArray(),groundImages=groundPreviews.ToArray(),sceneryImages=sceneryPreviews.ToArray(),heavyImages=heavyPreviews.ToArray(),busStopImages=stopPreviews.ToArray()
+                    , wiperImages=wiperPreviews.ToArray(),wiperPixelChanges=wiperPixelChanges.ToArray(),koreanSignalImages=koreanPreviews.ToArray(),reflectionGpu=reflectionGpu,wetReflectionImages=reflectionPreviews.ToArray(),materialColors = colors, climateImages = previews.ToArray(), vehicleImages = vehiclePreviews.ToArray(),frontageImages=frontagePreviews.ToArray(),drivingImages=drivingPreviews.ToArray(),headlightColourImages=colourPreviews.ToArray(),cameraImages=cameraPreviews.ToArray(),landscapeImages=landscapePreviews.ToArray(),skyImages=skyPreviews.ToArray(),groundImages=groundPreviews.ToArray(),sceneryImages=sceneryPreviews.ToArray(),heavyImages=heavyPreviews.ToArray(),busStopImages=stopPreviews.ToArray()
                 }, true));
                 Debug.Log("PASS: real city camera preview saved: " + output);
             }
@@ -549,6 +584,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             public int width, height;
             public string[] headlightColourImages;
             public string[] wetReflectionImages,koreanSignalImages;
+            public string[] wiperImages;public int[] wiperPixelChanges;
             public GroundScene.ReflectionGpuReport reflectionGpu;
             public string[] materialColors, climateImages, vehicleImages,frontageImages,drivingImages,cameraImages,landscapeImages,skyImages,groundImages,sceneryImages,heavyImages,busStopImages;
         }

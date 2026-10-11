@@ -11,6 +11,7 @@ namespace PixelTraffic.UnityPrototype
         [SerializeField] private Renderer[] vehicleLights,walkLights;
         [SerializeField] private int people=StarterConfig.DefaultPeople;
         [SerializeField] private WetTraffic spray;
+        [SerializeField] private VehicleWipers[] wipers;
         private CityClimate climate;
         private readonly Plane[] viewPlanes=new Plane[6];
         private Camera portraitCamera;
@@ -32,6 +33,7 @@ namespace PixelTraffic.UnityPrototype
         public void Configure(PrototypeDrive[] cars,WalkerView[] views,Renderer[] signals,Renderer[] crossingSignals)
         {
             vehicles=cars;walkers=views;vehicleLights=signals;walkLights=crossingSignals;
+            wipers=new VehicleWipers[cars.Length];for(int i=0;i<cars.Length;i++)wipers[i]=cars[i].GetComponent<VehicleWipers>();
             foreach(var car in cars)car.Bind(this);ResetModel();ApplyViews();
         }
         private void Awake()
@@ -51,6 +53,7 @@ namespace PixelTraffic.UnityPrototype
                 cars[i]=new StreetModel.Car {lane=vehicle.Lane,z=vehicle.transform.position.z,cruise=vehicle.Speed,speed=vehicle.Speed,length=bounds.size.z,width=bounds.size.x,height=bounds.size.y,bus=vehicle.Model=="CityBus"};
             }
             model=new StreetModel(people,cars);
+            if(wipers!=null)foreach(var pair in wipers)if(pair!=null)pair.ResetState();
             portraitCamera=Camera.main;if(portraitCamera!=null){GeometryUtility.CalculateFrustumPlanes(portraitCamera,viewPlanes);model.Visible=Visible;model.VisibleVehicle=VisibleVehicle;}
             accumulator=0;lastPhase=(StreetModel.Phase)(-1);
         }
@@ -75,6 +78,7 @@ namespace PixelTraffic.UnityPrototype
         {
             if(double.IsNaN(elapsed)||double.IsInfinity(elapsed)||elapsed<0)throw new ArgumentOutOfRangeException(nameof(elapsed));
             if(paused||(!focused&&!Application.isEditor&&!wallpaperRuntime))return;
+            if(wallpaperRuntime&&!AndroidWallpaperBridge.IsRendering)return;
             if(climate==null)climate=UnityEngine.Object.FindFirstObjectByType<CityClimate>();
             if(climate!=null&&climate.WeatherBlend!=null)model.SetWeather(climate.PeopleFraction,climate.TrafficFraction,climate.DrivingPace,climate.WalkingPace);
             if(portraitCamera!=null)GeometryUtility.CalculateFrustumPlanes(portraitCamera,viewPlanes);
@@ -89,6 +93,7 @@ namespace PixelTraffic.UnityPrototype
                 }
             }
             if(spray!=null)spray.Advance((float)elapsed,model,climate!=null&&climate.WeatherBlend!=null?climate.RainGain:0);
+            if(wipers!=null)for(int i=0;i<wipers.Length;i++)if(wipers[i]!=null&&model.Cars[i].active)wipers[i].Advance(elapsed,climate!=null&&climate.WeatherBlend!=null?climate.RainGain:0);
         }
         private bool VisibleVehicle(Vector2 point,Vector3 size)
             =>GeometryUtility.TestPlanesAABB(viewPlanes,new Bounds(new Vector3(point.x,size.y*.5f,point.y),size+Vector3.one*.4f));
