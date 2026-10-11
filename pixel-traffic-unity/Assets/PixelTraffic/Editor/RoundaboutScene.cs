@@ -51,6 +51,16 @@ namespace PixelTraffic.UnityPrototype.Editor
             asphalt.Rect(-160,-13,z-6.4f,z+6.4f,.006f);asphalt.Rect(13,160,z-6.4f,z+6.4f,.006f);
             asphalt.Rect(-160,160,295.6f,308.4f,.006f);
             asphalt.Quad(new Vector3(-6.4f,.006f,275),new Vector3(-35,.006f,302),new Vector3(35,.006f,302),new Vector3(6.4f,.006f,275));
+            // Support the full swept river-road bend, including the long bus body, beyond the central flare.
+            foreach(float side in new[]{-1f,1f})
+            {
+                Vector3 Bend(float t)
+                {float u=1-t;return new Vector3(side*(u*u*u*4.8f+3*u*u*t*4.8f+3*u*t*t*80+t*t*t*140),.006f,u*u*u*275+3*u*u*t*295+3*u*t*t*302+t*t*t*302);}
+                Vector3 Edge(float t)
+                {float u=1-t;Vector3 tangent=new Vector3(side*(6*u*t*75.2f+3*t*t*60),0,3*u*u*20+6*u*t*7);return new Vector3(-tangent.z,0,tangent.x).normalized*6.4f;}
+                for(int n=0;n<16;n++)
+                {float a=n/16f,b=(n+1)/16f;Vector3 p=Bend(a),q=Bend(b),s=Edge(a),t=Edge(b);asphalt.Quad(p-s,q-t,q+t,p+s);}
+            }
             for(int port=0;port<4;port++)
             {
                 Vector3 P(float x,float v,float y){Vector2 p=new Vector2(x,v);for(int k=0;k<port;k++)p=new Vector2(-p.y,p.x);return new Vector3(p.x,y,z+p.y);}
@@ -75,7 +85,12 @@ namespace PixelTraffic.UnityPrototype.Editor
 
             }
             foreach(float edge in new[]{-1f,1f})
-            {float p=302+edge*7.4f;paving.Rect(-160,160,p-1,p+1,.15f);float at=302+edge*6.52f;curb.Rect(-160,160,at-.12f,at+.12f,.17f);}
+            {
+                float p=302+edge*7.4f,at=302+edge*6.52f;
+                if(edge<0)
+                {paving.Rect(-160,-90,p-1,p+1,.15f);paving.Rect(90,160,p-1,p+1,.15f);curb.Rect(-160,-90,at-.12f,at+.12f,.17f);curb.Rect(90,160,at-.12f,at+.12f,.17f);}
+                else{paving.Rect(-160,160,p-1,p+1,.15f);curb.Rect(-160,160,at-.12f,at+.12f,.17f);}
+            }
             // Yield teeth at all four entries. The ring's single lane has no confusing centre line.
             for(int port=0;port<4;port++)for(int n=0;n<3;n++)
             {

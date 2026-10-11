@@ -1,5 +1,9 @@
 # 현재 상태
 
+## Unity 0.32.0 — river-road junction clearance
+
+Keep asphalt beneath the full left and right north-port curved routes, with a 6.4m half-width swept ribbon. Open the near-bank pavement and curb across this junction rather than letting a continuous raised strip cross vehicle routes. Preserve the five shared terrain meshes/materials and previous traffic behavior. Publish the same complete 19-source set and perform a fresh PC validation/GPU run; failed retry report names are not reused. No APK released until actual verification.
+
 ## Unity 0.32.0 — actual GPU pavement polish
 
 Actual PC validation run 38155783468 passed all roundabout circulation, independent collision checks, frame rates, weather and regression tests with 158 actual GPU PNGs. Visual review identified overlap between approach pavement ends and ring pavement, plus inappropriate reuse of box UV tiling. Join approach pavement strips at shared diagonal corners, add approach curb lips and map shared terrain materials in world space. The same 19 source inputs are published together; a fresh actual validation/capture is required before tagging the signed APK. Phone test remains pending.
