@@ -1,5 +1,9 @@
 # 새 채팅 인수인계 — 픽셀 트래픽 0.29.0
 
+## 2026-10-12 — Unity 0.33.0 실제 야간 구도 확인 후 안개 보완
+
+Initial actual Validate38184422654 and162GPU PNG passed; the saved-camera night image restored the roundabout but the28% blue haze still washed its green colour. Move clear haze start200->250 and require junction fog fraction below15% for all clear time states. Existing selected fog10..105, four realtime lights, shared-material two fixtures, original camera and traffic behavior stay intact. Publish complete8-source set and run fresh actual validation/capture before signed APK. No intermediate APK released.
+
 ## 2026-10-12 — Unity 0.33.0 로터리 야간 가시성 수정 진행
 
 사용자 폰의0.32.0 화면에서 뒤쪽 로터리가 어둡게 가려졌다. 실제 저장카메라의 로터리 깊이가 약270m인데 맑은 밤 linear fog가270m에서 완전히 덮이는 것이 원인이다. 맑은 날/노을/밤 fog200..490/470/450으로 뒤로 옮기고, 선택 안개10..105는 유지한다. 기존 재질을 쓰는 삼각형72개짜리 두 가로등과 기존 glow quad두개를 로터리 접근부에 추가한다. 실시간 조명4개/개체당4개 제한,47공유재질,기존 그래픽 예산과카메라/차량 경로를 유지한다.

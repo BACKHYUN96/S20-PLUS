@@ -606,7 +606,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     for(int y=y0;y<=y1;y++)for(int x=x0;x<=x1;x++)
                     {int n=y*image.width+x;int delta=Math.Abs(clearPixels[n].r-hiddenPixels[n].r)+Math.Abs(clearPixels[n].g-hiddenPixels[n].g)+Math.Abs(clearPixels[n].b-hiddenPixels[n].b);savedNightPixelDelta+=delta/(255f*3);if(delta>20)savedNightChangedPixels++;samples++;}
                     savedNightPixelDelta/=Mathf.Max(1,samples);
-                    if(savedNightFogFraction>=.4f||savedNightChangedPixels<32||savedNightPixelDelta<.002f)throw new InvalidOperationException("Saved night-camera junction remains lost in fog: obscured="+savedNightFogFraction+" changed="+savedNightChangedPixels+" delta="+savedNightPixelDelta);
+                    if(savedNightFogFraction>=.15f||savedNightChangedPixels<32||savedNightPixelDelta<.002f)throw new InvalidOperationException("Saved night-camera junction remains lost in fog: obscured="+savedNightFogFraction+" changed="+savedNightChangedPixels+" delta="+savedNightPixelDelta);
                     climate.Preview(2,4);detailStreet.ApplyViews();junctionVisibilityPreviews.Add(CaptureState(camera,request,target,image,"roundabout-saved-fog"));
                 }
                 finally{climate.Preview(0,0);detailStreet.ApplyViews();}

@@ -82,7 +82,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 {
                     float depth=Vector3.Dot(new Vector3(0,.25f,RoundaboutTraffic.CenterZ)-Camera.main.transform.position,Camera.main.transform.forward);
                     float obscured=Mathf.Clamp01((depth-RenderSettings.fogStartDistance)/(RenderSettings.fogEndDistance-RenderSettings.fogStartDistance));
-                    Need(RenderSettings.fogMode==FogMode.Linear&&obscured<.4f,"Clear-weather saved camera loses the roundabout in distant haze.");
+                    Need(RenderSettings.fogMode==FogMode.Linear&&obscured<.15f,"Clear-weather saved camera loses the roundabout in distant haze.");
                 }
                 if(weather==4)Need(Mathf.Abs(RenderSettings.fogStartDistance-10)<.01f&&Mathf.Abs(RenderSettings.fogEndDistance-105)<.01f,"Selected fog weather was weakened.");
                 Need(GameObject.Find("Rain Pool").GetComponent<Renderer>().enabled == (weather == 1 || weather == 2 || weather == 5), "Actual rain pool visibility differs.");
