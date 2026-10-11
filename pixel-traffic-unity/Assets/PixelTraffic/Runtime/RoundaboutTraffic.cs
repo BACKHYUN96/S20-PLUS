@@ -99,11 +99,18 @@ namespace PixelTraffic.UnityPrototype
         }
         static bool Axis(Vector2 d,Vector2 axis,Vector2 fa,Vector2 sa,Vector2 fb,Vector2 sb,float la,float wa,float lb,float wb)
         =>Mathf.Abs(Vector2.Dot(d,axis))>=Mathf.Abs(Vector2.Dot(fa,axis))*la+Mathf.Abs(Vector2.Dot(sa,axis))*wa+Mathf.Abs(Vector2.Dot(fb,axis))*lb+Mathf.Abs(Vector2.Dot(sb,axis))*wb-.0001f;
-        bool Free(int index,Vector2 point,float yaw)
+        public int Blocker(int index,Vector2 point,float yaw)
         {
             var c=model.Cars[index];for(int j=0;j<model.Cars.Length;j++)
-            {var other=model.Cars[j];if(j==index||!other.active||other.roundHidden)continue;if(!Separated(point,yaw,c.SafetyLength,c.width,Position(other),Yaw(other),other.SafetyLength,other.width))return false;}
-            return true;
+            {var other=model.Cars[j];if(j==index||!other.active||other.roundHidden)continue;if(!Separated(point,yaw,c.SafetyLength,c.width,Position(other),Yaw(other),other.SafetyLength,other.width))return j;}
+            return -1;
+        }
+        bool Free(int index,Vector2 point,float yaw)=>Blocker(index,point,yaw)<0;
+        bool ClearApproach(int index,State state)
+        {
+            for(float d=state.progress;d<state.path.entry;d+=.75f)
+            {Vector2 p=state.path.Pose(d,out float yaw);if(!Free(index,p,yaw))return false;}
+            Vector2 end=state.path.Pose(state.path.entry,out float heading);return Free(index,end,heading);
         }
         void Start(int i,int origin)
         {
@@ -166,7 +173,7 @@ namespace PixelTraffic.UnityPrototype
                 if(s.progress<s.path.entry&&owner!=i)
                 {
                     if(owner>=0&&owner!=i){limit=hold;s.stage=Stage.Waiting;s.waitTicks++;Yields++;}
-                    else if(s.progress>=hold-.001f&&Free(i,s.path.Pose(s.path.entry,out float heading),heading)){owner=i;Entries++;s.stage=Stage.Circulating;}
+                    else if(s.progress>=hold-.001f&&ClearApproach(i,s)){owner=i;Entries++;s.stage=Stage.Circulating;}
                     else limit=Mathf.Min(limit,hold);
                 }
                 if(s.progress>=s.path.exit-12)
