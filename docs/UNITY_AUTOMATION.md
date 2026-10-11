@@ -1,5 +1,11 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-11 — Unity 0.30.0 작은 잎 군집·수관 명암: 구현·실제 검증 대기
+
+사용자 폰0.29.0 성공확인 후 가로수 잎 디테일 패치 승인. 가까운8그루의7큰군집을각각7작은로브로분할하여49군집/980tri/588vertices의수관. 먼24그루는기존7군집/140tri유지. 가까운수관만3360tri추가, 이전최대114818→118178예상으로120000제한유지(실제검증대기). 작은로브상호배치로윤곽을쪼개고틈을만들며, 높이기반UV와공유256mip texture의상하gradient로햇빛/그늘강화. 32그루/6mesh/3잎재질·불투명렌더러·기후/바람·카메라/기능·신호중복수정·건물·Android host/workflow 유지. FoliageScene/SceneryChecks/StarterScene/StarterConfig4소스,0.30.0/code31,FineFoliage-0.30.0.unity/Generated/FineFoliage0300.
+
+검사는 실제49분리군집/작은bounds/높이UV/texture상하명암/원근topology/geometry winding/기존기능과예산을확인할계획. 기존150실제GPU캡처를사용하여이전0.29전체와3수종day/night/storm비교. 아직PC Unity/Android/서명APK/폰성능PASS아님. 시작296파일/index/status/122입력/host12SHA보존. 최종APK는사용자 Desktop\AI 폴더download/SHA/USBinstall단일PowerShell.
+
 ## 2026-10-11 — Unity 0.29.0 보행자 신호등 중복 제거: 실제 검증·서명 APK 전달 완료
 
 사용자 이미지의 결합신호기둥 위쪽 별도보행자신호 중복 신고를 수정했다. StreetScene이각curb z7/13에2기둥씩4기둥을생성하던원인. 별도보행자전용기둥2개를제거하고 차량/보행자결합기둥양쪽1개씩2개유지. 실제2기둥/2차량머리8렌즈/2보행머리4아이콘렌즈를검사하고 orphan/중복머리도직접계수한다. 높이·위치·신호색·표시방향·보행입장/차량정지·기후/기능은유지. 기존4기둥용안전회피구역을보수적으로유지하여보행경로변경을섞지않았다. StreetScene/StreetChecks/StarterScene/StarterConfig4소스,0.29.0/code30,UniquePedestrianSignals-0.29.0.unity/Generated/UniquePedestrianSignals0290. 가로수/건물/카메라/Android host/workflow변경없음.

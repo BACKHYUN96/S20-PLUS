@@ -22,10 +22,22 @@ namespace PixelTraffic.UnityPrototype.Editor
                     var mesh=canopy.GetComponent<MeshFilter>().sharedMesh;meshes.Add(mesh);
                     Geometry(mesh,ref checkedVertices);
                     bool treeNear=root.position.z<16;
-                    Need(mesh.triangles.Length/3==(treeNear?560:140),"Distance foliage topology changed.");
+                    Need(mesh.vertexCount==(treeNear?588:84),"Small canopy clusters are missing.");
+                    if(treeNear)
+                    {
+                        var points=mesh.vertices;var leafUv=mesh.uv;int fineGroups=0;
+                        for(int first=0;first<points.Length;first+=12)
+                        {
+                            Bounds groupBounds=new Bounds(points[first],Vector3.zero);
+                            for(int j=0;j<12;j++){groupBounds.Encapsulate(points[first+j]);Need(Mathf.Abs(leafUv[first+j].y-Mathf.Clamp((points[first+j].y-3)/5,.01f,.99f))<.0001f,"Canopy shade no longer follows height.");}
+                            Need(groupBounds.size.x<1.7f&&groupBounds.size.y<1.7f&&groupBounds.size.z<1.7f,"Large foliage blobs remain in detailed crown.");fineGroups++;
+                        }
+                        Need(fineGroups==49,"Near crown is not split into small leaf groups.");
+                    }
+                    Need(mesh.triangles.Length/3==(treeNear?980:140),"Distance foliage topology changed.");
                     Need(canopy.localScale.x>=.72f&&canopy.localScale.x<1&&canopy.localScale.y>=.89f&&canopy.localScale.y<1.04f,"Tree crown variety or crossing clearance lost.");
                     Need(root.Find("Trunk")!=null&&root.Find("Trunk").GetComponent<Renderer>().bounds.max.y>4,"Tree trunk disconnected.");
-                    Need(mesh.triangles.Length/3<=560&&mesh.bounds.min.y>3&&mesh.bounds.max.y<8,"Foliage blocks walking height or exceeds silhouette budget.");
+                    Need(mesh.triangles.Length/3<=980&&mesh.bounds.min.y>3&&mesh.bounds.max.y<8,"Foliage blocks walking height or exceeds silhouette budget.");
                     var material=canopy.GetComponent<MeshRenderer>().sharedMaterial;materials.Add(material);
                     var texture=material.GetTexture("_BaseMap") as Texture2D;
                     Need(texture!=null&&texture.width==256&&texture.height==256&&texture.mipmapCount>1&&texture.filterMode==FilterMode.Trilinear,"Leaf colour detail lacks shared distance-filtered texture.");
@@ -120,6 +132,10 @@ namespace PixelTraffic.UnityPrototype.Editor
             float minimum=1,maximum=0;
             foreach(Color c in leafTexture.GetPixels()) {minimum=Mathf.Min(minimum,c.g);maximum=Mathf.Max(maximum,c.g);}
             Need(maximum-minimum>.12f,"Leaf texture is flat colour.");
+            float lowerShade=0,upperShade=0;
+            for(int x=0;x<leafTexture.width;x++)for(int y=0;y<32;y++)
+            {lowerShade+=leafTexture.GetPixel(x,y).g;upperShade+=leafTexture.GetPixel(x,leafTexture.height-1-y).g;}
+            Need((upperShade-lowerShade)/(leafTexture.width*32)>.15f,"Sunlit upper foliage lacks its baked shade gradient.");
             Material original=AssetDatabase.LoadAssetAtPath<Material>(StarterScene.Generated+"/Leaves0.mat");
             Need(original!=null&&original.GetTexture("_BaseMap")==leafTexture,"Runtime/editor changes replace shared leaf asset.");
             var pipeline=UnityEngine.Rendering.GraphicsSettings.defaultRenderPipeline as UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset;

@@ -31,7 +31,19 @@ namespace PixelTraffic.UnityPrototype.Editor
             }
             var groups=new List<Vector3>(centres);
             groups.Add(new Vector3(-.65f,5.65f,-.95f));groups.Add(new Vector3(.75f,5.8f,.85f));
-            Mesh mesh=Clusters("Canopy Species "+species+(near?" Near":" Far"),groups.ToArray(),radius,near,species,true);
+            if(near)
+            {
+                // Seven small lobes replace each large ellipsoid, leaving scalloped edges and light gaps.
+                var lobes=new List<Vector3>();
+                Vector3[] offsets={Vector3.zero,Vector3.up,Vector3.down,Vector3.left,Vector3.right,Vector3.forward,Vector3.back};
+                for(int group=0;group<groups.Count;group++)
+                {
+                    Quaternion turn=Quaternion.Euler(0,group*37+species*19,group%2==0?13:-11);
+                    foreach(Vector3 offset in offsets)lobes.Add(groups[group]+turn*Vector3.Scale(offset,radius)*.55f);
+                }
+                groups=lobes;radius*=.48f;
+            }
+            Mesh mesh=Clusters("Canopy Species "+species+(near?" Near":" Far"),groups.ToArray(),radius,false,species,true);
             AssetDatabase.CreateAsset(mesh,path);return mesh;
         }
 
@@ -58,7 +70,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 {
                     float u=x/(float)size,v=y/(float)size;
                     float broad=TileNoise(u,v,7,31,11),leaf=TileNoise(u,v,43,7,29);
-                    float shade=.46f+broad*.28f+leaf*.26f;
+                    float shade=.36f+broad*.19f+leaf*.19f+v*.26f;
                     // Small oblique leaf groups stay readable after mip filtering.
                     float vein=Mathf.Abs(Mathf.Sin((u*71+v*43)*Mathf.PI));
                     shade*=.94f+vein*.06f;pixels[y*size+x]=new Color(shade*.96f,shade,shade*.87f);
@@ -105,7 +117,8 @@ namespace PixelTraffic.UnityPrototype.Editor
                     Vector3 clusterRadius=radius*size;
                     if(tree)clusterRadius=Vector3.Scale(clusterRadius,new Vector3(1+Mathf.Sin(clump*2.3f+seed)*.13f,1,.9f+clump%2*.18f));
                     positions.Add(centres[clump]+Vector3.Scale(n,clusterRadius)*growth);
-                    uv.Add(new Vector2(n.x*.55f+clump*.17f,n.y*.55f+seed*.21f));
+                    Vector3 vertex=positions[positions.Count-1];
+                    uv.Add(tree?new Vector2(n.x*.55f+clump*.17f,Mathf.Clamp((vertex.y-3)/5,.01f,.99f)):new Vector2(n.x*.55f+clump*.17f,n.y*.55f+seed*.21f));
                 }
                 foreach(int index in faces)indices.Add(offset+index);
             }
