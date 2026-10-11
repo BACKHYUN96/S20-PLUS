@@ -35,11 +35,28 @@ namespace PixelTraffic.UnityPrototype.Editor
             Mesh ridge1=GameObject.Find("Distant Ridge 1").GetComponent<MeshFilter>().sharedMesh;
             Mesh ridge2=GameObject.Find("Distant Ridge 2").GetComponent<MeshFilter>().sharedMesh;
             Need(ridge1.bounds.max.y>ridge0.bounds.max.y+15&&ridge2.bounds.max.y>ridge1.bounds.max.y+15,"Mountain layers collapse to one silhouette.");
+            Mesh[] ridges={ridge0,ridge1,ridge2};int ridgeSamples=0;
+            for(int layer=0;layer<ridges.Length;layer++)
+            {
+                var mesh=ridges[layer];Need(mesh.vertexCount==256&&mesh.triangles.Length/3==128,"Layered ridges add geometry or lose continuity.");
+                var points=mesh.vertices;var data=mesh.colors;
+                for(int segment=0;segment<64;segment++)
+                {
+                    int i=segment*4;
+                    Need(points[i].z==425+layer*18&&points[i+1].y>25&&points[i+1].y<130,"Ridge depth/height leaves the skyline envelope.");
+                    Need(data[i].r==1&&Mathf.Abs(data[i].g-layer*.43f)<.0001f,"Distance tone data is missing.");
+                    if(segment<63)Need(Vector3.Distance(points[i+2],points[i+5])<.0001f,"Visible ridge seam between strips.");
+                    ridgeSamples++;
+                }
+            }
             var cylinder=AssetDatabase.LoadAssetAtPath<Mesh>(StarterScene.Generated+"/StreetCylinder.asset");
             Need(cylinder!=null&&cylinder.triangles.Length/3==64&&cylinder.bounds.size==new Vector3(1,2,1),"Street cylinder changed dimensions or budget.");
             var climate=UnityEngine.Object.FindFirstObjectByType<CityClimate>();climate.Initialize();climate.Preview(0,0);
             Material original=AssetDatabase.LoadAssetAtPath<Material>(StarterScene.Generated+"/DistantLandscape.mat");
             Vector4 originalTheme=original.GetVector("_Theme"),originalWeather=original.GetVector("_Weather");
+            Need(original.HasProperty("_MountainDepth"),"Terrain depth parameters absent from actual shader.");
+            Vector4 mountainDepth=original.GetVector("_MountainDepth");
+            Need(Mathf.Abs(mountainDepth.x-.10f)<.0001f&&Mathf.Abs(mountainDepth.y-.38f)<.0001f&&Mathf.Abs(mountainDepth.z-.17f)<.0001f&&mountainDepth.w==1,"Mountain depth/relief defaults changed.");
             Need(distant.RuntimeMaterial!=original&&distant.RuntimeMaterial.shader.name=="PixelTraffic/Distant","Backdrop mutates a shared asset or loses its shader.");
             foreach(var renderer in root.GetComponentsInChildren<Renderer>())Need(renderer.sharedMaterial==distant.RuntimeMaterial,"Backdrop creates duplicate materials.");
             int combinations=0;
@@ -107,7 +124,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
             }finally{camera.aspect=oldAspect;}
             climate.Preview(0,0);
-            return new Report{result="PASS: sky sunlight dim/recovery and portrait celestial composition, river depth/bridge lamps, ridge silhouettes, one runtime material, saved endpoints, directional sunset, hidden clock and retarget; actual GPU preview/device test separate",meshCount=filters.Length,triangles=triangles,streetCylinderTriangles=64,combinations=combinations,frameRates=rates,transitionFrames=transitionFrames,compositionSamples=compositionSamples,maxThemeFrameJump=maxJump,hiddenFrames=100,bridgeLampCount=11,riverDepth=riverMesh.bounds.size.z,bridgeDeckClearance=24.8f-1.3f/2-surfaceY,skyWeatherFrames=skyWeatherFrames};
+            return new Report{result="PASS: sky sunlight dim/recovery and portrait celestial composition, river depth/bridge lamps, ridge silhouettes, one runtime material, saved endpoints, directional sunset, hidden clock and retarget; actual GPU preview/device test separate",ridgeLayers=3,ridgeSamples=ridgeSamples,meshCount=filters.Length,triangles=triangles,streetCylinderTriangles=64,combinations=combinations,frameRates=rates,transitionFrames=transitionFrames,compositionSamples=compositionSamples,maxThemeFrameJump=maxJump,hiddenFrames=100,bridgeLampCount=11,riverDepth=riverMesh.bounds.size.z,bridgeDeckClearance=24.8f-1.3f/2-surfaceY,skyWeatherFrames=skyWeatherFrames};
         }
         private static void Need(bool ok,string why){if(!ok)throw new InvalidOperationException(why);}
         [Serializable] internal sealed class Report
@@ -115,7 +132,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             public string result;public int meshCount,triangles,streetCylinderTriangles,combinations,transitionFrames,compositionSamples,hiddenFrames;
             public int[] frameRates;public float maxThemeFrameJump;
             public int bridgeLampCount;public float riverDepth,bridgeDeckClearance;
-            public int skyWeatherFrames;
+            public int skyWeatherFrames,ridgeLayers,ridgeSamples;
         }
     }
 }

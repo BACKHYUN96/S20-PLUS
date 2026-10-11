@@ -48,10 +48,12 @@ namespace PixelTraffic.UnityPrototype.Editor
         internal static float TowerHeight(int i)=>i==20?66:12+(i*19%31);
         internal static float RidgeHeight(float x,int layer)
         {
-            float centre=layer==0?-42:layer==1?42:-83;
-            float peak=layer==0?27:layer==1?47:62;
-            return 31+layer*5+peak*Mathf.Exp(-Mathf.Pow((x-centre)/(layer==0?62:88),2))
-                +Mathf.Sin(x*.048f+layer*2)*5+Mathf.Sin(x*.13f+layer)*2.2f;
+            float centre=layer==0?-36:layer==1?62:-92;
+            float peak=layer==0?39:layer==1?58:78;
+            float width=layer==0?68:layer==1?100:113;
+            float main=peak*Mathf.Exp(-Mathf.Pow((x-centre)/width,2));
+            float shoulder=8*Mathf.Exp(-Mathf.Pow((x-centre-76)/37,2));
+            return 31+layer*5+main+shoulder+Mathf.Sin(x*.057f+layer*2)*3.4f+Mathf.Sin(x*.17f+layer)*1.6f;
         }
         internal static void Create(Transform scenery)
         {

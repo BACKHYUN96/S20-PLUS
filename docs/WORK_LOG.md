@@ -1,5 +1,11 @@
 # 작업 이력
 
+## 2026-10-11 — Unity 0.31.0 산 능선·원경 깊이: 구현·검증 대기
+
+폰0.30.0 성공확인후 사용자가산/원경그래픽작업승인. 기존3산mesh/각64strip·128tri유지하면서peak/shoulder/능선리듬을달리해층분리. world-space연속relief/sunward/valley haze,near진한녹색→far옅은푸른색·명암감쇠. 낮/노을/밤palette·안개/강우/눈 기존기후weights로연동. _MountainDepth기본값실제shader/3layers192strip depth/seam/data/topology검사보강. 삼각형/renderers/materials증가없이 기존최대119938/1609/47예산유지예상. DistantScene/DistantChecks/Distant.shader/StarterScene/StarterConfig5소스,0.31.0/code32,MountainDepth-0.31.0.unity/Generated/MountainDepth0310.
+
+저장카메라/강·하늘shader분기/34tower·다리/가로수·건물·신호·기능·Android host/workflow유지. 산표면의fragment계산은추가되므로폰FPS/발열은미측정. 실제PC Unity/150GPU비교/Android·Lint·서명APK·공개다운로드검증대기. 시작296파일/index/status/122입력/host12SHA기록보존. 최종APK사용자 Desktop\AI download/SHA/USBinstall 단일PowerShell.
+
 ## 2026-10-11 — Unity 0.30.0 작은 잎 군집·수관 명암: 실제 검증·서명 APK 전달 완료
 
 사용자가폰0.29.0 성공확인후가로수잎디테일작업승인. 가까운8그루의큰7덩어리를각2작은곡면로브와상부팁으로분할,15군집/1200tri/630vertices. 먼24그루7군집/140tri유지. 군집윤곽과틈,높이기반UV+공유256miptexture의상하gradient로햇빛/그늘강화. 기존32그루/6mesh/3잎재질과불투명렌더러·바람·기후·보행/차량·중복신호수정·카메라·건물·Android host/workflow유지. FoliageScene/SceneryChecks/StarterScene/StarterConfig4소스,0.30.0/code31,FineFoliage-0.30.0.unity/Generated/FineFoliage0300.

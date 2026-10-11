@@ -6,6 +6,7 @@ Shader "PixelTraffic/Distant"
         _Weather("Cloud Fog Snow Rain",Vector)=(0,0,0,0)
         _Motion("Active seconds and cloud offset",Vector)=(0,0,0,0)
         _HazeColor("Distant haze",Color)=(.72,.78,.81,1)
+        _MountainDepth("Base haze, distance haze, valley haze, relief",Vector)=(.10,.38,.17,1)
     }
     SubShader
     {
@@ -20,7 +21,7 @@ Shader "PixelTraffic/Distant"
             #pragma fragment Frag
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             CBUFFER_START(UnityPerMaterial)
-                float4 _Theme, _Weather, _Motion;
+                float4 _Theme, _Weather, _Motion, _MountainDepth;
                 half4 _HazeColor;
             CBUFFER_END
             struct Attributes {float4 positionOS:POSITION;float3 normalOS:NORMAL;float2 uv:TEXCOORD0;float4 color:COLOR;};
@@ -86,14 +87,22 @@ Shader "PixelTraffic/Distant"
                 }
                 else if(kind<1.5)
                 {
-                    float far=i.color.y;
-                    float3 green=lerp(float3(.10,.29,.21),float3(.20,.43,.67),far);
-                    // Shared world coordinates keep terrain noise continuous between ridge strips.
-                    float2 terrain=i.positionWS.xy*float2(.065,.11);
-                    float shade=.79+Noise(terrain+i.color.z)*.15+Noise(terrain*2.3)*.06;
-                    color=(green*day+lerp(float3(.34,.34,.30),float3(.49,.43,.53),far)*dusk+float3(.035,.07,.12)*night)*shade;
+                    float far=saturate(i.color.y);
+                    float3 green=lerp(float3(.055,.265,.155),float3(.38,.57,.73),far);
+                    // Continuous world-space relief avoids a separate pattern on every mesh strip.
+                    float2 terrain=i.positionWS.xy*float2(.045,.072);
+                    float broad=Noise(terrain+i.color.z);
+                    float sunward=saturate(.5+(Noise(terrain+float2(-.37,.24)+i.color.z)-broad)*2.7);
+                    float relief=Noise(terrain*2.17+float2(broad,-broad));
+                    float shade=.65+broad*.13+sunward*.28+relief*.09;
+                    shade=lerp(1,shade,_MountainDepth.w*(1-far*.46));
+                    float3 evening=lerp(float3(.255,.245,.225),float3(.55,.45,.58),far);
+                    float3 nocturnal=lerp(float3(.018,.044,.057),float3(.065,.095,.155),far);
+                    color=(green*day+evening*dusk+nocturnal*night)*shade;
                     color=lerp(color,float3(.84,.87,.9)*(day+dusk*.65+night*.19),snow*smoothstep(48,80,i.positionWS.y)*.62);
-                    color=lerp(color,_HazeColor.rgb,saturate(.06+far*.11+fog*.84+rain*.26));
+                    float valley=1-smoothstep(22,88,i.positionWS.y);
+                    float air=saturate(_MountainDepth.x+far*_MountainDepth.y+valley*_MountainDepth.z+fog*.84+rain*.26);
+                    color=lerp(color,_HazeColor.rgb,air);
                 }
                 else if(kind<2.5)
                 {

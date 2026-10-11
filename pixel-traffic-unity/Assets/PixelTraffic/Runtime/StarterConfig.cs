@@ -3,9 +3,9 @@ namespace PixelTraffic.UnityPrototype
     public static class StarterConfig
     {
         public const string EditorVersion = "6000.3.26f1";
-        public const string VersionName = "0.30.0";
-        public const int VersionCode = 31;
-        public const string ScenePath = "Assets/PixelTraffic/Scenes/FineFoliage-0.30.0.unity";
+        public const string VersionName = "0.31.0";
+        public const int VersionCode = 32;
+        public const string ScenePath = "Assets/PixelTraffic/Scenes/MountainDepth-0.31.0.unity";
         public const string ExperimentAppId = "com.s20plus.pixeltraffic.unityprototype";
         public const string ReleaseAppId = "com.s20plus.pixeltraffic";
         public const float LaneWidth = 3.2f;
