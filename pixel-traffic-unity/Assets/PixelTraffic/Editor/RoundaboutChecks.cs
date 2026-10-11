@@ -44,6 +44,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Mesh mesh=f.sharedMesh;triangles+=mesh.triangles.Length/3;Need(mesh.vertexCount==mesh.uv.Length&&mesh.normals.Length==mesh.vertexCount,"mesh normals/UV absent.");
                 Need(f.GetComponent<Collider>()==null&&f.GetComponent<Renderer>().sharedMaterial!=null,"terrain adds collider or misses shared material.");
                 foreach(Vector3 v in mesh.vertices)Need(!float.IsNaN(v.x)&&!float.IsNaN(v.y)&&!float.IsNaN(v.z),"non-finite terrain point.");
+                if(f.name=="Roundabout Asphalt")foreach(Vector3 normal in mesh.normals)Need(normal.y>.99f,"asphalt has an invisible back-facing road patch.");
             }
             Need(triangles<=400,"junction exceeds its reclaimed far-marking triangle budget.");
             var island=root.Find("Roundabout Island").GetComponent<MeshFilter>().sharedMesh;

@@ -1,5 +1,9 @@
 # 작업 이력
 
+## Unity 0.32.0 — visible river-road surfaces
+
+The new swept river-road ribbon must face upward for the existing opaque back-face-culled material. Correct its face winding and check the actual serialized asphalt normals during validation, so a hidden road surface cannot pass solely on traffic geometry. This supersedes the pending intermediate source before an APK tag. Publish the same complete 19-source set and revalidate on the PC.
+
 ## Unity 0.32.0 — river-road junction clearance
 
 Keep asphalt beneath the full left and right north-port curved routes, with a 6.4m half-width swept ribbon. Open the near-bank pavement and curb across this junction rather than letting a continuous raised strip cross vehicle routes. Preserve the five shared terrain meshes/materials and previous traffic behavior. Publish the same complete 19-source set and perform a fresh PC validation/GPU run; failed retry report names are not reused. No APK released until actual verification.

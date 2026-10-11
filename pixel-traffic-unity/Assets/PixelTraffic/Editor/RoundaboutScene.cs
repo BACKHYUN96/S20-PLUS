@@ -59,7 +59,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Vector3 Edge(float t)
                 {float u=1-t;Vector3 tangent=new Vector3(side*(6*u*t*75.2f+3*t*t*60),0,3*u*u*20+6*u*t*7);return new Vector3(-tangent.z,0,tangent.x).normalized*6.4f;}
                 for(int n=0;n<16;n++)
-                {float a=n/16f,b=(n+1)/16f;Vector3 p=Bend(a),q=Bend(b),s=Edge(a),t=Edge(b);asphalt.Quad(p-s,q-t,q+t,p+s);}
+                {float a=n/16f,b=(n+1)/16f;Vector3 p=Bend(a),q=Bend(b),s=Edge(a),t=Edge(b);asphalt.Quad(p+s,q+t,q-t,p-s);}
             }
             for(int port=0;port<4;port++)
             {
