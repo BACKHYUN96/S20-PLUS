@@ -1,5 +1,11 @@
 # 새 채팅 인수인계 — 픽셀 트래픽 0.29.0
 
+## 2026-10-11 — Unity 0.29.0 보행자 신호등 중복 제거: 구현·검증 대기
+
+사용자 이미지에서 차량·보행자 결합기둥 위쪽에 별도 보행자신호가 중복되어 보인다는 신고. 생성코드가각curb의z7/13에2기둥씩 총4를 만들던원인확인. 차량신호붙은far-side기둥만양쪽1개씩총2유지하고, 별도보행자전용2기둥과머리를제거. 실제총2기둥/2차량머리8렌즈/2보행머리4아이콘렌즈를검사하고 orphan/중복머리도계수한다. 위치높이·차량/보행표시방향·기후·안전모델·카메라·가로수·건물·Android host/workflow유지. StreetScene/StreetChecks/StarterScene/StarterConfig4소스,0.29.0/code30,UniquePedestrianSignals-0.29.0.unity/Generated/UniquePedestrianSignals0290.
+
+실제PC Unity 검증·150GPU화면·Android/Lint·서명APK·공개다운로드는대기. 기존작업296파일/index/status/122빌드입력/host12SHA기록보존. 사용자가지정한Desktop\AI 폴더download/SHA/USB설치 단일PowerShell 전달계획. 기존4기둥용보행안전회피구역은유지하여 경로변경을이번버그수정에섞지않는다.
+
 ## 2026-10-11 — Unity 0.28.0 가로수 그래픽: 실제 검증·서명 APK 전달 완료
 
 사용자가 폰0.27.0 적용 성공을 확인하고 가로수 그래픽 개선을 승인했다. 0.28.0/code29, TreeCanopy-0.28.0.unity/Generated/TreeCanopy0280. FoliageScene/CityEnvironment/SceneryChecks/StarterScene/StarterConfig 5소스를 변경했다. 32그루/3잎재질/공유256 mip texture를 유지하고 근거리8그루560tri·원거리24그루140tri의6mesh로 수관을 만든다. 기존400tri 대비 수관4960tri 절감. 서로다른7비대칭군집,3수종 형태,잎녹색·밝기세분화,크기·높이·기울기와 좌우yaw를 다양화했다. 기존3가지 길이를 늘려 잎과 연결하고 횡단보도 인접 crown을 축소한다. planted bed/보행 동선/카메라·건물·차량·기후·Android host/workflow 유지. 불투명 shared mesh로 투명overdraw/새재질/Light/renderer를 추가하지 않는다.

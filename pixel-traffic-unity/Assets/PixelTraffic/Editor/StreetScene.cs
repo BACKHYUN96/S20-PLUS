@@ -35,12 +35,13 @@ namespace PixelTraffic.UnityPrototype.Editor
             Material lens=StarterScene.Surface("Headlamp",new Color(.97f,.94f,.79f),.1f,.6f);
             var vehicleLights=new List<Renderer>();var walkLights=new List<Renderer>();
             float armReach=StarterConfig.CurbFurnitureX-3.38f;
-            foreach(float side in new[]{-1f,1f})foreach(float z in new[]{7f,13f})
+            foreach(float side in new[]{-1f,1f})
             {
+                float z=StarterConfig.CrossingZ+side*3;
                 Transform pole=new GameObject("Signal Pole").transform;pole.SetParent(root.transform,false);pole.position=new Vector3(side*StarterConfig.CurbFurnitureX,.16f,z);
                 StarterScene.Box("Signal Mast",pole,new Vector3(0,2.9f,0),new Vector3(.18f,5.8f,.18f),metal);
                 // One overhead head per travel direction, on the far side of the crossing.
-                // The other mast retains its pedestrian signal without a duplicate vehicle arm.
+                // One combined vehicle/pedestrian mast on each curb; no extra pedestrian-only mast.
                 if(Mathf.Abs(z-(StarterConfig.CrossingZ+side*3))<.001f)
                 {
                     Transform head=new GameObject("Vehicle Signal").transform;head.SetParent(pole,false);head.localPosition=new Vector3(-side*armReach,5.45f,0);

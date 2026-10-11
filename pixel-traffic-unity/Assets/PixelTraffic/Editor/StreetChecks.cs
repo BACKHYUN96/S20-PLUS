@@ -107,7 +107,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     Need(view.root.GetComponent<SkinnedMeshRenderer>().sharedMesh!=null&&view.limbs.Length==4,"Human rig incomplete.");
                     Vector3 foot=view.root.position;foreach(var bed in treeBeds)Need(foot.x<bed.min.x-.15f||foot.x>bed.max.x+.15f||foot.z<bed.min.z-.15f||foot.z>bed.max.z+.15f,"Actual tree bed differs from foot navigation.");
                 }
-                return new Report {result="PASS: exactly one far-side vehicle head per direction, four curb-aligned Korean pedestrian poles and actual lamps, distributed 4/32/100 walkers,600sec crossing/following/safety,clock/pause and actual100-rig budget; device test pending",curbSignalPoles=curbPoles,vehicleSignalHeads=2,vehicleSignalLenses=8,pedestrianSignalHeads=4,koreanSignalStates=signalStates,crossingBandMean=crowdMeans.ToArray(),populations=populations.ToArray(),simulatedSeconds=new[]{200,600,600},minimumFootDistance=minimumPeople,minimumBumperGap=minimumCars,crossings=completed,signalCycles=cycles,maxPopulationBudget=budget};
+                return new Report {result="PASS: exactly one far-side vehicle head per direction, two unique combined curb-aligned Korean signal poles and actual lamps, distributed 4/32/100 walkers,600sec crossing/following/safety,clock/pause and actual100-rig budget; device test pending",curbSignalPoles=curbPoles,vehicleSignalHeads=2,vehicleSignalLenses=8,pedestrianSignalHeads=2,koreanSignalStates=signalStates,crossingBandMean=crowdMeans.ToArray(),populations=populations.ToArray(),simulatedSeconds=new[]{200,600,600},minimumFootDistance=minimumPeople,minimumBumperGap=minimumCars,crossings=completed,signalCycles=cycles,maxPopulationBudget=budget};
             }
             finally
             {
@@ -143,14 +143,14 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Need(!SidewalkRoutes.Allowed(foot)&&!SidewalkRoutes.SegmentAllowed(foot+Vector2.up*.4f,foot-Vector2.up*.4f),"Pedestrian route passes through relocated mast.");
                 Need(SidewalkRoutes.Allowed(new Vector2(Mathf.Sign(pole.position.x)*10.08f,pole.position.z)),"Old signal footprint still blocks outer sidewalk.");
             }
-            Need(count==4&&heads==2&&headSides.Count==2,"Curb-side poles or unique vehicle head count differs.");
-            int allHeads=0,allArms=0;foreach(var part in transforms){if(part.name=="Vehicle Signal")allHeads++;if(part.name=="Signal Arm")allArms++;}
-            Need(allHeads==2&&allArms==2,"Orphan or duplicate vehicle signal exists outside its expected mast.");return count;
+            Need(count==2&&heads==2&&headSides.Count==2,"Curb-side poles or unique vehicle head count differs.");
+            int allHeads=0,allArms=0,allWalkHeads=0;foreach(var part in transforms){if(part.name=="Vehicle Signal")allHeads++;if(part.name=="Signal Arm")allArms++;if(part.name=="Pedestrian Signal")allWalkHeads++;}
+            Need(allHeads==2&&allArms==2&&allWalkHeads==2,"Orphan or duplicate vehicle signal exists outside its expected mast.");return count;
         }
         private static int CheckSignalRigs(StreetSimulation controller)
         {
             var serialized=new SerializedObject(controller);var cars=serialized.FindProperty("vehicleLights");var people=serialized.FindProperty("walkLights");
-            Need(cars.arraySize==8&&people.arraySize==8,"Korean signal lamp ordering/count differs.");
+            Need(cars.arraySize==8&&people.arraySize==4,"Korean signal lamp ordering/count differs.");
             for(int i=0;i<cars.arraySize;i++)
             {
                 var r=(Renderer)cars.GetArrayElementAtIndex(i).objectReferenceValue;var parent=r.transform.parent;
