@@ -33,17 +33,18 @@ namespace PixelTraffic.UnityPrototype.Editor
             groups.Add(new Vector3(-.65f,5.65f,-.95f));groups.Add(new Vector3(.75f,5.8f,.85f));
             if(near)
             {
-                // Seven small lobes replace each large ellipsoid, leaving scalloped edges and light gaps.
+                // Two rounded lobes replace each large ellipsoid; a small crown tip connects the silhouette.
                 var lobes=new List<Vector3>();
-                Vector3[] offsets={Vector3.zero,Vector3.up,Vector3.down,Vector3.left,Vector3.right,Vector3.forward,Vector3.back};
+                Vector3[] offsets={new Vector3(-.55f,.18f,.22f),new Vector3(.55f,-.16f,-.22f)};
                 for(int group=0;group<groups.Count;group++)
                 {
                     Quaternion turn=Quaternion.Euler(0,group*37+species*19,group%2==0?13:-11);
-                    foreach(Vector3 offset in offsets)lobes.Add(groups[group]+turn*Vector3.Scale(offset,radius)*.55f);
+                    foreach(Vector3 offset in offsets)lobes.Add(groups[group]+turn*Vector3.Scale(offset,radius));
                 }
-                groups=lobes;radius*=.48f;
+                lobes.Add(new Vector3(0,species==1?6.7f:6.3f,.1f));
+                groups=lobes;radius*=.62f;
             }
-            Mesh mesh=Clusters("Canopy Species "+species+(near?" Near":" Far"),groups.ToArray(),radius,false,species,true);
+            Mesh mesh=Clusters("Canopy Species "+species+(near?" Near":" Far"),groups.ToArray(),radius,near,species,true);
             AssetDatabase.CreateAsset(mesh,path);return mesh;
         }
 

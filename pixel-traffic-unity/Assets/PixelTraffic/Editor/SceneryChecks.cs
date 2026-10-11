@@ -22,22 +22,22 @@ namespace PixelTraffic.UnityPrototype.Editor
                     var mesh=canopy.GetComponent<MeshFilter>().sharedMesh;meshes.Add(mesh);
                     Geometry(mesh,ref checkedVertices);
                     bool treeNear=root.position.z<16;
-                    Need(mesh.vertexCount==(treeNear?588:84),"Small canopy clusters are missing.");
+                    Need(mesh.vertexCount==(treeNear?630:84),"Small canopy clusters are missing.");
                     if(treeNear)
                     {
                         var points=mesh.vertices;var leafUv=mesh.uv;int fineGroups=0;
-                        for(int first=0;first<points.Length;first+=12)
+                        for(int first=0;first<points.Length;first+=42)
                         {
                             Bounds groupBounds=new Bounds(points[first],Vector3.zero);
-                            for(int j=0;j<12;j++){groupBounds.Encapsulate(points[first+j]);Need(Mathf.Abs(leafUv[first+j].y-Mathf.Clamp((points[first+j].y-3)/5,.01f,.99f))<.0001f,"Canopy shade no longer follows height.");}
-                            Need(groupBounds.size.x<1.7f&&groupBounds.size.y<1.7f&&groupBounds.size.z<1.7f,"Large foliage blobs remain in detailed crown.");fineGroups++;
+                            for(int j=0;j<42;j++){groupBounds.Encapsulate(points[first+j]);Need(Mathf.Abs(leafUv[first+j].y-Mathf.Clamp((points[first+j].y-3)/5,.01f,.99f))<.0001f,"Canopy shade no longer follows height.");}
+                            Need(groupBounds.size.x<2.1f&&groupBounds.size.y<2.1f&&groupBounds.size.z<2.1f,"Large foliage blobs remain in detailed crown.");fineGroups++;
                         }
-                        Need(fineGroups==49,"Near crown is not split into small leaf groups.");
+                        Need(fineGroups==15,"Near crown is not split into small leaf groups.");
                     }
-                    Need(mesh.triangles.Length/3==(treeNear?980:140),"Distance foliage topology changed.");
+                    Need(mesh.triangles.Length/3==(treeNear?1200:140),"Distance foliage topology changed.");
                     Need(canopy.localScale.x>=.72f&&canopy.localScale.x<1&&canopy.localScale.y>=.89f&&canopy.localScale.y<1.04f,"Tree crown variety or crossing clearance lost.");
                     Need(root.Find("Trunk")!=null&&root.Find("Trunk").GetComponent<Renderer>().bounds.max.y>4,"Tree trunk disconnected.");
-                    Need(mesh.triangles.Length/3<=980&&mesh.bounds.min.y>3&&mesh.bounds.max.y<8,"Foliage blocks walking height or exceeds silhouette budget.");
+                    Need(mesh.triangles.Length/3<=1200&&mesh.bounds.min.y>3&&mesh.bounds.max.y<8,"Foliage blocks walking height or exceeds silhouette budget.");
                     var material=canopy.GetComponent<MeshRenderer>().sharedMaterial;materials.Add(material);
                     var texture=material.GetTexture("_BaseMap") as Texture2D;
                     Need(texture!=null&&texture.width==256&&texture.height==256&&texture.mipmapCount>1&&texture.filterMode==FilterMode.Trilinear,"Leaf colour detail lacks shared distance-filtered texture.");
