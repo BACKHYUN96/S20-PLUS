@@ -211,6 +211,10 @@ namespace PixelTraffic.UnityPrototype.Editor
             Require(PlayerSettings.GetApplicationIdentifier(NamedBuildTarget.Android) == StarterConfig.ExperimentAppId, "Experimental app ID changed.");
             TrafficFleet.Report traffic = TrafficFleet.Validate();
             VehicleDetailChecks.Report vehicleDetail = VehicleDetailChecks.Validate();
+            // Start the new production route check from the saved scene, independently of prior fixtures.
+            EditorSceneManager.OpenScene(StarterConfig.ScenePath);
+            RoundaboutChecks.Report roundabout=RoundaboutChecks.Validate();
+            EditorSceneManager.OpenScene(StarterConfig.ScenePath);
             StreetChecks.Report street = StreetChecks.Validate();
             AndroidWallpaperBuild.ValidateTemplates();
             Require(Camera.main != null && Camera.main.farClipPlane > 120, "Portrait camera missing.");
@@ -224,7 +228,6 @@ namespace PixelTraffic.UnityPrototype.Editor
             HeavyVehicleChecks.Report heavy = HeavyVehicleChecks.Validate();
             BusStopChecks.Report busStops=BusStopChecks.Validate();
             WiperChecks.Report wipers=WiperChecks.Validate();
-            RoundaboutChecks.Report roundabout=RoundaboutChecks.Validate();
             Require(PlayerSettings.bundleVersion == StarterConfig.VersionName &&
                 PlayerSettings.Android.bundleVersionCode == StarterConfig.VersionCode, "APK version differs from source configuration.");
             Directory.CreateDirectory("Reports");

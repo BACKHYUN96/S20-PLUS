@@ -113,12 +113,14 @@ namespace PixelTraffic.UnityPrototype
             Vector2 end=route.path.Pose(route.path.clear,out float angle);return Separated(point,yaw,c.SafetyLength,c.width,end,angle,own.SafetyLength,own.width)?-1:owner;
         }
         bool Free(int index,Vector2 point,float yaw)=>Blocker(index,point,yaw)<0;
-        bool ClearRoute(int index,State state)
+        public int AdmissionBlocker(int index,out float blockedAt)
         {
+            var state=States[index];blockedAt=state.progress;
             for(float d=state.progress;d<state.path.clear;d+=.75f)
-            {Vector2 p=state.path.Pose(d,out float yaw);if(!Free(index,p,yaw))return false;}
-            Vector2 end=state.path.Pose(state.path.clear,out float heading);return Free(index,end,heading);
+            {Vector2 p=state.path.Pose(d,out float yaw);int blocker=Blocker(index,p,yaw);if(blocker>=0){blockedAt=d;return blocker;}}
+            Vector2 end=state.path.Pose(state.path.clear,out float heading);blockedAt=state.path.clear;return Blocker(index,end,heading);
         }
+        bool ClearRoute(int index,State state)=>AdmissionBlocker(index,out _) < 0;
         void Start(int i,int origin)
         {
             var s=States[i];var c=model.Cars[i];s.origin=origin;
