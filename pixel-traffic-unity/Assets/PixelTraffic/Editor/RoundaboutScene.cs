@@ -19,6 +19,15 @@ namespace PixelTraffic.UnityPrototype.Editor
             internal void Rect(float x0,float x1,float z0,float z1,float y)=>Quad(new Vector3(x0,y,z0),new Vector3(x0,y,z1),new Vector3(x1,y,z1),new Vector3(x1,y,z0));
             internal void Save(string name,Transform parent,Material material)
             {
+                // These materials also serve long box roads; undo their box tiling for world-space meshes.
+                Vector2 scale=material.GetTextureScale("_BaseMap");
+                for(int i=0;i<uv.Count;i++)
+                {
+                    Vector3 p=points[i];
+                    Vector2 tile=name=="Roundabout Island"?new Vector2((p.x+10)/20,(p.z-RoundaboutTraffic.CenterZ+10)/20):
+                        name=="Roundabout Paving"?new Vector2(p.x/2,p.z/4):new Vector2(p.x/6,p.z/6);
+                    uv[i]=new Vector2(tile.x/Mathf.Max(.001f,scale.x),tile.y/Mathf.Max(.001f,scale.y));
+                }
                 var mesh=new Mesh{name=name};mesh.SetVertices(points);mesh.SetUVs(0,uv);mesh.SetTriangles(indices,0);mesh.RecalculateNormals();mesh.RecalculateBounds();
                 AssetDatabase.CreateAsset(mesh,StarterScene.Generated+"/"+name.Replace(" ","")+".asset");
                 var obj=new GameObject(name,typeof(MeshFilter),typeof(MeshRenderer));obj.transform.SetParent(parent,false);obj.GetComponent<MeshFilter>().sharedMesh=mesh;
@@ -38,12 +47,6 @@ namespace PixelTraffic.UnityPrototype.Editor
                 lawn.Triangle(new Vector3(0,.235f,z),Circle(10,b,.235f),Circle(10,a,.235f));
                 curb.Quad(Circle(10,a,.25f),Circle(10,b,.25f),Circle(10.28f,b,.25f),Circle(10.28f,a,.25f));
                 curb.Quad(Circle(10.28f,a,.25f),Circle(10.28f,b,.25f),Circle(10.28f,b,0),Circle(10.28f,a,0));
-                float mid=(i+.5f)*360/segments,cardinal=Mathf.Abs(Mathf.DeltaAngle(mid,Mathf.Round(mid/90)*90));
-                if(cardinal>22)
-                {
-                    paving.Quad(Circle(19.5f,a,.15f),Circle(19.5f,b,.15f),Circle(21.5f,b,.15f),Circle(21.5f,a,.15f));
-                    curb.Quad(Circle(19.5f,a,.17f),Circle(19.5f,b,.17f),Circle(19.75f,b,.17f),Circle(19.75f,a,.17f));
-                }
             }
             asphalt.Rect(-160,-13,z-6.4f,z+6.4f,.006f);asphalt.Rect(13,160,z-6.4f,z+6.4f,.006f);
             asphalt.Rect(-160,160,295.6f,308.4f,.006f);
@@ -51,9 +54,13 @@ namespace PixelTraffic.UnityPrototype.Editor
             for(int port=0;port<4;port++)
             {
                 Vector3 P(float x,float v,float y){Vector2 p=new Vector2(x,v);for(int k=0;k<port;k++)p=new Vector2(-p.y,p.x);return new Vector3(p.x,y,z+p.y);}
-                asphalt.Quad(P(-6.4f,-40,.006f),P(-13,-13,.006f),P(13,-13,.006f),P(6.4f,-40,.006f));
-                paving.Quad(P(-10.4f,-40,.15f),P(-15,-13,.15f),P(-13,-13,.15f),P(-6.4f,-40,.15f));
-                paving.Quad(P(6.4f,-40,.15f),P(13,-13,.15f),P(15,-13,.15f),P(10.4f,-40,.15f));
+                // Adjacent approach pavements meet at the same diagonal ring corner, without stray stubs.
+                float inside=19.5f/Mathf.Sqrt(2),outside=21.5f/Mathf.Sqrt(2),lip=19.75f/Mathf.Sqrt(2);
+                asphalt.Quad(P(-6.4f,-40,.006f),P(-inside,-inside,.006f),P(inside,-inside,.006f),P(6.4f,-40,.006f));
+                paving.Quad(P(-10.4f,-40,.15f),P(-outside,-outside,.15f),P(-inside,-inside,.15f),P(-6.4f,-40,.15f));
+                paving.Quad(P(6.4f,-40,.15f),P(inside,-inside,.15f),P(outside,-outside,.15f),P(10.4f,-40,.15f));
+                curb.Quad(P(-6.65f,-40,.17f),P(-lip,-lip,.17f),P(-inside,-inside,.17f),P(-6.4f,-40,.17f));
+                curb.Quad(P(6.4f,-40,.17f),P(inside,-inside,.17f),P(lip,-lip,.17f),P(6.65f,-40,.17f));
             }
             foreach(float sign in new[]{-1f,1f})
             {

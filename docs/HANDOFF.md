@@ -1,5 +1,9 @@
 # 새 채팅 인수인계 — 픽셀 트래픽 0.29.0
 
+## Unity 0.32.0 — actual GPU pavement polish
+
+Actual PC validation run 38155783468 passed all roundabout circulation, independent collision checks, frame rates, weather and regression tests with 158 actual GPU PNGs. Visual review identified overlap between approach pavement ends and ring pavement, plus inappropriate reuse of box UV tiling. Join approach pavement strips at shared diagonal corners, add approach curb lips and map shared terrain materials in world space. The same 19 source inputs are published together; a fresh actual validation/capture is required before tagging the signed APK. Phone test remains pending.
+
 ## 2026-10-11 — 0.32.0 네 방향 무작위 선택 분포
 
 run38155463912의600초 실제순환/복귀/재진입/독립충돌검사는기준을통과했지만4방향중1방향이선택되지않았다. 실제South진입성공에만 Fisher-Yates shuffle bag의출구선택을소비하여네방향이무작위순서로나오도록한다.30Hz/reset결정성은유지하고4방향선택검사기준도유지한다.19소스전체검증재개.
