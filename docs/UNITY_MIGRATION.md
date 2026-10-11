@@ -1,5 +1,45 @@
 # Pixel Traffic — Unity 전환 준비
 
+## 2026-10-11 — Unity 0.30.0 작은 잎 군집·수관 명암: 실제 검증·서명 APK 전달 완료
+
+사용자가폰0.29.0 성공확인후가로수잎디테일작업승인. 가까운8그루의큰7덩어리를각2작은곡면로브와상부팁으로분할,15군집/1200tri/630vertices. 먼24그루7군집/140tri유지. 군집윤곽과틈,높이기반UV+공유256miptexture의상하gradient로햇빛/그늘강화. 기존32그루/6mesh/3잎재질과불투명렌더러·바람·기후·보행/차량·중복신호수정·카메라·건물·Android host/workflow유지. FoliageScene/SceneryChecks/StarterScene/StarterConfig4소스,0.30.0/code31,FineFoliage-0.30.0.unity/Generated/FineFoliage0300.
+
+**실제 검사:** source `96bbbd73caab9f428bde1527b12604fc497a8620` / [Validate](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38141830753). 실제15분리군집/작은bounds/높이UV/texture상하gradient/near-far topology/geometry normals/winding/UV/보행clearance와기존기후/와이퍼/승하차/반사/2결합신호검사PASS. 기본108592triangles,최대119938triangles/1609renderers/47materials로기존110000/120000/2400/48예산미만. 새재질/Light/renderer추가없음. 시작296파일/index/status/122입력/host12SHA보존. 로컬편집helper가버전문자열의2회등장을1회로예상하여중단;원래baseline을보존한채남은버전편집만재개하고실제검증완료. 초기검증38141209479은PASS지만확대에서49저폴리군집이각지고떨어져보여15곡면군집으로다듬은뒤다시검증했다. Unity실패기록[].
+
+**실제 화면:** Unity6000.3.26f1/D3D11 150PNG artifact sourceSHA/bytes/SHA/ZIPCRC확인. 전체와3수종day/night/storm을직접관찰하고이전0.29.0 전체/수종과비교하여변화확인. 실제Editor캡처이며AI시안/폰/FPS측정아님. 기존150캡처코드재사용. 개별잎자산완성이나시안과동일함을주장하지않는다.
+
+**Android:** `unity-apk-0.30.0-build1` / [BuildApk](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38142366995). BuildPlayer오류0/경고0; launcherLint오류0/경고8. 실제APK SDK apksigner/aapt/ZIPCRC로0.30.0/code31/min29/target36/ARM64IL2CPP·wallpaper service/privateprovider/settingslauncher/비활성UnityActivity·원본v2cert a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6확인. 변경없는host12SHA는hostLint38008378207오류0/경고10재사용.
+
+**전달:** [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/b4b3810c4665cebfb12166b3fe45d9c7a6974d8c/pixel-traffic-unity-prototype-0.30.0.apk) · [전체](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/b4b3810c4665cebfb12166b3fe45d9c7a6974d8c/foliage-city-preview.png) · [확대](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/b4b3810c4665cebfb12166b3fe45d9c7a6974d8c/foliage-rounded-preview.png) · [밤](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/b4b3810c4665cebfb12166b3fe45d9c7a6974d8c/foliage-night-preview.png) · [넓은수종](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/b4b3810c4665cebfb12166b3fe45d9c7a6974d8c/foliage-spreading-preview.png). 31223459bytes/SHA256 `b2beba85040d5c75f2281aaa32b28861aa79392a493814454688869e0be7d72e`. `downloads/unity-0.30.0`8파일로그인없는HTTP200/no redirect/fullbytes/SHA PASS. main에APK/newworkflow추가없음.
+
+USB폰1대연결·디버깅허용후아래WindowsPowerShell전체붙여넣기. 사용자 C:\Users\김백현\Desktop\AI로다운로드·SHA검증·기존앱업데이트. 클라우드에서사용자폰에설치했다고주장하지않는다.
+```powershell
+& {
+    $ErrorActionPreference = "Stop"
+    $apkFolder = "C:\Users\김백현\Desktop\AI"
+    $apkPath = Join-Path $apkFolder "pixel-traffic-unity-prototype-0.30.0.apk"
+    $apkUrl = "https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/b4b3810c4665cebfb12166b3fe45d9c7a6974d8c/pixel-traffic-unity-prototype-0.30.0.apk"
+    $trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+    if (-not (Test-Path -LiteralPath $trafficAdb)) { throw "Unity의 adb.exe를 찾을 수 없습니다." }
+    & $trafficAdb start-server
+    if ($LASTEXITCODE -ne 0) { throw "ADB 시작 실패" }
+    $deviceLines = & $trafficAdb devices
+    if ($LASTEXITCODE -ne 0) { throw "폰 연결 확인 실패" }
+    $connectedDevices = @($deviceLines | Where-Object { $_ -match '^\S+\s+device$' })
+    if ($connectedDevices.Count -ne 1) { throw "폰 1대를 USB로 연결하고 USB 디버깅을 허용해주세요." }
+    New-Item -ItemType Directory -Force -Path $apkFolder | Out-Null
+    Write-Host "0.30.0 APK 다운로드 중..."
+    Invoke-WebRequest -UseBasicParsing -Uri $apkUrl -OutFile $apkPath
+    if ((Get-FileHash -LiteralPath $apkPath -Algorithm SHA256).Hash -ne "b2beba85040d5c75f2281aaa32b28861aa79392a493814454688869e0be7d72e") { throw "파일 검증 실패. 다시 실행해주세요." }
+    Write-Host "폰에 앱 설치 중..."
+    & $trafficAdb install -r $apkPath
+    if ($LASTEXITCODE -ne 0) { throw "앱 설치 실패. 위 오류를 확인해주세요." }
+    Write-Host "완료! 0.30.0 설치 성공." -ForegroundColor Green
+}
+```
+
+폰0.29.0 사용자성공확인;폰0.30.0 외형/FPS/발열/장시간동작은사용자확인대기. PC Drive설정보류유지. 다음작업은사용자확인과요청에따른다.
+
 ## 2026-10-11 — Unity 0.30.0 작은 잎 군집·수관 명암: 구현·실제 검증 대기
 
 사용자 폰0.29.0 성공확인 후 가로수 잎 디테일 패치 승인. 가까운8그루의7큰군집을각각7작은로브로분할하여49군집/980tri/588vertices의수관. 먼24그루는기존7군집/140tri유지. 가까운수관만3360tri추가, 이전최대114818→118178예상으로120000제한유지(실제검증대기). 작은로브상호배치로윤곽을쪼개고틈을만들며, 높이기반UV와공유256mip texture의상하gradient로햇빛/그늘강화. 32그루/6mesh/3잎재질·불투명렌더러·기후/바람·카메라/기능·신호중복수정·건물·Android host/workflow 유지. FoliageScene/SceneryChecks/StarterScene/StarterConfig4소스,0.30.0/code31,FineFoliage-0.30.0.unity/Generated/FineFoliage0300.
