@@ -1,5 +1,45 @@
 # 현재 상태
 
+## 2026-10-11 — Unity 0.28.0 가로수 그래픽: 실제 검증·서명 APK 전달 완료
+
+사용자가 폰0.27.0 적용 성공을 확인하고 가로수 그래픽 개선을 승인했다. 0.28.0/code29, TreeCanopy-0.28.0.unity/Generated/TreeCanopy0280. FoliageScene/CityEnvironment/SceneryChecks/StarterScene/StarterConfig 5소스를 변경했다. 32그루/3잎재질/공유256 mip texture를 유지하고 근거리8그루560tri·원거리24그루140tri의6mesh로 수관을 만든다. 기존400tri 대비 수관4960tri 절감. 서로다른7비대칭군집,3수종 형태,잎녹색·밝기세분화,크기·높이·기울기와 좌우yaw를 다양화했다. 기존3가지 길이를 늘려 잎과 연결하고 횡단보도 인접 crown을 축소한다. planted bed/보행 동선/카메라·건물·차량·기후·Android host/workflow 유지. 불투명 shared mesh로 투명overdraw/새재질/Light/renderer를 추가하지 않는다.
+
+**실제 검사:** source `013f073034498beeacf228d59bdc603dbefaf26f` / [Validate](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38136988653). 원근 topology/수관 scale/줄기·winding/normal/UV·공유재질·mip texture/수종 형태·보행clearance와 기존건물/차량/와이퍼/기후/승하차/차선/신호/반사 검사 PASS. 실제 최대 114950triangles/1623renderers/47materials로 기존120000/2400/48 제한미만, 기본103604triangles로110000 예약예산미만. 시작296파일·실제index/status·122빌드입력·host12SHA 보존. 소스게시 전 preservation helper에 sourceCommit이 아직 없어 KeyError 발생; 게시 후 동일 검사는 PASS. Unity/빌드 실패기록: [{"run": 38136821459, "source": "2bc68ba24e1238481e609470e6f3c1cb1e9f91e6", "reason": "CS0136 tree near variable scope; tree checks duplicated into building blocks by global edit; fixed scoped checks and treeNear variable"}].
+
+**실제 화면:** Unity6000.3.26f1/D3D11 150PNG를 받아 artifact sourceSHA/bytes/SHA/ZIPCRC 확인. 전체구도와 3수종day·storm/night를 직접관찰했다. 확대는 제품과 같은 장면의 임시Editor 카메라이며 실제폰/FPS 측정이 아니다. 기존150캡처를 재사용하고 새로운 preview code는 추가하지 않는다.
+
+**Android:** `unity-apk-0.28.0-build1` / [BuildApk](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38137519032). BuildPlayer 오류0/경고0; launcherLint 오류0/경고8. 실제 APK를 SDK apksigner/aapt/ZIPCRC로0.28.0/code29/min29/target36/ARM64IL2CPP와 wallpaper service/private settings provider/settings launcher/비활성Unity Activity·원본v2인증서 a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6 확인. 변경 없는 host12 SHA는 hostLint38008378207 오류0/경고10 결과를 재사용했다.
+
+**전달:** [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/0681dc12820ea7f0a6c46a21003de0962bd746a4/pixel-traffic-unity-prototype-0.28.0.apk) · [전체](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/0681dc12820ea7f0a6c46a21003de0962bd746a4/tree-city-preview.png) · [둥근수종](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/0681dc12820ea7f0a6c46a21003de0962bd746a4/tree-rounded-preview.png) · [직립수종](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/0681dc12820ea7f0a6c46a21003de0962bd746a4/tree-upright-preview.png) · [넓은수종](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/0681dc12820ea7f0a6c46a21003de0962bd746a4/tree-spreading-preview.png) · [밤](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/0681dc12820ea7f0a6c46a21003de0962bd746a4/tree-night-preview.png) · [폭풍](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/0681dc12820ea7f0a6c46a21003de0962bd746a4/tree-storm-preview.png). 31194795bytes/SHA256 `102f4fd6c887723a40d013586f9fc8bf6f4ec01947d77b01c250c53c09166583`. `downloads/unity-0.28.0` 8파일 실제로그인없는 HTTP200/no redirect/fullbytes/SHA PASS. main에 APK나 새workflow를 추가하지 않았다.
+
+폰1대를USB 연결·디버깅 허용 후 아래PowerShell전체 실행. 사용자 지정 C:\Users\김백현\Desktop\AI 로다운로드·SHA검증·기존앱업데이트. 클라우드에서사용자폰에 설치했다고 주장하지 않는다.
+```powershell
+& {
+    $ErrorActionPreference = "Stop"
+    $apkFolder = "C:\Users\김백현\Desktop\AI"
+    $apkPath = Join-Path $apkFolder "pixel-traffic-unity-prototype-0.28.0.apk"
+    $apkUrl = "https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/0681dc12820ea7f0a6c46a21003de0962bd746a4/pixel-traffic-unity-prototype-0.28.0.apk"
+    $trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+    if (-not (Test-Path -LiteralPath $trafficAdb)) { throw "Unity의 adb.exe를 찾을 수 없습니다." }
+    & $trafficAdb start-server
+    if ($LASTEXITCODE -ne 0) { throw "ADB 시작 실패" }
+    $deviceLines = & $trafficAdb devices
+    if ($LASTEXITCODE -ne 0) { throw "폰 연결 확인 실패" }
+    $connectedDevices = @($deviceLines | Where-Object { $_ -match '^\S+\s+device$' })
+    if ($connectedDevices.Count -ne 1) { throw "폰 1대를 USB로 연결하고 USB 디버깅을 허용해주세요." }
+    New-Item -ItemType Directory -Force -Path $apkFolder | Out-Null
+    Write-Host "0.28.0 APK 다운로드 중..."
+    Invoke-WebRequest -UseBasicParsing -Uri $apkUrl -OutFile $apkPath
+    if ((Get-FileHash -LiteralPath $apkPath -Algorithm SHA256).Hash -ne "102f4fd6c887723a40d013586f9fc8bf6f4ec01947d77b01c250c53c09166583") { throw "파일 검증 실패. 다시 실행해주세요." }
+    Write-Host "폰에 앱 설치 중..."
+    & $trafficAdb install -r $apkPath
+    if ($LASTEXITCODE -ne 0) { throw "앱 설치 실패. 위 오류를 확인해주세요." }
+    Write-Host "완료! 0.28.0 설치 성공." -ForegroundColor Green
+}
+```
+
+폰0.27.0 사용자성공확인; 폰0.28.0 외형/FPS/발열/장시간 lifecycle은 사용자확인대기. 시안과의차이는여전히있고 이번은 가로수그래픽단계다. 실제 확대에서 여전히 덩어리 형태가 읽히며 개별 잎이나 시안 수준의 수목 자산이 완성되었다고 주장하지 않는다. PC Drive설정 보류유지. 다음작업은실제폰확인과요청에따른다.
+
 ## 2026-10-11 — Unity 0.28.0 가로수 그래픽: 구현 완료·실제 검증 대기
 
 사용자가 폰0.27.0 성공을 확인하고 가로수 그래픽 개선을 승인했다. 0.28.0/code29, TreeCanopy-0.28.0.unity/Generated/TreeCanopy0280. FoliageScene/CityEnvironment/SceneryChecks/StarterScene/StarterConfig 5소스만 변경한다. 32나무/3재질/공유256 mip texture 유지, 근거리8동수관560tri·원거리24수관140tri의6mesh. 기존400tri 수관 대비 전체수관4960tri 절감 예상(실제 보고서 대기). 7개 비대칭 잎군집·밝기/크기 변화·높이/폭/기울기 다양화, 기존3가지 길이 보강, 횡단보도 인접 crown 축소. planted bed/보행 동선/카메라·기후·건물/Android host/workflow 유지. 불투명 shared geometry로 투명 overdraw·새재질/Light/renderer를 추가하지 않는다.
