@@ -444,6 +444,9 @@ namespace PixelTraffic.UnityPrototype.Editor
                     climate.Preview(0,0);detailStreet.ResetModel();
                     camera.cullingMask=koreanMask;camera.transform.position=new Vector3(1.0f,6.7f,-4.0f);camera.transform.LookAt(new Vector3(StarterConfig.CurbFurnitureX,2.9f,7));camera.fieldOfView=55;
                     koreanPreviews.Add(CaptureState(camera,request,target,image,"curb-signal-placement"));
+                    climate.Preview(2,2);detailStreet.ApplyViews();camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);camera.fieldOfView=roadFov;
+                    koreanPreviews.Add(CaptureState(camera,request,target,image,"unique-signals-night-rain"));
+                    climate.Preview(0,0);detailStreet.ApplyViews();
                     foreach(var pole in UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))if(pole.name=="Signal Pole"&&pole.position.x<0&&Mathf.Abs(pole.position.z-7)<.01f)PreviewLayer(pole,30);
                     var koreanCaptured=new System.Collections.Generic.HashSet<string>();
                     for(int frame=0;frame<1200&&koreanCaptured.Count<5;frame++)
@@ -452,7 +455,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                         string vehicle=phase==StreetModel.Phase.VehicleGreen?"green":phase==StreetModel.Phase.VehicleYellow?"amber":"red";
                         if(koreanCaptured.Add("vehicle-"+vehicle))
                         {
-                            camera.cullingMask=koreanMask;camera.transform.position=new Vector3(3.38f,6.0f,0);camera.transform.LookAt(new Vector3(3.38f,5.61f,7));camera.fieldOfView=35;
+                            camera.cullingMask=koreanMask;camera.transform.position=new Vector3(3.38f,6.0f,0);camera.transform.LookAt(new Vector3(3.38f,5.61f,StarterConfig.CrossingZ+3));camera.fieldOfView=35;
                             koreanPreviews.Add(CaptureState(camera,request,target,image,"korean-vehicle-"+vehicle));
                         }
                         string pedestrian=detailStreet.Model.CanEnter?"walk":"stop";
@@ -513,9 +516,11 @@ namespace PixelTraffic.UnityPrototype.Editor
                         wiperPixelChanges.Add(changedWiperPixels);wiperPair.Advance(2,0);climate.Preview(0,0);detailStreet.ApplyViews();
                         if(wiperPair.Moving||Mathf.Abs(wiperPair.Angle-VehicleWipers.ParkAngle)>.001f)throw new InvalidOperationException("Captured wiper fails to park after rain.");
                         wiperPreviews.Add(CaptureState(camera,request,target,image,"wiper-"+vehicle.Model+"-after-rain"));
+                        climate.Preview(2,2);detailStreet.ApplyViews();wiperPair.ResetState();wiperPair.Advance(wiperPair.StartDelay+.4,1);
+                        wiperPreviews.Add(CaptureState(camera,request,target,image,"wiper-"+vehicle.Model+"-night-grey"));
                         foreach(var pair in wiperLayers)pair.Key.layer=pair.Value;wiperLayers.Clear();
                     }
-                    if(wiperPreviews.Count!=24)throw new InvalidOperationException("Wiper model captures incomplete.");
+                    if(wiperPreviews.Count!=30)throw new InvalidOperationException("Wiper model captures incomplete.");
                 }
                 finally
                 {

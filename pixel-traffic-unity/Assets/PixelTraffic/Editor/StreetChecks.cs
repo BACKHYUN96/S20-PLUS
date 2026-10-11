@@ -107,7 +107,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     Need(view.root.GetComponent<SkinnedMeshRenderer>().sharedMesh!=null&&view.limbs.Length==4,"Human rig incomplete.");
                     Vector3 foot=view.root.position;foreach(var bed in treeBeds)Need(foot.x<bed.min.x-.15f||foot.x>bed.max.x+.15f||foot.z<bed.min.z-.15f||foot.z>bed.max.z+.15f,"Actual tree bed differs from foot navigation.");
                 }
-                return new Report {result="PASS: curb-aligned Korean signal poles and actual lamps, distributed 4/32/100 walkers,600sec crossing/following/safety,clock/pause and actual100-rig budget; device test pending",curbSignalPoles=curbPoles,koreanSignalStates=signalStates,crossingBandMean=crowdMeans.ToArray(),populations=populations.ToArray(),simulatedSeconds=new[]{200,600,600},minimumFootDistance=minimumPeople,minimumBumperGap=minimumCars,crossings=completed,signalCycles=cycles,maxPopulationBudget=budget};
+                return new Report {result="PASS: exactly one far-side vehicle head per direction, four curb-aligned Korean pedestrian poles and actual lamps, distributed 4/32/100 walkers,600sec crossing/following/safety,clock/pause and actual100-rig budget; device test pending",curbSignalPoles=curbPoles,vehicleSignalHeads=2,vehicleSignalLenses=8,pedestrianSignalHeads=4,koreanSignalStates=signalStates,crossingBandMean=crowdMeans.ToArray(),populations=populations.ToArray(),simulatedSeconds=new[]{200,600,600},minimumFootDistance=minimumPeople,minimumBumperGap=minimumCars,crossings=completed,signalCycles=cycles,maxPopulationBudget=budget};
             }
             finally
             {
@@ -117,7 +117,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         }
         private static int CheckCurbSignalPlacement()
         {
-            var transforms=UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None);int count=0;
+            var transforms=UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None);int count=0,heads=0;var headSides=new HashSet<int>();
             foreach(var pole in transforms)if(pole.name=="Signal Pole")
             {
                 count++;Transform lamp=null;float nearest=float.MaxValue;
@@ -127,21 +127,30 @@ namespace PixelTraffic.UnityPrototype.Editor
                 var mast=pole.Find("Signal Mast").GetComponent<Renderer>();
                 Need(Mathf.Abs(pole.position.x)-mast.bounds.extents.x>StarterConfig.RoadWidth/2,"Signal mast extends into traffic.");
                 Need(Mathf.Abs(pole.position.z-7)<.001f||Mathf.Abs(pole.position.z-13)<.001f,"Signal moved away from the crosswalk.");
-                var head=pole.Find("Vehicle Signal");var arm=pole.Find("Signal Arm").GetComponent<Renderer>();
-                Need(Mathf.Abs(Mathf.Abs(head.position.x)-3.38f)<.001f&&Mathf.Abs(head.position.y-5.61f)<.001f,"Overhead signal moved away from its original lane position.");
-                float armLow=Mathf.Min(pole.position.x,head.position.x),armHigh=Mathf.Max(pole.position.x,head.position.x);
-                Need(Mathf.Abs(arm.bounds.min.x-armLow)<.001f&&Mathf.Abs(arm.bounds.max.x-armHigh)<.001f,"Signal arm does not join mast and vehicle head.");
+                var head=pole.Find("Vehicle Signal");var armTransform=pole.Find("Signal Arm");
+                bool expected=Mathf.Abs(pole.position.z-(StarterConfig.CrossingZ+Mathf.Sign(pole.position.x)*3))<.001f;
+                Need((head!=null)==expected&&(armTransform!=null)==expected,"Duplicate vehicle signal or missing far-side head.");
+                if(head!=null)
+                {
+                    heads++;Need(headSides.Add((int)Mathf.Sign(pole.position.x)),"Two vehicle heads face the same travel direction.");
+                    var arm=armTransform.GetComponent<Renderer>();
+                    Need(Mathf.Abs(Mathf.Abs(head.position.x)-3.38f)<.001f&&Mathf.Abs(head.position.y-5.61f)<.001f,"Overhead signal moved away from its original lane position.");
+                    float armLow=Mathf.Min(pole.position.x,head.position.x),armHigh=Mathf.Max(pole.position.x,head.position.x);
+                    Need(Mathf.Abs(arm.bounds.min.x-armLow)<.001f&&Mathf.Abs(arm.bounds.max.x-armHigh)<.001f,"Signal arm does not join mast and vehicle head.");
+                }
                 Need(Mathf.Abs(pole.Find("Pedestrian Signal").position.x-pole.position.x)<.001f,"Pedestrian signal detached from mast.");
                 var foot=new Vector2(pole.position.x,pole.position.z);
                 Need(!SidewalkRoutes.Allowed(foot)&&!SidewalkRoutes.SegmentAllowed(foot+Vector2.up*.4f,foot-Vector2.up*.4f),"Pedestrian route passes through relocated mast.");
                 Need(SidewalkRoutes.Allowed(new Vector2(Mathf.Sign(pole.position.x)*10.08f,pole.position.z)),"Old signal footprint still blocks outer sidewalk.");
             }
-            Need(count==4,"Curb-side signal pole count differs.");return count;
+            Need(count==4&&heads==2&&headSides.Count==2,"Curb-side poles or unique vehicle head count differs.");
+            int allHeads=0,allArms=0;foreach(var part in transforms){if(part.name=="Vehicle Signal")allHeads++;if(part.name=="Signal Arm")allArms++;}
+            Need(allHeads==2&&allArms==2,"Orphan or duplicate vehicle signal exists outside its expected mast.");return count;
         }
         private static int CheckSignalRigs(StreetSimulation controller)
         {
             var serialized=new SerializedObject(controller);var cars=serialized.FindProperty("vehicleLights");var people=serialized.FindProperty("walkLights");
-            Need(cars.arraySize==16&&people.arraySize==8,"Korean signal lamp ordering/count differs.");
+            Need(cars.arraySize==8&&people.arraySize==8,"Korean signal lamp ordering/count differs.");
             for(int i=0;i<cars.arraySize;i++)
             {
                 var r=(Renderer)cars.GetArrayElementAtIndex(i).objectReferenceValue;var parent=r.transform.parent;
@@ -180,7 +189,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         private static void Need(bool value,string message){if(!value)throw new InvalidOperationException(message);}
         [Serializable] internal sealed class Report
         {
-            public string result;public int[] populations,simulatedSeconds;public float[] crossingBandMean;public float minimumFootDistance,minimumBumperGap;public int crossings,signalCycles,koreanSignalStates,curbSignalPoles;
+            public string result;public int[] populations,simulatedSeconds;public float[] crossingBandMean;public float minimumFootDistance,minimumBumperGap;public int crossings,signalCycles,koreanSignalStates,curbSignalPoles,vehicleSignalHeads,vehicleSignalLenses,pedestrianSignalHeads;
             public CityEnvironment.Report maxPopulationBudget;
         }
     }

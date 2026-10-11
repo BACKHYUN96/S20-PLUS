@@ -39,17 +39,22 @@ namespace PixelTraffic.UnityPrototype.Editor
             {
                 Transform pole=new GameObject("Signal Pole").transform;pole.SetParent(root.transform,false);pole.position=new Vector3(side*StarterConfig.CurbFurnitureX,.16f,z);
                 StarterScene.Box("Signal Mast",pole,new Vector3(0,2.9f,0),new Vector3(.18f,5.8f,.18f),metal);
-                Transform head=new GameObject("Vehicle Signal").transform;head.SetParent(pole,false);head.localPosition=new Vector3(-side*armReach,5.45f,0);
-                // Each face looks upstream, towards the drivers who must obey it.
-                head.localRotation=Quaternion.Euler(0,side<0?0:180,0);
-                StarterScene.Box("Signal Arm",pole,new Vector3(-side*armReach/2,5.78f,0),new Vector3(armReach,.15f,.15f),metal);
-                StarterScene.Box("Signal Housing",head,Vector3.zero,new Vector3(1.82f,.50f,.26f),metal);
-                for(int n=0;n<4;n++)
+                // One overhead head per travel direction, on the far side of the crossing.
+                // The other mast retains its pedestrian signal without a duplicate vehicle arm.
+                if(Mathf.Abs(z-(StarterConfig.CrossingZ+side*3))<.001f)
                 {
-                    // Viewed from the illuminated face: red left, straight green right.
-                    var center=new Vector3(.66f-n*.44f,0,.141f);
-                    vehicleLights.Add(SignalPart("Signal Lens",head,CircleLens(),center,lens));
-                    SignalPart("Signal Hood",head,Hood(.40f,.38f),new Vector3(center.x,0,.135f),metal);
+                    Transform head=new GameObject("Vehicle Signal").transform;head.SetParent(pole,false);head.localPosition=new Vector3(-side*armReach,5.45f,0);
+                    // Each face looks upstream, towards the drivers who must obey it.
+                    head.localRotation=Quaternion.Euler(0,side<0?0:180,0);
+                    StarterScene.Box("Signal Arm",pole,new Vector3(-side*armReach/2,5.78f,0),new Vector3(armReach,.15f,.15f),metal);
+                    StarterScene.Box("Signal Housing",head,Vector3.zero,new Vector3(1.82f,.50f,.26f),metal);
+                    for(int n=0;n<4;n++)
+                    {
+                        // Viewed from the illuminated face: red left, straight green right.
+                        var center=new Vector3(.66f-n*.44f,0,.141f);
+                        vehicleLights.Add(SignalPart("Signal Lens",head,CircleLens(),center,lens));
+                        SignalPart("Signal Hood",head,Hood(.40f,.38f),new Vector3(center.x,0,.135f),metal);
+                    }
                 }
                 Transform walk=new GameObject("Pedestrian Signal").transform;walk.SetParent(pole,false);walk.localPosition=new Vector3(0,2.45f,0);walk.localRotation=Quaternion.Euler(0,side<0?90:-90,0);
                 StarterScene.Box("Walk Housing",walk,Vector3.zero,new Vector3(.37f,1.16f,.25f),metal);

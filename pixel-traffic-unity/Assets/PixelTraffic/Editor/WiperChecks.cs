@@ -9,7 +9,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         internal static Report Validate()
         {
             var cars=UnityEngine.Object.FindObjectsByType<PrototypeDrive>(FindObjectsSortMode.None);
-            var models=new HashSet<string>();int vertices=0,lightSweeps=0,heavySweeps=0,finalWipes=0;
+            var models=new HashSet<string>();int greyBlades=0;var tint=new MaterialPropertyBlock();int vertices=0,lightSweeps=0,heavySweeps=0,finalWipes=0;
             int[] rates={15,30,60,120};var positions=new float[cars.Length];
             for(int i=0;i<cars.Length;i++)positions[i]=cars[i].transform.position.z;
             var street=UnityEngine.Object.FindFirstObjectByType<StreetSimulation>();var climate=UnityEngine.Object.FindFirstObjectByType<CityClimate>();
@@ -19,6 +19,19 @@ namespace PixelTraffic.UnityPrototype.Editor
                 foreach(var car in cars)
                 {
                     var pair=car.GetComponent<VehicleWipers>();Need(pair!=null&&pair.Pivots.Length==2,"Vehicle lacks paired wipers.");models.Add(car.Model);
+                    foreach(var pivot in pair.Pivots)
+                    {
+                        var blade=pivot.GetComponent<Renderer>();blade.GetPropertyBlock(tint);Color grey=tint.GetColor("_BaseColor");
+                        Need(Mathf.Abs(grey.r-.52f)<.001f&&Mathf.Abs(grey.g-.55f)<.001f&&Mathf.Abs(grey.b-.58f)<.001f,"Wiper tint is not the requested contrasting grey.");
+                        Need(blade.sharedMaterial==car.transform.Find("Grille and Trim").GetComponent<Renderer>().sharedMaterial,"Wiper creates a separate material instance.");
+                        var glassMaterial=car.transform.Find("Sloped Windows").GetComponent<Renderer>().sharedMaterial;
+                        var glassTexture=glassMaterial.GetTexture("_BaseMap") as Texture2D;
+                        Need(glassTexture!=null&&(glassTexture.GetPixel(32,32)*glassMaterial.GetColor("_BaseColor")).grayscale<grey.grayscale-.15f,"Wiper grey blends with windshield texture.");
+                        // Recreate a scene/player load where property blocks start empty.
+                        blade.SetPropertyBlock(null);pair.SendMessage("Awake",SendMessageOptions.RequireReceiver);blade.GetPropertyBlock(tint);
+                        Color restored=tint.GetColor("_BaseColor");
+                        Need(Mathf.Abs(restored.r-grey.r)+Mathf.Abs(restored.g-grey.g)+Mathf.Abs(restored.b-grey.b)<.003f,"Player load loses the nonserialized wiper tint.");greyBlades++;
+                    }
                     var s=pair.Screen;Need(s.Length==4,"Wiper windshield profile missing.");
                     var glass=car.transform.Find("Sloped Windows").GetComponent<MeshFilter>().sharedMesh;
                     foreach(var corner in s)
@@ -66,13 +79,13 @@ namespace PixelTraffic.UnityPrototype.Editor
                 VehicleWipers probe=null;foreach(var car in cars)if(car.gameObject.activeSelf&&car.GetComponent<VehicleWipers>().Moving){probe=car.GetComponent<VehicleWipers>();break;}
                 Need(probe!=null,"Pause probe lacks a moving active wiper.");float frozen=probe.Angle;int frozenCount=probe.CompletedSweeps;
                 street.SetPaused(true);street.Advance(10);street.ApplyViews();Need(probe.Angle==frozen&&probe.CompletedSweeps==frozenCount,"Paused street advances wipers.");
-                return new Report{result="PASS: actual 24-car/48-blade glass fit, drizzle/heavy cadence, final wipe from moving/rest, stopped cars, frame clock and pause; phone test pending",models=models.Count,vehicles=cars.Length,blades=cars.Length*2,checkedVertices=vertices,drizzleSweeps=lightSweeps,heavySweeps=heavySweeps,finalWipes=finalWipes,stoppedWipers=stoppedWipers,frameRates=rates};
+                return new Report{result="PASS: contrasting grey restored on player load, actual 24-car/48-blade glass fit, drizzle/heavy cadence, final wipe from moving/rest, stopped cars, frame clock and pause; phone test pending",models=models.Count,greyBlades=greyBlades,vehicles=cars.Length,blades=cars.Length*2,checkedVertices=vertices,drizzleSweeps=lightSweeps,heavySweeps=heavySweeps,finalWipes=finalWipes,stoppedWipers=stoppedWipers,frameRates=rates};
             }
             finally
             {street.SetPaused(false);for(int i=0;i<cars.Length;i++)cars[i].ResetPosition(positions[i]);climate.Preview(0,0);street.ResetModel();street.ApplyViews();}
         }
         static void Need(bool condition,string message){if(!condition)throw new InvalidOperationException(message);}
         [Serializable] internal sealed class Report
-        {public string result;public int models,vehicles,blades,checkedVertices,drizzleSweeps,heavySweeps,finalWipes,stoppedWipers;public int[] frameRates;}
+        {public string result;public int models,vehicles,blades,greyBlades,checkedVertices,drizzleSweeps,heavySweeps,finalWipes,stoppedWipers;public int[] frameRates;}
     }
 }

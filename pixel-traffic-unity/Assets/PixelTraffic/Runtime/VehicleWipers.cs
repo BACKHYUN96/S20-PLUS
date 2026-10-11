@@ -19,10 +19,18 @@ namespace PixelTraffic.UnityPrototype
         public bool Moving=>moving;
         public float Angle {get;private set;}
         public int CompletedSweeps {get;private set;}
+        // Property blocks are not serialized in the scene; restore the tint on player load.
+        private void Awake()=>ApplyBladeTint();
+        private void ApplyBladeTint()
+        {
+            if(pivots==null)return;
+            var tint=new MaterialPropertyBlock();tint.SetColor("_BaseColor",new Color(.52f,.55f,.58f));
+            foreach(var pivot in pivots)if(pivot!=null)pivot.GetComponent<Renderer>().SetPropertyBlock(tint);
+        }
         public void Configure(Transform[] value,Vector3[] windshield,float seed)
         {pivots=value;screen=windshield;startDelay=Mathf.Clamp01(seed)*.7f;ResetState();}
         public void ResetState()
-        {requested=moving=finishing=false;first=true;sweepTime=waitTime=0;lastRain=0;CompletedSweeps=0;Pose(ParkAngle);}
+        {requested=moving=finishing=false;first=true;sweepTime=waitTime=0;lastRain=0;CompletedSweeps=0;ApplyBladeTint();Pose(ParkAngle);}
         private void Pose(float angle)
         {Angle=angle;foreach(var pivot in pivots)pivot.localRotation=Quaternion.AngleAxis(angle,Vector3.forward);}
         private void StartSweep(float rain)

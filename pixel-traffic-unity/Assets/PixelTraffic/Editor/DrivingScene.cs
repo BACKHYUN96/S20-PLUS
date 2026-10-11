@@ -31,7 +31,8 @@ namespace PixelTraffic.UnityPrototype.Editor
             Mesh mesh=Save(model+"Wiper",p,uv,t);Material trim=root.Find("Grille and Trim").GetComponent<Renderer>().sharedMaterial;
             var pivots=new Transform[2];
             for(int i=0;i<2;i++)
-            {var renderer=Part(plane,i==0?"Wiper Left":"Wiper Right",mesh,trim);pivots[i]=renderer.transform;pivots[i].localPosition=new Vector3(width*((i==0?.15f:.53f)-.5f),height*.03f,i*.004f);}
+            {var renderer=Part(plane,i==0?"Wiper Left":"Wiper Right",mesh,trim);
+                pivots[i]=renderer.transform;pivots[i].localPosition=new Vector3(width*((i==0?.15f:.53f)-.5f),height*.03f,i*.004f);}
             root.gameObject.AddComponent<VehicleWipers>().Configure(pivots,new[]{shape.screenBottomLeft,shape.screenBottomRight,shape.screenTopLeft,shape.screenTopRight},Mathf.Repeat(root.GetComponent<PrototypeDrive>().Lane*.21f+root.position.z*.037f,1));
         }
         static Mesh Signal(string name,float side,float front,float rear,float lampX,float frontY,float rearY)

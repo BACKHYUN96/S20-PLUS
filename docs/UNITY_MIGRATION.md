@@ -1,5 +1,15 @@
 # Pixel Traffic — Unity 전환 준비
 
+## 2026-10-11 — Unity 0.25.0 회색 와이퍼·중복 차량 신호등 구현 완료, 실제 검증 대기
+
+사용자는 폰0.24.0 와이퍼 동작 성공을 확인했고 어두운 유리와 겹치는 색 및 중복 차량 신호등을 지적했다. 새0.25.0/code26, Visibility-0.25.0.unity/Generated/Visibility0250에 생성한다.
+
+- 원인은 좌우×z7/13의4보행 신호 기둥에 모두 같은 방향 차량 신호/가로대를 생성하는 StreetScene 루프였다. 차량 신호는 방향별 횡단보도 건너편(x-3.38/z7 및 x+3.38/z13)에 하나씩, 총2head/8렌즈/2가로대로 제한한다. 보행 신호4head/8아이콘·4기둥·curb위치·보행 장애물·신호 주기/차량 정차 제어는 유지한다. 실제 topology/방향별 유일성/유령head count 검사와 기존6상태 렌즈 검사로 보강한다.
+- 와이퍼48날은 공유 trim 재질을 유지하며 전용 MaterialPropertyBlock 회색 RGB(.52,.55,.58)으로 대비를 준다. PropertyBlock은 장면에 저장되지 않으므로 VehicleWipers.Awake와ResetState에서 다시 적용한다. 초기 editor색만 바꾸는 접근을 게시 전에 runtime복원으로 보완했다. 검사에서48날 tint/공유재질/실제 유리 texture대비/PropertyBlock삭제 후 Awake 복원을 확인한다. 새로운 재질·Light·geometry·와이퍼 타이밍 변경은 없다.
+- 범위8소스: Editor DrivingScene/StreetScene/StreetChecks/WiperChecks/CityPreview/StarterScene, Runtime VehicleWipers/StarterConfig. 기존296파일/index/status,122입력,host12SHA 기록. 기존 사용자 변경은 보존한다.
+- 실제 야간 와이퍼 확대6장과 비오는 밤 신호 전체 구도1장을 추가해140GPU PNG를 받을 예정이다. 정적 구분자·도우미 Python parse는 통과했지만 실제 C#·Unity/GPU·Android 빌드/Lint/원본서명·다운로드는 아직 검증 전이다.
+- 다음: PC Unity 실제 검사 및 화면 관찰 뒤 서명 APK 빌드·공개 링크 전달. 실제 폰 새버전은 확인 대기.
+
 ## 2026-10-11 — Unity0.24.0 차량 와이퍼: 실제 검증·서명 APK 전달 완료
 
 사용자는 폰0.23.0 적용 성공을 확인하고 와이퍼 패치를 요청했다. **0.24.0/code25**, `Wipers-0.24.0.unity` / `Generated/Wipers0240`. 승용차·스포츠카·SUV·택시·버스·트럭의 실제 앞유리 모서리를 기준으로24대/48날을 배치했다. 유리의 기울기·폭·높이에 맞춰 길이와 회전면을 잡았고, 같은 차종끼리 메시를 공유한다. 각 날은 arm/blade2얇은 quad/4tri이며 기존 VehicleTrim 재질을 사용한다. 기존보다192tri/48renderer를 추가해 최대 강우/승객 장면 119346triangles/1637renderers/47materials, 기존120000/2400/48제한 미만이다. renderer 계약검사는 실제 추가2개에 맞춰 승용19/버스21로 갱신하되 메시·총량 제한은 유지했다.
