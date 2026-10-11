@@ -176,21 +176,23 @@ namespace PixelTraffic.UnityPrototype.Editor
                 var groundPreviews=new System.Collections.Generic.List<string>();
                 var groundTarget=new RenderTexture(960,720,24,RenderTextureFormat.ARGB32){antiAliasing=2};groundTarget.Create();
                 var groundImage=new Texture2D(960,720,TextureFormat.RGB24,false);
+                var groundStreet=UnityEngine.Object.FindFirstObjectByType<StreetSimulation>();
                 try
                 {
                     camera.aspect=4f/3;camera.fieldOfView=55;camera.transform.position=new Vector3(0,8,-23);camera.transform.LookAt(new Vector3(3,0,6));
                     var groundRequest=new UniversalRenderPipeline.SingleCameraRequest{destination=groundTarget};
-                    landscapeClimate.Preview(0,0);groundPreviews.Add(CaptureState(camera,groundRequest,groundTarget,groundImage,"ground-day"));
-                    landscapeClimate.Preview(2,2);groundPreviews.Add(CaptureState(camera,groundRequest,groundTarget,groundImage,"ground-rain-night"));
+                    landscapeClimate.Preview(0,0);groundStreet.ApplyViews();groundPreviews.Add(CaptureState(camera,groundRequest,groundTarget,groundImage,"ground-day"));
+                    landscapeClimate.Preview(2,2);groundStreet.ApplyViews();groundPreviews.Add(CaptureState(camera,groundRequest,groundTarget,groundImage,"ground-rain-night"));
                     for(int frame=0;frame<20;frame++)landscapeClimate.Advance(.1,true);
                     groundPreviews.Add(CaptureState(camera,groundRequest,groundTarget,groundImage,"ground-ripple-motion"));
-                    landscapeClimate.Preview(0,0);camera.transform.position=new Vector3(4.4f,4,-28);camera.transform.LookAt(new Vector3(7.7f,.13f,-22));
+                    landscapeClimate.Preview(0,0);groundStreet.ApplyViews();camera.transform.position=new Vector3(4.4f,4,-28);camera.transform.LookAt(new Vector3(7.7f,.13f,-22));
                     groundPreviews.Add(CaptureState(camera,groundRequest,groundTarget,groundImage,"ground-paving"));
                 }
                 finally
                 {
                     groundTarget.Release();UnityEngine.Object.DestroyImmediate(groundTarget);UnityEngine.Object.DestroyImmediate(groundImage);
                     camera.aspect=.45f;camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);camera.fieldOfView=roadFov;landscapeClimate.Preview(0,0);
+                    groundStreet.ApplyViews();
                 }
                 var sceneryTarget=new RenderTexture(960,720,24,RenderTextureFormat.ARGB32){antiAliasing=2};sceneryTarget.Create();
                 var sceneryImage=new Texture2D(960,720,TextureFormat.RGB24,false);

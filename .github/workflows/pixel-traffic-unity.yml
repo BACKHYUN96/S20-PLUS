@@ -130,7 +130,47 @@ jobs:
             pixel-traffic-unity/Reports/preview-result.json
             pixel-traffic-unity/Reports/preview-failure.json
             pixel-traffic-unity/Reports/unity-failure.json
-            pixel-traffic-unity/Reports/city-preview-*.png
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Split preview files into bounded transfer groups
+        if: always()
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $previewRoot = Join-Path $env:RUNNER_TEMP "pixel-traffic-previews-$env:GITHUB_RUN_ID"
+          $previewFiles = @(Get-ChildItem './pixel-traffic-unity/Reports/city-preview-*.png' -File -ErrorAction SilentlyContinue | Sort-Object Name)
+          for ($groupIndex = 0; $groupIndex -lt 3; $groupIndex++) {
+            $groupPath = Join-Path $previewRoot "group-$groupIndex"
+            New-Item -ItemType Directory -Path $groupPath -Force | Out-Null
+            $groupBytes = 0L
+            for ($previewIndex = $groupIndex; $previewIndex -lt $previewFiles.Count; $previewIndex += 3) {
+              Copy-Item -LiteralPath $previewFiles[$previewIndex].FullName -Destination $groupPath
+              $groupBytes += $previewFiles[$previewIndex].Length
+            }
+            if ($groupBytes -gt 24MB) { throw "Preview group $groupIndex exceeds the 24 MiB transfer budget." }
+          }
+          "PIXEL_TRAFFIC_PREVIEW_ROOT=$previewRoot" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Upload real preview group 0
+        if: always() && env.PIXEL_TRAFFIC_PREVIEW_ROOT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-previews-0-${{ github.run_id }}
+          path: ${{ env.PIXEL_TRAFFIC_PREVIEW_ROOT }}/group-0/*.png
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Upload real preview group 1
+        if: always() && env.PIXEL_TRAFFIC_PREVIEW_ROOT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-previews-1-${{ github.run_id }}
+          path: ${{ env.PIXEL_TRAFFIC_PREVIEW_ROOT }}/group-1/*.png
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Upload real preview group 2
+        if: always() && env.PIXEL_TRAFFIC_PREVIEW_ROOT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-previews-2-${{ github.run_id }}
+          path: ${{ env.PIXEL_TRAFFIC_PREVIEW_ROOT }}/group-2/*.png
           if-no-files-found: warn
           retention-days: 7
       - name: Upload verified Activity APK

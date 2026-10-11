@@ -2,6 +2,18 @@
 
 ## 2026-10-11 — Unity 0.18.0 도로·보도 마감과 접지감: 구현 완료, 실제 검사 대기
 
+사용자가 폰0.17 적용 성공을 확인하고 다음 도로·보도 패치를 승인했다. 0.18.0/code19, 새 GroundFinish-0.18.0 장면/Generated GroundFinish0180. 범위11 source/meta/workflow: GroundScene+meta, RoadSurface+meta, RoadOverlay.shader+meta, CityEnvironment, CityPreview, StarterScene, StarterConfig. 시작 시 이전dirty285파일/index/status와110입력/12host SHA를 기록했다. 신규6파일을 포함해 최종116입력을 추적한다.
+
+아스팔트512색/미세 normal·주기적 macro/grain·희미한8타이어 흔적, 보도256 줄눈/엇갈린 block·경계석128 joint, 기존4맨홀의32tri disc+철판 ring/hatch·도로 가장자리24배수구48tri를 공유 재질/병합메시로 구현한다. 차량별 renderer를 늘리지 않고 전체24대의 차체/4바퀴 접점과 전조등·후미등의젖은반사를 한672vertex/336tri 메시로 갱신한다. 가로등20곳의잘린반사40tri와8track16tri/배수구가추가되지만맨홀기존64tri를32tri로줄여budget여유를확보한다. Ground controller는mesh/재질을한번복제해원본asset를보존하고상태에는CityClimate의wetness/lamp/snow/visibleclock을사용한다. 숨김/화면OFF/정지 시메시·반사clock을갱신하지않고inactive차량의그림자/반사도제거한다. 반사는authored 효과이며실제reflectioncamera가아니다.
+
+관련검사는실제바퀴world좌표/±8도3pose의288contact, 숨김freeze/inactiveghost/원본asset/6miptexture/seams·배수구roadedge/기후endpoint를검사한다. 실제확대낮·비오는밤·2초ripple·보도4GPU사진을추가해총80장예정이며촬영카메라/기후는저장하지않는다. 기존18기후/180blend·낮→노을→밤·밤→낮·traffic/승하차/안전출발·strict120000tri/2400renderer/48material을유지해실제pipeline에서함께확인한다.
+
+첫source f7406b6/Validate38096983732의Unity와촬영step은성공했으나artifact11686656450(34394376bytes)이executor32MiB전송제한을넘었다. 직접파일전송도해당file domain의HTTP정책403에막혀우회하지않는다. 기존workflow의coreJSON/TXT와PNG3묶음을분리하고각이미지그룹24MiB예산을검사하도록개선했다. 권한contents:read/PR미실행/main 제한/원본로그제외/APK조건은유지한다. 최종source에서실제재검사하여작은artifact들의SHA/CRC/head를각각확인한다. 함께원거리ripple derivativefilter와촬영시실제차량Light refresh를보완했다.
+
+현재로컬변경범위/116SHA와기존index/host12를보존했으며Unity실행·GPU외형·Android빌드/Lint·기존서명/APK전달은대기다. NativeAndroid/host변경없음; 기존 read-only workflow의보고서출력만분할;host12가같아기존실제hostLint를재사용한다. 폰0.18/FPS·발열은미확인,Drive PC구성은보류한다.
+
+## 2026-10-11 — Unity 0.18.0 도로·보도 마감과 접지감: 구현 완료, 실제 검사 대기
+
 사용자가 폰0.17 적용 성공을 확인하고 다음 도로·보도 패치를 승인했다. 0.18.0/code19, 새 GroundFinish-0.18.0 장면/Generated GroundFinish0180. 범위10 source/meta: GroundScene+meta, RoadSurface+meta, RoadOverlay.shader+meta, CityEnvironment, CityPreview, StarterScene, StarterConfig. 시작 시 이전dirty285파일/index/status와110입력/12host SHA를 기록했다. 신규6파일을 포함해 최종116입력을 추적한다.
 
 아스팔트512색/미세 normal·주기적 macro/grain·희미한8타이어 흔적, 보도256 줄눈/엇갈린 block·경계석128 joint, 기존4맨홀의32tri disc+철판 ring/hatch·도로 가장자리24배수구48tri를 공유 재질/병합메시로 구현한다. 차량별 renderer를 늘리지 않고 전체24대의 차체/4바퀴 접점과 전조등·후미등의젖은반사를 한672vertex/336tri 메시로 갱신한다. 가로등20곳의잘린반사40tri와8track16tri/배수구가추가되지만맨홀기존64tri를32tri로줄여budget여유를확보한다. Ground controller는mesh/재질을한번복제해원본asset를보존하고상태에는CityClimate의wetness/lamp/snow/visibleclock을사용한다. 숨김/화면OFF/정지 시메시·반사clock을갱신하지않고inactive차량의그림자/반사도제거한다. 반사는authored 효과이며실제reflectioncamera가아니다.

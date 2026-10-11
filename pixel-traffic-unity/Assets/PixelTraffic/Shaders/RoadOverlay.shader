@@ -39,6 +39,8 @@ Shader "PixelTraffic/RoadOverlay"
                     float ripple=sin(i.world.z*11+_Ground.w*.55)+sin(i.world.z*29+i.world.x*8-_Ground.w*.34)*.4;
                     float edge=pow(saturate(1-d.x*d.x),2)*pow(saturate(1-d.y*d.y),1.3);
                     float broken=smoothstep(-.5,1.2,ripple);
+                    float detail=1-smoothstep(.8,2.5,max(fwidth(i.world.z*29),fwidth(i.world.x*8)));
+                    broken=lerp(.4,broken,detail);
                     alpha=edge*(.16+broken*.26)*_Ground.x*_Ground.y*(1-_Ground.z);colour=i.color.rgb;
                 }
                 else
