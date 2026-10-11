@@ -1,5 +1,14 @@
 # 작업 이력
 
+## 2026-10-11 — Unity 0.26.0 前景 건물 그래픽 구현, 실제 검증 대기
+
+사용자는 폰0.25.0 적용 성공을 확인했고 시안을 향해 앞쪽 대표 건물의 외관을 정교하게 만드는 작업을 승인했다. 다운로드·설치는 앞으로 C:\Users\김백현\Desktop\AI에 APK를 내려받고 SHA256을 검증한 뒤 USB ADB로 설치하는 단일 PowerShell 블록으로 전달한다. 실제 명령 실행은 사용자 PC에서 한다.
+
+0.26.0/code27, Architecture-0.26.0.unity / Generated/Architecture0260. 좌우 앞쪽6동(z-22/-5/12)의120창에 깊은 드러낸 창틀, 두 칸 창살과 가로 프레임/돌출 창턱을 추가한다. 유리는 기존 solid shell 바깥에 유지한다. 먼18동360창의 잘 보이지 않는 얕은 reveal면을 줄여 가까운 창의 geometry 예산을 확보한다. 시간에 따른 창문·상가 emission은 기존 shared atlas/CityClimate 전환을 유지한다. 유리 base atlas에 부드러운 하늘색 반사와 커튼색을 보완하고 외벽3색을 따뜻한 크림/회색/밝은 크림으로 구분한다.
+
+앞6동의 기존48발코니 중12곳에 화분·잎, 실외기12대/합쳐진 환기구를 추가하고1층 돌출 fascia/문턱을 기존 merged mesh에 넣는다. 기존 물탱크/옥상설비/상가/간판을 유지한다. 새재질/Light/Collider/프레임별 로직/Android host/workflow를 추가하지 않는다. 기존Leaves를 공유하는 합쳐진 Balcony Plants renderer가6개 추가된다. 단순 geometry산술로 최대119802tri를 예상했으며 실제 Unity 결과를 대체하지 않는다. 120000tri/2400renderer/48material 제한은 바꾸지 않는다.
+
+범위: ArchitectureScene/CityEnvironment/FrontageScene/FrontageChecks/SceneryChecks/CityPreview/StarterScene/StarterConfig의8소스. 기존296파일·실제index/status·122빌드입력·host12SHA를 시작 시 기록했다. 실제 생성된120깊은 창의 frame/glass depth/topology, 화분/실외기12곳, 보행·roof clearance/shared foliage/면 winding을 검사한다. 좌우 낮/밤 및 창틀 day/sunset/night 확대5장을 보완해145실제GPU PNG를 받을 예정이다. 현재 코드는 구현 상태이며 실제 C#·Unity/GPU·Android/Lint/서명·폰 검증은 아직 수행 전이다.
 ## 2026-10-11 — Unity 0.25.0 회색 와이퍼·중복 차량 신호등 수정: 검증·서명 APK 전달 완료
 
 사용자는 폰0.24.0 와이퍼 움직임을 확인했지만 유리에 묻혀 잘 보이지 않는다고 했고, 같은 방향 차량 신호등이 두 개씩 나오는 사진을 제공했다. **0.25.0/code26**, `Visibility-0.25.0.unity` / `Generated/Visibility0250`로 새 장면을 생성했다.

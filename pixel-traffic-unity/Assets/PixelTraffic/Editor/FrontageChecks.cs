@@ -9,7 +9,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         internal static Report Validate()
         {
             var climate=UnityEngine.Object.FindFirstObjectByType<CityClimate>();climate.Initialize();
-            Material window=null,shop=null;int buildings=0,windows=0,lit=0,dark=0,warm=0,cool=0;int[] styles=new int[3];
+            Material window=null,shop=null;int buildings=0,windows=0,lit=0,dark=0,warm=0,cool=0;int[] styles=new int[3];int detailedBuildings=0,deepWindows=0;
             foreach(var root in UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
             {
                 if(root.name!="City Building")continue;buildings++;
@@ -18,6 +18,15 @@ namespace PixelTraffic.UnityPrototype.Editor
                 var wm=glass.GetComponent<MeshRenderer>().sharedMaterial;var sm=display.GetComponent<MeshRenderer>().sharedMaterial;
                 if(window==null){window=wm;shop=sm;}Need(wm==window&&sm==shop,"Facade duplicates a material per building.");
                 var mesh=glass.GetComponent<MeshFilter>().sharedMesh;var store=display.GetComponent<MeshFilter>().sharedMesh;
+                bool near=root.position.z<=12.01f;var actualFrames=root.Find("Window Frame").GetComponent<MeshFilter>().sharedMesh;
+                int localWindows=mesh.vertexCount/4;
+                Need(actualFrames.vertexCount==localWindows*(near?64:16),"Near mullion/sill or distant simplified frame topology is incomplete.");
+                Need(actualFrames.triangles.Length/3==localWindows*(near?32:8),"Window detail geometry exceeds its near/far allocation.");
+                float facing=Mathf.Sign(mesh.bounds.center.x);
+                float glassFace=Mathf.Abs(mesh.vertices[0].x),frameFace=facing>0?actualFrames.bounds.max.x:-actualFrames.bounds.min.x;
+                Need(glassFace>3.25f&&glassFace<3.32f,"Glass is hidden inside the solid exterior wall.");
+                Need(near?frameFace-glassFace>.35f:frameFace-glassFace<.06f,"Window depth does not follow the near/far allocation.");
+                if(near){detailedBuildings++;deepWindows+=localWindows;}
                 Geometry(mesh);Geometry(store);Geometry(root.Find("Window Frame").GetComponent<MeshFilter>().sharedMesh);Geometry(root.Find("Shop Frames").GetComponent<MeshFilter>().sharedMesh);
                 Need(store.vertexCount==20&&store.triangles.Length/3==10,"Shop surface budget changed.");
                 Need(root.Find("Shop Frames").GetComponent<MeshFilter>().sharedMesh.triangles.Length/3==132,"Shop frame budget changed.");
@@ -42,6 +51,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
                 Need(root.GetComponentsInChildren<Collider>().Length==0,"Building frontage introduces primitive colliders.");
             }
+            Need(detailedBuildings==6&&deepWindows==120,"Six detailed facades /120 deep windows missing.");
             Need(buildings==24&&windows==480&&styles[0]==8&&styles[1]==8&&styles[2]==8&&lit>0&&dark>0&&warm>0&&cool>0,"Facade counts or room variety differ.");
             Map(window,256,128);Map(shop,512,512);
             var originalWindow=AssetDatabase.LoadAssetAtPath<Material>(StarterScene.Generated+"/WindowGlass.mat");
@@ -78,7 +88,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             Need(originalW==originalWindow.GetColor("_EmissionColor")&&originalS==originalShop.GetColor("_EmissionColor"),"Preview edits shared material assets.");
             Need(climate.AdditionalLights==4,"Store adds realtime lights beyond the mobile limit.");
             climate.Preview(0,0);
-            return new Report{result="PASS: baked storefront geometry, shared room/shop atlases and actual material fades; device test pending",buildings=buildings,windows=windows,litWindows=lit,darkWindows=dark,warmWindows=warm,coolWindows=cool,shopCounts=styles,frameRates=rates,transitionCases=cases,windowAtlasWidth=256,windowAtlasHeight=128,shopAtlasSize=512,realtimeStreetLights=4};
+            return new Report{result="PASS: baked storefront geometry, shared room/shop atlases and actual material fades; device test pending",detailedBuildings=detailedBuildings,deepWindows=deepWindows,buildings=buildings,windows=windows,litWindows=lit,darkWindows=dark,warmWindows=warm,coolWindows=cool,shopCounts=styles,frameRates=rates,transitionCases=cases,windowAtlasWidth=256,windowAtlasHeight=128,shopAtlasSize=512,realtimeStreetLights=4};
         }
         static void Gain(CityClimate climate,Material window,Material shop,float expectedW,float expectedS)
         {
@@ -102,7 +112,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         static void Need(bool condition,string message){if(!condition)throw new InvalidOperationException(message);}
         [Serializable]internal sealed class Report
         {
-            public string result;public int buildings,windows,litWindows,darkWindows,warmWindows,coolWindows,transitionCases,windowAtlasWidth,windowAtlasHeight,shopAtlasSize,realtimeStreetLights;
+            public string result;public int detailedBuildings,deepWindows,buildings,windows,litWindows,darkWindows,warmWindows,coolWindows,transitionCases,windowAtlasWidth,windowAtlasHeight,shopAtlasSize,realtimeStreetLights;
             public int[] shopCounts,frameRates;
         }
     }

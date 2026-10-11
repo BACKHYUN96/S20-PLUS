@@ -18,7 +18,8 @@ namespace PixelTraffic.UnityPrototype.Editor
             {this.root=root;this.index=index;this.x=x;this.frame=frame;outward=Mathf.Sign(x);}
             internal void Add(Vector3 p,int floor,int column)
             {
-                float front=x+outward*.07f,back=x+outward*.025f;
+                bool near=index<3;
+                float front=x+outward*(near?.28f:.07f),back=x+outward*.025f;
                 // Four front strips and four recessed reveals, with a real glass plane behind them.
                 for(int side=0;side<4;side++)
                 {
@@ -26,7 +27,14 @@ namespace PixelTraffic.UnityPrototype.Editor
                     Vector3 c=Corner(front,p,(side+1)%4,.82f),d=Corner(front,p,side,.82f);
                     frames.Quad(a,b,c,d,Rect.MinMaxRect(0,0,1,1),Vector3.right*outward);
                     Vector3 inward=side==0?Vector3.up:side==1?Vector3.back:side==2?Vector3.down:Vector3.forward;
-                    frames.Quad(d,c,Corner(back,p,(side+1)%4,.8f),Corner(back,p,side,.8f),Rect.MinMaxRect(0,0,1,1),inward);
+                    if(near)frames.Quad(d,c,Corner(back,p,(side+1)%4,.8f),Corner(back,p,side,.8f),Rect.MinMaxRect(0,0,1,1),inward);
+                }
+                if(near)
+                {
+                    // The nearer six buildings have deep reveals, a two-pane frame and a projecting sill.
+                    frames.Plane(front+.002f*outward,p.y-.8f,p.y+.8f,p.z-.035f,p.z+.035f,Rect.MinMaxRect(0,0,1,1),outward);
+                    frames.Plane(front+.002f*outward,p.y+.26f,p.y+.31f,p.z-.8f,p.z+.8f,Rect.MinMaxRect(0,0,1,1),outward);
+                    frames.Box(new Vector3(x+outward*.19f,p.y-.91f,p.z),new Vector3(.48f,.095f,1.98f));
                 }
                 int variant=(index*17+floor*13+column*7+(outward<0?3:0))%8;
                 glass.Plane(back,p.y-.8f,p.y+.8f,p.z-.8f,p.z+.8f,Tile(variant%4,variant/4,4,2,256,128),outward);
@@ -112,7 +120,10 @@ namespace PixelTraffic.UnityPrototype.Editor
             if(variant%3==0&&v>.18f&&v<.90f&&((int)(v*24)%3==0))shade*=.65f;
             if(variant%3==1&&u>.60f&&u<.77f&&v<.52f)shade*=.24f;
             if(v<.10f||v>.94f)shade*=.18f;
-            b=Color.Lerp(new Color(.055f,.095f,.13f),new Color(.28f,.33f,.35f),v*.35f);
+            // Opaque sky reflections and curtains retain depth without transparent overdraw.
+            b=Color.Lerp(new Color(.08f,.14f,.19f),new Color(.31f,.41f,.48f),v*.70f);
+            if(u<.12f||u>.88f)b=Color.Lerp(b,new Color(.37f,.35f,.30f),.48f);
+            if(v>.70f)b+=new Color(.025f,.035f,.045f)*(v-.70f)/.30f;
             if(u>.18f&&u<.23f)b+=new Color(.035f,.045f,.055f);
             e=lit?tone*shade:Color.black;
         }

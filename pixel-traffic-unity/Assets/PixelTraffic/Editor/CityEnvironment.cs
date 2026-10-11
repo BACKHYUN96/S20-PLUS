@@ -135,7 +135,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             int floors = 4 + index % 3; float height = floors * 2.8f + 1.2f;
             Transform root = new GameObject("City Building").transform;
             root.SetParent(parent, false); root.localPosition = new Vector3(x, .16f, z);
-            Color[] colors = {new Color(.80f,.79f,.70f),new Color(.75f,.77f,.70f),new Color(.83f,.78f,.69f)};
+            Color[] colors = {new Color(.80f,.76f,.67f),new Color(.70f,.75f,.74f),new Color(.85f,.80f,.71f)};
             Material facade = Mat("Facade " + index % 3, colors[index % 3]);
             Texture(facade, "Masonry", 2, new Vector2(2, floors*.65f));
             Box("Facade", root, new Vector3(0, height / 2, 0), new Vector3(6.5f, height, 14), facade);

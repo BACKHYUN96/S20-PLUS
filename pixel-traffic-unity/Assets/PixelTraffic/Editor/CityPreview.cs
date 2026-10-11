@@ -231,6 +231,16 @@ namespace PixelTraffic.UnityPrototype.Editor
                     }
                     camera.transform.position=new Vector3(-4.8f,18,-13);camera.transform.LookAt(new Vector3(-13,12.8f,-22));landscapeClimate.Preview(0,0);
                     sceneryPreviews.Add(CaptureState(camera,sceneryRequest,sceneryTarget,sceneryImage,"architecture-roof-day"));
+                    camera.transform.position=new Vector3(3.8f,10,-10);camera.transform.LookAt(new Vector3(10.85f,7.5f,-5));camera.fieldOfView=48;
+                    foreach(int theme in new[]{0,2})
+                    {
+                        landscapeClimate.Preview(theme,0);sceneryPreviews.Add(CaptureState(camera,sceneryRequest,sceneryTarget,sceneryImage,"architecture-right-"+(theme==0?"day":"night")));
+                    }
+                    camera.transform.position=new Vector3(-7.3f,10.1f,2);camera.transform.LookAt(new Vector3(-10.5f,7.5f,-5));camera.fieldOfView=44;
+                    foreach(int theme in new[]{0,1,2})
+                    {
+                        landscapeClimate.Preview(theme,0);sceneryPreviews.Add(CaptureState(camera,sceneryRequest,sceneryTarget,sceneryImage,"architecture-window-"+new[]{"day","sunset","night"}[theme]));
+                    }
                 }
                 finally{sceneryTarget.Release();UnityEngine.Object.DestroyImmediate(sceneryTarget);UnityEngine.Object.DestroyImmediate(sceneryImage);}
                 camera.aspect=.45f;camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);camera.fieldOfView=roadFov;landscapeClimate.Preview(0,0);

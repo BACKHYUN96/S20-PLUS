@@ -38,6 +38,28 @@ namespace PixelTraffic.UnityPrototype.Editor
                 var go=new GameObject("Roof Garden",typeof(MeshFilter),typeof(MeshRenderer));go.transform.SetParent(root,false);
                 go.transform.localPosition=new Vector3(streetSide-outward*.6f,height+.65f,-4.5f);go.GetComponent<MeshFilter>().sharedMesh=FoliageScene.RoofShrub();go.GetComponent<MeshRenderer>().sharedMaterial=FoliageScene.Leaves(index%3);
             }
+            if(index<3)
+            {
+                var plants=new Solids();
+                for(int balcony=0;balcony<2;balcony++)
+                {
+                    float z=balcony==0?-2.6f:2.6f,y=1.6f+(balcony+1)*2.8f-.9f;
+                    float plantX=streetSide+outward*.36f;
+                    trim.Box(new Vector3(plantX,y+.25f,z),new Vector3(.47f,.38f,1.18f));
+                    rails.Box(new Vector3(plantX,y+.45f,z),new Vector3(.49f,.045f,1.22f));
+                    plants.Append(FoliageScene.RoofShrub(),new Vector3(plantX,y+.44f,z),new Vector3(.35f,.55f,.72f));
+                    // Units sit beside, rather than in front of, the balcony openings.
+                    float unitY=y+.87f,unitZ=balcony==0?-4f:4f;
+                    plaster.Box(new Vector3(streetSide+outward*.27f,unitY,unitZ),new Vector3(.48f,.52f,.77f));
+                    rails.Box(new Vector3(streetSide+outward*.52f,unitY,unitZ),new Vector3(.035f,.39f,.62f));
+                    for(int slat=0;slat<4;slat++)
+                        rails.Plane(streetSide+outward*.54f,unitY-.15f+slat*.09f,unitY-.135f+slat*.09f,unitZ-.29f,unitZ+.29f,outward);
+                }
+                // Ground-floor stone fascia and raised entrance lip stay behind the walking corridor.
+                trim.Box(new Vector3(streetSide+outward*.15f,3.22f,0),new Vector3(.25f,.13f,11.8f));
+                trim.Box(new Vector3(streetSide+outward*.11f,.095f,(index%3-1)*3.6f),new Vector3(.18f,.09f,1.75f));
+                plants.Save(root,"Balcony Plants",(outward>0?"Left":"Right")+index.ToString("00")+"BalconyPlants",FoliageScene.Leaves(index%3));
+            }
             string key=(outward>0?"Left":"Right")+index.ToString("00");
             trim.Save(root,"Facade Stonework",key+"Stonework",stone);
             rails.Save(root,"Balcony Metalwork",key+"Metalwork",metal);
@@ -58,6 +80,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         private sealed class Solids
         {
             readonly List<Vector3> vertices=new List<Vector3>();readonly List<Vector2> uv=new List<Vector2>();readonly List<int> indices=new List<int>();
+            readonly List<Vector3> planeVertices=new List<Vector3>();
             internal void Box(Vector3 centre,Vector3 size)
             {
                 Vector3 h=size*.5f;
@@ -71,8 +94,24 @@ namespace PixelTraffic.UnityPrototype.Editor
                     indices.AddRange(new[]{n,n+1,n+2,n,n+2,n+3});
                 }
             }
+            internal void Plane(float x,float bottom,float top,float start,float end,float outward)
+            {
+                // Keep box vertices contiguous for the independent slab/railing geometry oracle.
+                if(outward>0)planeVertices.AddRange(new[]{new Vector3(x,bottom,start),new Vector3(x,top,start),new Vector3(x,top,end),new Vector3(x,bottom,end)});
+                else planeVertices.AddRange(new[]{new Vector3(x,bottom,start),new Vector3(x,bottom,end),new Vector3(x,top,end),new Vector3(x,top,start)});
+            }
+            internal void Append(Mesh mesh,Vector3 position,Vector3 scale)
+            {
+                int n=vertices.Count;
+                foreach(Vector3 v in mesh.vertices)vertices.Add(position+Vector3.Scale(v,scale));
+                uv.AddRange(mesh.uv);foreach(int i in mesh.triangles)indices.Add(n+i);
+            }
             internal void Save(Transform parent,string name,string asset,Material material)
             {
+                for(int i=0;i<planeVertices.Count;i+=4)
+                {
+                    int n=vertices.Count;vertices.AddRange(planeVertices.GetRange(i,4));uv.AddRange(new[]{Vector2.zero,Vector2.right,Vector2.one,Vector2.up});indices.AddRange(new[]{n,n+1,n+2,n,n+2,n+3});
+                }
                 var mesh=new Mesh{name=asset};mesh.SetVertices(vertices);mesh.SetUVs(0,uv);mesh.SetTriangles(indices,0);mesh.RecalculateNormals();mesh.RecalculateBounds();AssetDatabase.CreateAsset(mesh,StarterScene.Generated+"/"+asset+".asset");
                 var obj=new GameObject(name,typeof(MeshFilter),typeof(MeshRenderer));obj.transform.SetParent(parent,false);obj.GetComponent<MeshFilter>().sharedMesh=mesh;
                 var renderer=obj.GetComponent<MeshRenderer>();renderer.sharedMaterial=material;renderer.shadowCastingMode=ShadowCastingMode.On;renderer.receiveShadows=true;renderer.lightProbeUsage=LightProbeUsage.Off;renderer.reflectionProbeUsage=ReflectionProbeUsage.Off;

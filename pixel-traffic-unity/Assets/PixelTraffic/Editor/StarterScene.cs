@@ -14,7 +14,7 @@ namespace PixelTraffic.UnityPrototype.Editor
     // Generated geometry stays in its own scene; existing scenes are never rebuilt in place.
     public static class StarterScene
     {
-        internal const string Generated = "Assets/PixelTraffic/Generated/Visibility0250";
+        internal const string Generated = "Assets/PixelTraffic/Generated/Architecture0260";
         private const string PipelinePath = Generated + "/MobileURP.asset";
         private static readonly Dictionary<string, Material> materials = new Dictionary<string, Material>();
 
