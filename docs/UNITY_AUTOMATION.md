@@ -1,5 +1,45 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-11 — Unity 0.29.0 보행자 신호등 중복 제거: 실제 검증·서명 APK 전달 완료
+
+사용자 이미지의 결합신호기둥 위쪽 별도보행자신호 중복 신고를 수정했다. StreetScene이각curb z7/13에2기둥씩4기둥을생성하던원인. 별도보행자전용기둥2개를제거하고 차량/보행자결합기둥양쪽1개씩2개유지. 실제2기둥/2차량머리8렌즈/2보행머리4아이콘렌즈를검사하고 orphan/중복머리도직접계수한다. 높이·위치·신호색·표시방향·보행입장/차량정지·기후/기능은유지. 기존4기둥용안전회피구역을보수적으로유지하여보행경로변경을섞지않았다. StreetScene/StreetChecks/StarterScene/StarterConfig4소스,0.29.0/code30,UniquePedestrianSignals-0.29.0.unity/Generated/UniquePedestrianSignals0290. 가로수/건물/카메라/Android host/workflow변경없음.
+
+**실제 검증:** source `2e2c60b49f80d1bc4d7c6af9c38906b17f2a92ef` / [Validate](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38138769347). 기둥2·신호머리유일성·curb정렬·직렬화실제렌즈배열·6신호상태·양쪽보행아이콘동기·보행/차량안전·기존기후/와이퍼/승하차/반사/그래픽검사 PASS. 실제기본103472triangles,최대114818triangles/1609renderers/47materials로기존110000/120000/2400/48 예산미만. 시작296파일/index/status/122입력/host12SHA보존. Unity실패기록[].
+
+**실제 화면:** Unity6000.3.26f1/D3D11 150PNG artifact의sourceSHA/bytes/SHA/ZIPCRC 확인. 전체구도·야간비·차량/보행stop/walk실제캡처를관찰해남은결합기둥과아이콘확인. 기존150캡처코드재사용; AI생성이미지나폰/FPS캡처아님.
+
+**Android:** `unity-apk-0.29.0-build1` / [BuildApk](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38139284695). BuildPlayer오류0/경고0; launcherLint오류0/경고8. 실제APK SDK apksigner/aapt/ZIPCRC로0.29.0/code30/min29/target36/ARM64IL2CPP·wallpaper service/privateprovider/settingslauncher/비활성UnityActivity·원본v2cert a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6 확인. 변경없는host12SHA는hostLint38008378207 오류0/경고10재사용.
+
+**전달:** [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/2910337728d7649aad511dd01655c008870ed2bb/pixel-traffic-unity-prototype-0.29.0.apk) · [전체](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/2910337728d7649aad511dd01655c008870ed2bb/signal-city-preview.png) · [야간비](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/2910337728d7649aad511dd01655c008870ed2bb/signal-night-preview.png) · [보행신호](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/2910337728d7649aad511dd01655c008870ed2bb/signal-walk-preview.png). 31194891bytes/SHA256 `8b2fdee93eaa60dba5e1d0bd16e6ee9748bfbe97e75cab4829e754b20a6b731c`. 다운로드branch `downloads/unity-0.29.0`의8파일 로그인없는HTTP200/no redirect/fullbytes/SHA PASS. main에 APK/newworkflow추가없음.
+
+사용자폴더C:\Users\김백현\Desktop\AI로다운로드·SHA검증·USB업데이트설치. 폰1대USB연결·디버깅허용후사용자WindowsPowerShell에전체붙여넣기. 클라우드에서사용자폰에설치했다고주장하지않는다.
+```powershell
+& {
+    $ErrorActionPreference = "Stop"
+    $apkFolder = "C:\Users\김백현\Desktop\AI"
+    $apkPath = Join-Path $apkFolder "pixel-traffic-unity-prototype-0.29.0.apk"
+    $apkUrl = "https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/2910337728d7649aad511dd01655c008870ed2bb/pixel-traffic-unity-prototype-0.29.0.apk"
+    $trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+    if (-not (Test-Path -LiteralPath $trafficAdb)) { throw "Unity의 adb.exe를 찾을 수 없습니다." }
+    & $trafficAdb start-server
+    if ($LASTEXITCODE -ne 0) { throw "ADB 시작 실패" }
+    $deviceLines = & $trafficAdb devices
+    if ($LASTEXITCODE -ne 0) { throw "폰 연결 확인 실패" }
+    $connectedDevices = @($deviceLines | Where-Object { $_ -match '^\S+\s+device$' })
+    if ($connectedDevices.Count -ne 1) { throw "폰 1대를 USB로 연결하고 USB 디버깅을 허용해주세요." }
+    New-Item -ItemType Directory -Force -Path $apkFolder | Out-Null
+    Write-Host "0.29.0 APK 다운로드 중..."
+    Invoke-WebRequest -UseBasicParsing -Uri $apkUrl -OutFile $apkPath
+    if ((Get-FileHash -LiteralPath $apkPath -Algorithm SHA256).Hash -ne "8b2fdee93eaa60dba5e1d0bd16e6ee9748bfbe97e75cab4829e754b20a6b731c") { throw "파일 검증 실패. 다시 실행해주세요." }
+    Write-Host "폰에 앱 설치 중..."
+    & $trafficAdb install -r $apkPath
+    if ($LASTEXITCODE -ne 0) { throw "앱 설치 실패. 위 오류를 확인해주세요." }
+    Write-Host "완료! 0.29.0 설치 성공." -ForegroundColor Green
+}
+```
+
+폰0.29.0 외형/성능은 사용자확인대기. 폰0.27.0 사용자성공확인;0.28.0 전달후중복신호신고. PC Drive설정 보류유지. 다음그래픽개발은사용자확인과요청에따른다.
+
 ## 2026-10-11 — Unity 0.29.0 보행자 신호등 중복 제거: 구현·검증 대기
 
 사용자 이미지에서 차량·보행자 결합기둥 위쪽에 별도 보행자신호가 중복되어 보인다는 신고. 생성코드가각curb의z7/13에2기둥씩 총4를 만들던원인확인. 차량신호붙은far-side기둥만양쪽1개씩총2유지하고, 별도보행자전용2기둥과머리를제거. 실제총2기둥/2차량머리8렌즈/2보행머리4아이콘렌즈를검사하고 orphan/중복머리도계수한다. 위치높이·차량/보행표시방향·기후·안전모델·카메라·가로수·건물·Android host/workflow유지. StreetScene/StreetChecks/StarterScene/StarterConfig4소스,0.29.0/code30,UniquePedestrianSignals-0.29.0.unity/Generated/UniquePedestrianSignals0290.

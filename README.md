@@ -1,5 +1,7 @@
 # S20+
 
+Unity 라이브 배경화면 **0.29.0**: 별도보행자전용2기둥을제거하고 양쪽차량·보행결합기둥각1개만유지했습니다. 실제Unity/GPU150장·Android/Lint·원본서명·공개다운로드확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/2910337728d7649aad511dd01655c008870ed2bb/pixel-traffic-unity-prototype-0.29.0.apk) · [실제화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/2910337728d7649aad511dd01655c008870ed2bb/signal-city-preview.png) · [설치명령](docs/UNITY_AUTOMATION.md). 폰0.29.0 확인대기.
+
 Unity 라이브 배경화면 **0.28.0**: 가로수7비대칭 잎군집·녹색/크기/높이/가지 다양화와 원근별 geometry. 실제Unity/GPU150장·Android/Lint·원본서명·공개다운로드 확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/0681dc12820ea7f0a6c46a21003de0962bd746a4/pixel-traffic-unity-prototype-0.28.0.apk) · [가로수 확대](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/0681dc12820ea7f0a6c46a21003de0962bd746a4/tree-spreading-preview.png) · [다운로드+설치 명령](docs/UNITY_AUTOMATION.md). 폰0.27.0 사용자적용성공; 폰0.28.0 확인대기.
 
 Unity 라이브 배경화면 **0.27.0**: 앞쪽6동의 높이·옥상·발코니를 달리하고 옆면48창과 넓은 상층 테라스6곳을 추가했습니다. 실제Unity·GPU150장·Android/Lint·원본서명·공개다운로드 확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/64687628612cc6f90dabf150655e99030aa1a263/pixel-traffic-unity-prototype-0.27.0.apk) · [건물 확대](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/64687628612cc6f90dabf150655e99030aa1a263/building-terrace-preview.png) · [다운로드+설치 명령](docs/UNITY_AUTOMATION.md). 폰0.26.0은 사용자 적용 확인, 폰0.27.0 외형/성능은 확인 대기입니다.
