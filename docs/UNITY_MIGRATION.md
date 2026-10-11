@@ -1,5 +1,53 @@
 # Pixel Traffic — Unity 전환 준비
 
+## 2026-10-11 — Unity 0.27.0 건물 형태·옆면 창문·상층 테라스: 실제 검증·서명 APK 전달 완료
+
+사용자는 폰0.26.0 적용 성공을 확인하고 앞쪽 대표 건물부터 시안처럼 정교하게 만드는 작업을 승인했다. **0.27.0/code28**, `BuildingVariety-0.27.0.unity` / `Generated/BuildingVariety0270`으로 생성했다. 앞으로 APK는 사용자 Windows 폴더 `C:\Users\김백현\Desktop\AI`로 다운로드·SHA256 검증·USB ADB 설치를 한 번에 실행하는 PowerShell 블록으로 전달한다. 실제 명령 실행은 사용자 PC에서 하며 클라우드에서 설치했다고 주장하지 않는다.
+
+**건물 형태:** 앞쪽6동의 층수를 왼쪽6/5/4층·오른쪽4/6/5층으로 달리하고 각 옥상에 서로 다른6setback cap을 더했다. 기존roof access 크기도 달리하며 설비와grill을 같이 옮겨 새cap과 겹치지 않게 했다. 건물 위치/폭/도로·카메라·보행 footprint는 유지한다. 기존 주도로480창 중 앞120창의 깊은 frame/sill은 유지하고 보이는 끝면에48창을 추가해총528창을 만든다. 끝면 유리와 드러낸 frame/sill은 실제벽 바깥이며 기존2shared meshes/material에 합친다. 기존lit/dark/warm/cool atlas/상가3종/낮→노을→밤 emission을 유지한다.
+
+**발코니·옥상:** 가까운6동의 기존 발코니 폭/깊이를3규격으로 달리하고 각 상층에4m wide terrace/6post를 더했다. 실제총54발코니/228railposts/6상층테라스/18발코니식물/12실외기, roofProfiles6와 폭종류4를 검사했다. 화분 높이·위치를 profile마다 달리하며 sharedLeaves/RoofShrub는 그대로 재사용한다. 실외기중심은실제window열사이±3.9로 보완한다. 새재질/Light/Collider/Update/renderer/Android host/workflow는 추가하지 않는다.
+
+**거리별 예산 확보:** 먼18동360창의 frame을glass뒤의 얇은backing quad로 바꿔 street-facing outline은 남기고, 먼 상가frame의wall-facing face만 생략했다. 앞쪽/끝면 shadow/실제room emission·상가 표면은 유지한다. 기본/최대 인원 예산을 올리지 않고 실제geometry/winding/oracle로 검사한다.
+
+**범위·예산:** ArchitectureScene/CityEnvironment/FrontageScene/FrontageChecks/SceneryChecks/CityPreview/StarterScene/StarterConfig의8소스. 시작296파일·실제index/status·122입력·host12SHA 보존. 실제 최대 강우/승객 119910triangles/1623renderers/47materials로120000/2400/48 제한 미만이다. 제한을 높이지 않았다. 기본 장면 108564triangles로110000 예약 예산도 지킨다.
+
+**실제 검증:** source `b4ca1c77ac5e17e7cc6fe5c6c3941a6560d21ae8` / [Validate 38133036369](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38133036369). 실제 생성된6높이profile/6roof profile/6upper terrace/528창(주도로480+끝면48)/18화분/12실외기·near-far frame topology·끝면normal/벽바깥depth·보행/옥상 clearance·면 winding/공유재질 검사 PASS. 기존상가/18기후·180전환,24대/48와이퍼·pause/6신호/4기둥, 보행/승하차/차선 안전·노면GPU/CCT·차종 검증도 PASS. 이번 실패 기록: [].
+
+**실제 화면:** Unity6000.3.26f1/D3D11 150PNG를 받아 artifact sourceSHA/bytes/SHA/ZIPCRC를 확인했다. 기존145장에 좌우 끝면 day/night4장과상층테라스1장을 보완했다. 제품 구도와좌우끝면·옆면window depth·상층테라스/옥상 silhouette·밤창문을 직접 관찰했다. 확대는 같은 장면의 임시 Editor 카메라에서 촬영한 것이며 저장된 폰 카메라는 바꾸지 않는다. AI 생성 시안이나 폰/FPS 캡처가 아니다.
+
+**Android:** `unity-apk-0.27.0-build1` / [BuildApk 38133617130](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38133617130). BuildPlayer 오류0/경고0, launcherLint 오류0/경고8. 실제 APK를 SDK apksigner/aapt/ZIPCRC로0.27.0/code28/min29/target36/ARM64IL2CPP, wallpaper service/private settings provider/settings launcher/Unity Activity 비활성, 원본v2인증서 a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6 확인. 변경 없는 host12SHA는 hostLint38008378207(오류0/경고10) 결과를 재사용했다.
+
+**전달:** [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/64687628612cc6f90dabf150655e99030aa1a263/pixel-traffic-unity-prototype-0.27.0.apk) · [제품 전체](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/64687628612cc6f90dabf150655e99030aa1a263/building-city-preview.png) · [왼쪽 끝면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/64687628612cc6f90dabf150655e99030aa1a263/building-corner-left-preview.png) · [밤 끝면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/64687628612cc6f90dabf150655e99030aa1a263/building-corner-night-preview.png) · [상층 테라스](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/64687628612cc6f90dabf150655e99030aa1a263/building-terrace-preview.png) · [옥상/테라스](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/64687628612cc6f90dabf150655e99030aa1a263/building-terrace-preview.png). 31173119bytes/SHA256 `41e569dfb9ca624d5ca86cd278bc9c96b6368c1e0d815b6fc9540746afe4fca1`. `downloads/unity-0.27.0`의8파일을 로그인 없는 HTTP200/no redirect/fullbytes/SHA로 검증했다. main에는 APK binary나 새 workflow를 추가하지 않았다. 최종 문서는 검증한122빌드입력과 사용자 작업을 보존한다.
+
+USB 디버깅을 허용한 폰1대를 연결한 뒤 Windows PowerShell에 아래 전체를 붙여넣는다. 다운로드·검증·기존 앱 업데이트까지 수행한다.
+```powershell
+& {
+    $ErrorActionPreference = "Stop"
+    $apkFolder = "C:\Users\김백현\Desktop\AI"
+    $apkPath = Join-Path $apkFolder "pixel-traffic-unity-prototype-0.27.0.apk"
+    $apkUrl = "https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/64687628612cc6f90dabf150655e99030aa1a263/pixel-traffic-unity-prototype-0.27.0.apk"
+    $trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+    if (-not (Test-Path -LiteralPath $trafficAdb)) { throw "Unity의 adb.exe를 찾을 수 없습니다." }
+    & $trafficAdb start-server
+    if ($LASTEXITCODE -ne 0) { throw "ADB 시작 실패" }
+    $deviceLines = & $trafficAdb devices
+    if ($LASTEXITCODE -ne 0) { throw "폰 연결 확인 실패" }
+    $connectedDevices = @($deviceLines | Where-Object { $_ -match '^\S+\s+device$' })
+    if ($connectedDevices.Count -ne 1) { throw "폰 1대를 USB로 연결하고 USB 디버깅을 허용해주세요." }
+    New-Item -ItemType Directory -Force -Path $apkFolder | Out-Null
+    Write-Host "0.27.0 APK 다운로드 중..."
+    Invoke-WebRequest -UseBasicParsing -Uri $apkUrl -OutFile $apkPath
+    if ((Get-FileHash -LiteralPath $apkPath -Algorithm SHA256).Hash -ne "41e569dfb9ca624d5ca86cd278bc9c96b6368c1e0d815b6fc9540746afe4fca1") { throw "파일 검증 실패. 다시 실행해주세요." }
+    Write-Host "폰에 앱 설치 중..."
+    & $trafficAdb install -r $apkPath
+    if ($LASTEXITCODE -ne 0) { throw "앱 설치 실패. 위 오류를 확인해주세요." }
+    Write-Host "완료! 0.27.0 설치 성공." -ForegroundColor Green
+}
+```
+
+실제 폰0.27.0 외형/FPS·발열·장시간 lifecycle은 사용자 확인 대기. 폰0.26.0 적용 성공은 사용자 확인이다. 시안과의 차이는 여전히 있으며 이번 패치는 앞쪽6동의height/rooftop/upper balcony/cornerwindow 다양화 단계다. 다음 건물 외관 확대나 식생/배경 개선은 실제 폰 확인과 다음 요청에 따라 진행한다. PC Drive설정 보류 유지.
+
 ## 2026-10-11 — Unity 0.27.0 앞6동 형태·옆면 창문·상층 테라스 구현, 실제 검증 대기
 
 사용자는 폰0.26.0 적용 성공/문제 없음을 확인하고 앞6동의 높이·옥상·발코니 다양화와 모서리/옆면 창문 보강을 승인했다. 0.27.0/code28, BuildingVariety-0.27.0.unity / Generated/BuildingVariety0270.
