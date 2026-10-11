@@ -1,5 +1,24 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-11 — Unity 0.18.0 도로·보도 마감과 접지감: 실제 GPU 검증·서명 APK 전달 완료
+
+사용자는 폰 **0.17.0 적용 성공**을 확인하고 도로·보도 패치를 승인했다. **0.18.0/code19**, `GroundFinish-0.18.0.unity` / `Generated/GroundFinish0180`. 아스팔트512 색/미세 normal과 seam 없는주기적 grain/macro, 보도256의엇갈린블록/줄눈, 경계석 joint를 보강했다. 기존4맨홀은32tri disc+철판 ring/hatch로꾸미고 도로 가장자리24배수구를48tri병합메시로표현한다. 옅은8타이어흔적과전체24대의차체/4바퀴 접지 그림자·젖은전조등/후미등반사를 하나의672vertex/336tri 메시로갱신한다. 가로등20곳의길게끊어진노면반짝임도더했다. authored 반사이며실제reflectioncamera가아니다. Ground overlay는한번복제한공유재질/동적mesh로구현하고CityClimate wetness/lamp/snow/visibleclock을사용한다. 차량별renderer/실시간Light/콜라이더추가없음. 숨김/화면OFF에는mesh·반사clock을갱신하지않고inactive차량의shadow/reflection을제거한다.
+
+- **범위·예산:** GroundScene+meta, RoadSurface+meta, RoadOverlay.shader+meta, CityEnvironment, CityPreview, StarterScene, StarterConfig 및기존read-only workflow 11source/meta/workflow(신규6). 기존285파일/index/status를보존하고 신규6을더한116 build/capture입력을추적한다. Ground는4renderer·overlay1재질/Drain Iron1재질, 기존차량geometry/renderercontract유지. 최대100기존우산+8정류장 rig/우산 stress 119424tri/1584renderer/46material, 기존strict120000/2400/48이내. 셰이더/동적메시비용의 실제폰FPS·발열은별도확인이다.
+- **Unity:** source `f222879dc97a09d8f653316254e17b9a8933143c` / [Validate 38097682850](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38097682850) / reports artifact 11686822378. Ground 실제4바퀴×24차×3yaw의 288contact world좌표, hidden freeze/inactive ghost/원본asset/mip·seam/배수구roadedge/clear·wetnight mapping PASS. 기존18기후·180blend/15·30·60·120Hz 낮→노을→밤·밤→낮/숨김·retarget·신호/회전차체·차선변경·승하차/hazard·안전출발을 유지한다. 실제24대600초 신호 11순환/차선변경 21/정류장 출발 14, 최소차체gap 1.799999m, 후반승객탑승 23회.
+- **전송 개선:** 첫 Validate38096983732/원본artifact11686656450은실행성공이었으나34,394,376bytes로32MiB executor전송제한을넘어local GPU확인이불가능했다. 파일domainHTTP403도확인하고정책우회없이기존workflow의허용보고서출력을core+PNG3묶음으로분리했다. 최종묶음의각bytes/SHA/CRC/source head를검증했다.
+- **GPU:** 실제 Unity6000.3.26f1/Direct3D11 80PNG. 신규ground 낮·비오는밤·2초ripple·보도확대4사진과제품구도를관찰했다. 촬영카메라/기후변경은임시이며저장하지않는다. 실제Editor이미지는폰 screenshot/FPS 측정과구분한다. 실제관찰·수정이력은source manifest에기록한다.
+- **Android·서명:** 같은source tag `unity-apk-0.18.0-build1` / [BuildApk 38098141335](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38098141335) / reports 11687096882 / APK 11686952036. BuildPlayer 오류0/경고0, launcher Lint 오류0/경고8. 실제 다운로드 APK의기존v2 인증서 `a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6`, version0.18.0/code19/min29/target36/ARM64 IL2CPP, settings launcher·BIND_WALLPAPER service·private provider·disabled Unity activity를검증했다. 12host SHA가같아실제hostLint38008378207(오류0/경고10)을재사용한다. NativeAndroid/host 입력변경없음. 기존read-only workflow는core보고서/실제PNG3묶음으로분리하고그룹24MiB예산을검사한다.
+- **전달:** [APK 직접다운로드](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/e8e570e0b071415480e3dc5d743214bf213effc6/pixel-traffic-unity-prototype-0.18.0.apk) · [실제전체화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/e8e570e0b071415480e3dc5d743214bf213effc6/ground-city-preview.png) · [비오는화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/e8e570e0b071415480e3dc5d743214bf213effc6/ground-night-preview.png) · [노면확대](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/e8e570e0b071415480e3dc5d743214bf213effc6/ground-detail-preview.png). APK 31114347bytes/SHA256 `6b9489ae2fa47bc949d6c4b52922e8887e11ac23b7eecb2507e4acb7849ed759`. 일회성 `downloads/unity-0.18.0`의APK1·실제PNG3파일을로그인없는HTTP200/redirect없음/전체bytes/SHA로검증했다. main에는binary/새Releaseworkflow를추가하지않는다.
+
+PC 설치(다운로드한 실제 위치 사용):
+```powershell
+$trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $trafficAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.18.0.apk"
+```
+
+**미확인/다음:** 폰0.18 도로·보도/젖은밤·전환/접지감/FPS·발열·장시간lifecycle확인. 폰0.17 적용성공은사용자확인이다. 실제설치는사용자PC에서수행한다. Drive는나중에PC설치후재개한다. 최종docs-onlycommit은116입력이같으므로검사를반복하지않는다.
+
 ## 2026-10-11 — Unity 0.18.0 도로·보도 마감과 접지감: 구현 완료, 실제 검사 대기
 
 사용자가 폰0.17 적용 성공을 확인하고 다음 도로·보도 패치를 승인했다. 0.18.0/code19, 새 GroundFinish-0.18.0 장면/Generated GroundFinish0180. 범위11 source/meta/workflow: GroundScene+meta, RoadSurface+meta, RoadOverlay.shader+meta, CityEnvironment, CityPreview, StarterScene, StarterConfig. 시작 시 이전dirty285파일/index/status와110입력/12host SHA를 기록했다. 신규6파일을 포함해 최종116입력을 추적한다.

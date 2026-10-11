@@ -1,5 +1,7 @@
 # S20+
 
+Unity 라이브 배경화면 **0.18.0**: 아스팔트·보도 줄눈·경계석·맨홀/배수구와 차량 접지감, 젖은 노면의 가로등·전조등/후미등 반짝임을 보강했습니다. 실제 Unity 검사·GPU80PNG·Android 빌드/Lint·원본v2서명·공개파일SHA 확인. [APK 다운로드](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/e8e570e0b071415480e3dc5d743214bf213effc6/pixel-traffic-unity-prototype-0.18.0.apk) · [실제 화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/e8e570e0b071415480e3dc5d743214bf213effc6/ground-city-preview.png) · [설치·검증 기록](docs/UNITY_AUTOMATION.md). 폰0.17 적용성공은사용자확인,폰0.18/FPS·발열은확인대기입니다. Drive는PC설치후재개합니다.
+
 Unity 라이브 배경화면 **0.17.0**: 둥근 구름의 음영·노을빛, 구름에 가려지는 해·달·별과 날씨에 따른 햇빛 변화를 보강했습니다. 실제 Unity 검사·GPU76PNG·Android 빌드/Lint·원본v2서명·공개파일SHA를 확인했습니다. [APK 다운로드](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/7c562331c9837c7d5977cb9da3eda7b992c6307e/pixel-traffic-unity-prototype-0.17.0.apk) · [실제 화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/7c562331c9837c7d5977cb9da3eda7b992c6307e/sky-city-preview.png) · [설치·검증 기록](docs/UNITY_AUTOMATION.md). 폰0.16 적용 성공은사용자확인,폰0.17/FPS·발열은확인대기입니다. Drive는PC설치후재개합니다.
 
 Unity 라이브 배경화면 **0.16.0**: 강의 깊이·다리와11램프·34도시건물·산3층을 보강하고 밤 불빛의 수면 반사/노을 반짝임/날씨 흐림을 적용했습니다. 실제Unity검사·GPU71PNG·Android빌드/Lint·원본v2서명·공개파일SHA확인. [APK 다운로드](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/e635e0a1d513611a216f24526ed20e15ecef5b69/pixel-traffic-unity-prototype-0.16.0.apk) · [실제 화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/e635e0a1d513611a216f24526ed20e15ecef5b69/river-city-preview.png) · [설치·검증 기록](docs/UNITY_AUTOMATION.md). 폰0.15 적용성공은사용자확인,폰0.16/FPS·발열은확인대기입니다. Drive는PC설치후재개합니다.
