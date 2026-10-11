@@ -60,7 +60,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 GroundScene.Manhole(road,new Vector3(i % 2 == 0 ? -1.6f : 4.8f,.012f,24+i*34),Mat("Iron",new Color(.23f,.25f,.26f),.15f));
 
             for (int i = 0; i < 16; i++)
-                foreach (float side in new[] { -1f, 1f }) Tree(scenery, FoliageScene.Canopy(i%3), side * 8.6f, -24 + i * 13, i);
+                foreach (float side in new[] { -1f, 1f }) Tree(scenery, FoliageScene.Canopy(i%3,i<4), side * 8.6f, -24 + i * 13, i);
             for (int i = 0; i < 12; i++)
                 foreach (float side in new[] { -1f, 1f }) Building(scenery, side * 14.1f, -22 + i * 17, i);
             for (int i = 0; i < 10; i++)
@@ -109,18 +109,22 @@ namespace PixelTraffic.UnityPrototype.Editor
             Transform root = new GameObject("City Tree").transform;
             root.SetParent(parent, false);
             root.localPosition = new Vector3(x, .16f, z);
-            root.localRotation = Quaternion.Euler(0, index * 47, 0);
+            root.localRotation = Quaternion.Euler(0, index * 47+(x>0?23:0), 0);
             Material bark = Mat("Bark", new Color(.33f, .23f, .13f));
             Cylinder("Trunk", root, new Vector3(0, 2, 0), new Vector3(.26f, 2, .26f), bark);
             for (int i = 0; i < 3; i++)
             {
-                Vector3 direction = Quaternion.Euler(0, i * 120, 0) * new Vector3(.9f, 1.1f, 0);
+                Vector3 direction = Quaternion.Euler(0, i * 120, 0) * new Vector3(.9f+(index%3)*.12f, 1.5f, .15f);
                 var branch = Cylinder("Branch", root, new Vector3(0, 3, 0) + direction * .5f, new Vector3(.13f, direction.magnitude * .5f, .13f), bark);
                 branch.transform.localRotation = Quaternion.FromToRotation(Vector3.up, direction);
             }
             GameObject leaves = new GameObject("Layered Canopy", typeof(MeshFilter), typeof(MeshRenderer));
             leaves.transform.SetParent(root, false);
-            leaves.transform.localScale = Vector3.one * (.87f + index % 3 * .065f);
+            float width=.82f+(index%4)*.045f;
+            // Narrow the crossing-adjacent crown rather than moving planted beds into walking paths.
+            if(index==3)width*=.88f;
+            leaves.transform.localScale = new Vector3(width,.89f+(index%5)*.035f,width*(.94f+(index%3)*.035f));
+            leaves.transform.localRotation=Quaternion.Euler(index%2==0?2:-2,0,x>0?-2:2);
             leaves.GetComponent<MeshFilter>().sharedMesh = canopy;
             leaves.GetComponent<MeshRenderer>().sharedMaterial = FoliageScene.Leaves(index%3);
             Material planter = Mat("Planter Stone", new Color(.57f, .54f, .44f));

@@ -21,7 +21,11 @@ namespace PixelTraffic.UnityPrototype.Editor
                     trees++;var canopy=root.Find("Layered Canopy");Need(canopy!=null,"Tree canopy missing.");
                     var mesh=canopy.GetComponent<MeshFilter>().sharedMesh;meshes.Add(mesh);
                     Geometry(mesh,ref checkedVertices);
-                    Need(mesh.triangles.Length/3<=480&&mesh.bounds.min.y>3&&mesh.bounds.max.y<8,"Foliage blocks walking height or exceeds silhouette budget.");
+                    bool near=root.position.z<16;
+                    Need(mesh.triangles.Length/3==(near?560:140),"Distance foliage topology changed.");
+                    Need(canopy.localScale.x>=.72f&&canopy.localScale.x<1&&canopy.localScale.y>=.89f&&canopy.localScale.y<1.04f,"Tree crown variety or crossing clearance lost.");
+                    Need(root.Find("Trunk")!=null&&root.Find("Trunk").GetComponent<Renderer>().bounds.max.y>4,"Tree trunk disconnected.");
+                    Need(mesh.triangles.Length/3<=560&&mesh.bounds.min.y>3&&mesh.bounds.max.y<8,"Foliage blocks walking height or exceeds silhouette budget.");
                     var material=canopy.GetComponent<MeshRenderer>().sharedMaterial;materials.Add(material);
                     var texture=material.GetTexture("_BaseMap") as Texture2D;
                     Need(texture!=null&&texture.width==256&&texture.height==256&&texture.mipmapCount>1&&texture.filterMode==FilterMode.Trilinear,"Leaf colour detail lacks shared distance-filtered texture.");
@@ -46,7 +50,11 @@ namespace PixelTraffic.UnityPrototype.Editor
                 foreach(string name in new[]{"Facade Stonework","Balcony Metalwork","Roof Access"})
                 {
                     Transform detail=root.Find(name);Need(detail!=null,"Merged building detail missing: "+name);
-                    var mesh=detail.GetComponent<MeshFilter>().sharedMesh;Geometry(mesh,ref checkedVertices);architectureTriangles+=mesh.triangles.Length/3;
+                    var mesh=detail.GetComponent<MeshFilter>().sharedMesh;Geometry(mesh,ref checkedVertices);
+                    bool near=root.position.z<16;
+                    Need(mesh.triangles.Length/3==(near?560:140),"Distance foliage topology changed.");
+                    Need(canopy.localScale.x>=.72f&&canopy.localScale.x<1&&canopy.localScale.y>=.89f&&canopy.localScale.y<1.04f,"Tree crown variety or crossing clearance lost.");
+                    Need(root.Find("Trunk")!=null&&root.Find("Trunk").GetComponent<Renderer>().bounds.max.y>4,"Tree trunk disconnected.");architectureTriangles+=mesh.triangles.Length/3;
                     foreach(Vector3 vertex in mesh.vertices)
                     {
                         Vector3 world=detail.TransformPoint(vertex);
@@ -95,6 +103,10 @@ namespace PixelTraffic.UnityPrototype.Editor
                 if(garden!=null)
                 {
                     gardens++;var mesh=garden.GetComponent<MeshFilter>().sharedMesh;Geometry(mesh,ref checkedVertices);
+                    bool near=root.position.z<16;
+                    Need(mesh.triangles.Length/3==(near?560:140),"Distance foliage topology changed.");
+                    Need(canopy.localScale.x>=.72f&&canopy.localScale.x<1&&canopy.localScale.y>=.89f&&canopy.localScale.y<1.04f,"Tree crown variety or crossing clearance lost.");
+                    Need(root.Find("Trunk")!=null&&root.Find("Trunk").GetComponent<Renderer>().bounds.max.y>4,"Tree trunk disconnected.");
                     Need(mesh.triangles.Length/3<=80,"Small rooftop foliage exceeds its budget.");
                     foreach(Vector3 v in mesh.vertices)
                     {
@@ -107,12 +119,12 @@ namespace PixelTraffic.UnityPrototype.Editor
             }
             Need(upperTerraces==6&&roofProfiles.Count==6&&balconyWidths.Count>=4,"Building roof/terrace variety incomplete.");
             Need(detailedBuildings==6&&balconyPlants==18&&airConditioners==12,"Near building equipment/plant counts changed.");
-            Need(trees==32&&meshes.Count==3&&materials.Count==3&&buildings==24&&gardens==12,"Scenery loses tree/building variety or counts.");
+            Need(trees==32&&meshes.Count==6&&materials.Count==3&&buildings==24&&gardens==12,"Scenery loses tree/building variety or counts.");
             foreach(Material material in gardenMaterials)Need(materials.Contains(material),"Roof garden adds an independent material.");
             // Assert the three actual assets are distinct shapes, not just different names.
             var shapes=new List<Mesh>(meshes);
             for(int a=0;a<shapes.Count;a++)for(int b=a+1;b<shapes.Count;b++)
-                Need(Vector3.Distance(shapes[a].bounds.size,shapes[b].bounds.size)>.15f,"Canopy species have identical silhouettes.");
+                Need(shapes[a].triangles.Length!=shapes[b].triangles.Length||Vector3.Distance(shapes[a].bounds.size,shapes[b].bounds.size)>.15f,"Canopy species have identical silhouettes.");
             float minimum=1,maximum=0;
             foreach(Color c in leafTexture.GetPixels()) {minimum=Mathf.Min(minimum,c.g);maximum=Mathf.Max(maximum,c.g);}
             Need(maximum-minimum>.12f,"Leaf texture is flat colour.");

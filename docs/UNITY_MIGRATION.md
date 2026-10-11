@@ -1,5 +1,11 @@
 # Pixel Traffic — Unity 전환 준비
 
+## 2026-10-11 — Unity 0.28.0 가로수 그래픽: 구현 완료·실제 검증 대기
+
+사용자가 폰0.27.0 성공을 확인하고 가로수 그래픽 개선을 승인했다. 0.28.0/code29, TreeCanopy-0.28.0.unity/Generated/TreeCanopy0280. FoliageScene/CityEnvironment/SceneryChecks/StarterScene/StarterConfig 5소스만 변경한다. 32나무/3재질/공유256 mip texture 유지, 근거리8동수관560tri·원거리24수관140tri의6mesh. 기존400tri 수관 대비 전체수관4960tri 절감 예상(실제 보고서 대기). 7개 비대칭 잎군집·밝기/크기 변화·높이/폭/기울기 다양화, 기존3가지 길이 보강, 횡단보도 인접 crown 축소. planted bed/보행 동선/카메라·기후·건물/Android host/workflow 유지. 불투명 shared geometry로 투명 overdraw·새재질/Light/renderer를 추가하지 않는다.
+
+실제 mesh winding/normal/UV·원근 topology/수관 크기/줄기/예산 검사 보강. 기존 150GPU PNG 중 수종3day/storm/night 및전체를 관찰할 계획. PC Unity Validate/서명APK/실제Android/Lint/원본cert/공개다운로드는 현재미실행. 폰성능미측정. 시작사용자파일·실제index/status·122빌드입력·host12SHA 기록보존. 향후 APK는 C:\Users\김백현\Desktop\AI 에 다운로드·SHA검증·USB설치하는 단일PowerShell로 전달.
+
 ## 2026-10-11 — Unity 0.27.0 건물 형태·옆면 창문·상층 테라스: 실제 검증·서명 APK 전달 완료
 
 사용자는 폰0.26.0 적용 성공을 확인하고 앞쪽 대표 건물부터 시안처럼 정교하게 만드는 작업을 승인했다. **0.27.0/code28**, `BuildingVariety-0.27.0.unity` / `Generated/BuildingVariety0270`으로 생성했다. 앞으로 APK는 사용자 Windows 폴더 `C:\Users\김백현\Desktop\AI`로 다운로드·SHA256 검증·USB ADB 설치를 한 번에 실행하는 PowerShell 블록으로 전달한다. 실제 명령 실행은 사용자 PC에서 하며 클라우드에서 설치했다고 주장하지 않는다.

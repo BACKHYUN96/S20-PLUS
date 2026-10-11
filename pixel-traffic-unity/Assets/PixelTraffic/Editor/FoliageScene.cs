@@ -8,9 +8,9 @@ namespace PixelTraffic.UnityPrototype.Editor
     // Opaque, shared foliage: silhouette and baked colour detail without alpha cards.
     internal static class FoliageScene
     {
-        internal static Mesh Canopy(int species)
+        internal static Mesh Canopy(int species,bool near)
         {
-            string path=StarterScene.Generated+"/CanopySpecies"+species+".asset";
+            string path=StarterScene.Generated+"/CanopySpecies"+species+(near?"Near":"Far")+".asset";
             Mesh existing=AssetDatabase.LoadAssetAtPath<Mesh>(path);if(existing!=null)return existing;
             Vector3[] centres;
             Vector3 radius;
@@ -29,7 +29,9 @@ namespace PixelTraffic.UnityPrototype.Editor
                 centres=new[]{new Vector3(0,5.65f,0),new Vector3(-1.05f,4.7f,.15f),new Vector3(1.1f,4.75f,-.2f),new Vector3(.1f,4.7f,1.05f),new Vector3(-.1f,4.65f,-1)};
                 radius=new Vector3(1.45f,1.35f,1.4f);
             }
-            Mesh mesh=Clusters("Canopy Species "+species,centres,radius,true,species);
+            var groups=new List<Vector3>(centres);
+            groups.Add(new Vector3(-.65f,5.65f,-.95f));groups.Add(new Vector3(.75f,5.8f,.85f));
+            Mesh mesh=Clusters("Canopy Species "+species+(near?" Near":" Far"),groups.ToArray(),radius,near,species,true);
             AssetDatabase.CreateAsset(mesh,path);return mesh;
         }
 
@@ -43,7 +45,7 @@ namespace PixelTraffic.UnityPrototype.Editor
 
         internal static Material Leaves(int species)
         {
-            Color[] greens={new Color(.33f,.49f,.13f),new Color(.40f,.55f,.17f),new Color(.25f,.43f,.105f)};
+            Color[] greens={new Color(.46f,.63f,.19f),new Color(.51f,.67f,.24f),new Color(.36f,.56f,.14f)};
             Material material=StarterScene.Surface("Leaves "+species,greens[species],0,.20f);
             if(material.GetTexture("_BaseMap")!=null)return material;
             string path=StarterScene.Generated+"/FoliageColour.asset";
@@ -56,7 +58,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 {
                     float u=x/(float)size,v=y/(float)size;
                     float broad=TileNoise(u,v,7,31,11),leaf=TileNoise(u,v,43,7,29);
-                    float shade=.55f+broad*.27f+leaf*.18f;
+                    float shade=.46f+broad*.28f+leaf*.26f;
                     // Small oblique leaf groups stay readable after mip filtering.
                     float vein=Mathf.Abs(Mathf.Sin((u*71+v*43)*Mathf.PI));
                     shade*=.94f+vein*.06f;pixels[y*size+x]=new Color(shade*.96f,shade,shade*.87f);
@@ -73,7 +75,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             return Mathf.Lerp(Mathf.Lerp(a,b,u),Mathf.Lerp(c,d,u),v);
         }
 
-        private static Mesh Clusters(string name,Vector3[] centres,Vector3 radius,bool refine,int seed)
+        private static Mesh Clusters(string name,Vector3[] centres,Vector3 radius,bool refine,int seed,bool tree=false)
         {
             float t=(1+Mathf.Sqrt(5))/2;
             var unit=new List<Vector3>{new Vector3(-1,t,0),new Vector3(1,t,0),new Vector3(-1,-t,0),new Vector3(1,-t,0),new Vector3(0,-1,t),new Vector3(0,1,t),new Vector3(0,-1,-t),new Vector3(0,1,-t),new Vector3(t,0,-1),new Vector3(t,0,1),new Vector3(-t,0,-1),new Vector3(-t,0,1)};
@@ -98,8 +100,11 @@ namespace PixelTraffic.UnityPrototype.Editor
                 int offset=positions.Count;
                 foreach(Vector3 n in unit)
                 {
-                    float growth=.92f+Mathf.PerlinNoise(n.x*3+seed*13+clump*7,n.z*3+n.y*2+19)*.16f;
-                    positions.Add(centres[clump]+Vector3.Scale(n,radius)*growth);
+                    float growth=(tree?.79f:.92f)+Mathf.PerlinNoise(n.x*3+seed*13+clump*7,n.z*3+n.y*2+19)*(tree?.36f:.16f);
+                    float size=tree?(.67f+(clump%3)*.13f):1;
+                    Vector3 clusterRadius=radius*size;
+                    if(tree)clusterRadius=Vector3.Scale(clusterRadius,new Vector3(1+Mathf.Sin(clump*2.3f+seed)*.13f,1,.9f+clump%2*.18f));
+                    positions.Add(centres[clump]+Vector3.Scale(n,clusterRadius)*growth);
                     uv.Add(new Vector2(n.x*.55f+clump*.17f,n.y*.55f+seed*.21f));
                 }
                 foreach(int index in faces)indices.Add(offset+index);
