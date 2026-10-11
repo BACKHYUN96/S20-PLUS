@@ -38,6 +38,7 @@ namespace PixelTraffic.UnityPrototype
         }
         readonly StreetModel model;public readonly State[] States;
         readonly Dictionary<int,Path> paths=new Dictionary<int,Path>();
+        uint dispatchRandom=47639;readonly int[] exitBag={0,1,2,3};int exitCursor=4;
         int owner=-1;public int Owner=>owner;
         public int Entries{get;private set;}public int Completed{get;private set;}public int Yields{get;private set;}public int Returns{get;private set;}public int Recycles{get;private set;}
         public readonly int[] Destinations=new int[4];
@@ -50,7 +51,13 @@ namespace PixelTraffic.UnityPrototype
                 if(c.z>GateZ){c.roundabout=true;c.roundHidden=true;c.roundPosition=new Vector2(-90,CenterZ);c.z=CenterZ;States[i].stage=Stage.Hidden;States[i].origin=1+i%3;}
             }
         }
-        static int Random(State s,int range){uint n=s.random;n^=n<<13;n^=n>>17;n^=n<<5;s.random=n;return (int)(n%(uint)range);}
+        static int Random(ref uint seed,int range){uint n=seed;n^=n<<13;n^=n>>17;n^=n<<5;seed=n;return (int)(n%(uint)range);}
+        static int Random(State s,int range)=>Random(ref s.random,range);
+        int Destination()
+        {
+            if(exitCursor==4){for(int i=3;i>0;i--){int j=Random(ref dispatchRandom,i+1);int value=exitBag[i];exitBag[i]=exitBag[j];exitBag[j]=value;}exitCursor=0;}
+            return exitBag[exitCursor++];
+        }
         public bool Busy(StreetModel.Car c)=>c.roundabout;
         public static Vector2 Position(StreetModel.Car c)=>new Vector2(c.X,(float)c.z);
         public static float Yaw(StreetModel.Car c)=>c.roundabout?c.roundYaw:(c.Direction<0?180:0)+LaneChanges.Yaw(c);
@@ -126,7 +133,9 @@ namespace PixelTraffic.UnityPrototype
             var s=States[i];var c=model.Cars[i];s.origin=origin;
             if(s.path==null)
             {
-                s.destination=origin==0?Random(s,4):0;s.lane=s.destination==0?(c.bus?0:Random(s,2)):c.lane;
+                // Only consume an exit choice when the road-to-path handoff can really start.
+                if(origin==0){Vector2 gate=Route(0,1,c.lane).Pose(0,out float direction);if(!Free(i,gate,direction))return;}
+                s.destination=origin==0?Destination():0;s.lane=s.destination==0?(c.bus?0:Random(s,2)):c.lane;
                 s.path=origin==0&&s.destination==0?UTurn(c.lane,s.lane):Route(origin,s.destination,s.destination==0?s.lane:c.lane);
             }
             var path=s.path;

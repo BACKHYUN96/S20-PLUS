@@ -92,7 +92,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
                 var final=model.Roundabout;entries=final.Entries;completed=final.Completed;returns=final.Returns;yields=final.Yields;recycles=final.Recycles;destinations=(int[])final.Destinations.Clone();departures=model.Stops.Departures;
                 if(!(entries>=8&&completed>=8&&returns>=8&&recycles>=4&&yields>0&&ringSamples>100&&signalFrames>100))Need(false,"traffic stalls or skips entry/circulation/return/indicator stages: "+entries+"/"+completed+"/"+returns+"/"+recycles+Summary(model));
-                foreach(int count in destinations)Need(count>0,"one requested random destination never occurs.");
+                foreach(int count in destinations)Need(count>0,"one requested random destination never occurs: "+string.Join(",",destinations)+" entries="+entries+" completed="+completed);
                 Need(model.Stops.Departures>=2&&model.Cycles>=2,"roundabout starves bus service or signals.");
                 // The actual fixed clock must retain route, heading, destination and progress at every frame rate.
                 Vector2[] baseline=null;float[] headings=null;int[] choices=null;
