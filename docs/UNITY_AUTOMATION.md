@@ -1,5 +1,51 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-11 — Unity 0.26.0 가까운 건물 외관: 실제 검증·서명 APK 전달 완료
+
+사용자는 폰0.25.0 적용 성공을 확인하고 앞쪽 대표 건물부터 시안처럼 정교하게 만드는 작업을 승인했다. **0.26.0/code27**, `Architecture-0.26.0.unity` / `Generated/Architecture0260`으로 생성했다. 앞으로 APK는 사용자 Windows 폴더 `C:\Users\김백현\Desktop\AI`로 다운로드·SHA256 검증·USB ADB 설치를 한 번에 실행하는 PowerShell 블록으로 전달한다. 실제 명령 실행은 사용자 PC에서 하며 클라우드에서 설치했다고 주장하지 않는다.
+
+**건물:** 가까운 좌우6동(z-22/-5/12)의120창에 깊은 창틀/두 칸 창살/가로 프레임/돌출 창턱을 넣었다. 유리는 solid shell 밖에 있어 벽에 가려지지 않는다. 먼18동360창은 잘 보이지 않는 얕은 reveal면을 생략해 성능 예산을 확보한다. 전체 외벽3색의 차이를 보완하고 기존 창문 atlas에 하늘색 반사/커튼색을 더했다. 모든480창의 occupied/dark/warm/cool variation과 기존 낮→노을→밤 emission 전환을 유지한다.
+
+앞6동의 기존 발코니12곳에 화분·식물과 실외기12대를 넣고1층 상가 fascia·문턱을 기존 merged geometry에 연결했다. 전체48발코니·192난간기둥·옥상 정원12곳·물탱크/설비와 기존1층 상가3종은 유지한다. 추가 식물은 기존Leaves/60tri RoofShrub를 공유하며 건물별 한 renderer에 합친다. 새재질/Light/Collider/독립Update/Android host/workflow는 추가하지 않았다.
+
+**범위·예산:** ArchitectureScene/CityEnvironment/FrontageScene/FrontageChecks/SceneryChecks/CityPreview/StarterScene/StarterConfig의8소스. 시작296파일·실제index/status·122입력·host12SHA 보존. 실제 최대 강우/승객 119730triangles/1623renderers/47materials로120000/2400/48 제한 미만이다. 제한을 높이지 않았다. 기본 장면 108384triangles로110000 예약 예산도 지킨다.
+
+**실제 검증:** source `3d06d6456ea8ffcbd627f5287ec66bacaab36a5a` / [Validate 38130958043](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38130958043). 실제 생성된6상세건물/120깊은창/12화분/12실외기/near-far frame topology·glass-wall depth·보행/옥상 clearance·면 winding/공유재질 검사 PASS. 기존480창/상가/18기후·180전환,24대/48와이퍼·pause/6신호/4기둥, 보행/승하차/차선 안전·노면GPU/CCT·차종 검증도 PASS. 이번 실패 기록: [].
+
+**실제 화면:** Unity6000.3.26f1/D3D11 145PNG를 받아 artifact sourceSHA/bytes/SHA/ZIPCRC를 확인했다. 기존140장에 오른쪽 건물 day/night와 가까운 창틀 day/sunset/night5장을 추가했다. 제품 구도와 좌우 가까운 외관/창턱·발코니·실외기·밤 창문·옥상 확대를 직접 관찰했다. 확대는 같은 장면의 임시 Editor 카메라에서 촬영한 것이며 저장된 폰 카메라는 바꾸지 않는다. AI 생성 시안이나 폰/FPS 캡처가 아니다.
+
+**Android:** `unity-apk-0.26.0-build1` / [BuildApk 38131503616](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38131503616). BuildPlayer 오류0/경고0, launcherLint 오류0/경고8. 실제 APK를 SDK apksigner/aapt/ZIPCRC로0.26.0/code27/min29/target36/ARM64IL2CPP, wallpaper service/private settings provider/settings launcher/Unity Activity 비활성, 원본v2인증서 a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6 확인. 변경 없는 host12SHA는 hostLint38008378207(오류0/경고10) 결과를 재사용했다.
+
+**전달:** [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/397a53566db1cc396e5822a79748d0b63c974ec1/pixel-traffic-unity-prototype-0.26.0.apk) · [제품 전체](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/397a53566db1cc396e5822a79748d0b63c974ec1/architecture-city-preview.png) · [낮 건물](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/397a53566db1cc396e5822a79748d0b63c974ec1/architecture-day-preview.png) · [밤 건물](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/397a53566db1cc396e5822a79748d0b63c974ec1/architecture-night-preview.png) · [창틀 확대](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/397a53566db1cc396e5822a79748d0b63c974ec1/architecture-window-preview.png) · [옥상](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/397a53566db1cc396e5822a79748d0b63c974ec1/architecture-roof-preview.png). 31163831bytes/SHA256 `a0f3076f44c0195761a8255cbc8265ec04fbc46f53f4b837ad6fc2ab7deeecbd`. `downloads/unity-0.26.0`의8파일을 로그인 없는 HTTP200/no redirect/fullbytes/SHA로 검증했다. main에는 APK binary나 새 workflow를 추가하지 않았다. 최종 문서는 검증한122빌드입력과 사용자 작업을 보존한다.
+
+USB 디버깅을 허용한 폰1대를 연결한 뒤 Windows PowerShell에 아래 전체를 붙여넣는다. 다운로드·검증·기존 앱 업데이트까지 수행한다.
+```powershell
+& {
+    $ErrorActionPreference = "Stop"
+    $apkFolder = "C:\Users\김백현\Desktop\AI"
+    $apkPath = Join-Path $apkFolder "pixel-traffic-unity-prototype-0.26.0.apk"
+    $apkUrl = "https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/397a53566db1cc396e5822a79748d0b63c974ec1/pixel-traffic-unity-prototype-0.26.0.apk"
+    $trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+    if (-not (Test-Path -LiteralPath $trafficAdb)) { throw "Unity의 adb.exe를 찾을 수 없습니다." }
+    & $trafficAdb start-server
+    if ($LASTEXITCODE -ne 0) { throw "ADB 시작 실패" }
+    $deviceLines = & $trafficAdb devices
+    if ($LASTEXITCODE -ne 0) { throw "폰 연결 확인 실패" }
+    $connectedDevices = @($deviceLines | Where-Object { $_ -match '^\S+\s+device$' })
+    if ($connectedDevices.Count -ne 1) { throw "폰 1대를 USB로 연결하고 USB 디버깅을 허용해주세요." }
+    New-Item -ItemType Directory -Force -Path $apkFolder | Out-Null
+    Write-Host "0.26.0 APK 다운로드 중..."
+    Invoke-WebRequest -UseBasicParsing -Uri $apkUrl -OutFile $apkPath
+    if ((Get-FileHash -LiteralPath $apkPath -Algorithm SHA256).Hash -ne "a0f3076f44c0195761a8255cbc8265ec04fbc46f53f4b837ad6fc2ab7deeecbd") { throw "파일 검증 실패. 다시 실행해주세요." }
+    Write-Host "폰에 앱 설치 중..."
+    & $trafficAdb install -r $apkPath
+    if ($LASTEXITCODE -ne 0) { throw "앱 설치 실패. 위 오류를 확인해주세요." }
+    Write-Host "완료! 0.26.0 설치 성공." -ForegroundColor Green
+}
+```
+
+실제 폰0.26.0 외형/FPS·발열·장시간 lifecycle은 사용자 확인 대기. 폰0.25.0 적용 성공은 사용자 확인이다. 시안과의 차이는 여전히 있으며 이번 패치는 앞쪽 대표 건물의 창틀/생활감 디테일 단계다. 다음 건물 외관 확대나 식생/배경 개선은 실제 폰 확인과 다음 요청에 따라 진행한다. PC Drive설정 보류 유지.
+
 ## 2026-10-11 — Unity 0.26.0 前景 건물 그래픽 구현, 실제 검증 대기
 
 사용자는 폰0.25.0 적용 성공을 확인했고 시안을 향해 앞쪽 대표 건물의 외관을 정교하게 만드는 작업을 승인했다. 다운로드·설치는 앞으로 C:\Users\김백현\Desktop\AI에 APK를 내려받고 SHA256을 검증한 뒤 USB ADB로 설치하는 단일 PowerShell 블록으로 전달한다. 실제 명령 실행은 사용자 PC에서 한다.
