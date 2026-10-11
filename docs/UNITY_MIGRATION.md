@@ -1,5 +1,27 @@
 # Pixel Traffic — Unity 전환 준비
 
+## 2026-10-11 — Unity 0.20.0 차종별 전조등 색상: 실제 화면 검증·서명 APK 전달 완료
+
+사용자 요청에 따라 버스·트럭 전조등은 약 3200K의 따뜻한 노란빛, 일반 승용차·SUV·택시는 중립적인 흰색, 스포츠카는 요청한 6500–8000K 범위의 7500K 차가운 흰색으로 변경했다. **0.20.0/code21**, `HeadlightColors-0.20.0.unity` / `Generated/HeadlightColors0200`. 사용자가 첨부한 주황색 도로 가장자리 불빛은 젖은 노면에 반사된 가로등이며 가로등 색상·반사는 그대로 유지한다.
+
+VehicleLighting의 차종 프로필을 램프 발광·부채꼴 빛·젖은 노면 반사에 함께 적용한다. Unity 색온도 linear RGB를 재질용 sRGB로 한 번만 변환하고 차량 참조를 캐시한다. 노면 메시에는 현재 렌더링 색 공간에 맞춘 값을 전달한다. 기존 낮·노을·밤 밝기 전환, 부채꼴 가장자리 감쇠와 차량 회전, 후미등·브레이크등·깜빡이·버스 비상등 제어를 유지한다. 7500K는 렌더링에 지정한 색온도이며 실제 디스플레이의 측정값이 아니다.
+
+- **범위와 보존:** VehicleLighting, RoadSurface, StarterConfig, DrivingChecks, CityPreview, StarterScene의 6파일이며 신규 파일은 없다. 시작 상태 293파일·실제 index·전체 미추적 Git 상태와 118 빌드/촬영 입력을 기록하고 관련 없는 사용자 변경을 보존했다. Native Android·host·workflow 12 입력의 SHA는 그대로다.
+- **예산:** Light·renderer·mesh·shader·공유 재질을 추가하지 않는다. 최대 우산·정류장 스트레스 장면 119424 triangles / 1584 renderers / 47 materials는 기존 제한 이내다. 실제 폰 FPS·발열은 별도 확인이 필요하다.
+- **Unity 검사:** source `4347cb6757d2b6955f2a5c052754c7b581c8c881` / [Validate 38104624321](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38104624321). 차량 24대의 실제 램프/빔 MaterialPropertyBlock 색상·밝기 96사례를 검증했다. 노란빛 8대, 흰빛 13대, LED/HID 계열 3대이며 스포츠카 설정은 7500K다. 젖은 노면의 전조등 반사 RGB도 차량별 프로필을 현재 색 공간으로 변환한 값과 일치한다. 기존 부채꼴 방향/회전 144사례·젖은 반사 24대, 600초 교통 안전, 18기후·180전환과 승하차·비상깜빡이·안전 출발 검사도 PASS다.
+- **실제 관찰 후 보정:** 첫 source549e68024ac57282a3498cbcb789ece41c325164 / Validate38104122433은 검사·94 PNG가 통과했지만 버스/트럭 불빛이 과도하게 주황색으로 보여 CCT linear RGB와 SetColor sRGB 입력의 변환을 보정했다. 첫 사진을 별도 보존하고 아래 최종 source로 검사·촬영을 다시 수행했다.
+- **실제 GPU:** Unity 6000.3.26f1 / Direct3D11의 94 PNG. 6차종의 건조/젖은 야간 비교 사진 12장을 추가했다. 버스·트럭의 노란빛, 승용차의 흰빛, 스포츠카의 차가운 흰빛과 제품 야간 구도를 직접 관찰했다. 임시 촬영 구도·차량 배치는 저장하지 않는다. Editor 촬영은 실제 폰 screenshot/FPS 측정과 구분한다. core와 PNG 3묶음의 bytes/SHA/CRC/source를 확인했다.
+- **Android·서명:** 같은 source tag `unity-apk-0.20.0-build1` / [BuildApk 38105051956](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38105051956). BuildPlayer 오류0/경고0, launcher Lint 오류0/경고8. 내려받은 실제 APK의 version0.20.0/code21/min29/target36/ARM64 IL2CPP, wallpaper service·private provider·settings launcher와 원본 v2 인증서 `a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6`를 확인했다. 변경 없는 12 host 입력의 SHA가 같아 기존 host Lint38008378207(오류0/경고10)을 재사용했다.
+- **전달:** [APK 직접 다운로드](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/140b775fa2072bae24cea4d17f7e90720a0cb4f7/pixel-traffic-unity-prototype-0.20.0.apk) · [전체 화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/140b775fa2072bae24cea4d17f7e90720a0cb4f7/headlight-city-preview.png) · [노란 버스 불빛·젖은 노면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/140b775fa2072bae24cea4d17f7e90720a0cb4f7/headlight-halogen-preview.png) · [흰색 승용차 불빛](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/140b775fa2072bae24cea4d17f7e90720a0cb4f7/headlight-white-preview.png) · [7500K 스포츠카 불빛](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/140b775fa2072bae24cea4d17f7e90720a0cb4f7/headlight-led-preview.png). APK 31121075 bytes / SHA256 `66011b4e94a031f81cc603dff4e5ede30d2072b948f8aef8efebc0d4ebd594dd`. 일회성 `downloads/unity-0.20.0`의 APK·실제 사진을 로그인 없는 HTTP200/redirect 없음/전체 bytes/SHA로 확인했다. main에는 APK binary를 추가하지 않았다.
+
+PC 설치(아래 폴더로 다운로드한 경우):
+```powershell
+$trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+& $trafficAdb install -r "C:\Users\김백현\Desktop\AI\pixel-traffic-unity-prototype-0.20.0.apk"
+```
+
+미확인: 실제 폰 0.20.0 외형·성능·발열·장시간 lifecycle. APK 설치는 사용자 PC/폰에서 수행하며 여기서 설치했다고 주장하지 않는다. Drive 설정은 기존 보류 상태다. 최종 문서 전용 commit의 118 입력 SHA가 같으므로 통과한 검사를 반복하지 않는다.
+
 ## 2026-10-11 — Unity 0.20.0 실제 GPU 관찰 후 색 공간 보정
 
 첫 source `549e68024ac57282a3498cbcb789ece41c325164` / Validate38104122433의 Unity 검사와 94 GPU PNG는 통과했다. 실제 비교 사진에서 3200K 버스·트럭 부채꼴이 과도하게 주황색으로 보였다. CCT의 linear RGB를 MaterialPropertyBlock.SetColor의 sRGB 입력으로 직접 전달한 문제를 보정했다. 램프/빔에는 CCT.gamma를 전달하고 linear 렌더링의 노면 메시 vertex colour에는 다시 linear로 변환해 같은 조명 색 공간을 사용한다. 해당 반사 검사도 변환 후 실제 RGB를 비교한다. 기존 6소스 범위와 예산·가로등을 유지하며 새 source의 검증·실제 화면을 다시 확인한다. 첫 사진/보고서는 별도로 보존했고 APK는 아직 빌드하지 않았다.
