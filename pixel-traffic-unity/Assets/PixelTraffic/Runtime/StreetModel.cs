@@ -249,7 +249,7 @@ namespace PixelTraffic.UnityPrototype
                 for(int j=0;j<Cars.Length;j++)if(j!=i&&Cars[j].active&&LaneChanges.SharesLane(car,Cars[j]))
                 {
                     double gap=car.Direction*(oldZ[j]-oldZ[i]);if(Roundabout!=null){if(gap<0)continue;}else gap=(gap%span+span)%span;
-                    room=Mathf.Min(room,(float)gap-(car.SafetyLength+Cars[j].SafetyLength)/2-1.8f);
+                    room=Mathf.Min(room,(float)gap-(car.SafetyLength+Cars[j].SafetyLength)/2-(Roundabout!=null?2.2f:1.8f));
                 }
                 if(Signal!=Phase.VehicleGreen&&!car.committed)
                 {

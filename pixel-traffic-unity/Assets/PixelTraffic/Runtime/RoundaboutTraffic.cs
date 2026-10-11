@@ -156,7 +156,7 @@ namespace PixelTraffic.UnityPrototype
                 float wide=other.width*Mathf.Abs(Mathf.Cos(angle))+other.SafetyLength*Mathf.Abs(Mathf.Sin(angle));
                 float length=other.SafetyLength*Mathf.Abs(Mathf.Cos(angle))+other.width*Mathf.Abs(Mathf.Sin(angle));
                 float ahead=c.Direction*((float)other.z-(float)c.z);
-                if(ahead>=0&&Mathf.Abs(c.X-other.X)<(c.width+wide)*.5f+.05f)room=Mathf.Min(room,ahead-(c.SafetyLength+length)*.5f-1.8f);
+                if(ahead>=0&&Mathf.Abs(c.X-other.X)<(c.width+wide)*.5f+.05f)room=Mathf.Min(room,ahead-(c.SafetyLength+length)*.5f-2.2f);
             }
             if(owner>=0)
             {int index=Array.IndexOf(model.Cars,c);Vector2 next=new Vector2(c.X,(float)c.z+c.Direction*Mathf.Min(Mathf.Max(0,room),c.cruise*StreetModel.Dt));if(ReservationBlocker(index,next,Yaw(c))>=0)room=0;}
