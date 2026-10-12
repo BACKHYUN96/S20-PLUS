@@ -65,6 +65,10 @@ namespace PixelTraffic.UnityPrototype.Editor
             CityClimate climate = UnityEngine.Object.FindFirstObjectByType<CityClimate>(); Need(climate != null, "Climate controller missing."); climate.Initialize();
             var pipeline = UnityEngine.Rendering.GraphicsSettings.defaultRenderPipeline as UniversalRenderPipelineAsset;
             Need(pipeline.additionalLightsRenderingMode == LightRenderingMode.PerPixel && pipeline.maxAdditionalLightsCount == 4 && climate.AdditionalLights == 4, "Mobile light limit differs.");
+            int junctionLights=0;
+            foreach(var light in UnityEngine.Object.FindObjectsByType<Light>(FindObjectsSortMode.None))if(light.name=="Roundabout Street Light")
+            {junctionLights++;Need(light.type==LightType.Spot&&light.shadows==LightShadows.None&&Mathf.Abs(light.range-38)<.01f&&Vector3.Dot(light.transform.forward,(new Vector3(0,.25f,RoundaboutTraffic.CenterZ)-light.transform.position).normalized)>.999f,"Junction spotlight misses the central island or adds shadow cost.");}
+            Need(junctionLights==2,"Two realtime light slots are not allocated to the junction.");
             var fixedObjects = new List<Transform>(); var fixedPositions = new List<Vector3>(); var fixedRotations = new List<Quaternion>(); var trees = new List<Transform>();
             foreach (var transform in UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
             {

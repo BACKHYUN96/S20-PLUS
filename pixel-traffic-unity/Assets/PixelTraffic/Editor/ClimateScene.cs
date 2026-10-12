@@ -29,21 +29,28 @@ namespace PixelTraffic.UnityPrototype.Editor
             Light[] lights = new Light[4]; var pools = new Renderer[lamps.Count];
             Material glow = Transparent("Lamp Pool", RadialTexture(), true);
             DrivingScene.ConfigureBeams();
+            int lightSlot=0;
             for (int i = 0; i < lamps.Count; i++)
             {
+                bool junction=lamps[i].parent.name=="Roundabout Lamp";
                 var pool = Quad("Warm Road Pool", root.transform, glow, false);
                 pool.transform.position = new Vector3(lamps[i].position.x, .035f, lamps[i].position.z); pool.transform.rotation = Quaternion.Euler(90, 0, 0); pool.transform.localScale = new Vector3(5, 9, 1); pools[i] = pool;
-                if(lamps[i].parent.name=="Roundabout Lamp")
+                if(junction)
                 {
                     Vector3 inward=new Vector3(-pool.transform.position.x,0,RoundaboutTraffic.CenterZ-pool.transform.position.z).normalized;
                     pool.transform.position+=inward*6;pool.transform.localScale=new Vector3(12,18,1);pool.name="Roundabout Road Pool";
                 }
-                if (i < lights.Length)
+                if (i < 2 || junction)
                 {
-                    lights[i] = new GameObject("Local Street Light").AddComponent<Light>(); lights[i].transform.SetParent(lamps[i], false); lights[i].transform.localRotation = Quaternion.Euler(90, 0, 0);
-                    lights[i].type = LightType.Spot; lights[i].range = 12; lights[i].spotAngle = 105; lights[i].color = new Color(1, .73f, .35f); lights[i].intensity = 0; lights[i].shadows = LightShadows.None;
+                    if(lightSlot>=lights.Length)throw new InvalidOperationException("Street light allocation exceeds the four-light mobile budget.");
+                    var light=new GameObject(junction?"Roundabout Street Light":"Local Street Light").AddComponent<Light>();lights[lightSlot++]=light;
+                    if(junction)
+                    {light.transform.SetParent(root.transform,false);light.transform.position=lamps[i].position;light.transform.rotation=Quaternion.LookRotation(new Vector3(0,.25f,RoundaboutTraffic.CenterZ)-light.transform.position);}
+                    else{light.transform.SetParent(lamps[i],false);light.transform.localRotation=Quaternion.Euler(90,0,0);}
+                    light.type=LightType.Spot;light.range=junction?38:12;light.spotAngle=105;light.innerSpotAngle=junction?72:30;light.color=new Color(1,.73f,.35f);light.intensity=0;light.shadows=LightShadows.None;
                 }
             }
+            if(lightSlot!=lights.Length)throw new InvalidOperationException("Street scene must allocate two near and two junction lights.");
             Material particles = Transparent("Weather Particles", null, true);
             MeshFilter rain = ParticlePool("Rain Pool", root.transform, particles, 160), snow = ParticlePool("Snow Pool", root.transform, particles, 96);
             Renderer paper = Quad("Windblown Newspaper", root.transform, Transparent("Newspaper", PaperTexture(), false), true); paper.transform.localScale = new Vector3(.65f, .46f, 1); paper.enabled = false;

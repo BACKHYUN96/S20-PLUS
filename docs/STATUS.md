@@ -1,5 +1,9 @@
 # 현재 상태
 
+## 2026-10-12 — Unity 0.33.0 로터리 조명 슬롯 재배치
+
+Actual saved-night capture from Validate38185377881 passed with10.6% haze. Reuse the existing four realtime light slots: keep two near the camera and direct two shadowless38m spots at the central island/approaches, instead of illuminating only the front street.160 intensity compensates the greater light-to-ground distance and follows existing LampGain transitions. Keep four total/per-object lights, two fixtures/glow, original camera and unchanged triangle/material budget. Add actual spot direction/range/shadow assertions. Full eight-source publish and fresh actual PC verification are required before tagging APK; no interim APK published.
+
 ## 2026-10-12 — Unity 0.33.0 실제 야간 구도 확인 후 안개 보완
 
 Initial actual Validate38184422654 and162GPU PNG passed; the saved-camera night image restored the roundabout but the28% blue haze still washed its green colour. Move clear haze start200->250 and require junction fog fraction below15% for all clear time states. Existing selected fog10..105, four realtime lights, shared-material two fixtures, original camera and traffic behavior stay intact. Publish complete8-source set and run fresh actual validation/capture before signed APK. No intermediate APK released.
