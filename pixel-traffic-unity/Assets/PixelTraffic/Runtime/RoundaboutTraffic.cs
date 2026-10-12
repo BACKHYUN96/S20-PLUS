@@ -128,13 +128,13 @@ namespace PixelTraffic.UnityPrototype
             {var other=model.Cars[j];if(j==index||!other.active||other.roundHidden)continue;if(!Separated(point,yaw,c.length,c.width,Position(other),Yaw(other),other.length,other.width,.15f))return j;}
             return -1;
         }
-        bool RoadSpawnFree(int index,Vector2 point)
+        bool RoadSpawnFree(int index,Vector2 point,float yaw=0)
         {
             var car=model.Cars[index];
             for(int j=0;j<model.Cars.Length;j++)
             {
                 var other=model.Cars[j];if(j==index||!other.active||other.roundHidden)continue;
-                if(!Separated(point,0,car.SafetyLength,car.width,Position(other),Yaw(other),other.SafetyLength,other.width,2.2f))return false;
+                if(!Separated(point,yaw,car.SafetyLength,car.width,Position(other),Yaw(other),other.SafetyLength,other.width,2.2f))return false;
             }
             return true;
         }
@@ -283,6 +283,7 @@ namespace PixelTraffic.UnityPrototype
                 if(s.progress<s.path.Length-.001f)continue;
                 if(s.destination==0)
                 {
+                    if(!RoadSpawnFree(i,c.roundPosition,180))continue;
                     c.lane=s.lane;c.roundabout=false;c.roundSignal=false;c.roundHidden=false;c.z=GateZ;c.busOffset=0;s.stage=Stage.Road;s.path=null;Returns++;model.Stops.Wrapped(c);
                 }
                 else
