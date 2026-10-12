@@ -1,4 +1,46 @@
-# Pixel Traffic Unity — 로터리 첫 출구·입구 정체 개선 0.39.0
+# Pixel Traffic Unity — 강변 접속·보행길·원경 건물 0.40.0
+
+## 2026-10-12 — Unity 0.40.0 강변 접속·보행계단·난간·원경 건물: 검증·서명 APK 전달 완료
+
+0.39.0 폰 적용 성공 후 사용자가 시안 목표의 그래픽 작업 복귀를 승인했다. 로터리 뒤 북쪽 가로도로의 보도 끝z310.4/y.15에서 강변z326/y7.1까지 양측 식재 지형과 중앙20단 계단을 연결했다. 강변 보행길z326~329.8와 강330/y8 끝벽, 중앙16m입구를 남긴16기둥·양옆 난간을 추가했다. 중앙을 막던 낮은 건물12동을 양옆6동으로 줄였고, 앞·뒤 지형 높이를 잇는 실제 기단 위에 세워 바닥과 분리되어 보이는 모습을 줄였다. 새 지형·계단·기단은 기존 하나의 opaque Distant 재질/8mesh 내 tag7 분기로 낮·노을·밤·비·눈·안개를 따른다. 추가 Light/Collider/material/동적캐릭터/교통 경로 변경은 없다. 중앙 계단은 그래픽이며 기존 보행자의 실제 이동 경로를 강변까지 확장한 것은 아니다.
+
+변경6소스 DistantScene/DistantChecks/Distant.shader/StarterScene/StarterConfig/CityPreview; 0.40.0/code41/Riverfront-0.40.0.unity/Generated/Riverfront0400. 기존0.39의 첫출구·차선변경대기fix·버스/와이퍼/보행/기후/카메라 옵션 유지. 원경34동 몸체·옥상의 가려진 아래면136tri를 줄이고 bank192→346tri로 바꾸어 순증18tri만 남겼다. 기존304파일/실제index/status/130검증입력/host12 보존. 사전 authored budget/기단·중앙통로·north traffic clearance 계산 PASS; 아래 실제 결과와 구분한다.
+
+**실제 Unity:** source `944fcff95272d8f46e3a3121f3512ccdfdd9e1ec` / [전체 검증·APK 빌드](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38242257583). 실제mesh의6기단 지지/20단·20riser/16난간기둥/346banktri/기후18조합·숨김clock·4FPS·리타깃 PASS. 원경8mesh/총1796tri/산3겹/강 깊이65/다리11등 유지. 전체기본108634tri/최대119980tri/1592renderers/47materials, 기존110000/120000/2400/48예산 미만. 기존교통 실제600초 완료125/첫출구32경로/추가회전0/stale request48조건/최장하단대기4.03초/독립차체SAT993186회/폭풍·버스·보행·와이퍼·기후·반사 PASS. PC 실패 기록 [{'run': 38241327806, 'job': 114784386487, 'sourceCommit': '2e061cbf09d018627dcf2a9c02a84b27c7591455', 'reason': 'DistantChecks classified16m wide house foundation as a central stair riser by width/style alone. Restrict independent stair check to x=-8..8 central path; retain .36m riser bound and all foundation checks. Geometry/shader compiled and other preceding checks ran; no APK built.'}].
+
+**실제 GPU:** 같은source에서bytes/SHA/ZIP CRC 검증한178PNG. 도시/로터리×낮/밤 강변4장과 이전0.39 실제캡처를 직접 비교했다. 정상/비/눈/안개·낮/노을/밤 기존캡처와 원주/입구움직임·별도6대밀도fixture도 유지한다. 실제URP/Direct3D11 화면이며 AI 시안이나 폰FPS/발열 검사는 아니다. 공개PNG는 이 최종BuildApk의 실제화면이다. 초기 riverfront 전용 야간4장 중 밤 장면은 배경 endpoint 확인용이며 차량 조명이 초기 snapshot 상태로 남는다. 전체 야간 대표 화면은 Advance60/ApplyViews를 거친 camera-option-roundabout-night로 확인했고0.39와 직접 비교하여 헤드라이트·원주 흐름 유지도 관찰했다.
+
+**Android:** tag `unity-apk-0.40.0-build2`. BuildPlayer 오류0/경고0, launcherLint 오류0/경고8. 실제APK apksigner/aapt/ZIP CRC로0.40.0/code41/min29/target36/ARM64 IL2CPP/원본v2서명/배경화면서비스·private provider·settings launcher·비활성UnityActivity 확인. host12SHA동일로 [0.34 hostLint](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38192276536) 오류0/경고10/생성8입력 일치를 재사용.
+
+[APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9c26327944bb372cb927195db1d3ac29ebd674b5/pixel-traffic-unity-prototype-0.40.0.apk) · [도시낮](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9c26327944bb372cb927195db1d3ac29ebd674b5/riverfront-city-day.png) · [로터리낮](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9c26327944bb372cb927195db1d3ac29ebd674b5/riverfront-roundabout-day.png) · [로터리밤](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9c26327944bb372cb927195db1d3ac29ebd674b5/camera-roundabout-night.png). APK31242983bytes/SHA256 `9e560c016d939cd4a5dd7bbe12dd3a53694f31d9f36d86ce12efcaf13e7ffe76`. `downloads/unity-0.40.0`의24파일 모두로그인없는HTTP200/no redirect/full bytes/SHA검증. main에APK나새workflow추가하지 않았다.
+
+USB폰1대·디버깅을 허용하고 PowerShell 전체블록을 실행한다. C:\Users\김백현\Desktop\AI 다운로드·SHA검증·기존앱 업데이트:
+```powershell
+& {
+    $ErrorActionPreference = "Stop"
+    $apkFolder = "C:\Users\김백현\Desktop\AI"
+    $apkPath = Join-Path $apkFolder "pixel-traffic-unity-prototype-0.40.0.apk"
+    $apkUrl = "https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9c26327944bb372cb927195db1d3ac29ebd674b5/pixel-traffic-unity-prototype-0.40.0.apk"
+    $trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+    if (-not (Test-Path -LiteralPath $trafficAdb)) { throw "Unity의 adb.exe를 찾을 수 없습니다." }
+    & $trafficAdb start-server
+    if ($LASTEXITCODE -ne 0) { throw "ADB 시작 실패" }
+    $deviceLines = & $trafficAdb devices
+    if ($LASTEXITCODE -ne 0) { throw "폰 연결 확인 실패" }
+    $connectedDevices = @($deviceLines | Where-Object { $_ -match '^\S+\s+device$' })
+    if ($connectedDevices.Count -ne 1) { throw "폰 1대를 USB로 연결하고 USB 디버깅을 허용해주세요." }
+    New-Item -ItemType Directory -Force -Path $apkFolder | Out-Null
+    Write-Host "0.40.0 APK 다운로드 중..."
+    Invoke-WebRequest -UseBasicParsing -Uri $apkUrl -OutFile $apkPath
+    if ((Get-FileHash -LiteralPath $apkPath -Algorithm SHA256).Hash -ne "9e560c016d939cd4a5dd7bbe12dd3a53694f31d9f36d86ce12efcaf13e7ffe76") { throw "파일 검증 실패. 다시 실행해주세요." }
+    Write-Host "폰에 앱 설치 중..."
+    & $trafficAdb install -r $apkPath
+    if ($LASTEXITCODE -ne 0) { throw "앱 설치 실패. 위 오류를 확인해주세요." }
+    Write-Host "완료! 0.40.0 설치 성공." -ForegroundColor Green
+}
+```
+
+0.39.0 사용자폰 적용 확인;0.40.0 폰 외형·FPS·발열·장시간 확인 대기. 설치후 도시 전체/로터리 보기에서 강변 연결·건물기단·낮/밤·날씨를 확인한다. 클라우드에서 사용자폰 설치를 실행했다고 주장하지 않는다.
 
 ## 2026-10-12 — Unity 0.39.0 첫 출구 진출·하단 입구 정체 개선: 검증·서명 APK 전달 완료
 

@@ -1,5 +1,7 @@
 # S20+
 
+Unity 라이브 배경화면 **0.40.0**: 로터리 뒤부터 강변까지 식재 지형·중앙20단계단·보행길·난간을 잇고 양옆6동을 지형에 맞춘 기단 위에 배치했습니다. 실제Unity/178GPU PNG/Android·Lint·원본서명·공개다운로드 확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9c26327944bb372cb927195db1d3ac29ebd674b5/pixel-traffic-unity-prototype-0.40.0.apk) · [강변 낮](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9c26327944bb372cb927195db1d3ac29ebd674b5/riverfront-roundabout-day.png) · [설치명령](docs/UNITY_AUTOMATION.md). 0.39.0 폰 적용 확인/0.40.0 폰 확인대기.
+
 Unity 라이브 배경화면 **0.39.0**: 로터리 추가 회전을 제거하고 배정된 첫 출구로 빠져나갑니다. 입구에서 낡은 차선변경 요청 때문에 멈추는 버그를 고치고 진출 동선을 분리했습니다. 실제600초/174GPU PNG/Android·Lint·원본서명·공개다운로드 확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9bb7aa86cbc427ec03044b5d294b4c5279e68552/pixel-traffic-unity-prototype-0.39.0.apk) · [실제 진입 흐름](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9bb7aa86cbc427ec03044b5d294b4c5279e68552/roundabout-entrance-flow-0.png) · [설치명령](docs/UNITY_AUTOMATION.md). 0.39.0 폰 확인대기.
 
 Unity 라이브 배경화면 **0.38.0**: 실제교통에서 로터리5대를 유지하고 빈자리만큼 계속 보충합니다. 출입중첩6대 허용, 보충전에는멈추지않고추가회전. 실제600초 최소5대·GPU174장·Android/Lint·원본서명·공개다운로드 확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/5449560d2327ca567cf701eba03ae1702dad7812/pixel-traffic-unity-prototype-0.38.0.apk) · [실제5대](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/5449560d2327ca567cf701eba03ae1702dad7812/roundabout-target-five-0.png) · [설치명령](docs/UNITY_AUTOMATION.md). 폰0.37.0 적용확인/희소로터리보고;0.38.0 확인대기.
