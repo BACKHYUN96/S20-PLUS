@@ -1,5 +1,49 @@
 # Pixel Traffic — Unity 전환 준비
 
+## 2026-10-12 — Unity 0.38.0 로터리 5대 유지·빈자리 보충: 검증·서명 APK 전달 완료
+
+폰0.37.0 사진에서 로터리가1~2대인데도 입구 대기가 남아, 사용자가5대 유지와1/2/3대 보충을 요청했다. 실제StreetSimulation에서5대 목표를 켠다. 초기 모델에서 기존24차량 중5대를 원주위치로 설정하고 최초 production tick에서 차량뷰에 적용한다. 원주 차량과 확정 접근차를 계산해 부족한 만큼 입구를 열고, 신규 차량이 실제로 들어온 뒤 기존차 진출을 승인한다. 기본5대와 출입 중첩6대를 허용하며, 자리가 채워지기 전에는 기존차가 멈추지 않고 같은 원주를 더 돈다. 준비됐으면 첫 출구에서 나갈 수 있고 무작위 네 출구·복귀·세 번 출구 깜빡이를 유지한다. 확정 합류차는 원주 뒤차가 간격을 두고 따라가, 진입차의 코와 원주차가 서로 가로막지 않게 한다. 다른 접근차의 양보·진출 긴 차체 보호·일반 도로2.2m 간격은 유지한다. 실시간 차량 추가나 visible teleport를 사용하지 않으며 동일2도 원주 샘플과 pause/fixed clock으로 loop pose를 유지한다. 기후가 바뀌어도 로터리5대를 유지하고 일반도로 날씨 정책은 그대로다.
+
+수정7CS: RoundaboutTraffic/StreetModel/StreetSimulation/RoundaboutChecks/CityPreview/StarterConfig/StarterScene;0.38.0/code39,RoundaboutFive-0.38.0.unity/Generated/RoundaboutFive0380. terrain·차량geometry·카메라·조명·보행·승하차·와이퍼·host12/workflow 유지. 기존304파일·실제index/status·130검증입력 보존.
+
+**개발·로컬:** 기존.NET8/실제6차종 치수/독립 SAT1200초: normal 완료96/최대무완료21.9초/후반최소332.61m, enlarged91/22.1초/778.09m, storm60/53.7초. 세 조건 모두36000tick 원주5~6대, exact5 tick27065/27235/26202, 추가회전248/252/159, 충돌·교착 없음. missing-slot 별도fixture1/2/3자리 보충7.6/17.1/26.23초(실제 접근 이동시간 포함); 정상실행에서는 사전보충으로5대를 유지한다. 빈 진입30조건 정차0, blocked handoff 역이동/road recycle/exit2.2m PASS.6대 별도밀도90tick이동·안쪽6대대기·해제후6대복구 PASS. 개발 중 committed 합류와 원주차 교착은 확정합류차 추종으로 해결했고,2m 미래buffer만 추가하는 시행은 배제했다. 폭풍 예상도착을 믿고 먼저나가던11tick/4대 상태는 실제진입 후 승인으로 없앴다. 불필요한 추가1회전을 first-exit 선택으로 줄였다. 초기5주민은 무정차 진입수에 포함하지 않는다. 목표대수 정책에 맞춰 saved throughput 하한50→35와 실제 occupancy/movement/completion을 함께 검사하며 통과량이나 입구대기시간이0.37보다 개선됐다고 주장하지 않는다. 로컬 결과는 실제Unity/Android/폰과 별개다. 같은 saved-model-clone 보충fixture도8.13/17.53/30.67초 PASS. 실제PC에서 기후probe의 회전pose가 독립 직선도로DrivingChecks의 초기값에 섞여10/21간격-1.386799가 됐고, 저장 장면을 직선fixture 직전에 다시 열어 격리했다. Editor scene reload는Awake가 없어 새StreetSimulation.Model을ResetModel로 명시 초기화했다. 기존간격assertion/실제runtime검사를 완화하지 않았다.
+
+**실제 Unity:** source`73b0f6f1c280818e440d8a7a79373899e25e63f7` / [실제Unity 검증](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38225611985) / [같은source BuildApk](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38225611985). 실제600초 교통에서 최소5/최대6대,5대이상18000/18000tick, 정확히5대13829tick, 추가회전125. 진입50/완료49/실제정차없이진입4/최대이동6대, 다중이동18000tick/최대무완료23.20초. 별도1/2/3빈자리 fixture 보충[16.03333282470703, 33.5, 30.83333396911621]초(이동시간 포함). 빈 경로120조건 정차0tick. 접근정차누계1135.77초는 여러 차량·방문 합계이며 한 차량 기다림이 아니다. 네출구[7, 8, 8, 8]/복귀26/재진입23/독립회전차체993508회·중앙섬·반시계·연속pose·버스10회·보행/신호·폭풍·15/30/60/120Hz·pause PASS. 기존기후·조명·와이퍼·반사 PASS. 기본108616tri/최대119962tri/1592renderers/47materials 예산110000/120000/2400/48 미만.
+
+**실제 GPU:** 같은source의 BuildApk38225611985에서 source/bytes/SHA/ZIP CRC 확인한174PNG. 실제 production 초기화·제어로 촬영한4frame 원주대수[5, 5, 5, 5]/픽셀변경[37396, 43209, 53724] PASS. 수동pose/밀도fixture로 만든 장면이 아니다. 별도6대fixture4frame의6차량 각각>.5m 이동/변경[20424, 19704, 19357], 자연 교통4frame4차량 각각>.5m/변경[35916, 35914, 30675] PASS. 도시/로터리 카메라·낮/노을/밤/강비·안개 비교도 유지한다. 공개 PNG는 이 BuildApk 촬영본이다. 실제URP/Editor 확인이며 폰FPS·발열 검사를 대신하지 않는다. PC실패/수정 기록[{'run': 38223456414, 'job': 114725081903, 'sourceCommit': 'dfd95ea1d8a911e45e9abafb27e398c5c063d180', 'reason': 'Roundabout target/refill checks returned, then DrivingChecks legacy straight-road fixture cloned circular runtime transforms left by climate probes; flat lane gap10/21=-1.386799. Reload saved scene before independent DrivingChecks; keep gap assertion.'}, {'run': 38223482756, 'job': 114726913752, 'sourceCommit': 'dfd95ea1d8a911e45e9abafb27e398c5c063d180', 'reason': 'Already-running build1 repeats the confirmed legacy straight-road fixture initial transform contamination; final source reloads saved scene before DrivingChecks.'}, {'run': 38224682602, 'job': 114729166947, 'sourceCommit': 'cf4906e39822167fd97aa9b5d232579ef1b2d4b2', 'reason': 'Saved-scene reload fixes legacy flat driving gaps. Its final ApplyViews then finds model null because Editor scene reload does not call runtime Awake. Explicit ResetModel after reload initializes the new component without moving serialized drive origins.'}, {'run': 38224722960, 'job': 114731084553, 'sourceCommit': 'cf4906e39822167fd97aa9b5d232579ef1b2d4b2', 'reason': 'Already-running build2 repeats the null model at final DrivingChecks.ApplyViews after canonical Editor scene reload; final source explicitly initializes the reloaded controller.'}].
+
+**Android:** tag`unity-apk-0.38.0-build3`/[BuildApk](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38225611985). BuildPlayer 오류0/경고0, launcherLint 오류0/경고8. 내려받은APK의 apksigner/aapt/ZIP CRC로0.38.0/code39/min29/target36/ARM64 IL2CPP/wallpaper service·private provider·settings launcher·비활성UnityActivity PASS. 기존v2cert`a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6`. host12 SHA가 같아 [0.34.0 unityLibraryLint](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38192276536) 오류0/경고10/생성8입력일치를 재사용.
+
+[APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/5449560d2327ca567cf701eba03ae1702dad7812/pixel-traffic-unity-prototype-0.38.0.apk) · [실제5대 frame0](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/5449560d2327ca567cf701eba03ae1702dad7812/roundabout-target-five-0.png) · [frame1](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/5449560d2327ca567cf701eba03ae1702dad7812/roundabout-target-five-1.png) · [6대fixture](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/5449560d2327ca567cf701eba03ae1702dad7812/roundabout-six-fixture-0.png). APK31245363bytes/SHA256`70936626ab611c0b5301ef8908810ca992f20a78710722a2a09eebcce06af427`. `downloads/unity-0.38.0`의20파일을 로그인없는HTTP200/no redirect/full bytes/SHA로 검증. main에APK/새workflow를 추가하지 않았다.
+
+USB폰1대와디버깅을 허용하고 PowerShell 전체블록을 실행한다. C:\Users\김백현\Desktop\AI에 다운로드·SHA검증·기존앱 업데이트:
+```powershell
+& {
+    $ErrorActionPreference = "Stop"
+    $apkFolder = "C:\Users\김백현\Desktop\AI"
+    $apkPath = Join-Path $apkFolder "pixel-traffic-unity-prototype-0.38.0.apk"
+    $apkUrl = "https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/5449560d2327ca567cf701eba03ae1702dad7812/pixel-traffic-unity-prototype-0.38.0.apk"
+    $trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+    if (-not (Test-Path -LiteralPath $trafficAdb)) { throw "Unity의 adb.exe를 찾을 수 없습니다." }
+    & $trafficAdb start-server
+    if ($LASTEXITCODE -ne 0) { throw "ADB 시작 실패" }
+    $deviceLines = & $trafficAdb devices
+    if ($LASTEXITCODE -ne 0) { throw "폰 연결 확인 실패" }
+    $connectedDevices = @($deviceLines | Where-Object { $_ -match '^\S+\s+device$' })
+    if ($connectedDevices.Count -ne 1) { throw "폰 1대를 USB로 연결하고 USB 디버깅을 허용해주세요." }
+    New-Item -ItemType Directory -Force -Path $apkFolder | Out-Null
+    Write-Host "0.38.0 APK 다운로드 중..."
+    Invoke-WebRequest -UseBasicParsing -Uri $apkUrl -OutFile $apkPath
+    if ((Get-FileHash -LiteralPath $apkPath -Algorithm SHA256).Hash -ne "70936626ab611c0b5301ef8908810ca992f20a78710722a2a09eebcce06af427") { throw "파일 검증 실패. 다시 실행해주세요." }
+    Write-Host "폰에 앱 설치 중..."
+    & $trafficAdb install -r $apkPath
+    if ($LASTEXITCODE -ne 0) { throw "앱 설치 실패. 위 오류를 확인해주세요." }
+    Write-Host "완료! 0.38.0 설치 성공." -ForegroundColor Green
+}
+```
+
+0.37.0 사용자폰 적용 확인 및 입구대기/희소로터리 보고;0.38.0 실제폰 흐름/FPS/발열/장시간 확인 대기. 설치후 카메라 구도→로터리 보기에서 확인한다. 클라우드에서 사용자폰 설치를 실행했다고 주장하지 않는다.
+
 ## 2026-10-12 — Unity 0.38.0 독립 검사 장면 초기화 보완
 
 cf4906e39822167fd97aa9b5d232579ef1b2d4b2 / Validate38224682602(job114729166947)는 직선lane-gap/차선변경 검사를 지나 DrivingChecks 마지막ApplyViews에서 새StreetSimulation.model null로 실패했다. EditorSceneManager가 새장면을 열 때 runtime Awake를 호출하지 않으므로, 재로드 직후StreetSimulation.ResetModel을 명시한다. 저장된drive 초기transform은 유지되어 직선 fixture의 초기간격이 재오염되지 않는다. 로터리 runtime·충돌/간격 assertion은 그대로다. 실제전체Unity/GPU/Android 다시 실행 예정; APK·폰은 아직 미완료.

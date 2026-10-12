@@ -1,5 +1,7 @@
 # S20+
 
+Unity 라이브 배경화면 **0.38.0**: 실제교통에서 로터리5대를 유지하고 빈자리만큼 계속 보충합니다. 출입중첩6대 허용, 보충전에는멈추지않고추가회전. 실제600초 최소5대·GPU174장·Android/Lint·원본서명·공개다운로드 확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/5449560d2327ca567cf701eba03ae1702dad7812/pixel-traffic-unity-prototype-0.38.0.apk) · [실제5대](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/5449560d2327ca567cf701eba03ae1702dad7812/roundabout-target-five-0.png) · [설치명령](docs/UNITY_AUTOMATION.md). 폰0.37.0 적용확인/희소로터리보고;0.38.0 확인대기.
+
 Unity 라이브 배경화면 **0.37.0**: 먼 출구 예약을 근거리 합류·앞차 추종으로 바꾸고6대 회전/내부정체 회복을 검사했습니다. 실제 빈 경로120조건 정차0·600초 완료86·GPU170장·Android/Lint·원본서명·공개다운로드 확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/a267ae4f2daf6f970b1a33136870807cc5567ce7/pixel-traffic-unity-prototype-0.37.0.apk) · [실제 회전](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/a267ae4f2daf6f970b1a33136870807cc5567ce7/roundabout-motion-0.png) · [설치명령](docs/UNITY_AUTOMATION.md). 폰0.36.0 적용 확인;0.37.0 적용 확인 대기.
 
 Unity 라이브 배경화면 **0.36.0**: 빈 합류의 강제 정차를 제거하고 로터리 연속 진입을 적용했습니다. 실제 빈 경로120조건 정차0·600초 완료71·GPU166장·Android/Lint·원본서명·공개다운로드 확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/018ef633cf73b42642e953ac837d357cbb069436/pixel-traffic-unity-prototype-0.36.0.apk) · [실제 회전](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/018ef633cf73b42642e953ac837d357cbb069436/roundabout-motion-0.png) · [설치명령](docs/UNITY_AUTOMATION.md). 폰0.35.0 두 대 통과 확인;0.36.0 적용 확인 대기.
