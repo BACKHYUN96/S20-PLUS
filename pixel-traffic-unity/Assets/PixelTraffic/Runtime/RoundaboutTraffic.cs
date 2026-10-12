@@ -5,7 +5,7 @@ using UnityEngine;
 namespace PixelTraffic.UnityPrototype
 {
     // Reuses the existing fleet and the street clock. The junction is a one-lane
-    // roundabout: circulating traffic holds the reservation until its tail clears.
+    // roundabout: each merge yields to committed/circulating cars, with no global lock.
     public sealed class RoundaboutTraffic
     {
         public const float CenterZ=235,Radius=14,IslandRadius=10,OuterRadius=19.5f,GateZ=195;
@@ -13,7 +13,7 @@ namespace PixelTraffic.UnityPrototype
         public sealed class State
         {
             public Stage stage;public int origin,destination,lane,visits,waitTicks;public uint random;
-            public float progress;public Path path;
+            public float progress;public Path path;public bool admitted;
         }
         public sealed class Path
         {
@@ -39,7 +39,7 @@ namespace PixelTraffic.UnityPrototype
         readonly StreetModel model;public readonly State[] States;
         readonly Dictionary<int,Path> paths=new Dictionary<int,Path>();
         uint dispatchRandom=47639;readonly int[] exitBag={0,1,2,3};int exitCursor=4;
-        int owner=-1;public int Owner=>owner;
+        public int Owner {get {for(int i=0;i<States.Length;i++)if(States[i].admitted)return i;return -1;}}
         public int Entries{get;private set;}public int Completed{get;private set;}public int Yields{get;private set;}public int Returns{get;private set;}public int Recycles{get;private set;}
         public readonly int[] Destinations=new int[4];
         public RoundaboutTraffic(StreetModel street)
@@ -80,7 +80,13 @@ namespace PixelTraffic.UnityPrototype
             else if(origin==2)Bezier(p,new Vector2(-140,302),new Vector2(-80,302),new Vector2(-4.8f,295),gate);
             else p.Add(gate);
             float entryAngle=(-45+origin*90)*Mathf.Deg2Rad;Vector2 entry=Ring(entryAngle);
-            Bezier(p,gate,World(new Vector2(x,-30),origin),entry-Tangent(entryAngle)*7,entry);
+            if(origin==0)
+            {
+                Vector2 straight=World(new Vector2(x,-22),origin);
+                Bezier(p,gate,World(new Vector2(x,-34),origin),World(new Vector2(x,-28),origin),straight,18);
+                Bezier(p,straight,World(new Vector2(x,-19),origin),entry-Tangent(entryAngle)*7,entry);
+            }
+            else Bezier(p,gate,World(new Vector2(x,-30),origin),entry-Tangent(entryAngle)*7,entry);
             int entryIndex=p.Count-1;
             float exitAngle=(-105+destination*90)*Mathf.Deg2Rad;while(exitAngle<entryAngle+.01f)exitAngle+=Mathf.PI*2;
             int arcSteps=Mathf.CeilToInt((exitAngle-entryAngle)*Mathf.Rad2Deg/2);
@@ -88,7 +94,15 @@ namespace PixelTraffic.UnityPrototype
             int exitIndex=p.Count-1;Vector2 end;
             float outX=destination==0?(lane-1.5f)*StarterConfig.LaneWidth:-4.8f;
             end=World(new Vector2(outX,-40),destination);
-            Bezier(p,Ring(exitAngle),Ring(exitAngle)+Tangent(exitAngle)*3,World(new Vector2(outX,-30),destination),end);
+            if(destination==0)
+            {
+                // Align with the outgoing lane before reaching queued oncoming buses.
+                // A diagonal wide truck near the gate can otherwise block both directions.
+                Vector2 aligned=World(new Vector2(outX,-22),destination);
+                Bezier(p,Ring(exitAngle),Ring(exitAngle)+Tangent(exitAngle)*3,World(new Vector2(outX,-18),destination),aligned);
+                Bezier(p,aligned,World(new Vector2(outX,-28),destination),World(new Vector2(outX,-34),destination),end,18);
+            }
+            else Bezier(p,Ring(exitAngle),Ring(exitAngle)+Tangent(exitAngle)*3,World(new Vector2(outX,-30),destination),end);
             int clearIndex=p.Count-1;
             if(destination==1||destination==3)Bezier(p,end,World(new Vector2(-4.8f,-60),destination),World(new Vector2(-4.8f,-100),destination),World(new Vector2(-4.8f,-140),destination));
             else if(destination==2)Bezier(p,end,new Vector2(4.8f,295),new Vector2(80,302),new Vector2(140,302));
@@ -106,26 +120,64 @@ namespace PixelTraffic.UnityPrototype
         }
         static bool Axis(Vector2 d,Vector2 axis,Vector2 fa,Vector2 sa,Vector2 fb,Vector2 sb,float la,float wa,float lb,float wb)
         =>Mathf.Abs(Vector2.Dot(d,axis))>=Mathf.Abs(Vector2.Dot(fa,axis))*la+Mathf.Abs(Vector2.Dot(sa,axis))*wa+Mathf.Abs(Vector2.Dot(fb,axis))*lb+Mathf.Abs(Vector2.Dot(sb,axis))*wb-.0001f;
-        public int Blocker(int index,Vector2 point,float yaw)
+        int PhysicalBlocker(int index,Vector2 point,float yaw)
         {
             var c=model.Cars[index];for(int j=0;j<model.Cars.Length;j++)
             {var other=model.Cars[j];if(j==index||!other.active||other.roundHidden)continue;if(!Separated(point,yaw,c.SafetyLength,c.width,Position(other),Yaw(other),other.SafetyLength,other.width))return j;}
-            return ReservationBlocker(index,point,yaw);
+            return -1;
         }
-        int ReservationBlocker(int index,Vector2 point,float yaw)
+        public int Blocker(int index,Vector2 point,float yaw)
+        {int other=PhysicalBlocker(index,point,yaw);return other>=0?other:ReservationBlocker(index,point,yaw);}
+        int ReservationBlocker(int index,Vector2 point,float yaw,bool exits=true)
         {
-            if(owner<0||owner==index)return -1;var own=model.Cars[owner];var route=States[owner];var c=model.Cars[index];
-            for(float d=route.progress;d<=route.path.clear;d+=.75f)
-            {Vector2 p=route.path.Pose(d,out float heading);if(!Separated(point,yaw,c.SafetyLength,c.width,p,heading,own.SafetyLength,own.width))return owner;}
-            Vector2 end=route.path.Pose(route.path.clear,out float angle);return Separated(point,yaw,c.SafetyLength,c.width,end,angle,own.SafetyLength,own.width)?-1:owner;
+            var c=model.Cars[index];
+            if(States[index].admitted||States[index].stage==Stage.Exit||(!c.roundabout&&c.Direction<0))return -1;
+            for(int j=0;j<States.Length;j++)
+            {
+                var route=States[j];var own=model.Cars[j];
+                if(j==index||!own.active||!route.admitted)continue;
+                // Entry and exit curves are protected; the shared circle is never locked.
+                if(route.progress<route.path.entry)
+                    for(float d=route.progress;d<=route.path.entry;d+=.75f)
+                    {Vector2 p=route.path.Pose(d,out float heading);if(!Separated(point,yaw,c.SafetyLength,c.width,p,heading,own.SafetyLength,own.width))return j;}
+                if(exits&&!States[index].admitted&&(c.roundabout||c.Direction>0))
+                    for(float d=Mathf.Max(route.progress,route.path.exit);d<=route.path.clear;d+=.75f)
+                    {Vector2 p=route.path.Pose(d,out float heading);if(!Separated(point,yaw,c.SafetyLength,c.width,p,heading,own.SafetyLength,own.width))return j;}
+            }
+            return -1;
         }
         bool Free(int index,Vector2 point,float yaw)=>Blocker(index,point,yaw)<0;
         public int AdmissionBlocker(int index,out float blockedAt)
         {
             var state=States[index];blockedAt=state.progress;
-            for(float d=state.progress;d<state.path.clear;d+=.75f)
+            for(int j=0;j<States.Length;j++)if(j!=index&&States[j].admitted&&States[j].origin==state.origin&&States[j].progress<States[j].path.entry+model.Cars[j].SafetyLength+2.2f)return j;
+            float endDistance=Mathf.Min(state.path.Length,state.path.entry+8);
+            for(float d=state.progress;d<endDistance;d+=.75f)
             {Vector2 p=state.path.Pose(d,out float yaw);int blocker=Blocker(index,p,yaw);if(blocker>=0){blockedAt=d;return blocker;}}
-            Vector2 end=state.path.Pose(state.path.clear,out float heading);blockedAt=state.path.clear;return Blocker(index,end,heading);
+            // Circulating cars have priority: leave time for the entry curve, including
+            // a car approaching the merge from behind, before committing to it.
+            var own=model.Cars[index];
+            for(int j=0;j<States.Length;j++)
+            {
+                var other=model.Cars[j];var route=States[j];
+                if(j==index||!other.active||!route.admitted||route.progress>route.path.exit)continue;
+                float horizon=state.path.entry-state.progress+own.SafetyLength+other.SafetyLength+14;
+                for(float future=0;future<=horizon;future+=2)
+                {
+                    Vector2 p=route.path.Pose(Mathf.Min(route.progress+future,route.path.exit),out float yaw);
+                    Vector2 entry=state.path.Pose(state.path.entry,out float direction);
+                    if(!Separated(entry,direction,own.SafetyLength,own.width,p,yaw,other.SafetyLength,other.width)){blockedAt=state.path.entry;return j;}
+                }
+            }
+            // Check the reciprocal conflict too: a new exit must not cut across
+            // another committed entry. Shared exits may follow one another.
+            for(float d=state.path.exit;d<=state.path.clear;d+=.75f)
+            {
+                Vector2 p=state.path.Pose(d,out float yaw);int blocker=PhysicalBlocker(index,p,yaw);
+                if(blocker<0)blocker=ReservationBlocker(index,p,yaw,false);
+                if(blocker>=0){blockedAt=d;return blocker;}
+            }
+            Vector2 end=state.path.Pose(endDistance,out float heading);blockedAt=endDistance;return Blocker(index,end,heading);
         }
         bool ClearRoute(int index,State state)=>AdmissionBlocker(index,out _) < 0;
         void Start(int i,int origin)
@@ -140,7 +192,7 @@ namespace PixelTraffic.UnityPrototype
             }
             var path=s.path;
             Vector2 point=path.Pose(0,out float yaw);if(!Free(i,point,yaw))return;
-            s.path=path;s.progress=0;s.stage=Stage.Approach;s.waitTicks=0;s.visits++;
+            s.path=path;s.progress=0;s.stage=Stage.Approach;s.waitTicks=0;s.visits++;s.admitted=false;
             c.roundabout=true;c.roundHidden=false;c.roundPosition=point;c.roundYaw=yaw;c.z=point.y;c.roundSignal=false;c.roundSignalTicks=0;c.speed=Mathf.Min(c.speed,3.8f);c.committed=false;
             model.Maneuvers.Cancel(c,model.ActiveTicks);if(origin==0)Destinations[s.destination]++;
         }
@@ -167,7 +219,7 @@ namespace PixelTraffic.UnityPrototype
                 float ahead=c.Direction*((float)other.z-(float)c.z);
                 if(ahead>=0&&Mathf.Abs(c.X-other.X)<(c.width+wide)*.5f+.05f)room=Mathf.Min(room,ahead-(c.SafetyLength+length)*.5f-2.2f);
             }
-            if(owner>=0)
+            if(Owner>=0)
             {int index=Array.IndexOf(model.Cars,c);Vector2 next=new Vector2(c.X,(float)c.z+c.Direction*Mathf.Min(Mathf.Max(0,room),c.cruise*StreetModel.Dt));if(ReservationBlocker(index,next,Yaw(c))>=0)room=0;}
             return Mathf.Max(0,room);
         }
@@ -187,14 +239,13 @@ namespace PixelTraffic.UnityPrototype
                     continue;
                 }
                 if(s.stage==Stage.Hidden){Start(i,s.origin);continue;}
-                // Reserve before approach lanes converge; keep the entire route clear.
+                // Approach the yield line; each entry reserves only its merge curve.
                 float hold=Mathf.Max(0,s.path.entry-32);
                 float limit=s.path.Length;
-                if(s.progress<s.path.entry&&owner!=i)
+                if(!s.admitted&&s.progress<s.path.entry)
                 {
-                    if(owner>=0&&owner!=i){limit=hold;s.stage=Stage.Waiting;s.waitTicks++;Yields++;}
-                    else if(s.progress>=hold-.001f&&ClearRoute(i,s)){owner=i;Entries++;s.stage=Stage.Circulating;}
-                    else limit=Mathf.Min(limit,hold);
+                    if(s.progress>=hold-.001f&&ClearRoute(i,s)){s.admitted=true;Entries++;s.stage=Stage.Circulating;}
+                    else {limit=Mathf.Min(limit,hold);s.stage=Stage.Waiting;s.waitTicks++;Yields++;}
                 }
                 if(s.progress>=s.path.exit-12)
                 {if(!c.roundSignal)c.roundSignalTicks=0;c.roundSignal=true;c.roundSignalTicks++;}
@@ -203,10 +254,11 @@ namespace PixelTraffic.UnityPrototype
                 c.speed=Mathf.MoveTowards(c.speed,target,(target>c.speed?1.8f:3.4f)*StreetModel.Dt);
                 float travel=Mathf.Min(c.speed*StreetModel.Dt,room),next=Mathf.Min(s.progress+travel,limit);
                 Vector2 nextPoint=s.path.Pose(next,out float nextYaw);
-                if(!Free(i,nextPoint,nextYaw)){travel=0;next=s.progress;nextPoint=s.path.Pose(next,out nextYaw);c.speed=0;s.waitTicks++;}
-                s.progress=next;c.roundPosition=nextPoint;c.roundYaw=nextYaw;c.z=nextPoint.y;c.distance=travel;c.totalDistance+=travel;c.braking=previous>c.speed+.015f||(c.speed<.1f&&room<.3f);
+                bool blocked=!Free(i,nextPoint,nextYaw);
+                if(blocked){travel=0;next=s.progress;nextPoint=s.path.Pose(next,out nextYaw);c.speed=0;s.waitTicks++;}
+                s.progress=next;c.roundPosition=nextPoint;c.roundYaw=nextYaw;c.z=nextPoint.y;c.distance=travel;c.totalDistance+=travel;c.braking=previous>c.speed+.015f||(c.speed<.1f&&(room<.3f||blocked));
                 if(s.progress>=s.path.exit+.001f)s.stage=Stage.Exit;
-                if(owner==i&&s.progress>=s.path.clear-.001f){owner=-1;Completed++;}
+                if(s.admitted&&s.progress>=s.path.clear-.001f){s.admitted=false;Completed++;}
                 if(s.progress<s.path.Length-.001f)continue;
                 if(s.destination==0)
                 {

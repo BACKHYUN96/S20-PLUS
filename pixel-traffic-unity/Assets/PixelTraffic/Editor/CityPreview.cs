@@ -549,7 +549,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     camera.aspect=.45f;camera.fieldOfView=roadFov;camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);
                 }
                 var roundaboutPreviews=new System.Collections.Generic.List<string>();
-                var roundaboutPixelChanges=new System.Collections.Generic.List<int>();
+                var roundaboutPixelChanges=new System.Collections.Generic.List<int>();int roundaboutMovingVehicles=0;
                 var roundaboutMotionPositions=new System.Collections.Generic.List<Vector3>();
                 var junctionVisibilityPreviews=new System.Collections.Generic.List<string>();int savedNightChangedPixels=0;float savedNightPixelDelta=0,savedNightFogFraction=0;
                 try
@@ -564,14 +564,21 @@ namespace PixelTraffic.UnityPrototype.Editor
                     camera.transform.position=new Vector3(28,38,177);camera.transform.LookAt(new Vector3(0,0,235));
                     roundaboutPreviews.Add(CaptureState(camera,request,target,image,"roundabout-oblique"));
                     camera.transform.position=new Vector3(0,46,161);camera.transform.LookAt(new Vector3(0,0,241));
-                    int junctionTracked=detailStreet.Model.Roundabout.Owner;
-                    for(int wait=0;junctionTracked<0&&wait<1800;wait++){detailStreet.Advance(1d/30);junctionTracked=detailStreet.Model.Roundabout.Owner;}
-                    if(junctionTracked<0)throw new InvalidOperationException("No actual circulating vehicle for junction captures.");
+                    var junctionTracked=new System.Collections.Generic.List<int>();
+                    for(int wait=0;wait<18000;wait++)
+                    {
+                        junctionTracked.Clear();var round=detailStreet.Model.Roundabout;
+                        for(int i=0;i<round.States.Length;i++)
+                        {var car=detailStreet.Model.Cars[i];var state=round.States[i];if(car.active&&!car.roundHidden&&state.path!=null&&state.progress>=state.path.entry&&state.progress<state.path.exit-15&&car.distance>.00001f)junctionTracked.Add(i);}
+                        if(junctionTracked.Count>=2)break;detailStreet.Advance(1d/30);
+                    }
+                    if(junctionTracked.Count<2)throw new InvalidOperationException("No simultaneous actual circulating vehicles for junction captures.");
+                    var multiStart=new Vector2[junctionTracked.Count];for(int i=0;i<multiStart.Length;i++)multiStart[i]=RoundaboutTraffic.Position(detailStreet.Model.Cars[junctionTracked[i]]);
                     Color32[] previousPixels=null;
                     for(int frame=0;frame<4;frame++)
                     {
                         if(frame>0)detailStreet.Advance(1);detailStreet.ApplyViews();
-                        var car=detailStreet.Model.Cars[junctionTracked];roundaboutMotionPositions.Add(new Vector3(car.X,car.roundabout?car.roundYaw:(car.Direction<0?180:0),(float)car.z));
+                        var car=detailStreet.Model.Cars[junctionTracked[0]];roundaboutMotionPositions.Add(new Vector3(car.X,car.roundabout?car.roundYaw:(car.Direction<0?180:0),(float)car.z));
                         roundaboutPreviews.Add(CaptureState(camera,request,target,image,"roundabout-motion-"+frame));
                         var currentPixels=image.GetPixels32();if(previousPixels!=null)
                         {
@@ -580,6 +587,9 @@ namespace PixelTraffic.UnityPrototype.Editor
                         }
                         previousPixels=currentPixels;
                     }
+                    for(int i=0;i<multiStart.Length;i++)
+                    {if(Vector2.Distance(multiStart[i],RoundaboutTraffic.Position(detailStreet.Model.Cars[junctionTracked[i]]))<.5f)throw new InvalidOperationException("A tracked circulating vehicle stays frozen across actual GPU frames.");}
+                    roundaboutMovingVehicles=junctionTracked.Count;
                 }
                 finally
                 {
@@ -633,7 +643,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 finally{cameraChoice.Preview(0);climate.Preview(0,0);detailStreet.ApplyViews();}
                 File.WriteAllText("Reports/preview-result.json", JsonUtility.ToJson(new Report {
                     cameraOptionImages=cameraOptionImages.ToArray(),cameraOptionTrafficSimulatedSeconds=60,
-                    roundaboutImages=roundaboutPreviews.ToArray(),roundaboutPixelChanges=roundaboutPixelChanges.ToArray(),roundaboutMotionPositions=roundaboutMotionPositions.ToArray(),
+                    roundaboutMovingVehicles=roundaboutMovingVehicles,roundaboutImages=roundaboutPreviews.ToArray(),roundaboutPixelChanges=roundaboutPixelChanges.ToArray(),roundaboutMotionPositions=roundaboutMotionPositions.ToArray(),
                     junctionVisibilityImages=junctionVisibilityPreviews.ToArray(),savedNightChangedPixels=savedNightChangedPixels,savedNightPixelDelta=savedNightPixelDelta,savedNightFogFraction=savedNightFogFraction,
                     result = "PASS", version = StarterConfig.VersionName, editor = Application.unityVersion,
                     graphicsApi = SystemInfo.graphicsDeviceType.ToString(), width = width, height = height,
@@ -697,7 +707,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         {
             public string result, version, editor, graphicsApi, image, source;
             public int width, height;
-            public string[] roundaboutImages;public int[] roundaboutPixelChanges;public Vector3[] roundaboutMotionPositions;
+            public int roundaboutMovingVehicles;public string[] roundaboutImages;public int[] roundaboutPixelChanges;public Vector3[] roundaboutMotionPositions;
             public string[] junctionVisibilityImages;public int savedNightChangedPixels;public float savedNightPixelDelta,savedNightFogFraction;
             public string[] cameraOptionImages;
             public int cameraOptionTrafficSimulatedSeconds;

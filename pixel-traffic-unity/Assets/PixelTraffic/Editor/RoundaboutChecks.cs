@@ -82,15 +82,18 @@ namespace PixelTraffic.UnityPrototype.Editor
             finally{cameraChoice.Preview(0);camera.aspect=aspect;}
             var drives=UnityEngine.Object.FindObjectsByType<PrototypeDrive>(FindObjectsInactive.Include,FindObjectsSortMode.None);var poses=new float[drives.Length];for(int i=0;i<drives.Length;i++)poses[i]=drives[i].transform.position.z;
             var climate=UnityEngine.Object.FindFirstObjectByType<CityClimate>();int pairChecks=0,ringSamples=0,signalFrames=0,hiddenResets=0;float maximumStep=0;
-            int entries=0,completed=0,returns=0,yields=0,recycles=0,departures=0;int[] destinations=null;
+            int entries=0,completed=0,returns=0,yields=0,recycles=0,departures=0,peakMoving=0,multipleMovingTicks=0,lastCompletionTick=0,lastCompleted=0,maxCompletionGap=0;int[] destinations=null;
             try
             {
-                climate.Preview(0,0);controller.ResetModel();var model=controller.Model;
+                cameraChoice.Preview(1);climate.Preview(0,0);controller.ResetModel();var model=controller.Model;
                 var previous=new Vector2[model.Cars.Length];var oldHidden=new bool[model.Cars.Length];var oldRound=new bool[model.Cars.Length];var oldLane=new int[model.Cars.Length];
                 for(int tick=0;tick<18000;tick++)
                 {
                     for(int i=0;i<previous.Length;i++){previous[i]=RoundaboutTraffic.Position(model.Cars[i]);oldHidden[i]=model.Cars[i].roundHidden;oldRound[i]=model.Cars[i].roundabout;oldLane[i]=model.Cars[i].lane;}
-                    controller.Advance(1d/30);model=controller.Model;var round=model.Roundabout;
+                    controller.Advance(1d/30);model=controller.Model;var round=model.Roundabout;int moving=0;
+                    if(round.Completed!=lastCompleted){lastCompleted=round.Completed;lastCompletionTick=tick;}
+                    maxCompletionGap=Mathf.Max(maxCompletionGap,tick-lastCompletionTick);
+                    Need(tick-lastCompletionTick<2700,"junction has no completed route for90seconds."+Summary(model));
                     Need(!(model.CanEnter||model.Signal==StreetModel.Phase.PedestrianClearance)||!model.RoadOccupied(),"junction breaks crossing clearance.");
                     for(int i=0;i<model.Cars.Length;i++)
                     {
@@ -107,16 +110,18 @@ namespace PixelTraffic.UnityPrototype.Editor
                                 Need(Vector2.Distance(p,new Vector2(0,235))>13.9f,"circle cuts through its island.");
                                 Vector2 forward=new Vector2(Mathf.Sin(c.roundYaw*Mathf.Deg2Rad),Mathf.Cos(c.roundYaw*Mathf.Deg2Rad));Vector2 radial=p-new Vector2(0,235);
                                 Need(radial.x*forward.y-radial.y*forward.x>12,"traffic circulates clockwise.");
-                                foreach(var corner in Corners(c))Need(Vector2.Distance(corner,new Vector2(0,235))>10.3f,"long body clips the island.");ringSamples++;
+                                foreach(var corner in Corners(c))Need(Vector2.Distance(corner,new Vector2(0,235))>10.3f,"long body clips the island.");ringSamples++;if(c.distance>.00001f)moving++;
                             }
                             if(c.roundSignal)signalFrames++;
                         }
                         if(tick%5==0)for(int j=i+1;j<model.Cars.Length;j++)
                         {var other=model.Cars[j];if(!other.active||other.roundHidden)continue;Need(Separate(Corners(c),Corners(other)),"actual rotated bodies overlap: "+i+"/"+j+" tick="+tick);pairChecks++;}
                     }
+                    peakMoving=Mathf.Max(peakMoving,moving);if(moving>=2)multipleMovingTicks++;
                 }
                 var final=model.Roundabout;entries=final.Entries;completed=final.Completed;returns=final.Returns;yields=final.Yields;recycles=final.Recycles;destinations=(int[])final.Destinations.Clone();departures=model.Stops.Departures;
                 if(!(entries>=8&&completed>=8&&returns>=8&&recycles>=4&&yields>0&&ringSamples>100&&signalFrames>100))Need(false,"traffic stalls or skips entry/circulation/return/indicator stages: "+entries+"/"+completed+"/"+returns+"/"+recycles+Summary(model));
+                Need(peakMoving>=2&&multipleMovingTicks>=90,"only one ring vehicle moves at a time: peak="+peakMoving+" ticks="+multipleMovingTicks);
                 foreach(int count in destinations)Need(count>0,"one requested random destination never occurs: "+string.Join(",",destinations)+" entries="+entries+" completed="+completed);
                 Need(model.Stops.Departures>=2&&model.Cycles>=2,"roundabout starves bus service or signals.");
                 // The actual fixed clock must retain route, heading, destination and progress at every frame rate.
@@ -137,10 +142,10 @@ namespace PixelTraffic.UnityPrototype.Editor
                 for(int i=0;i<drives.Length;i++)drives[i].ResetPosition(poses[i]);climate.Preview(0,5);controller.ResetModel();for(int n=0;n<9000;n++)controller.Advance(1d/30);
                 Need(controller.Model.Roundabout.Completed>=2,"storm deadlocks the junction.");
             }
-            finally{controller.SetPaused(false);for(int i=0;i<drives.Length;i++)drives[i].ResetPosition(poses[i]);climate.Preview(0,0);controller.ResetModel();controller.ApplyViews();}
-            return new Report{result="PASS: actual production routes, CCW circulation/rotated-body island and pair clearance, four random exits, circulating-priority reservation, right indicators, offscreen return, bus service, storm and fixed-clock/pause; actual GPU and phone separate",cameraOptionsChecked=true,terrainMeshes=5,terrainTriangles=triangles,simulatedSeconds=600,entries=entries,completed=completed,returns=returns,yields=yields,recycles=recycles,destinations=destinations,pairChecks=pairChecks,ringSamples=ringSamples,signalFrames=signalFrames,hiddenSpawns=hiddenResets,maximumVisibleStep=maximumStep,busDepartures=departures,frameRates=new[]{15,30,60,120}};
+            finally{cameraChoice.Preview(0);controller.SetPaused(false);for(int i=0;i<drives.Length;i++)drives[i].ResetPosition(poses[i]);climate.Preview(0,0);controller.ResetModel();controller.ApplyViews();}
+            return new Report{result="PASS: actual production routes, CCW circulation/rotated-body island and pair clearance, four random exits, circulating-priority reservation, right indicators, offscreen return, bus service, storm and fixed-clock/pause; actual GPU and phone separate",cameraOptionsChecked=true,peakMovingRingCars=peakMoving,multipleMovingTicks=multipleMovingTicks,maxCompletionGapSeconds=maxCompletionGap/30f,terrainMeshes=5,terrainTriangles=triangles,simulatedSeconds=600,entries=entries,completed=completed,returns=returns,yields=yields,recycles=recycles,destinations=destinations,pairChecks=pairChecks,ringSamples=ringSamples,signalFrames=signalFrames,hiddenSpawns=hiddenResets,maximumVisibleStep=maximumStep,busDepartures=departures,frameRates=new[]{15,30,60,120}};
         }
         [Serializable] internal sealed class Report
-        {public string result;public bool cameraOptionsChecked;public int terrainMeshes,terrainTriangles,simulatedSeconds,entries,completed,returns,yields,recycles,pairChecks,ringSamples,signalFrames,hiddenSpawns,busDepartures;public int[] destinations,frameRates;public float maximumVisibleStep;}
+        {public string result;public bool cameraOptionsChecked;public int peakMovingRingCars,multipleMovingTicks;public float maxCompletionGapSeconds;public int terrainMeshes,terrainTriangles,simulatedSeconds,entries,completed,returns,yields,recycles,pairChecks,ringSamples,signalFrames,hiddenSpawns,busDepartures;public int[] destinations,frameRates;public float maximumVisibleStep;}
     }
 }

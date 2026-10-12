@@ -1,5 +1,15 @@
 # Pixel Traffic — Unity 전환 준비
 
+## 2026-10-12 — Unity0.35.0 로터리 한 대 주행·대기 정체 수정: 실제 PC 검증 대기
+
+사용자가0.34.0의 로터리 구도에서 한 대만 회전하고 다른 차량이 기다리는 현상을 제보했다. 기존 단일owner가 접근부터 전체 회전/진출까지 미래경로를 예약하여 교차로 전체를 직렬화하는 제한을 확인했다. global lock을 제거하고 차량별admitted 상태·같은진입로 합류순서·이미 진입한 차량의 예상 합류시간/차체간격·서로의 진입/진출 곡선 교차 여부를 검사한다. 미래곡선 예약은 새로 들어오는 차량에만 적용하고 이미 진입/진출한 차량은 실제 차체 간격으로 진행한다. 예약 때문에 앞서 진출하는 차량이 멈추는 순환 대기를 보완했다. 두 진입차로는 처음18m 직진 후 합류하며 남쪽 진출은213m에서 차로에 먼저 정렬한다. 막혀 정차한 차량의 brake 상태를 유지한다.
+
+범위5CS: RoundaboutTraffic,RoundaboutChecks,CityPreview,StarterConfig,StarterScene.0.35.0/code36 / RoundaboutFlow0350 생성경로. 카메라옵션·차량meshes/색/조명·날씨·신호·승하차·와이퍼·도로geometry와 nativehost12/workflow는 유지한다. 기존304파일/실제index/status 보존. 실제600초 로터리 검사를 로터리카메라로 실행하고 두 대 이상 동시에 움직이는tick/90초 무완료 정체·차체각도 충돌/중앙섬·네출구/복귀·fps/pause를 검사한다. GPU4연속 frame에서 두 대 이상의 실제 이동을 검사한다.
+
+로컬 과정: 클라우드에 dotnet/mcs/csc/mono가 없어 기존toolchains에.NET8.0.419를 격리해 추가했다. offline NuGet/minimal UnityMath shim으로 실제 StreetModel/RoundaboutTraffic/LaneChanges/BusStops/SidewalkRoutes 소스를 직접 실행했다.0.34.0 실제Unity보고서의6차종 치수를 사용하며 독립SAT 차체간격을 검사한다. 합류지점 교착·대형차 출구 회전·미래예약이 진출차를 막는 시행을 수정했다. 실제치수1200초: 완료115/최대동시회전3/무완료최대33.2초; 확대차체1200초: 완료101/최대동시회전2/무완료최대39.3초, 차체 충돌 없음. 이는 실제Unity/Android/폰 검증을 대신하지 않는다.
+
+다음: PC 실제 Unity검증/166GPU촬영/같은source의 원본서명APK·launcherLint·다운로드 검증. 변경 없는nativehost12 SHA는0.34.0 unityLibraryLint38192276536(errors0/warnings10,8生成파일일치)을 재사용한다. 아직0.35.0 PC/Android/폰 통과를 주장하지 않는다.
+
 ## 2026-10-12 — Unity 0.34.0 카메라 구도 선택: 검증·서명 APK 전달 완료
 
 요청: 기존 도시 구도와 별도로 로터리가 잘 보이는 구도를 설정에서 선택한다. Android 설정의 카메라 구도에 ‘도시 전체’/‘로터리 보기’를 추가했다. 선택을 SharedPreferences에 저장하고 기존 비공개 provider/500ms 스냅샷/JNI bridge로 wallpaper 프로세스에 전달한다. 기존 설정은 도시 전체가 기본이다. 동일 카메라의 위치·방향·FOV만 변경하고 날씨·시간대·차량 clock을 초기화하지 않는다. 구도 선택은 즉시 적용하며 다시 시작할 때 복원한다. 폰의 실제 저장/재시작 동작은 사용자 확인 대기다.
