@@ -149,6 +149,17 @@ namespace PixelTraffic.UnityPrototype.Editor
                 for(int i=0;i<60;i++)landscapeClimate.Advance(.1,true);
                 landscapePreviews.Add(CaptureState(camera,request,target,image,"river-motion"));
                 camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);camera.fieldOfView=roadFov;landscapeClimate.Preview(0,0);
+                var riverfrontPreviews=new System.Collections.Generic.List<string>();
+                var riverfrontCamera=camera.GetComponent<CityCamera>();
+                try
+                {
+                    foreach(int option in new[]{0,1})foreach(int theme in new[]{0,2})
+                    {
+                        riverfrontCamera.Preview(option);landscapeClimate.Preview(theme,0);
+                        riverfrontPreviews.Add(CaptureState(camera,request,target,image,"riverfront-"+(option==0?"city-":"roundabout-")+(theme==0?"day":"night")));
+                    }
+                }
+                finally{riverfrontCamera.Preview(0);camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);camera.fieldOfView=roadFov;landscapeClimate.Preview(0,0);}
                 var skyPreviews=new System.Collections.Generic.List<string>();
                 var skyTarget=new RenderTexture(960,720,24,RenderTextureFormat.ARGB32){antiAliasing=2};skyTarget.Create();
                 var skyImage=new Texture2D(960,720,TextureFormat.RGB24,false);
@@ -683,7 +694,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
                 finally{cameraChoice.Preview(0);climate.Preview(0,0);detailStreet.ApplyViews();}
                 File.WriteAllText("Reports/preview-result.json", JsonUtility.ToJson(new Report {
-                    cameraOptionImages=cameraOptionImages.ToArray(),cameraOptionTrafficSimulatedSeconds=60,
+                    riverfrontImages=riverfrontPreviews.ToArray(),cameraOptionImages=cameraOptionImages.ToArray(),cameraOptionTrafficSimulatedSeconds=60,
                     entranceImages=entranceImages.ToArray(),entranceMovingCounts=entranceMovingCounts.ToArray(),entrancePixelChanges=entrancePixelChanges.ToArray(),denseMovingVehicles=6,denseImages=denseImages.ToArray(),densePixelChanges=densePixelChanges.ToArray(),roundaboutMovingVehicles=roundaboutMovingVehicles,roundaboutImages=roundaboutPreviews.ToArray(),roundaboutPixelChanges=roundaboutPixelChanges.ToArray(),roundaboutMotionPositions=roundaboutMotionPositions.ToArray(),
                     junctionVisibilityImages=junctionVisibilityPreviews.ToArray(),savedNightChangedPixels=savedNightChangedPixels,savedNightPixelDelta=savedNightPixelDelta,savedNightFogFraction=savedNightFogFraction,
                     result = "PASS", version = StarterConfig.VersionName, editor = Application.unityVersion,
@@ -746,7 +757,7 @@ namespace PixelTraffic.UnityPrototype.Editor
 
         [Serializable] private sealed class Report
         {
-            public string result, version, editor, graphicsApi, image, source;
+            public string[] riverfrontImages;public string result, version, editor, graphicsApi, image, source;
             public int width, height;
             public string[] entranceImages;public int[] entranceMovingCounts,entrancePixelChanges;public int denseMovingVehicles;public string[] denseImages;public int[] densePixelChanges;public int roundaboutMovingVehicles;public string[] roundaboutImages;public int[] roundaboutPixelChanges;public Vector3[] roundaboutMotionPositions;
             public string[] junctionVisibilityImages;public int savedNightChangedPixels;public float savedNightPixelDelta,savedNightFogFraction;

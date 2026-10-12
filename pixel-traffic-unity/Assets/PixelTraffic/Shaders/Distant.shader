@@ -164,10 +164,26 @@ Shader "PixelTraffic/Distant"
                     color=lerp(color,float3(.84,.87,.9)*(day+dusk*.65+night*.19),snow*.65);
                     color=lerp(color,_HazeColor.rgb,saturate(.12+fog*.86+rain*.26));
                 }
-                else
+                else if(kind<6.5)
                 {
                     color=float3(.35,.37,.36)*day+float3(1,.64,.26)*(dusk*.6+night*.95);
                     color=lerp(color,_HazeColor.rgb,saturate(.09+fog*.83+rain*.25));
+                }
+                else
+                {
+                    float style=i.color.y;
+                    color=style<.5?float3(.65,.61,.51):style<1.5?float3(.30,.43,.25):float3(.48,.49,.45);
+                    float light=.7+.3*saturate(dot(normalize(i.normalWS),normalize(float3(-.5,.7,-.5))));
+                    color*=light*(day+dusk*.68+night*.24);
+                    if(style<.5)
+                    {
+                        float2 cell=abs(frac(i.positionWS.xz*.55)-.5);
+                        float aa=max(.01,max(fwidth(cell.x),fwidth(cell.y)));
+                        color*=1-.12*smoothstep(.46-aa,.46+aa,max(cell.x,cell.y));
+                    }
+                    color=lerp(color,color*.67,rain*.35);
+                    color=lerp(color,float3(.86,.89,.92)*(day+dusk*.68+night*.23),snow*.66);
+                    color=lerp(color,_HazeColor.rgb,saturate(.06+fog*.86+rain*.2));
                 }
                 return half4(color,1);
             }

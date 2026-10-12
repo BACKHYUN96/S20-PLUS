@@ -49,6 +49,32 @@ namespace PixelTraffic.UnityPrototype.Editor
                     ridgeSamples++;
                 }
             }
+            Mesh bank=GameObject.Find("River Banks").GetComponent<MeshFilter>().sharedMesh;
+            Need(bank.triangles.Length/3==346,"Riverfront terrain/foundation/rail budget differs.");
+            var bp=bank.vertices;var bc=bank.colors;int stairs=0,risers=0,posts=0,graded=0,houses=0;
+            for(int i=0;i<bp.Length;i+=4)
+            {
+                if(bc[i].r==7)
+                {
+                    for(int n=0;n<4;n++)Need(bp[i+n].z>=310.399f,"Riverfront grade intrudes into the swept river-road traffic envelope.");
+                    float width=Mathf.Abs(bp[i+2].x-bp[i].x);
+                    if(bc[i].g==0&&Mathf.Abs(width-16)<.001f){Need(bank.normals[i].y>.99f&&bp[i+1].z>bp[i].z,"Stair tread is back-facing or reversed.");stairs++;}
+                    if(bc[i].g==2&&Mathf.Abs(width-16)<.001f){Need(bp[i+1].y>bp[i].y&&bp[i+1].y-bp[i].y<.36f,"Stair riser drops or becomes oversized.");risers++;}
+                    if(bc[i].g==1){Need(Mathf.Abs(bp[i].y-.15f)<.001f&&Mathf.Abs(bp[i+1].y-7.1f)<.001f,"Planting grade loses street/promenade seam.");graded++;}
+                }
+                if(bc[i].r==4&&Mathf.Abs(bp[i].z-329.1f)<.001f&&Mathf.Abs(bp[i+2].x-bp[i].x-.18f)<.001f)posts++;
+            }
+            foreach(Transform child in root.transform)if(child.name=="Riverfront House")
+            {
+                var at=child.localPosition;var size=child.localScale;
+                Need(Mathf.Abs(at.x)-size.x*.5f>=8&&at.z-size.z*.5f>310.4f,"Riverfront house closes the central walk or sits in traffic.");
+                Need(Mathf.Abs(at.y-DistantScene.BankGrade(at.z+size.z*.5f))<.001f,"House floor is detached from its supporting grade.");
+                float low=float.MaxValue,high=float.MinValue;int matched=0;
+                for(int i=0;i<bp.Length;i++)if(bc[i].r==7&&bc[i].g==2&&Mathf.Abs(bp[i].x-at.x)<=size.x*.5f+.001f&&Mathf.Abs(bp[i].z-at.z)<=size.z*.5f+.001f)
+                {low=Mathf.Min(low,bp[i].y);high=Mathf.Max(high,bp[i].y);matched++;}
+                Need(matched==24&&Mathf.Abs(high-at.y)<.001f&&Mathf.Abs(low-DistantScene.BankGrade(at.z-size.z*.5f))<.001f,"House foundation floats above ground or misses its rear support.");houses++;
+            }
+            Need(stairs==20&&risers==20&&posts==16&&graded==2&&houses==6,"Riverfront stairs/posts/houses incomplete.");
             var cylinder=AssetDatabase.LoadAssetAtPath<Mesh>(StarterScene.Generated+"/StreetCylinder.asset");
             Need(cylinder!=null&&cylinder.triangles.Length/3==64&&cylinder.bounds.size==new Vector3(1,2,1),"Street cylinder changed dimensions or budget.");
             var climate=UnityEngine.Object.FindFirstObjectByType<CityClimate>();climate.Initialize();climate.Preview(0,0);
@@ -124,12 +150,12 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
             }finally{camera.aspect=oldAspect;}
             climate.Preview(0,0);
-            return new Report{result="PASS: sky sunlight dim/recovery and portrait celestial composition, river depth/bridge lamps, ridge silhouettes, one runtime material, saved endpoints, directional sunset, hidden clock and retarget; actual GPU preview/device test separate",ridgeLayers=3,ridgeSamples=ridgeSamples,meshCount=filters.Length,triangles=triangles,streetCylinderTriangles=64,combinations=combinations,frameRates=rates,transitionFrames=transitionFrames,compositionSamples=compositionSamples,maxThemeFrameJump=maxJump,hiddenFrames=100,bridgeLampCount=11,riverDepth=riverMesh.bounds.size.z,bridgeDeckClearance=24.8f-1.3f/2-surfaceY,skyWeatherFrames=skyWeatherFrames};
+            return new Report{riverfrontHouses=houses,riverfrontSteps=stairs,riverfrontPosts=posts,riverfrontTriangles=346,result="PASS: sky sunlight dim/recovery and portrait celestial composition, river depth/bridge lamps, ridge silhouettes, one runtime material, saved endpoints, directional sunset, hidden clock and retarget; actual GPU preview/device test separate",ridgeLayers=3,ridgeSamples=ridgeSamples,meshCount=filters.Length,triangles=triangles,streetCylinderTriangles=64,combinations=combinations,frameRates=rates,transitionFrames=transitionFrames,compositionSamples=compositionSamples,maxThemeFrameJump=maxJump,hiddenFrames=100,bridgeLampCount=11,riverDepth=riverMesh.bounds.size.z,bridgeDeckClearance=24.8f-1.3f/2-surfaceY,skyWeatherFrames=skyWeatherFrames};
         }
         private static void Need(bool ok,string why){if(!ok)throw new InvalidOperationException(why);}
         [Serializable] internal sealed class Report
         {
-            public string result;public int meshCount,triangles,streetCylinderTriangles,combinations,transitionFrames,compositionSamples,hiddenFrames;
+            public int riverfrontHouses,riverfrontSteps,riverfrontPosts,riverfrontTriangles;public string result;public int meshCount,triangles,streetCylinderTriangles,combinations,transitionFrames,compositionSamples,hiddenFrames;
             public int[] frameRates;public float maxThemeFrameJump;
             public int bridgeLampCount;public float riverDepth,bridgeDeckClearance;
             public int skyWeatherFrames,ridgeLayers,ridgeSamples;

@@ -21,7 +21,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 for(int i=0;i<4;i++)colors.Add(data);
                 indices.AddRange(new[]{n,n+1,n+2,n,n+2,n+3});
             }
-            internal void Box(Vector3 centre,Vector3 size,Color data)
+            internal void Box(Vector3 centre,Vector3 size,Color data,bool underside=true)
             {
                 Vector3 a=centre-size*.5f,b=centre+size*.5f;
                 Quad(new Vector3(a.x,a.y,a.z),new Vector3(a.x,b.y,a.z),new Vector3(b.x,b.y,a.z),new Vector3(b.x,a.y,a.z),data);
@@ -29,7 +29,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Quad(new Vector3(a.x,a.y,b.z),new Vector3(a.x,b.y,b.z),new Vector3(a.x,b.y,a.z),new Vector3(a.x,a.y,a.z),data);
                 Quad(new Vector3(b.x,a.y,a.z),new Vector3(b.x,b.y,a.z),new Vector3(b.x,b.y,b.z),new Vector3(b.x,a.y,b.z),data);
                 Quad(new Vector3(a.x,b.y,a.z),new Vector3(a.x,b.y,b.z),new Vector3(b.x,b.y,b.z),new Vector3(b.x,b.y,a.z),data);
-                Quad(new Vector3(a.x,a.y,b.z),new Vector3(a.x,a.y,a.z),new Vector3(b.x,a.y,a.z),new Vector3(b.x,a.y,b.z),data);
+                if(underside)Quad(new Vector3(a.x,a.y,b.z),new Vector3(a.x,a.y,a.z),new Vector3(b.x,a.y,a.z),new Vector3(b.x,a.y,b.z),data);
             }
             internal Renderer Save(string name,Transform parent,Material material)
             {
@@ -42,6 +42,9 @@ namespace PixelTraffic.UnityPrototype.Editor
         // Shared authored layout also locates reflection ribbons; the shader never invents
         // unrelated night lights on a separate screen-space grid.
         internal const int TowerCount=34;
+        internal const float RiverfrontStartZ=310.4f,RiverfrontWalkZ=326,RiverfrontEdgeZ=329.8f;
+        internal const int RiverfrontSteps=20,RiverfrontHouses=6,RiverfrontPosts=16;
+        internal static float BankGrade(float z)=>Mathf.Lerp(.15f,7.1f,Mathf.InverseLerp(RiverfrontStartZ,RiverfrontWalkZ,z));
         internal const float BridgeZ=362;
         internal const float BridgeDeckY=24.8f;
         internal static float TowerX(int i)=>-165+i*10;
@@ -78,8 +81,8 @@ namespace PixelTraffic.UnityPrototype.Editor
             {
                 float x=TowerX(i),z=402+i%3*6,height=TowerHeight(i),seed=i/(float)TowerCount;
                 var marker=new GameObject("Skyline Tower").transform;marker.SetParent(root,false);marker.localPosition=new Vector3(x,20,z);
-                city.Box(new Vector3(x,20+height*.5f,z),new Vector3(5+i%4,height,7+i%3*2),new Color(2,height/2.4f,seed,1));
-                city.Box(new Vector3(x,20+height+.6f,z),new Vector3(3,1.2f,4),new Color(4,0,0,1));
+                city.Box(new Vector3(x,20+height*.5f,z),new Vector3(5+i%4,height,7+i%3*2),new Color(2,height/2.4f,seed,1),false);
+                city.Box(new Vector3(x,20+height+.6f,z),new Vector3(3,1.2f,4),new Color(4,0,0,1),false);
                 if(i==20)
                 {
                     city.Box(new Vector3(x,20+height+4,z),new Vector3(2.3f,7,3),new Color(2,3,seed,1));
@@ -98,14 +101,41 @@ namespace PixelTraffic.UnityPrototype.Editor
             water.Quad(new Vector3(-220,8,330),new Vector3(-220,25,395),new Vector3(220,25,395),new Vector3(220,8,330),new Color(3,0,0,1));
             views.Add(water.Save("Reference River",root,material));
             var bank=new Geometry();
-            bank.Box(new Vector3(0,7.3f,325),new Vector3(360,1.4f,4),new Color(5,0,0,1));
-            bank.Box(new Vector3(0,25.6f,397),new Vector3(360,1.2f,3),new Color(5,0,0,1));
-            for(int i=0;i<12;i++)
+            // The north pavement ends at310.4/.15. Meet it with graded
+            // planting on both sides and a central stair approach to the river.
+            foreach(float side in new[]{-1f,1f})
             {
-                float x=-110+i*20;float height=5+i%4;
-                bank.Box(new Vector3(x,height*.5f,318+i%3),new Vector3(10,height,6),new Color(2,3,i/12f,1));
-                bank.Quad(new Vector3(x-6,height+.05f,318+i%3),new Vector3(x-6,height+.65f,318+i%3),new Vector3(x+6,height+.65f,318+i%3),new Vector3(x+6,height+.05f,318+i%3),new Color(5,1,0,1));
+                float x0=side<0?-160:8,x1=side<0?-8:160;
+                bank.Quad(new Vector3(x0,.15f,RiverfrontStartZ),new Vector3(x0,7.1f,RiverfrontWalkZ),new Vector3(x1,7.1f,RiverfrontWalkZ),new Vector3(x1,.15f,RiverfrontStartZ),new Color(7,1,0,1));
             }
+            for(int step=0;step<RiverfrontSteps;step++)
+            {
+                float a=Mathf.Lerp(RiverfrontStartZ,RiverfrontWalkZ,step/(float)RiverfrontSteps),b=Mathf.Lerp(RiverfrontStartZ,RiverfrontWalkZ,(step+1f)/RiverfrontSteps);
+                float low=BankGrade(a),high=BankGrade(b);
+                bank.Quad(new Vector3(-8,high,a),new Vector3(-8,high,b),new Vector3(8,high,b),new Vector3(8,high,a),new Color(7,0,0,1));
+                bank.Quad(new Vector3(-8,low,a),new Vector3(-8,high,a),new Vector3(8,high,a),new Vector3(8,low,a),new Color(7,2,0,1));
+            }
+            bank.Quad(new Vector3(-160,7.1f,RiverfrontWalkZ),new Vector3(-160,7.6f,RiverfrontEdgeZ),new Vector3(160,7.6f,RiverfrontEdgeZ),new Vector3(160,7.1f,RiverfrontWalkZ),new Color(7,0,0,1));
+            bank.Box(new Vector3(0,7.3f,329.9f),new Vector3(360,1.4f,.2f),new Color(5,0,0,1));
+            bank.Box(new Vector3(0,25.6f,397),new Vector3(360,1.2f,3),new Color(5,0,0,1));
+            for(int i=0;i<RiverfrontHouses;i++)
+            {
+                float side=i%2==0?-1:1;int row=i/2;float x=side*(30+row*33),z=316.5f+row*.65f,height=6+row*1.5f,width=12+row*2,depth=5;
+                float low=BankGrade(z-depth*.5f),baseY=BankGrade(z+depth*.5f);
+                bank.Box(new Vector3(x,(low+baseY)*.5f,z),new Vector3(width,baseY-low,depth),new Color(7,2,0,1));
+                bank.Box(new Vector3(x,baseY+height*.5f,z),new Vector3(width,height,depth),new Color(2,height/2.4f,(i+2)/12f,1));
+                bank.Quad(new Vector3(x-width*.5f-.4f,baseY+height,z-depth*.5f-.05f),new Vector3(x-width*.5f-.4f,baseY+height+.55f,z-depth*.5f-.05f),new Vector3(x+width*.5f+.4f,baseY+height+.55f,z-depth*.5f-.05f),new Vector3(x+width*.5f+.4f,baseY+height,z-depth*.5f-.05f),new Color(5,1,0,1));
+                var footprint=new GameObject("Riverfront House").transform;footprint.SetParent(root,false);footprint.localPosition=new Vector3(x,baseY,z);footprint.localScale=new Vector3(width,height,depth);
+            }
+            // Camera-facing post faces and closed rails reuse the opaque backdrop
+            // material. The central stair path retains a16m opening.
+            for(int i=0;i<RiverfrontPosts;i++)
+            {
+                float x=-135+i*18;
+                bank.Quad(new Vector3(x-.09f,7.55f,329.1f),new Vector3(x-.09f,8.7f,329.1f),new Vector3(x+.09f,8.7f,329.1f),new Vector3(x+.09f,7.55f,329.1f),new Color(4,0,0,1));
+            }
+            foreach(float side in new[]{-1f,1f})foreach(float height in new[]{8.1f,8.65f})
+                bank.Box(new Vector3(side*79,height,329.1f),new Vector3(142,.09f,.14f),new Color(4,0,0,1));
             views.Add(bank.Save("River Banks",root,material));
             var bridge=new Geometry();
             bridge.Box(new Vector3(0,BridgeDeckY,BridgeZ),new Vector3(250,1.3f,6),new Color(4,0,0,1));
