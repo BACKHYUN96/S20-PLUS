@@ -1,5 +1,7 @@
 # S20+
 
+Unity 라이브 배경화면 **0.35.0**: 로터리 전체 한 대 예약을 제거하고 안전한 다중 진입/차체간격·진출을 적용했습니다. 실제GPU166장·여러차량 연속이동·600초 안전/정체검사·Android/Lint·원본서명·공개다운로드 확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/78775fc2665e312be7a7a285fe32d2cb5a5878aa/pixel-traffic-unity-prototype-0.35.0.apk) · [실제회전](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/78775fc2665e312be7a7a285fe32d2cb5a5878aa/roundabout-motion-0.png) · [설치명령](docs/UNITY_AUTOMATION.md). 폰0.35.0 적용확인 대기.
+
 Unity 라이브 배경화면 **0.34.0**: 설정 → 카메라 구도에서 **도시 전체/로터리 보기**를 선택하고 저장합니다. 실제GPU166장·Android 빌드/launcher 및 새host Lint·원본서명·공개다운로드 확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/62a5f8bee65c9956bd5953591b1795207c9a558e/pixel-traffic-unity-prototype-0.34.0.apk) · [로터리 보기](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/62a5f8bee65c9956bd5953591b1795207c9a558e/camera-roundabout-day.png) · [설치명령](docs/UNITY_AUTOMATION.md). 폰 적용 확인 대기.
 
 Unity 라이브 배경화면 **0.33.0**: 실제 저장카메라에서 로터리를 가리던 맑은밤 안개를 뒤로 옮기고 두 가로등과 기존 glow로 접근부를 보완했습니다. 실제 GPU162장·기존구도 밤/control 비교·Android/Lint·원본서명·공개다운로드 확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/622384d010d95256b6c7490834a9b6fe0b30e296/pixel-traffic-unity-prototype-0.33.0.apk) · [기존구도 밤](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/622384d010d95256b6c7490834a9b6fe0b30e296/roundabout-saved-night-preview.png) · [설치 명령](docs/UNITY_AUTOMATION.md). 사용자 폰 적용 확인 대기.

@@ -1,5 +1,49 @@
 # 작은 패치 작업 안내
 
+## 2026-10-12 — Unity0.35.0 로터리 차량 흐름 수정: 실제 검증·서명APK 전달 완료
+
+0.34.0 로터리 카메라에서 한 대만 회전하고 다른 차량이 오래 기다리는 사용자 제보를 반영했다. 전체 접근/회전/진출 경로를 한 대가 예약하던global owner를 제거했다. 차량별admitted 상태, 같은진입로 합류순서, 이미 진입한 차의 합류예상구간/차체간격 및 서로의 진입/진출 곡선 교차를 검사한다. 미래곡선 예약은 새로 들어오는 차량에만 적용하고 이미 진입/진출한 차량은 실제 차체간격으로 이동한다. 예약 때문에 앞선 진출차까지 멈추던 순환 대기를 보완했다. 남쪽 두차로는 처음18m 직진한 뒤 합류하고, 진출은213m에서 차로에 정렬해 큰 차량이 반대편 대기차로에 걸리는 것을 피한다. 물리적으로 막혀 정차한 차량의 brake 상태를 유지한다.
+
+변경5CS: RoundaboutTraffic,RoundaboutChecks,CityPreview,StarterConfig,StarterScene.0.35.0/code36, RoundaboutFlow-0.35.0.unity / Generated/RoundaboutFlow0350. 로터리 지형mesh·차량/조명meshes·카메라선택·날씨·신호/보행·버스승하차·와이퍼와host12/workflow를 유지한다.130검증입력/304기존파일·실제index/status를 보존했다.
+
+**로컬 과정:** C#컴파일러 부재를 확인하여 기존toolchains에.NET8.0.419를 격리해 추가했다. offline NuGet/최소UnityMath shim으로 실제StreetModel/RoundaboutTraffic/LaneChanges/BusStops/SidewalkRoutes 소스를 실행하고0.34.0 실제보고서6차종치수와 독립SAT 차체검사를 사용했다. 합류 대기점 충돌·대형차출구각도·미래예약이 진출차까지 막는 시행을 보완했다.1200초 실제치수 완료115/최대동시3/최대무완료33.2초, 확대치수 완료101/최대동시2/39.3초, 폭풍 완료62/최대동시3/61.2초; 차체충돌 없음. 로컬helper는 실제Unity/Android/폰 검증을 대신하지 않는다.
+
+**실제PC 검증:** source `2ab4579bd539c869e1b7ad25d492c1f6a03dd025` / [Validate](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38195420608). 저장된 실제24차량을 로터리 카메라로600초 검사: 진입50,완료48,복귀27,재진입21,네출구[8, 8, 8, 8]. 최대동시회전2대, 두 대 이상 이동1827tick, 최대무완료33.13초로90초 정체 방지 검사 PASS. 독립회전차체간격993140회, 중앙섬/반시계/연속이동·offscreen재진입·15/30/60/120Hz/pause·버스승하차/깜빡이·신호/보행·라이트/와이퍼·기후/반사 PASS. 기본108616tri, 최대119962tri/1592renderers/47materials로 기존 예산110000/120000/2400/48 미만.
+
+**실제GPU:** 166PNG의source/bytes/SHA/ZIP CRC 확인.4연속 로터리 frame에서2개 실제 회전차량 각각의 이동>.5m 및 GPU 변경픽셀[3396, 3304, 3756] 검사 PASS. 새옵션 낮/노을/밤/강비4장과 기존카메라/안개 조건도 유지했다. Unity Editor/URP/GPU 결과이며 실제폰촬영/FPS가 아니다. 실패/수정 기록: [].
+
+**Android:** `unity-apk-0.35.0-build1` / [BuildApk](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38196464073). BuildPlayer 오류0/경고0,launcherLint 오류0/경고8. 실제다운로드APK apksigner/aapt/ZIP CRC로0.35.0/code36/min29/target36/ARM64 IL2CPP와wallpaper service/privateprovider/settingslauncher/비활성UnityActivity를 확인했다. 원본v2cert SHA256 a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6. 변경없는host12 SHA는 [0.34.0 unityLibraryLint](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38192276536) 오류0/경고10,8생성파일일치를 재사용했다.
+
+[APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/78775fc2665e312be7a7a285fe32d2cb5a5878aa/pixel-traffic-unity-prototype-0.35.0.apk) · [실제회전frame0](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/78775fc2665e312be7a7a285fe32d2cb5a5878aa/roundabout-motion-0.png) · [frame1](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/78775fc2665e312be7a7a285fe32d2cb5a5878aa/roundabout-motion-1.png) · [로터리밤](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/78775fc2665e312be7a7a285fe32d2cb5a5878aa/camera-roundabout-night.png). APK31241787bytes/SHA256`6329f10efc789b8f3ff065b0d9c674fb34301b3d12233a63b3748399fc6648ec`. 다운로드branch`downloads/unity-0.35.0`의16파일을 로그인 없는HTTP200/no redirect/full bytes/SHA로 확인했다. main에APK·새workflow를 추가하지 않았다.
+
+USB폰1대를 연결하고 디버깅을 허용한 뒤 아래PowerShell 전체블록을 실행한다. C:\Users\김백현\Desktop\AI에 다운로드·SHA 확인·기존앱 업데이트:
+```powershell
+& {
+    $ErrorActionPreference = "Stop"
+    $apkFolder = "C:\Users\김백현\Desktop\AI"
+    $apkPath = Join-Path $apkFolder "pixel-traffic-unity-prototype-0.35.0.apk"
+    $apkUrl = "https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/78775fc2665e312be7a7a285fe32d2cb5a5878aa/pixel-traffic-unity-prototype-0.35.0.apk"
+    $trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+    if (-not (Test-Path -LiteralPath $trafficAdb)) { throw "Unity의 adb.exe를 찾을 수 없습니다." }
+    & $trafficAdb start-server
+    if ($LASTEXITCODE -ne 0) { throw "ADB 시작 실패" }
+    $deviceLines = & $trafficAdb devices
+    if ($LASTEXITCODE -ne 0) { throw "폰 연결 확인 실패" }
+    $connectedDevices = @($deviceLines | Where-Object { $_ -match '^\S+\s+device$' })
+    if ($connectedDevices.Count -ne 1) { throw "폰 1대를 USB로 연결하고 USB 디버깅을 허용해주세요." }
+    New-Item -ItemType Directory -Force -Path $apkFolder | Out-Null
+    Write-Host "0.35.0 APK 다운로드 중..."
+    Invoke-WebRequest -UseBasicParsing -Uri $apkUrl -OutFile $apkPath
+    if ((Get-FileHash -LiteralPath $apkPath -Algorithm SHA256).Hash -ne "6329f10efc789b8f3ff065b0d9c674fb34301b3d12233a63b3748399fc6648ec") { throw "파일 검증 실패. 다시 실행해주세요." }
+    Write-Host "폰에 앱 설치 중..."
+    & $trafficAdb install -r $apkPath
+    if ($LASTEXITCODE -ne 0) { throw "앱 설치 실패. 위 오류를 확인해주세요." }
+    Write-Host "완료! 0.35.0 설치 성공." -ForegroundColor Green
+}
+```
+
+설치 후 기존설정은 유지하며 앱설정 → 카메라구도 → 로터리보기에서 차량흐름을 확인한다. 합류간격이 부족하면 진입차는 기다리고, 이미 회전/진출하는 차는 계속 이동한다.0.34.0 로터리구도는 사용자 폰 적용 확인;0.35.0 폰 주행/외형/FPS/발열/장시간 확인 대기다. 클라우드에서 폰설치를 했다고 주장하지 않는다.
+
 ## 2026-10-12 — Unity 0.34.0 카메라 구도 선택: 검증·서명 APK 전달 완료
 
 요청: 기존 도시 구도와 별도로 로터리가 잘 보이는 구도를 설정에서 선택한다. Android 설정의 카메라 구도에 ‘도시 전체’/‘로터리 보기’를 추가했다. 선택을 SharedPreferences에 저장하고 기존 비공개 provider/500ms 스냅샷/JNI bridge로 wallpaper 프로세스에 전달한다. 기존 설정은 도시 전체가 기본이다. 동일 카메라의 위치·방향·FOV만 변경하고 날씨·시간대·차량 clock을 초기화하지 않는다. 구도 선택은 즉시 적용하며 다시 시작할 때 복원한다. 폰의 실제 저장/재시작 동작은 사용자 확인 대기다.
