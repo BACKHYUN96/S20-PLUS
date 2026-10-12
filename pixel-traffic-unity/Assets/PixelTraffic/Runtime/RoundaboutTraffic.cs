@@ -258,6 +258,9 @@ namespace PixelTraffic.UnityPrototype
                 if(s.progress>=s.path.exit-12)
                 {if(!c.roundSignal)c.roundSignalTicks=0;c.roundSignal=true;c.roundSignalTicks++;}
                 if(c.roundSignal&&c.roundSignalTicks<54)limit=Mathf.Min(limit,s.path.exit);
+                // A rolling handoff can already be beyond a hold point; yielding
+                // must keep that pose, never clamp progress backwards.
+                limit=Mathf.Max(s.progress,limit);
                 float room=Mathf.Max(0,limit-s.progress),target=Mathf.Min(4.8f*model.DrivingPace,Mathf.Sqrt(6.8f*room));float previous=c.speed;
                 c.speed=Mathf.MoveTowards(c.speed,target,(target>c.speed?1.8f:3.4f)*StreetModel.Dt);
                 float travel=Mathf.Min(c.speed*StreetModel.Dt,room),next=Mathf.Min(s.progress+travel,limit);
