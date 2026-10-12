@@ -1,5 +1,9 @@
 # 작업 이력
 
+## 2026-10-12 — Unity 0.38.0 독립 검사 장면 초기화 보완
+
+cf4906e39822167fd97aa9b5d232579ef1b2d4b2 / Validate38224682602(job114729166947)는 직선lane-gap/차선변경 검사를 지나 DrivingChecks 마지막ApplyViews에서 새StreetSimulation.model null로 실패했다. EditorSceneManager가 새장면을 열 때 runtime Awake를 호출하지 않으므로, 재로드 직후StreetSimulation.ResetModel을 명시한다. 저장된drive 초기transform은 유지되어 직선 fixture의 초기간격이 재오염되지 않는다. 로터리 runtime·충돌/간격 assertion은 그대로다. 실제전체Unity/GPU/Android 다시 실행 예정; APK·폰은 아직 미완료.
+
 ## 2026-10-12 — Unity 0.38.0 실제 PC 검사 초기배치 격리 수정
 
 source dfd95ea1d8a911e45e9abafb27e398c5c063d180 / Validate38223456414(job114725081903) 실패. RoundaboutChecks(5대 유지·보충·실제SAT 등)는 반환한 뒤, 기후 probe가 움직인 로터리 차량 transform을DrivingChecks의 별도 직선모델이 그대로 복제해10/21간격-1.386799가 됐다. StarterScene에서 독립 DrivingChecks 직전 저장 장면을 다시 연다. 실제runtime 간격완화를 하지 않고 기존DrivingChecks.Gap assertion을 보존한다. 이 원인 확인으로 기존 런타임 road-return 충돌 추정은 정정한다. 원본Editor로그/자격정보를 게시하지 않고 redacted failure 요약만 확인했다. 동일runtime 추가 local saved-model-clone 보충1/2/3자리8.13/17.53/30.67초 PASS. 기존30/20분 runtime검사 입력은 그대로며, 현재 바뀐 검사 초기화와 전체PC/실제GPU/Android를 다시 실행한다. APK·폰 확인 미완료.

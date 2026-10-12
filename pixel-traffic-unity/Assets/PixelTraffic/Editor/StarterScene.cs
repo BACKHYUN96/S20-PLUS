@@ -225,6 +225,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             // Legacy straight-road fixtures consume serialized lane origins,
             // never the circulating poses left by climate/runtime probes.
             EditorSceneManager.OpenScene(StarterConfig.ScenePath);
+            UnityEngine.Object.FindFirstObjectByType<StreetSimulation>().ResetModel();
             DrivingChecks.Report driving = DrivingChecks.Validate();
             DistantChecks.Report distant = DistantChecks.Validate();
             GroundScene.Report ground = GroundScene.Validate();
