@@ -128,6 +128,16 @@ namespace PixelTraffic.UnityPrototype
             {var other=model.Cars[j];if(j==index||!other.active||other.roundHidden)continue;if(!Separated(point,yaw,c.length,c.width,Position(other),Yaw(other),other.length,other.width,.15f))return j;}
             return -1;
         }
+        bool RoadSpawnFree(int index,Vector2 point)
+        {
+            var car=model.Cars[index];
+            for(int j=0;j<model.Cars.Length;j++)
+            {
+                var other=model.Cars[j];if(j==index||!other.active||other.roundHidden)continue;
+                if(!Separated(point,0,car.SafetyLength,car.width,Position(other),Yaw(other),other.SafetyLength,other.width,2.2f))return false;
+            }
+            return true;
+        }
         public int Blocker(int index,Vector2 point,float yaw)
         {int other=PhysicalBlocker(index,point,yaw);return other>=0?other:ReservationBlocker(index,point,yaw);}
         int ReservationBlocker(int index,Vector2 point,float yaw,bool exits=true)
@@ -241,7 +251,7 @@ namespace PixelTraffic.UnityPrototype
                     else if(c.Direction<0&&c.z<=StarterConfig.RouteStart+.001f)
                     {
                         int lane=c.bus?3:2+(i+s.visits)%2;Vector2 p=new Vector2((lane-1.5f)*StarterConfig.LaneWidth,StarterConfig.RouteStart);
-                        if(!Free(i,p,0))continue;c.lane=lane;c.z=StarterConfig.RouteStart;c.speed=0;c.committed=false;model.Maneuvers.Cancel(c,model.ActiveTicks);model.Stops.Wrapped(c);
+                        if(!RoadSpawnFree(i,p))continue;c.lane=lane;c.z=StarterConfig.RouteStart;c.speed=0;c.committed=false;model.Maneuvers.Cancel(c,model.ActiveTicks);model.Stops.Wrapped(c);
                     }
                     continue;
                 }
