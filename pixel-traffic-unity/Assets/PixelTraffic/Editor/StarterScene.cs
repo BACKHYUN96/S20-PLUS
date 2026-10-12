@@ -222,6 +222,9 @@ namespace PixelTraffic.UnityPrototype.Editor
             CityEnvironment.Report environment = CityEnvironment.Validate(Camera.main, pipeline);
             ClimateChecks.Report climate = ClimateChecks.Validate();
             FrontageChecks.Report frontage = FrontageChecks.Validate();
+            // Legacy straight-road fixtures consume serialized lane origins,
+            // never the circulating poses left by climate/runtime probes.
+            EditorSceneManager.OpenScene(StarterConfig.ScenePath);
             DrivingChecks.Report driving = DrivingChecks.Validate();
             DistantChecks.Report distant = DistantChecks.Validate();
             GroundScene.Report ground = GroundScene.Validate();
