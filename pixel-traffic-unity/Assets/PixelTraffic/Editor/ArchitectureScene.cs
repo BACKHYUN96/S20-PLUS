@@ -80,13 +80,60 @@ namespace PixelTraffic.UnityPrototype.Editor
 
         internal static Color MasonryPixel(int x,int y,int size)
         {
-            float u=x/(float)size,v=y/(float)size;
-            // Large concrete panels and subtle runoff replace the small repeated brick grid.
-            float cloud=Mathf.PerlinNoise(u*8+53,v*8+17),grain=((x*31+y*73+x*y*11)%97)/96f;
-            bool seam=y%(size/4)<2||(x+(y/(size/4)%2)*(size/8))%(size/4)<1;
-            float stain=Mathf.PerlinNoise(u*29+41,v*3+7)*.055f;
-            float shade=seam?.72f:.89f+cloud*.065f+grain*.025f-stain;
-            return new Color(shade,shade*.99f,shade*.97f);
+            // A repeat spans 5.2m x5.6m: eight .65m/.7m panels, two full storeys.
+            int panel=size/8;float u=x/(float)size,v=y/(float)size;
+            float grain=((x*31+y*73+x*y*11)%97)/96f;
+            float cloud=Mathf.PerlinNoise(u*12+53,v*12+17);
+            float panelTone=((x/panel*7+y/panel*13)%9-4)*.006f;
+            float shade=.91f+cloud*.055f+(grain-.5f)*.025f+panelTone;
+            int px=x%panel,py=y%panel;
+            if(px<2||py<2)shade*=.76f;
+            else if(px<4||py<4)shade*=.92f;
+            // Soft contact shade immediately below existing floor cornices, anchored in metres by UVs.
+            float course=(y%(size/2))/(float)(size/2);
+            if(course<.045f)shade*=Mathf.Lerp(.79f,1,course/.045f);
+            return new Color(shade,shade*.995f,shade*.975f);
+        }
+
+        internal static void SurfaceDetail(Material material,string name,int size,bool frame)
+        {
+            string path=StarterScene.Generated+"/"+name+".asset";
+            Texture2D texture=AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if(texture==null)
+            {
+                texture=new Texture2D(size,size,TextureFormat.RGB24,true){name=name,filterMode=FilterMode.Trilinear,wrapMode=TextureWrapMode.Repeat,anisoLevel=4};
+                var pixels=new Color[size*size];
+                for(int y=0;y<size;y++)for(int x=0;x<size;x++)
+                {
+                    float u=(x+.5f)/size,v=(y+.5f)/size;
+                    float edge=Mathf.Min(Mathf.Min(u,1-u),Mathf.Min(v,1-v));
+                    float grain=((x*37+y*53+x*y*7)%89)/88f;
+                    float shade=frame?(.78f+v*.14f)*Mathf.Lerp(.74f,1,Mathf.Clamp01(edge/.05f)):
+                        (.91f+Mathf.PerlinNoise(u*9+13,v*9+29)*.055f)*Mathf.Lerp(.88f,1,Mathf.Clamp01(edge/.03f));
+                    shade+=(grain-.5f)*(frame?.012f:.025f);
+                    pixels[y*size+x]=new Color(shade,shade,shade);
+                }
+                texture.SetPixels(pixels);texture.Apply(true,false);AssetDatabase.CreateAsset(texture,path);
+            }
+            material.SetTexture("_BaseMap",texture);EditorUtility.SetDirty(material);
+        }
+
+        internal static void StoneCoordinates(GameObject wall,int floors,float height)
+        {
+            string path=StarterScene.Generated+"/FacadeStoneUV"+floors+".asset";
+            Mesh mesh=AssetDatabase.LoadAssetAtPath<Mesh>(path);
+            if(mesh==null)
+            {
+                mesh=UnityEngine.Object.Instantiate(wall.GetComponent<MeshFilter>().sharedMesh);mesh.name="Facade Stone UV "+floors;
+                Vector3[] points=mesh.vertices,normals=mesh.normals;var uv=new Vector2[points.Length];
+                for(int i=0;i<points.Length;i++)
+                {
+                    float horizontal=Mathf.Abs(normals[i].x)>.5f?points[i].z*14:points[i].x*6.5f;
+                    uv[i]=new Vector2((horizontal+7)/5.2f,(points[i].y+.5f)*height/5.6f);
+                }
+                mesh.uv=uv;AssetDatabase.CreateAsset(mesh,path);
+            }
+            wall.GetComponent<MeshFilter>().sharedMesh=mesh;
         }
 
         private sealed class Solids

@@ -1,5 +1,15 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-12 — Unity 0.42.0 건물 외벽·창문 재질: 구현 완료·실제 PC 검증 대기
+
+사용자가0.41.0 폰적용을확인하고건물그래픽정교화를승인했다. 앞으로완료안내에는다음추천작업도포함한다. 이번에는24기존건물의물리메시/창틀/발코니/옥상구조를유지하고석재512×512와미터기반UV(5.2×5.6mrepeat, .65×.7m패널),3공유외벽색조·좌우profile변화,기존floorcornice밑의부드러운명암과줄눈을다듬었다. 높이별3cubeUVmesh는원본24vertices/12tri/normal/position을유지한다. 기존ArchitecturalTrim/WindowFrame에공유128/64texture로모서리·재질명암을보완했다.
+
+기존불투명WindowGlass Base/Emission atlas를256×128→512×256으로높이고베이스에하늘그라데이션/구름·반대편건물의낮은반사실루엣·가느다란광택선을구웠다. 상가512atlas,8실내variant/점등·소등분포/기존밤·노을·weather emission gain은유지한다. 새로운재질/투명layer/Light/콜라이더/실시간반사카메라/교통모델변경없음. 실제기후18조합/transition/공유재질/기하·UV/석재·유리픽셀/5새·개선texture총3MiB미만을FrontageChecks로검사한다. 전체메시·재질예산은기존한도를유지한다.
+
+변경7CS ArchitectureScene/CityEnvironment/FrontageScene/FrontageChecks/CityPreview/StarterScene/StarterConfig 및기존Unity workflow1. 0.42.0/code43/Generated/StoneGlass0420/Scenes/StoneGlass-0.42.0.unity. 새실제finish캡처6장(도시낮/밤, 가까운외벽낮/노을/밤/비)을추가해총190PNG를예정한다. 질감상승에따른PNG크기와파일증가를대비하여기존24MiB한도의preview분할/업로드를3→4그룹으로확장했다. 새workflow를만들거나APK/host/서명절차를바꾸지않는다.
+
+사전Roslyn7CS syntax오류0/YAML4upload단계/304baseline·130sourceinputs·actualindex보존확인. 실제Windows PC Unity·GPU·Android/Lint·sign/공개다운로드검증은대기중이며사전검사가이를대신하지않는다. 다음추천작업은도로·보도재질의색/해상도/접지명암을다듬어건물과거리의질감을맞추는것이다. 실제폰FPS/발열은별도사용확인영역이다.
+
 ## 2026-10-12 — Unity 0.41.0 로터리中央섬·외곽 조경: 실제 검증·서명 APK 전달 완료
 
 0.40.0 폰 적용 성공 후 사용자가 조경 그래픽 작업을 승인했다. 중앙섬에낮은관목9군집/꽃24군집/토양3구획, 외곽네모서리에관목8군집/작은나무4그루/토양4구획을추가했다. 외곽토양y=-.17은실제대지y=-.18보다1cm높게접지한다. 실제936tri/6merged meshes는 기존Soil/Bark/RoadWhite/Leaves0~2를공유한다. 중앙의actualvertices는1.1m미만·반경9.5m안, 외곽은차도·보도·진입flare밖x절대값14.5m이상/z235거리22m이상이다. 별도Light/Collider/Update/교통경로·속도·인구변경은없다.

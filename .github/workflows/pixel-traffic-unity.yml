@@ -138,11 +138,11 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $previewRoot = Join-Path $env:RUNNER_TEMP "pixel-traffic-previews-$env:GITHUB_RUN_ID"
           $previewFiles = @(Get-ChildItem './pixel-traffic-unity/Reports/city-preview-*.png' -File -ErrorAction SilentlyContinue | Sort-Object Name)
-          for ($groupIndex = 0; $groupIndex -lt 3; $groupIndex++) {
+          for ($groupIndex = 0; $groupIndex -lt 4; $groupIndex++) {
             $groupPath = Join-Path $previewRoot "group-$groupIndex"
             New-Item -ItemType Directory -Path $groupPath -Force | Out-Null
             $groupBytes = 0L
-            for ($previewIndex = $groupIndex; $previewIndex -lt $previewFiles.Count; $previewIndex += 3) {
+            for ($previewIndex = $groupIndex; $previewIndex -lt $previewFiles.Count; $previewIndex += 4) {
               Copy-Item -LiteralPath $previewFiles[$previewIndex].FullName -Destination $groupPath
               $groupBytes += $previewFiles[$previewIndex].Length
             }
@@ -171,6 +171,14 @@ jobs:
         with:
           name: unity-previews-2-${{ github.run_id }}
           path: ${{ env.PIXEL_TRAFFIC_PREVIEW_ROOT }}/group-2/*.png
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Upload real preview group 3
+        if: always() && env.PIXEL_TRAFFIC_PREVIEW_ROOT != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-previews-3-${{ github.run_id }}
+          path: ${{ env.PIXEL_TRAFFIC_PREVIEW_ROOT }}/group-3/*.png
           if-no-files-found: warn
           retention-days: 7
       - name: Upload verified Activity APK

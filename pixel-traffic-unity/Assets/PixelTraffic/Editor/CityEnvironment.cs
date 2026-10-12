@@ -79,7 +79,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
             if (texture == null)
             {
-                const int size = 128;
+                const int size = 512;
                 texture = new Texture2D(size, size, TextureFormat.RGB24, true) {
                     name = name, filterMode = FilterMode.Trilinear, wrapMode = TextureWrapMode.Repeat, anisoLevel = 2
                 };
@@ -140,13 +140,17 @@ namespace PixelTraffic.UnityPrototype.Editor
             int floors = index<3 ? (x<0 ? new[]{6,5,4} : new[]{4,6,5})[index] : 4+index%3; float height = floors * 2.8f + 1.2f;
             Transform root = new GameObject("City Building").transform;
             root.SetParent(parent, false); root.localPosition = new Vector3(x, .16f, z);
-            Color[] colors = {new Color(.80f,.76f,.67f),new Color(.70f,.75f,.74f),new Color(.85f,.80f,.71f)};
-            Material facade = Mat("Facade " + index % 3, colors[index % 3]);
-            Texture(facade, "Masonry", 2, new Vector2(2, floors*.65f));
-            Box("Facade", root, new Vector3(0, height / 2, 0), new Vector3(6.5f, height, 14), facade);
+            Color[] colors = {new Color(.90f,.87f,.80f),new Color(.82f,.86f,.85f),new Color(.87f,.82f,.75f)};
+            int profile=(index+(x>0?1:0))%3;
+            Material facade = Mat("Facade " + profile, colors[profile]);
+            Texture(facade, "Masonry", 2, Vector2.one);
+            var wall=Box("Facade", root, new Vector3(0, height / 2, 0), new Vector3(6.5f, height, 14), facade);
+            ArchitectureScene.StoneCoordinates(wall,floors,height);
             float streetSide = x > 0 ? -3.28f : 3.28f;
-            Material stone = Mat("Architectural Trim", new Color(.76f,.75f,.68f));
+            Material stone = Mat("Architectural Trim", new Color(.86f,.85f,.80f));
             Material frame = Mat("Window Frame", new Color(.27f,.31f,.31f), .1f);
+            ArchitectureScene.SurfaceDetail(stone,"ArchitecturalStone",128,false);
+            ArchitectureScene.SurfaceDetail(frame,"FrameFinish",64,true);
             var windows=FrontageScene.BeginWindows(root,index,streetSide,frame);
             for (int floor = 1; floor < floors; floor++)
             {

@@ -66,7 +66,8 @@ namespace PixelTraffic.UnityPrototype.Editor
             }
             Need(detailedBuildings==6&&deepWindows==120&&sideWindows==48,"Six detailed facades /120 deep windows missing.");
             Need(buildings==24&&windows==528&&styles[0]==8&&styles[1]==8&&styles[2]==8&&lit>0&&dark>0&&warm>0&&cool>0,"Facade counts or room variety differ.");
-            Map(window,256,128);Map(shop,512,512);
+            int finishBytes=Finishes(window);
+            Map(window,512,256);Map(shop,512,512);
             var originalWindow=AssetDatabase.LoadAssetAtPath<Material>(StarterScene.Generated+"/WindowGlass.mat");
             var originalShop=AssetDatabase.LoadAssetAtPath<Material>(StarterScene.Generated+"/ShopInterior.mat");
             Color originalW=originalWindow.GetColor("_EmissionColor"),originalS=originalShop.GetColor("_EmissionColor");
@@ -101,7 +102,58 @@ namespace PixelTraffic.UnityPrototype.Editor
             Need(originalW==originalWindow.GetColor("_EmissionColor")&&originalS==originalShop.GetColor("_EmissionColor"),"Preview edits shared material assets.");
             Need(climate.AdditionalLights==4,"Store adds realtime lights beyond the mobile limit.");
             climate.Preview(0,0);
-            return new Report{result="PASS: baked storefront geometry, shared room/shop atlases and actual material fades; device test pending",detailedBuildings=detailedBuildings,deepWindows=deepWindows,sideWindows=sideWindows,buildings=buildings,windows=windows,litWindows=lit,darkWindows=dark,warmWindows=warm,coolWindows=cool,shopCounts=styles,frameRates=rates,transitionCases=cases,windowAtlasWidth=256,windowAtlasHeight=128,shopAtlasSize=512,realtimeStreetLights=4};
+            return new Report{result="PASS: baked storefront geometry, shared room/shop atlases and actual material fades; device test pending",detailedBuildings=detailedBuildings,deepWindows=deepWindows,sideWindows=sideWindows,buildings=buildings,windows=windows,litWindows=lit,darkWindows=dark,warmWindows=warm,coolWindows=cool,shopCounts=styles,frameRates=rates,transitionCases=cases,finishTextureBytes=finishBytes,stoneAtlasSize=512,texturedWalls=24,finishTextures=5,windowAtlasWidth=512,windowAtlasHeight=256,shopAtlasSize=512,realtimeStreetLights=4};
+        }
+
+        static int Finishes(Material window)
+        {
+            var textures=new System.Collections.Generic.HashSet<Texture2D>();
+            var facadeMaterials=new System.Collections.Generic.HashSet<Material>();var wallMeshes=new System.Collections.Generic.HashSet<Mesh>();
+            int walls=0;Texture2D stone=null;
+            foreach(var root in UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
+            {
+                if(root.name!="City Building")continue;walls++;
+                var wall=root.Find("Facade");var renderer=wall.GetComponent<MeshRenderer>();var material=renderer.sharedMaterial;
+                facadeMaterials.Add(material);var mesh=wall.GetComponent<MeshFilter>().sharedMesh;wallMeshes.Add(mesh);
+                var texture=material.GetTexture("_BaseMap") as Texture2D;
+                Need(texture!=null&&texture.width==512&&texture.height==512&&texture.wrapMode==TextureWrapMode.Repeat&&texture.filterMode==FilterMode.Trilinear&&texture.mipmapCount>1,"Stone finish resolution/filtering incomplete.");
+                if(stone==null)stone=texture;Need(texture==stone,"Facade colours duplicate the shared stone texture.");textures.Add(texture);
+                Need(mesh.vertexCount==24&&mesh.triangles.Length==36&&Vector3.Distance(mesh.bounds.size,Vector3.one)<.0001f,"Wall finish changes physical cube geometry.");
+                var vertices=mesh.vertices;var uv=mesh.uv;var normals=mesh.normals;
+                for(int i=0;i<vertices.Length;i++)
+                {
+                    Need(Finite(uv[i].x)&&Finite(uv[i].y)&&Mathf.Abs(normals[i].magnitude-1)<.001f,"Wall surface coordinates/normals invalid.");
+                    float expected=(vertices[i].y+.5f)*wall.localScale.y/5.6f;
+                    Need(Mathf.Abs(uv[i].y-expected)<.00001f,"Stone courses do not match metres/storeys.");
+                    float horizontal=Mathf.Abs(normals[i].x)>.5f?vertices[i].z*wall.localScale.z:vertices[i].x*wall.localScale.x;
+                    Need(Mathf.Abs(uv[i].x*5.2f-7-horizontal)<.00001f,"Stone panel width stretches on the building end.");
+                }
+                foreach(string name in new[]{"Window Frame","Facade Stonework"})
+                {
+                    var part=root.Find(name).GetComponent<MeshRenderer>();var detail=part.sharedMaterial.GetTexture("_BaseMap") as Texture2D;
+                    int size=name=="Window Frame"?64:128;
+                    Need(detail!=null&&detail.width==size&&detail.height==size&&detail.mipmapCount>1&&detail.filterMode==FilterMode.Trilinear,"Frame/trim shade detail is missing.");textures.Add(detail);
+                }
+            }
+            Need(walls==24&&facadeMaterials.Count==3&&wallMeshes.Count==3,"Stone colours or height-specific UV meshes lose sharing.");
+            Need(stone.GetPixel(16,80).r-stone.GetPixel(16,64).r>.10f,"Stone grout lacks panel separation.");
+            Need(stone.GetPixel(16,24).r-stone.GetPixel(16,0).r>.15f,"Cornice contact shade is missing.");
+            var glass=window.GetTexture("_BaseMap") as Texture2D;var rooms=window.GetTexture("_EmissionMap") as Texture2D;
+            textures.Add(glass);textures.Add(rooms);
+            Need(window.GetFloat("_Surface")==0&&window.GetFloat("_Smoothness")>.6f&&window.GetFloat("_Metallic")<.15f,"Glass introduces transparency or loses its surface finish.");
+            for(int tile=0;tile<8;tile++)
+            {
+                float u=(tile%4+.5f)/4,v0=(tile/4+.2f)/2,v1=(tile/4+.82f)/2;
+                Color lower=glass.GetPixelBilinear(u,v0),upper=glass.GetPixelBilinear(u,v1);
+                Need(upper.b>lower.b*1.6f&&upper.b>upper.r*1.15f,"A window loses sky reflection or interior depth.");
+            }
+            int bytes=0;foreach(Texture2D texture in textures)
+            {
+                Need(texture!=null&&texture.format==TextureFormat.RGB24,"Finish adds unexpected texture format/storage.");
+                for(int mip=0;mip<texture.mipmapCount;mip++)bytes+=Mathf.Max(1,texture.width>>mip)*Mathf.Max(1,texture.height>>mip)*3;
+            }
+            Need(textures.Count==5&&bytes<3*1024*1024,"Shared finish texture budget exceeds3MiB.");
+            return bytes;
         }
         static void Gain(CityClimate climate,Material window,Material shop,float expectedW,float expectedS)
         {
@@ -125,7 +177,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         static void Need(bool condition,string message){if(!condition)throw new InvalidOperationException(message);}
         [Serializable]internal sealed class Report
         {
-            public string result;public int detailedBuildings,deepWindows,sideWindows,buildings,windows,litWindows,darkWindows,warmWindows,coolWindows,transitionCases,windowAtlasWidth,windowAtlasHeight,shopAtlasSize,realtimeStreetLights;
+            public string result;public int finishTextureBytes,stoneAtlasSize,texturedWalls,finishTextures;public int detailedBuildings,deepWindows,sideWindows,buildings,windows,litWindows,darkWindows,warmWindows,coolWindows,transitionCases,windowAtlasWidth,windowAtlasHeight,shopAtlasSize,realtimeStreetLights;
             public int[] shopCounts,frameRates;
         }
     }

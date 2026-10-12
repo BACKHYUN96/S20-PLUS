@@ -38,7 +38,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     frames.Box(new Vector3(x+outward*.19f,p.y-.91f,p.z),new Vector3(.48f,.095f,1.98f));
                 }
                 int variant=(index*17+floor*13+column*7+(outward<0?3:0))%8;
-                glass.Plane(back,p.y-.8f,p.y+.8f,p.z-.8f,p.z+.8f,Tile(variant%4,variant/4,4,2,256,128),outward);
+                glass.Plane(back,p.y-.8f,p.y+.8f,p.z-.8f,p.z+.8f,Tile(variant%4,variant/4,4,2,512,256),outward);
             }
             internal void Side(float centreX,float y,int floor)
             {
@@ -58,7 +58,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
                 frames.Box(new Vector3(centreX,y-.88f,-7.13f),new Vector3(1.52f,.10f,.40f));
                 int variant=(index*11+floor*3+(centreX>0?5:1)+(outward<0?2:0))%8;
-                glass.Quad(new Vector3(centreX-.59f,y-.735f,back),new Vector3(centreX+.59f,y-.735f,back),new Vector3(centreX+.59f,y+.735f,back),new Vector3(centreX-.59f,y+.735f,back),Tile(variant%4,variant/4,4,2,256,128),Vector3.back);
+                glass.Quad(new Vector3(centreX-.59f,y-.735f,back),new Vector3(centreX+.59f,y-.735f,back),new Vector3(centreX+.59f,y+.735f,back),new Vector3(centreX-.59f,y+.735f,back),Tile(variant%4,variant/4,4,2,512,256),Vector3.back);
             }
             static Vector3 Corner(float x,Vector3 p,int side,float radius)
             {return new Vector3(x,p.y+(side==0||side==1?-radius:radius),p.z+(side==0||side==3?-radius:radius));}
@@ -102,11 +102,11 @@ namespace PixelTraffic.UnityPrototype.Editor
         static Material AtlasMaterial(bool shop)
         {
             string name=shop?"Shop Interior":"Window Glass";
-            Material material=StarterScene.Surface(name,Color.white,shop?.08f:.25f,shop?.45f:.52f);
+            Material material=StarterScene.Surface(name,Color.white,.08f,shop?.45f:.72f);
             if(material.GetTexture("_EmissionMap")!=null)return material;
-            int width=shop?512:256,height=shop?512:128;
+            int width=512,height=shop?512:256;
             var basePixels=new Color[width*height];var emissionPixels=new Color[width*height];
-            int cell=shop?128:64;
+            int cell=128;
             for(int y=0;y<height;y++)for(int x=0;x<width;x++)
             {
                 int column=x/cell,row=y/cell;float u=(x%cell)/(float)(cell-1),v=(y%cell)/(float)(cell-1);
@@ -141,11 +141,20 @@ namespace PixelTraffic.UnityPrototype.Editor
             if(variant%3==0&&v>.18f&&v<.90f&&((int)(v*24)%3==0))shade*=.65f;
             if(variant%3==1&&u>.60f&&u<.77f&&v<.52f)shade*=.24f;
             if(v<.10f||v>.94f)shade*=.18f;
-            // Opaque sky reflections and curtains retain depth without transparent overdraw.
-            b=Color.Lerp(new Color(.08f,.14f,.19f),new Color(.31f,.41f,.48f),v*.70f);
-            if(u<.12f||u>.88f)b=Color.Lerp(b,new Color(.37f,.35f,.30f),.48f);
-            if(v>.70f)b+=new Color(.025f,.035f,.045f)*(v-.70f)/.30f;
-            if(u>.18f&&u<.23f)b+=new Color(.035f,.045f,.055f);
+            // Baked sky and opposite-facade reflections preserve opaque, shared window rendering.
+            float cloud=Mathf.SmoothStep(.49f,.70f,Mathf.PerlinNoise(u*4+variant*11+7,v*8+variant*3+41));
+            b=Color.Lerp(new Color(.075f,.12f,.16f),new Color(.42f,.58f,.69f),Mathf.SmoothStep(.10f,.98f,v));
+            b+=new Color(.12f,.13f,.12f)*cloud*Mathf.SmoothStep(.35f,.82f,v);
+            if(v<.42f)
+            {
+                float roof=.16f+((int)(u*6+variant)%4)*.035f;
+                if(v<roof)b=Color.Lerp(b,new Color(.045f,.073f,.093f),.55f);
+            }
+            if(u<.12f||u>.88f)b=Color.Lerp(b,new Color(.30f,.29f,.255f),.35f);
+            float highlight=Mathf.Max(0,1-Mathf.Abs(u+v*.28f-.37f)/.018f);
+            b+=new Color(.06f,.07f,.08f)*highlight;
+            float border=Mathf.Min(Mathf.Min(u,1-u),Mathf.Min(v,1-v));
+            b*=Mathf.Lerp(.58f,1,Mathf.Clamp01(border/.045f));
             e=lit?tone*shade:Color.black;
         }
         static void ShopPixel(int style,int row,float u,float v,out Color b,out Color e)

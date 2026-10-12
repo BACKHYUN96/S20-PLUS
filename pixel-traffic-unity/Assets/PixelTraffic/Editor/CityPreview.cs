@@ -705,8 +705,24 @@ namespace PixelTraffic.UnityPrototype.Editor
                     climate.Preview(2,0);detailStreet.ApplyViews();gardenImages.Add(CaptureState(camera,request,target,image,"gardens-detail-night"));
                 }
                 finally{cameraChoice.Preview(0);camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);camera.fieldOfView=roadFov;climate.Preview(0,0);detailStreet.ApplyViews();}
+                var finishImages=new System.Collections.Generic.List<string>();
+                var finishTarget=new RenderTexture(960,720,24,RenderTextureFormat.ARGB32){antiAliasing=2};finishTarget.Create();
+                var finishImage=new Texture2D(960,720,TextureFormat.RGB24,false);
+                try
+                {
+                    cameraChoice.Preview(0);camera.aspect=.45f;
+                    foreach(int theme in new[]{0,2})
+                    {climate.Preview(theme,0);detailStreet.ApplyViews();finishImages.Add(CaptureState(camera,request,target,image,"finish-city-"+(theme==0?"day":"night")));}
+                    camera.aspect=960f/720;camera.fieldOfView=45;
+                    var finishRequest=new UniversalRenderPipeline.SingleCameraRequest{destination=finishTarget};
+                    camera.transform.position=new Vector3(-4.1f,9.5f,-31);camera.transform.LookAt(new Vector3(-11.0f,8.4f,-22));
+                    foreach(int theme in new[]{0,1,2})
+                    {climate.Preview(theme,0);detailStreet.ApplyViews();finishImages.Add(CaptureState(camera,finishRequest,finishTarget,finishImage,"finish-facade-"+new[]{"day","dusk","night"}[theme]));}
+                    climate.Preview(0,2);detailStreet.ApplyViews();finishImages.Add(CaptureState(camera,finishRequest,finishTarget,finishImage,"finish-facade-rain"));
+                }
+                finally{finishTarget.Release();UnityEngine.Object.DestroyImmediate(finishTarget);UnityEngine.Object.DestroyImmediate(finishImage);cameraChoice.Preview(0);camera.aspect=.45f;camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);camera.fieldOfView=roadFov;climate.Preview(0,0);detailStreet.ApplyViews();}
                 File.WriteAllText("Reports/preview-result.json", JsonUtility.ToJson(new Report {
-                    gardenImages=gardenImages.ToArray(),riverfrontImages=riverfrontPreviews.ToArray(),cameraOptionImages=cameraOptionImages.ToArray(),cameraOptionTrafficSimulatedSeconds=60,
+                    finishImages=finishImages.ToArray(),gardenImages=gardenImages.ToArray(),riverfrontImages=riverfrontPreviews.ToArray(),cameraOptionImages=cameraOptionImages.ToArray(),cameraOptionTrafficSimulatedSeconds=60,
                     entranceImages=entranceImages.ToArray(),entranceMovingCounts=entranceMovingCounts.ToArray(),entrancePixelChanges=entrancePixelChanges.ToArray(),denseMovingVehicles=6,denseImages=denseImages.ToArray(),densePixelChanges=densePixelChanges.ToArray(),roundaboutMovingVehicles=roundaboutMovingVehicles,roundaboutImages=roundaboutPreviews.ToArray(),roundaboutPixelChanges=roundaboutPixelChanges.ToArray(),roundaboutMotionPositions=roundaboutMotionPositions.ToArray(),
                     junctionVisibilityImages=junctionVisibilityPreviews.ToArray(),savedNightChangedPixels=savedNightChangedPixels,savedNightPixelDelta=savedNightPixelDelta,savedNightFogFraction=savedNightFogFraction,
                     result = "PASS", version = StarterConfig.VersionName, editor = Application.unityVersion,
@@ -769,7 +785,7 @@ namespace PixelTraffic.UnityPrototype.Editor
 
         [Serializable] private sealed class Report
         {
-            public string[] gardenImages,riverfrontImages;public string result, version, editor, graphicsApi, image, source;
+            public string[] finishImages,gardenImages,riverfrontImages;public string result, version, editor, graphicsApi, image, source;
             public int width, height;
             public string[] entranceImages;public int[] entranceMovingCounts,entrancePixelChanges;public int denseMovingVehicles;public string[] denseImages;public int[] densePixelChanges;public int roundaboutMovingVehicles;public string[] roundaboutImages;public int[] roundaboutPixelChanges;public Vector3[] roundaboutMotionPositions;
             public string[] junctionVisibilityImages;public int savedNightChangedPixels;public float savedNightPixelDelta,savedNightFogFraction;
