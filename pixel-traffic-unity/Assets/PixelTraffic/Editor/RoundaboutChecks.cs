@@ -119,7 +119,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     controller.Advance(1d/30);model=controller.Model;var round=model.Roundabout;int moving=0;
                     if(round.Completed!=lastCompleted){lastCompleted=round.Completed;lastCompletionTick=tick;}
                     maxCompletionGap=Mathf.Max(maxCompletionGap,tick-lastCompletionTick);
-                    Need(tick-lastCompletionTick<2700,"junction has no completed route for90seconds."+Summary(model));
+                    if(tick-lastCompletionTick>=2700)Need(false,"junction has no completed route for90seconds."+Summary(model));
                     Need(!(model.CanEnter||model.Signal==StreetModel.Phase.PedestrianClearance)||!model.RoadOccupied(),"junction breaks crossing clearance.");
                     for(int i=0;i<model.Cars.Length;i++)
                     {
