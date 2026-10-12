@@ -53,7 +53,7 @@ namespace PixelTraffic.UnityPrototype
                 var vehicle=vehicles[i];vehicle.gameObject.SetActive(true);vehicle.ResetPosition(vehicle.transform.position.z);Bounds bounds=vehicle.BodyBounds();
                 cars[i]=new StreetModel.Car {lane=vehicle.Lane,z=vehicle.transform.position.z,cruise=vehicle.Speed,speed=vehicle.Speed,length=bounds.size.z,width=bounds.size.x,height=bounds.size.y,bus=vehicle.Model=="CityBus"};
             }
-            model=new StreetModel(people,cars);if(roundaboutEnabled)model.EnableRoundabout(true);
+            model=new StreetModel(people,cars);if(roundaboutEnabled)model.EnableRoundabout();
             if(wipers!=null)foreach(var pair in wipers)if(pair!=null)pair.ResetState();
             portraitCamera=Camera.main;if(portraitCamera!=null){GeometryUtility.CalculateFrustumPlanes(portraitCamera,viewPlanes);model.Visible=Visible;model.VisibleVehicle=VisibleVehicle;}
             accumulator=0;lastPhase=(StreetModel.Phase)(-1);

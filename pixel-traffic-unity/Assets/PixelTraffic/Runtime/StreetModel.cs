@@ -40,7 +40,7 @@ namespace PixelTraffic.UnityPrototype
         public readonly BusStops Stops;
         public bool AutomaticLaneChanges=true;
         public RoundaboutTraffic Roundabout {get;private set;}
-        public void EnableRoundabout(bool maintainFive=false)=>Roundabout=new RoundaboutTraffic(this,maintainFive);
+        public void EnableRoundabout()=>Roundabout=new RoundaboutTraffic(this);
         public Func<Vector2,Vector3,bool> VisibleVehicle;
         public bool VehicleVisible(Car car,double z)
         {
