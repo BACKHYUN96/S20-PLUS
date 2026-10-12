@@ -1,5 +1,47 @@
 # 작은 패치 작업 안내
 
+## 2026-10-12 — Unity 0.33.0 로터리 야간 가시성: 검증과 서명 APK 전달 완료
+
+사용자 폰0.32.0 사진에서 로터리가 어둡게 사라졌다. 기존 저장카메라의 로터리 깊이 약270m에 맑은 밤 fogEnd270이 겹쳐 중앙섬과 회전 도로를 완전히 같은 안개색으로 덮는 것이 원인이었다. 맑은 날/노을/밤의 linear haze를250..490/470/450으로 뒤로 옮겼다. 선택 안개의10..105끝점은 유지한다. 폭풍은 기존 weather 가중치와 선택별 전환을 유지하며 새 clear 끝점에서 보간한다.
+
+기존 Street Metal/Lamp Lens와 Lamp Pool 재질로 두 가로등(총72tri)과 접근부 glow quad두개(4tri)를 추가했다. 회전차로 밖 보도에 설치하고 지면 glow만 회전 접근부로 옮겼다. 실시간 조명은 기존4개 중2개를 로터리로 재배치하고38m/무그림자 spot으로 중앙섬과 도로를 비춘다. 총4개/개체당4개,공유재질47개,기존 그래픽 예산을 유지했다. 카메라·차량 경로·진입 예약·정류장·신호·날씨/와이퍼 동작은 유지한다. 지형5mesh/308tri. 버전0.33.0/code34, RoundaboutVisibility-0.33.0.unity / Generated/RoundaboutVisibility0330. 변경8소스·검증128입력·host12와workflow 보존. 시작302파일과 실제index/status를 확인했다.
+
+**실제 PC 검증:** source `6222da7606c5258b83b781b38da7fc56e4349bd1` / [검증 포함 빌드](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38187596334). 맑은3시간대의 실제 저장카메라 fog fraction<0.15 및 선택 안개10..105 유지, 두 조명구성/무collider/총실시간light4 및 로터리spot2의 방향·범위·무그림자 PASS. 기존600초 실제 차량 검사는 진입24,완료23,복귀11,화면밖재진입11,독립 차체검사993347회와15/30/60/120Hz·pause PASS. 신호·보행·승하차·라이트·와이퍼·반사·기후 검사 PASS. 기본108616tri,최대119962tri/1592renderers/47materials로110000/120000/2400/48 미만.
+
+**실제 GPU 화면:** 같은source의162PNG를bytes/SHA/ZIP CRC로 확인했다. 확대카메라뿐 아니라 기존 저장카메라 day/night/fog를 촬영한다. 같은정지장면·같은조명에서 구130..270 안개를 주입한 control과 새 맑은밤을 비교한다. 로터리ROI 변경픽셀1613,밤 close GPU의 red/green250이상 과노출<8% 검사 PASS. 평균absolute RGB delta0.039087,새 fog fraction0.106157. 실제 Editor 촬영이며 사용자 폰 촬영/FPS 검사가 아니다. 비교control은0.32.0 APK 캡처가 아니라 동일0.33.0 장면에 구 fog를 적용한 격리 검사다. 실패/보완 기록: [{"run": 38187432971, "job": 114612695931, "sourceCommit": "6222da7606c5258b83b781b38da7fc56e4349bd1", "reason": "Repository workflow requires APK tag to match current main; candidate tag was created before main publication. Publish exact candidate to main and rerun unchanged tag. No Unity/APK ran on the rejected attempt."}] / ["Saved clear-night fog end270 is reached by the junction from the original camera; use linear clear haze200..490/470/450 without weakening selected fog10..105.", "Two separate three-box shared-material fixtures and two existing pooled glows illuminate ring approaches; four realtime lights, camera/traffic behavior and47material budget retained.", "Add original-camera day/night/fog captures and old130..270 fault comparison with actual GPU ROI pixel differences; no close-camera-only visibility claim.", "Actual saved-night GPU review: move clear haze start200->250 and require<15% at junction in all clear themes, reducing night blue wash without camera/traffic/light-budget changes. Initial successful run not used as final APK source.", "Preserve total four realtime slots but allocate two near-camera and two directional, shadowless38m junction spots;160 intensity compensates the greater distance while retaining normal LampGain transitions. No added triangles/materials over the previous successful run.", "Actual third GPU review found160-intensity spots clipping grass/bus/road. Clamp all four lights to the existing2.3 intensity and require<8% red/green-clipped pixels in the real close-night render. Full BuildApk pipeline validates and captures this exact candidate before main/public delivery."].
+
+**Android:** `unity-apk-0.33.0-build1` / [BuildApk](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38187432971). BuildPlayer 오류0/경고0,launcherLint 오류0/경고8. 실제 내려받은 APK를apksigner/aapt/ZIP CRC로 확인하여0.33.0/code34/min29/target36/ARM64 IL2CPP와wallpaper service/private provider/settings launcher/비활성 Unity Activity를 검증했다. 원본v2서명 인증서SHA256 a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6. 변경 없는host12의hostLint38008378207 오류0/경고10을 재사용한다.
+
+[APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/622384d010d95256b6c7490834a9b6fe0b30e296/pixel-traffic-unity-prototype-0.33.0.apk) · [기존구도 밤](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/622384d010d95256b6c7490834a9b6fe0b30e296/roundabout-saved-night-preview.png) · [구안개 회귀조건](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/622384d010d95256b6c7490834a9b6fe0b30e296/roundabout-oldfog-preview.png) · [전체 낮](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/622384d010d95256b6c7490834a9b6fe0b30e296/roundabout-city-preview.png) · [확대](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/622384d010d95256b6c7490834a9b6fe0b30e296/roundabout-oblique-preview.png). APK31237619bytes/SHA256`7121299ace3380cf7f361e44d8cc6cb39b158b6ace47fa8c662eb87cc3e19ae1`. 다운로드branch`downloads/unity-0.33.0`의12파일을 로그인 없는HTTP200/no redirect/full bytes/SHA로 확인했다. main에APK·새workflow를 추가하지 않았다.
+
+USB폰1대와 디버깅 허용 후 Windows PowerShell 전체블록을 실행한다. C:\Users\김백현\Desktop\AI에 다운로드·SHA 확인·기존앱 업데이트:
+```powershell
+& {
+    $ErrorActionPreference = "Stop"
+    $apkFolder = "C:\Users\김백현\Desktop\AI"
+    $apkPath = Join-Path $apkFolder "pixel-traffic-unity-prototype-0.33.0.apk"
+    $apkUrl = "https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/622384d010d95256b6c7490834a9b6fe0b30e296/pixel-traffic-unity-prototype-0.33.0.apk"
+    $trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+    if (-not (Test-Path -LiteralPath $trafficAdb)) { throw "Unity의 adb.exe를 찾을 수 없습니다." }
+    & $trafficAdb start-server
+    if ($LASTEXITCODE -ne 0) { throw "ADB 시작 실패" }
+    $deviceLines = & $trafficAdb devices
+    if ($LASTEXITCODE -ne 0) { throw "폰 연결 확인 실패" }
+    $connectedDevices = @($deviceLines | Where-Object { $_ -match '^\S+\s+device$' })
+    if ($connectedDevices.Count -ne 1) { throw "폰 1대를 USB로 연결하고 USB 디버깅을 허용해주세요." }
+    New-Item -ItemType Directory -Force -Path $apkFolder | Out-Null
+    Write-Host "0.33.0 APK 다운로드 중..."
+    Invoke-WebRequest -UseBasicParsing -Uri $apkUrl -OutFile $apkPath
+    if ((Get-FileHash -LiteralPath $apkPath -Algorithm SHA256).Hash -ne "7121299ace3380cf7f361e44d8cc6cb39b158b6ace47fa8c662eb87cc3e19ae1") { throw "파일 검증 실패. 다시 실행해주세요." }
+    Write-Host "폰에 앱 설치 중..."
+    & $trafficAdb install -r $apkPath
+    if ($LASTEXITCODE -ne 0) { throw "앱 설치 실패. 위 오류를 확인해주세요." }
+    Write-Host "완료! 0.33.0 설치 성공." -ForegroundColor Green
+}
+```
+
+0.32.0 폰 사진의 야간 가림은 확인했으며,0.33.0 폰 외형/FPS/발열/장시간 동작은 적용 확인 대기다. 사용자 폰에 클라우드에서 설치했다고 주장하지 않는다. PC Drive 설정은 보류한다.
+
 ## 2026-10-11 — Unity 0.32.0 회전교차로·실제 차량 순환: 검증과 서명 APK 전달 완료
 
 사용자가 0.31.0 산 적용을 확인한 후 뒤쪽 도로 단절 문제를 제보하고, 회전교차로와 좌·우·직진 진출 및 카메라 방향 복귀를 승인했다. 기존24차량을 재사용해 반시계 회전차로, 낮은 잔디 중앙섬과 경계석, 네 방향 연결 도로와 양보 표시를 만들었다. 앞쪽 도로에서 오는 차량은 네 출구를 섞은 순번으로 선택해 네 방향이 모두 사용되도록 하고 측면·강변 도로 차량은 다시 카메라 방향 도로로 돌아온다. 화면 밖 도로 끝에서만 재진입한다. 원경의 낮은 건물12동은 교차로 통로에서 옮기고 바닥 높이를 지면에 맞췄다.

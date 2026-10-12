@@ -1,5 +1,7 @@
 # S20+
 
+Unity 라이브 배경화면 **0.33.0**: 실제 저장카메라에서 로터리를 가리던 맑은밤 안개를 뒤로 옮기고 두 가로등과 기존 glow로 접근부를 보완했습니다. 실제 GPU162장·기존구도 밤/control 비교·Android/Lint·원본서명·공개다운로드 확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/622384d010d95256b6c7490834a9b6fe0b30e296/pixel-traffic-unity-prototype-0.33.0.apk) · [기존구도 밤](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/622384d010d95256b6c7490834a9b6fe0b30e296/roundabout-saved-night-preview.png) · [설치 명령](docs/UNITY_AUTOMATION.md). 사용자 폰 적용 확인 대기.
+
 Unity 라이브 배경화면 **0.32.0**: 뒤쪽 도로에 회전교차로를 연결하고 실제 차량이 반시계 순환·무작위 진출·복귀하도록 구현했습니다. 실제 Unity/GPU158장·Android/Lint·원본서명·공개다운로드 확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9e4d3bcc63e610b93aabcbd1e7ff4285a28580b5/pixel-traffic-unity-prototype-0.32.0.apk) · [실제 화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9e4d3bcc63e610b93aabcbd1e7ff4285a28580b5/roundabout-city-preview.png) · [설치 명령](docs/UNITY_AUTOMATION.md). 0.32.0 폰 적용 확인 대기.
 
 Unity 라이브 배경화면 **0.31.0**: 산 능선과 표면 명암, 거리별 색·안개로 원경 깊이를 보강했습니다. 실제 Unity/GPU150장·Android/Lint·원본 서명·공개 다운로드 확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/1b3e4b269aea190adb5b5b9a5857119e7d4869cb/pixel-traffic-unity-prototype-0.31.0.apk) · [실제화면](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/1b3e4b269aea190adb5b5b9a5857119e7d4869cb/mountain-city-preview.png) · [설치명령](docs/UNITY_AUTOMATION.md). 폰 0.30.0 사용자 적용 확인, 0.31.0 확인 대기.
