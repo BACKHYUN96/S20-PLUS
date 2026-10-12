@@ -1,5 +1,7 @@
 # S20+
 
+Unity 라이브 배경화면 **0.41.0**: 로터리 중앙섬의 낮은 관목·꽃밭과 외곽 네 구획의 관목·작은 나무를 추가했습니다. 가려진 가로수 내부면을 회수해 기존 메시 예산과 차량 흐름을 유지했습니다. 실제Unity/184GPU PNG/Android·Lint·원본서명·공개다운로드 확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/be854c4d04f9b2b93b7f47e1b96ccf76f4e60145/pixel-traffic-unity-prototype-0.41.0.apk) · [조경 낮](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/be854c4d04f9b2b93b7f47e1b96ccf76f4e60145/gardens-roundabout-day.png) · [설치명령](docs/UNITY_AUTOMATION.md). 0.40.0 폰 적용 확인/0.41.0 폰 확인 대기.
+
 Unity 라이브 배경화면 **0.40.0**: 로터리 뒤부터 강변까지 식재 지형·중앙20단계단·보행길·난간을 잇고 양옆6동을 지형에 맞춘 기단 위에 배치했습니다. 실제Unity/178GPU PNG/Android·Lint·원본서명·공개다운로드 확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9c26327944bb372cb927195db1d3ac29ebd674b5/pixel-traffic-unity-prototype-0.40.0.apk) · [강변 낮](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9c26327944bb372cb927195db1d3ac29ebd674b5/riverfront-roundabout-day.png) · [설치명령](docs/UNITY_AUTOMATION.md). 0.39.0 폰 적용 확인/0.40.0 폰 확인대기.
 
 Unity 라이브 배경화면 **0.39.0**: 로터리 추가 회전을 제거하고 배정된 첫 출구로 빠져나갑니다. 입구에서 낡은 차선변경 요청 때문에 멈추는 버그를 고치고 진출 동선을 분리했습니다. 실제600초/174GPU PNG/Android·Lint·원본서명·공개다운로드 확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9bb7aa86cbc427ec03044b5d294b4c5279e68552/pixel-traffic-unity-prototype-0.39.0.apk) · [실제 진입 흐름](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9bb7aa86cbc427ec03044b5d294b4c5279e68552/roundabout-entrance-flow-0.png) · [설치명령](docs/UNITY_AUTOMATION.md). 0.39.0 폰 확인대기.

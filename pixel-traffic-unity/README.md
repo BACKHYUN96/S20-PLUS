@@ -1,4 +1,48 @@
-# Pixel Traffic Unity — 강변 접속·보행길·원경 건물 0.40.0
+# Pixel Traffic Unity — 로터리 중앙섬·외곽 조경 0.41.0
+
+## 2026-10-12 — Unity 0.41.0 로터리中央섬·외곽 조경: 실제 검증·서명 APK 전달 완료
+
+0.40.0 폰 적용 성공 후 사용자가 조경 그래픽 작업을 승인했다. 중앙섬에낮은관목9군집/꽃24군집/토양3구획, 외곽네모서리에관목8군집/작은나무4그루/토양4구획을추가했다. 외곽토양y=-.17은실제대지y=-.18보다1cm높게접지한다. 실제936tri/6merged meshes는 기존Soil/Bark/RoadWhite/Leaves0~2를공유한다. 중앙의actualvertices는1.1m미만·반경9.5m안, 외곽은차도·보도·진입flare밖x절대값14.5m이상/z235거리22m이상이다. 별도Light/Collider/Update/교통경로·속도·인구변경은없다.
+
+메시예산을늘리지않고기존32가로수의완전히가려진내부면 962tri를회수했다. 각제거삼각형의3vertex가다른완전잎군집의모든outward plane 안에들어가는경우만제거한다. vertex/UV/원본normal을보존하며독립SceneryChecks가원본20/80face·subdivision을재구성하여제거면내포/정상triangle/원본normal일치를확인했다. 보이는수종실루엣·근거리15군집·높이UV·공유256mip텍스처·보행높이검사유지.
+
+변경7소스 RoundaboutScene/RoundaboutChecks/FoliageScene/SceneryChecks/StarterScene/CityPreview/StarterConfig. 0.41.0/code42/Generated/Gardens0410/Scenes/Gardens-0.41.0.unity. 캡처전용 riverfront 야간도ApplyViews하여실제theme에맞는차량조명을저장한다. 기존304파일/실제index/status/130검증입력/host12보존. 실제소스 `72cb3f42acfc13b3c351bdf08590cde42ca9d4f6`, [전체PC검증·서명APK](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38251576691). 사전Roslyn7소스syntax와범위보존및Linux 실제6차종·32경로×4화단 .25m SAT824544회PASS는실제Unity검증과구분한다. 수정/실패이력: [];사전높이보정 ['Outer beds moved fromy.02 toy-.17, 1cm above actual groundy-.18, preventing a20cm unsupported patch; actualheight check updated beforedelivery.', 'Actual Build1 GPU capture showed pointed low caps and outer trees at image edges; reshape25crowns to8side2ring32tri, moved/narrowed4outerbeds within proved entry clearance; add actual rotated body/bed SAT. Newgarden936tri, predictedpeak119954.']. Build2태그는대기동시성으로실행전취소;build3는앞선높이보정본;최종곡면·배치source의build4만전달한다.
+
+**실제Unity:** 새조경actualmesh/UV/normal/winding/영역·높이·6재질공유 PASS. 기본108608tri, 최대119954tri/1598renderers/47materials: 기존110000/120000/2400/48예산미만. 실제600초교통완료125/32첫출구/추가회전0/최장하단대기4.03초/독립차체SAT993186회, 빈진입120조건/차선대기48조건/6대동시밀도·내부정체복구 PASS. 버스·보행·와이퍼·기후18조합/4FPS·폭풍·반사·원경8mesh/1796tri/강변20단·6기단·16난간기둥도 PASS.
+
+**실제GPU:** 동일source의184PNG를ZIP bytes/SHA/CRC검증했다. 조경전용6장(로터리낮/노을/밤/비·확대낮/밤)과기존생산카메라·원주/진입흐름캡처를관찰했다. PC Unity URP/Direct3D11이며시안이미지나폰FPS측정이아니다. 실제관찰: 0.40 로터리 낮 및 초기0.41 각진 수관/가장자리 배치와 비교했다. 중앙의 평평한 잔디에 낮은 토양·관목·크림색 꽃밭3구획이 추가됐고, 최종 관목은 더 둥글다. 외곽 위쪽 두 나무는 화면 안쪽, 아래쪽 두 나무는 화면 가장자리에 일부 보인다. 새6조경캡처의 낮/노을/밤/비와 확대낮/밤을 직접 관찰했다. 밤 조경은 기존 주변광 수준으로 어둡고 외곽선이 은은하다. 초기 riverfront 야간도ApplyViews 보정후 실제차량헤드라이트가 보인다. 카메라 및 원주/진입차량시야를 유지했다. 시안과완전히동일한최종아트나폰FPS측정으로표시하지않는다..
+
+**Android:** `unity-apk-0.41.0-build4` BuildPlayer오류0/경고0, launcherLint오류0/경고8. 다운로드한actualAPK를Linux apksigner/aapt/ZIP CRC로0.41.0/code42/min29/target36/ARM64 IL2CPP/원본v2cert/배경화면서비스/private provider/settings launcher/disabled UnityActivity확인했다. host12SHA동일이므로 [기존0.34 hostLint](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38192276536) 오류0/경고10·생성8입력동일결과를재사용.
+
+[APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/be854c4d04f9b2b93b7f47e1b96ccf76f4e60145/pixel-traffic-unity-prototype-0.41.0.apk) · [조경낮](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/be854c4d04f9b2b93b7f47e1b96ccf76f4e60145/gardens-roundabout-day.png) · [조경밤](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/be854c4d04f9b2b93b7f47e1b96ccf76f4e60145/gardens-roundabout-night.png) · [조경확대](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/be854c4d04f9b2b93b7f47e1b96ccf76f4e60145/gardens-detail-day.png). APK31270160bytes/SHA256 `3ac32556b04a2e7087a16ff53ded19b072d4f1dcf4221b312d6361c38cc8d837`. 별도 `downloads/unity-0.41.0`의30파일 모두로그인없는HTTP200/no redirect/full bytes/SHA확인. main에binary/newworkflow추가없음.
+
+USB폰1대·디버깅을허용하고아래전체PowerShell블록을실행한다. C:\Users\김백현\Desktop\AI에다운로드·SHA검증·설치한다:
+```powershell
+& {
+    $ErrorActionPreference = "Stop"
+    $apkFolder = "C:\Users\김백현\Desktop\AI"
+    $apkPath = Join-Path $apkFolder "pixel-traffic-unity-prototype-0.41.0.apk"
+    $apkUrl = "https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/be854c4d04f9b2b93b7f47e1b96ccf76f4e60145/pixel-traffic-unity-prototype-0.41.0.apk"
+    $trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+    if (-not (Test-Path -LiteralPath $trafficAdb)) { throw "Unity의 adb.exe를 찾을 수 없습니다." }
+    & $trafficAdb start-server
+    if ($LASTEXITCODE -ne 0) { throw "ADB 시작 실패" }
+    $deviceLines = & $trafficAdb devices
+    if ($LASTEXITCODE -ne 0) { throw "폰 연결 확인 실패" }
+    $connectedDevices = @($deviceLines | Where-Object { $_ -match '^\S+\s+device$' })
+    if ($connectedDevices.Count -ne 1) { throw "폰 1대를 USB로 연결하고 USB 디버깅을 허용해주세요." }
+    New-Item -ItemType Directory -Force -Path $apkFolder | Out-Null
+    Write-Host "0.41.0 APK 다운로드 중..."
+    Invoke-WebRequest -UseBasicParsing -Uri $apkUrl -OutFile $apkPath
+    if ((Get-FileHash -LiteralPath $apkPath -Algorithm SHA256).Hash -ne "3ac32556b04a2e7087a16ff53ded19b072d4f1dcf4221b312d6361c38cc8d837") { throw "파일 검증 실패. 다시 실행해주세요." }
+    Write-Host "폰에 앱 설치 중..."
+    & $trafficAdb install -r $apkPath
+    if ($LASTEXITCODE -ne 0) { throw "앱 설치 실패. 위 오류를 확인해주세요." }
+    Write-Host "완료! 0.41.0 설치 성공." -ForegroundColor Green
+}
+```
+
+0.40.0사용자폰적용확인;0.41.0폰외형/FPS/발열/장시간확인대기. 설치후설정의로터리보기에서낮·밤·비와차량흐름을확인한다. 클라우드에서사용자폰설치를실행했다고주장하지않는다.
 
 ## 2026-10-12 — Unity 0.40.0 강변 접속·보행계단·난간·원경 건물: 검증·서명 APK 전달 완료
 
