@@ -25,6 +25,17 @@ namespace PixelTraffic.UnityPrototype.Editor
             }
             return false;
         }
+        static void GardenBodyClearance(StreetModel.Car car)
+        {
+            Vector2 p=RoundaboutTraffic.Position(car);
+            if(Mathf.Abs(p.y-235)<14||Mathf.Abs(p.y-235)>35||Mathf.Abs(p.x)<8||Mathf.Abs(p.x)>28)return;
+            foreach(float side in new[]{-1f,1f})foreach(float back in new[]{-1f,1f})
+            {
+                float x=side*17.4f,z=235+back*25;
+                var bed=new[]{new Vector2(x-2.5f,z-2.8f),new Vector2(x+2.5f,z-2.8f),new Vector2(x+2.5f,z+2.8f),new Vector2(x-2.5f,z+2.8f)};
+                Need(Separate(Corners(car),bed),"actual rotated vehicle body enters an outer planting bed.");
+            }
+        }
         static string Summary(StreetModel model)
         {
             for(int i=0;i<model.Cars.Length;i++)
@@ -150,7 +161,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 if(marker.name=="Island Planting Bed"){islandBeds++;Need(new Vector2(p.x,p.z-235).magnitude+Mathf.Max(s.x,s.z)<9.5f&&p.y>.235f&&p.y<.27f,"island bed crosses its curb or floats.");}
                 if(marker.name=="Island Shrub"){shrubs++;Need(p.y+s.y<1.1f&&new Vector2(p.x,p.z-235).magnitude+Mathf.Max(s.x,s.z)<9.5f,"central planting obscures traffic.");}
                 if(marker.name=="Island Flower Cluster")flowers++;
-                if(marker.name=="Outer Planting Bed"){outerBeds++;Need(Mathf.Abs(p.y+.17f)<.001f&&Mathf.Abs(p.x)-s.x>21.5f&&Mathf.Abs(p.z-235)-s.z>21.5f,"outer bed enters the circle, flared approach or sidewalk.");}
+                if(marker.name=="Outer Planting Bed"){outerBeds++;Need(Mathf.Abs(p.y+.17f)<.001f&&Mathf.Abs(p.x)-s.x>14.5f&&Mathf.Abs(p.z-235)-s.z>22,"outer bed enters the circle, flared approach or sidewalk.");}
                 if(marker.name=="Outer Shrub")outerShrubs++;
                 if(marker.name=="Garden Tree")trees++;
                 var filter=marker.GetComponent<MeshFilter>();if(filter==null)continue;
@@ -162,13 +173,13 @@ namespace PixelTraffic.UnityPrototype.Editor
                     var p0=points[i];Need(!float.IsNaN(p0.x)&&!float.IsNaN(p0.y)&&!float.IsNaN(p0.z)&&Mathf.Abs(normals[i].magnitude-1)<.001f,"garden geometry invalid.");
                     float r=new Vector2(p0.x,p0.z-235).magnitude;
                     bool central=r<9.5f&&p0.y>=.235f&&p0.y<1.1f;
-                    bool outside=Mathf.Abs(p0.x)>21.5f&&Mathf.Abs(p0.z-235)>21.5f&&p0.y>=-.175f&&p0.y<4.7f;
+                    bool outside=Mathf.Abs(p0.x)>14.5f&&Mathf.Abs(p0.z-235)>22&&p0.y>=-.175f&&p0.y<4.7f;
                     Need(central||outside,"actual planting enters a vehicle lane, walking band, or central sightline.");
                 }
                 for(int i=0;i<indices.Length;i+=3)
                 {int a=indices[i],b=indices[i+1],c=indices[i+2];var normal=Vector3.Cross(points[b]-points[a],points[c]-points[a]);Need(normal.sqrMagnitude>1e-10f&&Vector3.Dot(normal,normals[a]+normals[b]+normals[c])>0,"garden face degenerate or reversed.");}
             }
-            Need(islandBeds==3&&outerBeds==4&&shrubs==9&&outerShrubs==8&&flowers==24&&trees==4&&names.Count==6&&triangles==436,"landscape groups or shared mesh budget changed.");
+            Need(islandBeds==3&&outerBeds==4&&shrubs==9&&outerShrubs==8&&flowers==24&&trees==4&&names.Count==6&&triangles==936,"landscape groups or shared mesh budget changed.");
             return triangles;
         }
         internal static Report Validate()
@@ -265,6 +276,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                             }
                             if(c.roundSignal)signalFrames++;
                         }
+                        if(tick%5==0)GardenBodyClearance(c);
                         if(tick%5==0)for(int j=i+1;j<model.Cars.Length;j++)
                         {var other=model.Cars[j];if(!other.active||other.roundHidden)continue;Need(Separate(Corners(c),Corners(other)),"actual rotated bodies overlap: "+i+"/"+j+" tick="+tick);pairChecks++;}
                     }

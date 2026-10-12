@@ -54,13 +54,14 @@ namespace PixelTraffic.UnityPrototype.Editor
             }
             void Crown(Vector3 p,Vector3 radius,int colour)
             {
-                // Six-sided rounded cap: low-cost opaque geometry, no alpha cards or realtime lights.
-                const int sides=6;Vector3 top=p+Vector3.up*radius.y;
+                // Two eight-sided rings round the low crown without alpha cards or a new material.
+                const int sides=8;Vector3 top=p+Vector3.up*radius.y;
                 for(int n=0;n<sides;n++)
                 {
                     float a=n*Mathf.PI*2/sides,b=(n+1)*Mathf.PI*2/sides;
                     Vector3 u=p+new Vector3(Mathf.Cos(a)*radius.x,0,Mathf.Sin(a)*radius.z),v=p+new Vector3(Mathf.Cos(b)*radius.x,0,Mathf.Sin(b)*radius.z);
-                    green[colour].Triangle(top,v,u);
+                    Vector3 up=p+new Vector3(Mathf.Cos(a)*radius.x*.7f,radius.y*.55f,Mathf.Sin(a)*radius.z*.7f),vp=p+new Vector3(Mathf.Cos(b)*radius.x*.7f,radius.y*.55f,Mathf.Sin(b)*radius.z*.7f);
+                    green[colour].Triangle(top,vp,up);green[colour].Quad(u,up,vp,v);
                     green[colour].Triangle(p-Vector3.up*radius.y*.5f,u,v);
                 }
             }
@@ -87,13 +88,13 @@ namespace PixelTraffic.UnityPrototype.Editor
             for(int i=0;i<4;i++)
             {
                 float side=i%2==0?-1:1,back=i<2?-1:1;
-                Vector3 p=new Vector3(side*27,-.17f,z+back*26);Bed(p,4.4f,3.2f,false);
+                Vector3 p=new Vector3(side*17.4f,-.17f,z+back*25);Bed(p,2.5f,2.8f,false);
                 for(int n=0;n<2;n++)
                 {
                     Vector3 at=p+new Vector3(side*(n*2-1),.43f,back*1.65f);Vector3 radius=new Vector3(1.15f,.57f+n*.18f,.94f);
                     Crown(at,radius,(i+n)%3);Marker("Outer Shrub",at,radius);
                 }
-                Vector3 tree=p+new Vector3(-side,0,-back*.75f);float height=2.65f+(i%2)*.55f;
+                Vector3 tree=p+new Vector3(-side*.5f,0,-back*.75f);float height=2.65f+(i%2)*.55f;
                 Marker("Garden Tree",tree,new Vector3(1,height,1));
                 for(int n=0;n<4;n++)
                 {
