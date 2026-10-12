@@ -1,5 +1,49 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-12 — Unity 0.39.0 첫 출구 진출·하단 입구 정체 개선: 검증·서명 APK 전달 완료
+
+사용자가 목표를 정정했다. 원주 5대 고정보다 하단 입구 정체 해소와 배정된 동서남북 출구 첫 진출이 우선이다. 기존 5대 유지/초기 원주 배치/사전 보충/진출 승인 대기/추가 회전 정책을 제거했다. 모든 방문의 경로는 단조롭게 진행해 처음 만나는 배정 출구로 나간다. 같은 방향 확정 합류 선행차를 안전한 간격으로 따라 진입하고, 원주 뒤차는 확정 합류차를 추종한다. 출구 접점을 20도 앞당겨 -125도로 옮겼고, 하단 복귀는 왼쪽 바깥 차선으로 정렬하여 긴 차량의 대각선 차체와 반대편 진입 코가 서로 막히는 것을 방지한다. 추가로 하단 정체의 실제 원인인 차선변경 Waiting 요청을 고쳤다. 기존 진입 제외 구간에 도달하면 아직 시작하지 않은 Waiting/Signaling 요청을 취소하여 Idle 요구 때문에 최대120초 기다리지 않는다. 이미 Merging인 차는 계속 이동하며 횡방향 순간 이동이 없다. 원주 대수는 자연 출입으로 달라진다. 교통 수요와 실제 충돌 위험에 따른 양보는 유지하며 모든 상황에서 대기 0을 보장하지 않는다.
+
+수정7CS: RoundaboutTraffic/StreetModel/StreetSimulation/RoundaboutChecks/CityPreview/StarterConfig/StarterScene; 0.39.0/code40/RoundaboutExit-0.39.0.unity/Generated/RoundaboutExit0390. 도로/차량 geometry·조명·카메라·날씨·보행·버스·와이퍼·host12/workflow 유지. 기존304파일·실제index/status·130검증입력을 보존한다.
+
+**로컬 개발:** 기존.NET8/생산 모델/실제6차종 치수/독립 SAT1200초 normal/확대차체/storm 결과 `{'normal': {'entries': 258, 'completed': 251, 'returns': 143, 'recycles': 107, 'peakMoving': 6, 'multipleMovingTicks': 15064, 'maxCompletionGapSeconds': 29.7, 'lowerQueueStopSeconds': 42.9, 'peakLowerQueue': 4.0, 'maximumLowerWaitSeconds': 3.566666666666667, 'waitingStopSeconds': 163.53333333333333, 'minimumSecondHalfTravel': 2143.5016623106785}, 'large': {'entries': 252, 'completed': 248, 'returns': 141, 'recycles': 105, 'peakMoving': 5, 'multipleMovingTicks': 15057, 'maxCompletionGapSeconds': 22.9, 'lowerQueueStopSeconds': 39.8, 'peakLowerQueue': 4.0, 'maximumLowerWaitSeconds': 4.333333333333333, 'waitingStopSeconds': 232.46666666666667, 'minimumSecondHalfTravel': 1897.6823151530698}, 'storm': {'entries': 106, 'completed': 103, 'returns': 60, 'recycles': 43, 'peakMoving': 4, 'multipleMovingTicks': 8064, 'maxCompletionGapSeconds': 67.8, 'lowerQueueStopSeconds': 12.6, 'peakLowerQueue': 3.0, 'maximumLowerWaitSeconds': 2.966666666666667, 'waitingStopSeconds': 62.8, 'minimumSecondHalfTravel': 0.0}}`. 동일 fixture의 0.38.0 하단 정차누계 `{'lowerQueueStopSeconds': 8302.866666666667, 'peakLowerQueue': 11.0, 'maximumLowerWaitSeconds': 210.3, 'waitingStopSeconds': 2446.6666666666665}`와 비교해 normal 누계 99.5% 감소. 이는 하단 일반도로160~195.6m의 진입 차량과 origin0의 실제 합류 전 차량을 모두 포함한 여러 차량·방문의 정차시간 합이며 단일 차량의 기다림이 아니다. 전체 접근 정차 누계는 별도 기록한다. storm의 비활성 차량은 운행 거리 최솟값 주장에 포함하지 않는다. 실제 소스1 검사에서는 하단 최대112.23초 대기가 남아 per-car trace로 z195.5에서 stale Waiting/rearMask와 false Context를 확인했다. 최종 fix는 정상하단 최장3.57초/확대4.33초/storm2.97초로 낮췄다. 32경로 최대 원주280도/추가회전0, 빈 진입30조건 정차0/blocked handoff/road recycle/exit 간격과 독립6대 fixture 이동·내부queue·해제후6대복구 PASS. 긴 차체에서 inner outgoing 차선으로 대각선 정렬하는 시도가 교착을 보여 실제 복귀를 outer outgoing으로 한정했다. 양보 위치만 원주 가까이 옮기는 시도는 uncommitted 접근차의 코가 원주를 막아 배제했다. 최종 소스에 유효한 변경만 남겼으며 교착/간격 검사를 완화하지 않았다. 이전0.38 Editor의 독립 DrivingChecks 장면 재로드+ResetModel 수정은 유지한다. 로컬 검사는 실제 Unity/Android/폰의 대체가 아니다.
+
+**실제 Unity:** source `3cdfd47a6977051bf8170e6b4b0db8aed0618f2e` / [전체 검증·APK 빌드](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38235889329). 실제600초 진입127/완료125/무정차진입86, 최대 원주이동6대·다중이동7046tick·최대무완료26.73초. 게이트 stale Waiting/Signaling48조건+진행중merge 보존 PASS. 첫출구32경로/최대원주280.00도/같은방문 progress 역행0/추가회전0. 빈 경로120조건 정차0tick. 실제 하단 정차누계28.83초/최대대기차량4대/최장연속대기4.03초. 모든방향 접근정차누계76.67초, 이전0.38 실제 동일600초1135.77초와 구분한다. 이전 실제 검사에 하단 일반도로 정차 지표는 없으므로 하단 감소율은 로컬 동일조건 비교만 사용한다. 네출구[18, 18, 18, 18]/복귀71/재진입53/독립차체 SAT993186회/중앙섬·반시계·연속pose·버스17회·보행/신호·storm·15/30/60/120Hz·pause PASS. 기본108616tri/최대119962tri/1592renderers/47materials 예산110000/120000/2400/48 미만.
+
+**실제 GPU:** 같은 BuildApk에서 source/bytes/SHA/ZIP CRC 확인한174PNG. 자연 하단 진입 흐름4frame에서 이동차량수[2, 2, 2, 3]/픽셀변경[31801, 30297, 25109]와 추적차량>.5m 이동 PASS. 인위적5대 배치/추가 회전으로 채운 장면이 아니다. 생산 원주흐름4frame2대각각>.5m/변경[15420, 14622, 12371] PASS. 별도6대fixture4frame/차량각각>.5m/변경[20424, 19705, 19253] PASS. 도시/로터리 카메라·낮/노을/밤/강비·안개 비교 유지. 실제URP/Editor 확인이며 폰FPS·발열 검사는 별개다. 실제 PC 실패 기록: [{'run': 38234066446, 'job': 114760289839, 'attempt': 1, 'reason': 'Build guard requires APK tag to point to current main. Source tag was published before main; no Unity/Android checks ran. Publish the identical source to main and rerun failed job.'}].
+
+**Android:** tag `unity-apk-0.39.0-build2`. BuildPlayer 오류0/경고0, launcherLint 오류0/경고8. APK apksigner/aapt/ZIP CRC로0.39.0/code40/min29/target36/ARM64 IL2CPP/원본v2서명/wallpaper service·private provider·settings launcher·비활성UnityActivity PASS. host12 SHA 동일로 [0.34 unityLibraryLint](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38192276536) 오류0/경고10/생성8입력 일치를 재사용한다.
+
+[APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9bb7aa86cbc427ec03044b5d294b4c5279e68552/pixel-traffic-unity-prototype-0.39.0.apk) · [실제 하단 flow0](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9bb7aa86cbc427ec03044b5d294b4c5279e68552/roundabout-entrance-flow-0.png) · [flow1](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9bb7aa86cbc427ec03044b5d294b4c5279e68552/roundabout-entrance-flow-1.png) · [6대fixture](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9bb7aa86cbc427ec03044b5d294b4c5279e68552/roundabout-six-fixture-0.png). APK31241707bytes/SHA256 `bfabdeea5e69c5ff2f1d7fc87576c93b5f51b1e09d23ab2bdfaf0a852297df63`. `downloads/unity-0.39.0`의20파일 로그인없는 HTTP200/no redirect/full bytes/SHA 검증. main에 APK/새workflow 추가하지 않았다.
+
+USB폰1대와디버깅을 허용한 뒤 PowerShell 전체블록을 실행한다. C:\Users\김백현\Desktop\AI 다운로드·SHA검증·기존앱 업데이트:
+```powershell
+& {
+    $ErrorActionPreference = "Stop"
+    $apkFolder = "C:\Users\김백현\Desktop\AI"
+    $apkPath = Join-Path $apkFolder "pixel-traffic-unity-prototype-0.39.0.apk"
+    $apkUrl = "https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/9bb7aa86cbc427ec03044b5d294b4c5279e68552/pixel-traffic-unity-prototype-0.39.0.apk"
+    $trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+    if (-not (Test-Path -LiteralPath $trafficAdb)) { throw "Unity의 adb.exe를 찾을 수 없습니다." }
+    & $trafficAdb start-server
+    if ($LASTEXITCODE -ne 0) { throw "ADB 시작 실패" }
+    $deviceLines = & $trafficAdb devices
+    if ($LASTEXITCODE -ne 0) { throw "폰 연결 확인 실패" }
+    $connectedDevices = @($deviceLines | Where-Object { $_ -match '^\S+\s+device$' })
+    if ($connectedDevices.Count -ne 1) { throw "폰 1대를 USB로 연결하고 USB 디버깅을 허용해주세요." }
+    New-Item -ItemType Directory -Force -Path $apkFolder | Out-Null
+    Write-Host "0.39.0 APK 다운로드 중..."
+    Invoke-WebRequest -UseBasicParsing -Uri $apkUrl -OutFile $apkPath
+    if ((Get-FileHash -LiteralPath $apkPath -Algorithm SHA256).Hash -ne "bfabdeea5e69c5ff2f1d7fc87576c93b5f51b1e09d23ab2bdfaf0a852297df63") { throw "파일 검증 실패. 다시 실행해주세요." }
+    Write-Host "폰에 앱 설치 중..."
+    & $trafficAdb install -r $apkPath
+    if ($LASTEXITCODE -ne 0) { throw "앱 설치 실패. 위 오류를 확인해주세요." }
+    Write-Host "완료! 0.39.0 설치 성공." -ForegroundColor Green
+}
+```
+
+0.38.0 폰 설치 사진/하단 queue 보고 확인;0.39.0 폰 흐름/FPS/발열/장시간 확인 대기. 설치 후 카메라→로터리 보기에서 하단 진입과 첫출구를 확인한다. 클라우드에서 사용자폰 설치를 실행했다고 주장하지 않는다.
+
 ## 2026-10-12 — Unity 0.39.0 하단 정체 실제 원인 수정: 오래된 차선변경 요청
 
 첫 source532ee89143ca8d3bb601dcf0dfba8a2c3ea6bde0의 실제 Unity Validate38234258333는 600초 완료92/추가회전0/무정차진입67/모든 접근정차51.53초 PASS였지만, 하단 일반도로 최대대기112.23초/9대/누계2986.9초가 남았다. 국지 로컬 trace가 정확한 원인을 확인했다: z195.5 게이트에서 LaneChanges.Waiting rearMask가 남아 Context는 이미 진입 제외 구간이라 다시 true가 될 수 없는데 Roundabout.Start는 Idle을 요구한다. 요청의 120초 만료까지 양쪽 차선 선두가 로터리가 비어도 서 있었다. Roundabout.Tick의 Road 상태에서 기존 차선변경 제외 경계 GateZ-30-SafetyLength에 도달하면 Waiting/Signaling만 취소한다. 실제 Merging은 끝까지 유지하여 횡이동/차체pose가 순간 이동하지 않는다. 별도 실제 24차종×2pending상태48조건/진행중 merge 보존 회귀 검사를 추가하고 실제600초 최대하단대기를30초 미만으로 검사한다.
