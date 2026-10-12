@@ -102,6 +102,20 @@ namespace PixelTraffic.UnityPrototype.Editor
             Need(sixTicks>=60&&queued>=2&&model.Roundabout.Completed>=6,"six-car circulation/internal queue does not recover: "+sixTicks+"/"+queued+"/"+model.Roundabout.Completed);
             return new[]{sixTicks,queued,model.Roundabout.Completed};
         }
+        static int StaleLaneRequests(StreetModel.Car[] templates)
+        {
+            int cases=0;
+            foreach(var source in templates)foreach(var pending in new[]{LaneChanges.Stage.Waiting,LaneChanges.Stage.Signaling})
+            {
+                var c=new StreetModel.Car{lane=3,z=195,cruise=6,speed=4.8f,length=source.length,width=source.width,height=source.height,bus=source.bus,targetLane=2,maneuver=pending,rearMask=1,requestTick=1};
+                var model=new StreetModel(4,new[]{c});model.EnableRoundabout();model.Tick();
+                Need(c.roundabout&&c.maneuver==LaneChanges.Stage.Idle&&c.rearMask==0,"stale lane-change request strands a car at an empty gate.");cases++;
+            }
+            var merging=new StreetModel.Car{lane=3,z=175,cruise=6,speed=4.8f,length=5,width=2.2f,targetLane=2,maneuver=LaneChanges.Stage.Merging,mergeTicks=30};
+            var probe=new StreetModel(4,new[]{merging});probe.EnableRoundabout();probe.Tick();
+            Need(merging.maneuver==LaneChanges.Stage.Merging&&!merging.roundabout,"an already swept lane merge is canceled/teleported.");
+            return cases;
+        }
         // Independent polar-angle accumulation: the first assigned exit must be
         // reached in less than one full turn on all ports and lane variants.
         static float[] FirstExits(StreetModel model)
@@ -125,7 +139,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         internal static Report Validate()
         {
             var controller=UnityEngine.Object.FindFirstObjectByType<StreetSimulation>();controller.ResetModel();Need(controller.Model.Roundabout!=null,"saved runtime controller omits the junction.");
-            var firstExits=FirstExits(controller.Model);int uninterruptedCases=UninterruptedEntries(controller.Model.Cars);int[] density=DenseQueue(controller.Model.Cars);
+            int staleCases=StaleLaneRequests(controller.Model.Cars);var firstExits=FirstExits(controller.Model);int uninterruptedCases=UninterruptedEntries(controller.Model.Cars);int[] density=DenseQueue(controller.Model.Cars);
             Transform root=GameObject.Find("Roundabout Terrain").transform;var filters=root.GetComponentsInChildren<MeshFilter>();Need(filters.Length==5,"terrain loses material sharing.");
             int triangles=0;foreach(var f in filters)
             {
@@ -245,9 +259,9 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Need(controller.Model.Roundabout.Completed>=2,"storm deadlocks the junction.");
             }
             finally{cameraChoice.Preview(0);controller.SetPaused(false);for(int i=0;i<drives.Length;i++)drives[i].ResetPosition(poses[i]);climate.Preview(0,0);controller.ResetModel();controller.ApplyViews();}
-            return new Report{result="PASS: actual production routes, CCW circulation/rotated-body island and pair clearance, four random exits, rolling uninterrupted entry and local time-aligned merges, first assigned exits without occupancy retention or extra laps, measured lower entrance queue, six-car density/internal-queue recovery and committed-merge clearance, right indicators, offscreen return, bus service, storm and fixed-clock/pause; actual GPU and phone separate",cameraOptionsChecked=true,firstExitRoutes=(int)firstExits[0],maximumArcDegrees=firstExits[1],progressRewinds=progressRewinds,extraLaps=0,lowerQueueStopSeconds=lowerQueueTicks/30f,peakLowerQueue=peakLowerQueue,maximumLowerWaitSeconds=maxLowerWaitTicks/30f,denseVehicles=6,denseMovingTicks=density[0],denseInsideQueueCount=density[1],denseRecovered=density[2],entriesWithoutStop=entriesWithoutStop,approachStoppedSeconds=approachStoppedTicks/30f,uninterruptedEntryCases=uninterruptedCases,uninterruptedEntryStopTicks=0,peakMovingRingCars=peakMoving,multipleMovingTicks=multipleMovingTicks,maxCompletionGapSeconds=maxCompletionGap/30f,terrainMeshes=5,terrainTriangles=triangles,simulatedSeconds=600,entries=entries,completed=completed,returns=returns,yields=yields,recycles=recycles,destinations=destinations,pairChecks=pairChecks,ringSamples=ringSamples,signalFrames=signalFrames,hiddenSpawns=hiddenResets,maximumVisibleStep=maximumStep,busDepartures=departures,frameRates=new[]{15,30,60,120}};
+            return new Report{result="PASS: actual production routes, CCW circulation/rotated-body island and pair clearance, four random exits, rolling uninterrupted entry and local time-aligned merges, first assigned exits without occupancy retention or extra laps, measured lower entrance queue and stale rear-pass cancellation at gate, six-car density/internal-queue recovery and committed-merge clearance, right indicators, offscreen return, bus service, storm and fixed-clock/pause; actual GPU and phone separate",cameraOptionsChecked=true,staleLaneRequestCases=staleCases,firstExitRoutes=(int)firstExits[0],maximumArcDegrees=firstExits[1],progressRewinds=progressRewinds,extraLaps=0,lowerQueueStopSeconds=lowerQueueTicks/30f,peakLowerQueue=peakLowerQueue,maximumLowerWaitSeconds=maxLowerWaitTicks/30f,denseVehicles=6,denseMovingTicks=density[0],denseInsideQueueCount=density[1],denseRecovered=density[2],entriesWithoutStop=entriesWithoutStop,approachStoppedSeconds=approachStoppedTicks/30f,uninterruptedEntryCases=uninterruptedCases,uninterruptedEntryStopTicks=0,peakMovingRingCars=peakMoving,multipleMovingTicks=multipleMovingTicks,maxCompletionGapSeconds=maxCompletionGap/30f,terrainMeshes=5,terrainTriangles=triangles,simulatedSeconds=600,entries=entries,completed=completed,returns=returns,yields=yields,recycles=recycles,destinations=destinations,pairChecks=pairChecks,ringSamples=ringSamples,signalFrames=signalFrames,hiddenSpawns=hiddenResets,maximumVisibleStep=maximumStep,busDepartures=departures,frameRates=new[]{15,30,60,120}};
         }
         [Serializable] internal sealed class Report
-        {public string result;public bool cameraOptionsChecked;public float approachStoppedSeconds;public int firstExitRoutes,progressRewinds,extraLaps,peakLowerQueue;public float maximumArcDegrees,lowerQueueStopSeconds,maximumLowerWaitSeconds;public int denseVehicles,denseMovingTicks,denseInsideQueueCount,denseRecovered;public int entriesWithoutStop,uninterruptedEntryCases,uninterruptedEntryStopTicks,peakMovingRingCars,multipleMovingTicks;public float maxCompletionGapSeconds;public int terrainMeshes,terrainTriangles,simulatedSeconds,entries,completed,returns,yields,recycles,pairChecks,ringSamples,signalFrames,hiddenSpawns,busDepartures;public int[] destinations,frameRates;public float maximumVisibleStep;}
+        {public string result;public bool cameraOptionsChecked;public float approachStoppedSeconds;public int staleLaneRequestCases,firstExitRoutes,progressRewinds,extraLaps,peakLowerQueue;public float maximumArcDegrees,lowerQueueStopSeconds,maximumLowerWaitSeconds;public int denseVehicles,denseMovingTicks,denseInsideQueueCount,denseRecovered;public int entriesWithoutStop,uninterruptedEntryCases,uninterruptedEntryStopTicks,peakMovingRingCars,multipleMovingTicks;public float maxCompletionGapSeconds;public int terrainMeshes,terrainTriangles,simulatedSeconds,entries,completed,returns,yields,recycles,pairChecks,ringSamples,signalFrames,hiddenSpawns,busDepartures;public int[] destinations,frameRates;public float maximumVisibleStep;}
     }
 }

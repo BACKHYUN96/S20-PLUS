@@ -286,6 +286,12 @@ namespace PixelTraffic.UnityPrototype
                 int i=(pass+model.ActiveTicks/30)%States.Length;var s=States[i];var c=model.Cars[i];if(!c.active)continue;
                 if(s.stage==Stage.Road)
                 {
+                    // An old rear-pass request can reach the gate after leaving
+                    // the lane-change zone. Its Context can never become true,
+                    // yet Start requires Idle: clear only unswept requests here.
+                    // A real merge finishes normally, without a lateral teleport.
+                    if(c.Direction>0&&c.z>=GateZ-30-c.SafetyLength&&(c.maneuver==LaneChanges.Stage.Waiting||c.maneuver==LaneChanges.Stage.Signaling))
+                        model.Maneuvers.Cancel(c,model.ActiveTicks);
                     if(c.Direction>0&&c.z>=GateZ-.001f&&c.maneuver==LaneChanges.Stage.Idle&&!model.Stops.Holds(c))Start(i,0);
                     else if(c.Direction<0&&c.z<=StarterConfig.RouteStart+.001f)
                     {
