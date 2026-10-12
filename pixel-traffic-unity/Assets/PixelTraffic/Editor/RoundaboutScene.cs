@@ -87,7 +87,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             for(int i=0;i<4;i++)
             {
                 float side=i%2==0?-1:1,back=i<2?-1:1;
-                Vector3 p=new Vector3(side*27,.02f,z+back*26);Bed(p,4.4f,3.2f,false);
+                Vector3 p=new Vector3(side*27,-.17f,z+back*26);Bed(p,4.4f,3.2f,false);
                 for(int n=0;n<2;n++)
                 {
                     Vector3 at=p+new Vector3(side*(n*2-1),.43f,back*1.65f);Vector3 radius=new Vector3(1.15f,.57f+n*.18f,.94f);

@@ -150,7 +150,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 if(marker.name=="Island Planting Bed"){islandBeds++;Need(new Vector2(p.x,p.z-235).magnitude+Mathf.Max(s.x,s.z)<9.5f&&p.y>.235f&&p.y<.27f,"island bed crosses its curb or floats.");}
                 if(marker.name=="Island Shrub"){shrubs++;Need(p.y+s.y<1.1f&&new Vector2(p.x,p.z-235).magnitude+Mathf.Max(s.x,s.z)<9.5f,"central planting obscures traffic.");}
                 if(marker.name=="Island Flower Cluster")flowers++;
-                if(marker.name=="Outer Planting Bed"){outerBeds++;Need(Mathf.Abs(p.x)-s.x>21.5f&&Mathf.Abs(p.z-235)-s.z>21.5f,"outer bed enters the circle, flared approach or sidewalk.");}
+                if(marker.name=="Outer Planting Bed"){outerBeds++;Need(Mathf.Abs(p.y+.17f)<.001f&&Mathf.Abs(p.x)-s.x>21.5f&&Mathf.Abs(p.z-235)-s.z>21.5f,"outer bed enters the circle, flared approach or sidewalk.");}
                 if(marker.name=="Outer Shrub")outerShrubs++;
                 if(marker.name=="Garden Tree")trees++;
                 var filter=marker.GetComponent<MeshFilter>();if(filter==null)continue;
@@ -162,7 +162,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     var p0=points[i];Need(!float.IsNaN(p0.x)&&!float.IsNaN(p0.y)&&!float.IsNaN(p0.z)&&Mathf.Abs(normals[i].magnitude-1)<.001f,"garden geometry invalid.");
                     float r=new Vector2(p0.x,p0.z-235).magnitude;
                     bool central=r<9.5f&&p0.y>=.235f&&p0.y<1.1f;
-                    bool outside=Mathf.Abs(p0.x)>21.5f&&Mathf.Abs(p0.z-235)>21.5f&&p0.y>=.015f&&p0.y<4.7f;
+                    bool outside=Mathf.Abs(p0.x)>21.5f&&Mathf.Abs(p0.z-235)>21.5f&&p0.y>=-.175f&&p0.y<4.7f;
                     Need(central||outside,"actual planting enters a vehicle lane, walking band, or central sightline.");
                 }
                 for(int i=0;i<indices.Length;i+=3)
