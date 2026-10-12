@@ -1,4 +1,48 @@
-# Pixel Traffic Unity — 로터리 차량 흐름 0.35.0
+# Pixel Traffic Unity — 로터리 연속 진입 0.36.0
+
+## 2026-10-12 — Unity 0.36.0 로터리 연속 진입: 검증·서명 APK 전달 완료
+
+폰에서 0.35.0 두 대 동시 통과를 확인한 사용자가 빈 로터리에서도 기다리지 않고, 충돌하지 않는 차량들은 계속 이동하도록 요청했다. 도로→로터리 handoff를 고정 정지선으로 취급하던 제동을 없애고 tick의 작은 이동 초과분을 같은 직선 경로의 progress로 넘긴다. 양보 지점에 닿기 전 제동거리부터 빈 진입을 확인하여 계속 진행한다. 기준속도 3.8→4.8m/s, 기존 가감속 유지. 대기선은 entry-22m이며 남쪽 안쪽 차로는 기존 gate에 두어 바깥 버스 꼬리를 막지 않는다. 미래 회전 범위의 먼 여유 14→8m와 합류 전에 지나가는 위치 제외로 불필요한 양보를 줄인다. 실제 회전 차체는 정확한 길이·각도와 0.15m 길이/0.08m 폭 여유로 검사한다. 일반 도로의 하단 재진입과 로터리 진출 handoff는 별도 SafetyLength+2.2m 간격을 적용하고, 미래경로의 yaw-expanded SafetyLength/1.8m 여유와 동일 진입로 순서·진입/진출 교차·세 번 출구 깜빡이를 유지한다. 동시 차량 수 제한은 없으며 충돌 위험이 있는 합류는 감속·양보한다.
+
+변경 4CS: RoundaboutTraffic/RoundaboutChecks/StarterConfig/StarterScene. 0.36.0/code37, RoundaboutRolling-0.36.0.unity / Generated/RoundaboutRolling0360. 도로·차량 geometry, 카메라, 조명·기후, 보행·신호, 승하차·와이퍼 및 host12/workflow는 유지했다. 기존304파일·실제index/status·130검증입력을 보존했다.
+
+**개발·로컬 검사:** 낙관적인 시간 예측만으로 양쪽 대기선을 앞당기는 시행은 대형차 꼬리 및 선후 합류 정체를 일으켜 배제했다. 안전예약과 합류 순서를 보존하고 대기선을 분리했다. 기존 격리.NET8, 실제6차종 치수·생산 모델과 독립 SAT로1200초 실행: normal 완료143/최대동시3/최대무완료27.2초/최소 후반 이동927.17m; 확대차체 완료146/최대동시3/27.3초/최소999.66m; 폭풍 완료84/최대동시2/42.9초. 모두 충돌 없음. 빈 경로30조건 정차tick0와 blocked rolling handoff의 역이동 방지 검사 PASS. 실제Unity에서 잡힌0.1204834m 역보정은 limit의 현재progress 하한으로 수정했으며, 정체 진단은 실패 시에만 실행해 정상tick 오류 로그를 제거했다. 같은 fixture의0.35.0 완료115와 비교했으며, 로컬 결과는 실제Unity/Android/폰 검사와 구분한다.
+
+**실제 Unity:** source `fca458e4e174ddf66bbdf92bed80955710759251` / [검증 포함 BuildApk](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38209523501). 저장24차량의5진입조건 총120빈 경로에서 정차tick0. 로터리 카메라600초 실제 검사는 진입74, 완료71, 정차 없는 진입8, 최대 동시 회전3대, 다중 이동3127tick, 최대 무완료27.17초. 접근 차량 정차시간 합계1806.47초는 여러 차량·방문 전체 누계이며 한 차량의 대기시간이 아니다. 네 출구[10, 11, 11, 11], 복귀41, 재진입30, 독립 회전차체 검사993301회 및 중앙섬·반시계·연속 이동·버스/보행/신호·폭풍·15/30/60/120Hz·pause PASS. 기존 기후/조명/와이퍼/반사 검사 PASS. 기본108616tri, 최대119962tri/1592renderers/47materials로110000/120000/2400/48 예산 미만.
+
+**실제 GPU:** source/bytes/SHA/ZIP CRC가 같은166PNG 확인.4연속 frame의 실제 회전2차량 각각>.5m 이동, 변경픽셀[4074, 3760, 5349] PASS. 낮/노을/밤/강비 카메라 옵션 및 기존 안개 비교를 유지했다. Editor/URP 촬영이며 실제폰 촬영/FPS 검사가 아니다. 실제 PC 실패/수정 기록: [{'run': 38207266889, 'job': 114673415025, 'sourceCommit': 'a01c45f122b53aaf6734b8fdea67d942c12050af', 'reason': 'Actual Unity continuity check caught a rolling handoff0.1204834m past the yield hold being clamped backwards when admission was blocked. Floor the movement limit at current progress; do not weaken continuity check.'}, {'run': 38207647844, 'job': 114674586907, 'sourceCommit': '84c9e13573c335fdd24c6b941d2fe9edb4ba4a10', 'reason': 'Actual full-fleet bus regression found road-recycle safety gap -0.1145325m at tick169 pair16/20. The tighter physical guard for rotated junction bodies also affected bottom road respawn. Keep2.2m yaw-expanded road spawn clearance separately; do not relax bus gap assertions.'}, {'run': 38207764530, 'job': 114677152002, 'sourceCommit': '86ab888a25430e2419c57dfd4e1d646e6095aef5', 'reason': 'Queued source with lazy diagnostic but without road-spawn fix repeats the same full-fleet safety gap failure16/20 tick169. Downloaded failure report confirms it; final source restores2.2m at recycling and exit handoff.'}].
+
+**Android·전달:** `unity-apk-0.36.0-build2` / [BuildApk](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38209523501). BuildPlayer 오류0/경고0, launcherLint 오류0/경고8. 다운로드APK의 apksigner/aapt/ZIP CRC로0.36.0/code37/min29/target36/ARM64 IL2CPP와 wallpaper service/private provider/settings launcher/비활성UnityActivity 확인. 원본 v2cert SHA256 `a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6`. host12 SHA가 같아 [0.34.0 unityLibraryLint](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38192276536) 오류0/경고10/8생성파일일치를 재사용했다.
+
+[APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/018ef633cf73b42642e953ac837d357cbb069436/pixel-traffic-unity-prototype-0.36.0.apk) · [실제 frame0](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/018ef633cf73b42642e953ac837d357cbb069436/roundabout-motion-0.png) · [frame1](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/018ef633cf73b42642e953ac837d357cbb069436/roundabout-motion-1.png) · [로터리 밤](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/018ef633cf73b42642e953ac837d357cbb069436/camera-roundabout-night.png). APK31237287bytes/SHA256`e079f6de2ecbae3a3a8290d02f213866faf4f8559de461ab48f81e9adfb6f945`. `downloads/unity-0.36.0`의16파일을 로그인 없는HTTP200/no redirect/full bytes/SHA로 확인했다. main에APK/새workflow를 추가하지 않았다.
+
+USB폰1대와 디버깅을 허용한 뒤 PowerShell 전체블록을 실행한다. 지정 폴더 C:\Users\김백현\Desktop\AI에 다운로드·SHA 확인·기존앱 업데이트:
+```powershell
+& {
+    $ErrorActionPreference = "Stop"
+    $apkFolder = "C:\Users\김백현\Desktop\AI"
+    $apkPath = Join-Path $apkFolder "pixel-traffic-unity-prototype-0.36.0.apk"
+    $apkUrl = "https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/018ef633cf73b42642e953ac837d357cbb069436/pixel-traffic-unity-prototype-0.36.0.apk"
+    $trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+    if (-not (Test-Path -LiteralPath $trafficAdb)) { throw "Unity의 adb.exe를 찾을 수 없습니다." }
+    & $trafficAdb start-server
+    if ($LASTEXITCODE -ne 0) { throw "ADB 시작 실패" }
+    $deviceLines = & $trafficAdb devices
+    if ($LASTEXITCODE -ne 0) { throw "폰 연결 확인 실패" }
+    $connectedDevices = @($deviceLines | Where-Object { $_ -match '^\S+\s+device$' })
+    if ($connectedDevices.Count -ne 1) { throw "폰 1대를 USB로 연결하고 USB 디버깅을 허용해주세요." }
+    New-Item -ItemType Directory -Force -Path $apkFolder | Out-Null
+    Write-Host "0.36.0 APK 다운로드 중..."
+    Invoke-WebRequest -UseBasicParsing -Uri $apkUrl -OutFile $apkPath
+    if ((Get-FileHash -LiteralPath $apkPath -Algorithm SHA256).Hash -ne "e079f6de2ecbae3a3a8290d02f213866faf4f8559de461ab48f81e9adfb6f945") { throw "파일 검증 실패. 다시 실행해주세요." }
+    Write-Host "폰에 앱 설치 중..."
+    & $trafficAdb install -r $apkPath
+    if ($LASTEXITCODE -ne 0) { throw "앱 설치 실패. 위 오류를 확인해주세요." }
+    Write-Host "완료! 0.36.0 설치 성공." -ForegroundColor Green
+}
+```
+
+설치 후 카메라 구도 → 로터리 보기에서 확인한다. 0.35.0 두 대 동시 통과는 사용자 폰 확인;0.36.0 실제폰 외형/흐름/FPS/발열/장시간 확인 대기다. 클라우드에서 폰 설치를 실행했다고 주장하지 않는다.
 
 ## 2026-10-12 — Unity0.35.0 로터리 차량 흐름 수정: 실제 검증·서명APK 전달 완료
 
