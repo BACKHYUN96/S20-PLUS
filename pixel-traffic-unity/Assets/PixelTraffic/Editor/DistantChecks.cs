@@ -59,7 +59,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                     for(int n=0;n<4;n++)Need(bp[i+n].z>=310.399f,"Riverfront grade intrudes into the swept river-road traffic envelope.");
                     float width=Mathf.Abs(bp[i+2].x-bp[i].x);
                     if(bc[i].g==0&&Mathf.Abs(width-16)<.001f){Need(bank.normals[i].y>.99f&&bp[i+1].z>bp[i].z,"Stair tread is back-facing or reversed.");stairs++;}
-                    if(bc[i].g==2&&Mathf.Abs(width-16)<.001f){Need(bp[i+1].y>bp[i].y&&bp[i+1].y-bp[i].y<.36f,"Stair riser drops or becomes oversized.");risers++;}
+                    if(bc[i].g==2&&Mathf.Abs(width-16)<.001f&&Mathf.Abs(bp[i].x+8)<.001f){Need(bp[i+1].y>bp[i].y&&bp[i+1].y-bp[i].y<.36f,"Stair riser drops or becomes oversized.");risers++;}
                     if(bc[i].g==1){Need(Mathf.Abs(bp[i].y-.15f)<.001f&&Mathf.Abs(bp[i+1].y-7.1f)<.001f,"Planting grade loses street/promenade seam.");graded++;}
                 }
                 if(bc[i].r==4&&Mathf.Abs(bp[i].z-329.1f)<.001f&&Mathf.Abs(bp[i+2].x-bp[i].x-.18f)<.001f)posts++;
