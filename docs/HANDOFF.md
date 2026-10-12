@@ -1,5 +1,51 @@
 # 새 채팅 인수인계 — 픽셀 트래픽 0.29.0
 
+## 2026-10-12 — Unity 0.42.0 건물 외벽·창문 재질: 검증·서명 APK 전달 완료
+
+사용자가0.41.0 폰 적용을확인하고건물퀄리티향상을승인했다. 건물24동의기존입체창틀/발코니/옥상/물리메시를유지하면서외벽석재와유리질감을다듬었다. 외벽3공유색조를밝은석재·따뜻한베이지·차분한회색으로보완하고좌우palette profile을다르게배정했다. 512×512공유Masonry와5.2×5.6m미터UV로 .65×.7m타일줄눈과floorcornice접합부명암을그렸다. 높이4/5/6층의3공유cubeUVmesh는원본24vertex/12tri/normal/position을유지한다. 기존ArchitecturalTrim/WindowFrame의128/64공유texture로석재·프레임모서리의명암을더했다.
+
+창문Base/Emission atlas는256×128에서512×256으로높였다. Base에하늘색그라데이션·구름·반대편건물의낮은실루엣·광택선을구웠고유리smoothness .72/metallic .08을설정했다. Opaque URP/Lit로투명layer/실시간반사카메라/새Light/콜라이더를추가하지않는다. 8실내variant/켜진·꺼진방/상가512atlas/기존낮→노을→밤 및날씨emission gain을유지한다. 공용마감texture5장의RGB24 mip texel계산량은실제2179071bytes(3MiB미만)이며실기기메모리측정은아니다.
+
+변경7CS ArchitectureScene/CityEnvironment/FrontageScene/FrontageChecks/CityPreview/StarterScene/StarterConfig 및기존workflow1. 0.42.0/code43/Generated/StoneGlass0420/Scenes/StoneGlass-0.42.0.unity. Capture6장추가로총190PNG를기존24MiB한도내4그룹으로분할/업로드하도록기존workflow를3→4그룹으로확장했다. 새workflow는없고APK/host/signing절차는유지한다. 기존304파일/actualindex/status/130빌드검증입력/host12보존을확인했다. source `225a4c7fe7e9b53641dbef71ca063623c7a4fd1d` / [전체Windows검증·서명APK](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38259029159). 사전Roslyn7CS/YAML4그룹/범위보존과실제PC결과는구분한다. 실패·수정이력: [].
+
+**실제Unity:** 실제24벽·3공유palette/3원본cubeUVmesh/원본vertex·triangle·normal 및미터UV,석재줄눈/접합부·유리상하색픽셀/공유5texture/저장형식·mip/공유frame·trim과기존emission전환검사 PASS. 기본108608tri, 최대119954tri/1598renderers/47materials:0.41과같고기존110000/120000/2400/48한도미만. 교통600초완료125/32첫출구/추가회전0/최장하단대기4.03초/차체SAT993186회,원주/빈진입120조건/차선48조건/6대밀도·화단간격·버스·보행·와이퍼·18기후조합/4FPS·반사·강변/조경도 PASS.
+
+**실제GPU:** 동일source190PNG의ZIP bytes/SHA/CRC 및PNG포맷을확인했다. 기존전체구도와새finish6장(도시낮/밤, 가까운외벽낮/노을/밤/비),기존건물확대·밤창문과0.41실제캡처를비교했다. PC Unity URP/Direct3D11이며폰FPS나시안이미지가아니다. 직접관찰: 0.41 실제도시낮과0.42 도시낮을비교했다. 외벽타일줄눈이더정교하고층높이와맞으며석재색이밝아졌다. 좌우건물색조가다르고창문에하늘·구름과반대편건물의낮은실루엣·광택선이보인다. 최종finish6장의도시낮/밤과외벽낮/노을/밤/비를직접관찰하여기존창틀·발코니·식재와따뜻한/차가운방조명·꺼진방을확인했다. 비에서기존자연스러운장면명암이유지된다. 삼각형수와재질수는0.41과동일하고차량흐름을유지한다. 실기기FPS나시안과완전히동일한최종아트로표시하지않는다..
+
+**Android:** `unity-apk-0.42.0-build1` BuildPlayer오류0/경고0,launcherLint오류0/경고8. 실제다운로드APK apksigner/aapt/ZIP CRC로0.42.0/code43/min29/target36/ARM64 IL2CPP/원본v2cert/배경화면서비스/private provider/settings launcher/disabled UnityActivity를확인했다. host12SHA동일로 [기존0.34 hostLint](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38192276536) 오류0/경고10·생성8입력동일결과를재사용한다.
+
+[APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/c23848da0f84725b47c7fc39106ce064368af8c9/pixel-traffic-unity-prototype-0.42.0.apk) · [도시낮](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/c23848da0f84725b47c7fc39106ce064368af8c9/finish-city-day.png) · [외벽낮](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/c23848da0f84725b47c7fc39106ce064368af8c9/finish-facade-day.png) · [외벽밤](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/c23848da0f84725b47c7fc39106ce064368af8c9/finish-facade-night.png). APK31734602bytes/SHA256 `65f54c4c1e13e43f48d66fd5a7e6b722be48abe93f828c691f007d17e201db6d`. 별도 `downloads/unity-0.42.0`의36파일 모두로그인없는HTTP200/no redirect/full bytes/SHA를확인했다. main에APK binary를넣지않는다.
+
+USB폰1대·디버깅허용후PowerShell전체블록을실행한다. 지정Desktop AI폴더에다운로드·SHA확인·설치:
+```powershell
+& {
+    $ErrorActionPreference = "Stop"
+    $apkFolder = "C:\Users\김백현\Desktop\AI"
+    $apkPath = Join-Path $apkFolder "pixel-traffic-unity-prototype-0.42.0.apk"
+    $apkUrl = "https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/c23848da0f84725b47c7fc39106ce064368af8c9/pixel-traffic-unity-prototype-0.42.0.apk"
+    $trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+    if (-not (Test-Path -LiteralPath $trafficAdb)) { throw "Unity의 adb.exe를 찾을 수 없습니다." }
+    & $trafficAdb start-server
+    if ($LASTEXITCODE -ne 0) { throw "ADB 시작 실패" }
+    $deviceLines = & $trafficAdb devices
+    if ($LASTEXITCODE -ne 0) { throw "폰 연결 확인 실패" }
+    $connectedDevices = @($deviceLines | Where-Object { $_ -match '^\S+\s+device$' })
+    if ($connectedDevices.Count -ne 1) { throw "폰 1대를 USB로 연결하고 USB 디버깅을 허용해주세요." }
+    New-Item -ItemType Directory -Force -Path $apkFolder | Out-Null
+    Write-Host "0.42.0 APK 다운로드 중..."
+    Invoke-WebRequest -UseBasicParsing -Uri $apkUrl -OutFile $apkPath
+    if ((Get-FileHash -LiteralPath $apkPath -Algorithm SHA256).Hash -ne "65f54c4c1e13e43f48d66fd5a7e6b722be48abe93f828c691f007d17e201db6d") { throw "파일 검증 실패. 다시 실행해주세요." }
+    Write-Host "폰에 앱 설치 중..."
+    & $trafficAdb install -r $apkPath
+    if ($LASTEXITCODE -ne 0) { throw "앱 설치 실패. 위 오류를 확인해주세요." }
+    Write-Host "완료! 0.42.0 설치 성공." -ForegroundColor Green
+}
+```
+
+0.41.0사용자폰적용확인;0.42.0폰외형/FPS/발열/장시간확인대기. 클라우드에서사용자폰설치를실행했다고주장하지않는다.
+
+**다음 추천 작업:** 도로·보도 재질 그래픽. 밝아진건물과거리의질감을맞추도록아스팔트의입자·색조,보도줄눈·마모,경계석과접지명암을다듬는다. 기존차선/횡단보도배치·차량경로·날씨모션을유지하며보이는전체거리의완성도를높이는범위를추천한다. 다음추천은착수완료를뜻하지않는다. 사용자요청에따라향후모든완료안내에다음작업과이유를함께포함한다.
+
 ## 2026-10-12 — Unity 0.42.0 건물 외벽·창문 재질: 구현 완료·실제 PC 검증 대기
 
 사용자가0.41.0 폰적용을확인하고건물그래픽정교화를승인했다. 앞으로완료안내에는다음추천작업도포함한다. 이번에는24기존건물의물리메시/창틀/발코니/옥상구조를유지하고석재512×512와미터기반UV(5.2×5.6mrepeat, .65×.7m패널),3공유외벽색조·좌우profile변화,기존floorcornice밑의부드러운명암과줄눈을다듬었다. 높이별3cubeUVmesh는원본24vertices/12tri/normal/position을유지한다. 기존ArchitecturalTrim/WindowFrame에공유128/64texture로모서리·재질명암을보완했다.
