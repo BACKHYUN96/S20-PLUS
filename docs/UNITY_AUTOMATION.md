@@ -1,5 +1,9 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-12 — Unity 0.33.0 야간 조명 과노출 보완·검증 포함 APK 후보
+
+Actual Validate38186445194 passed all logic/GPU checks but visual inspection found160-intensity junction lights overexposed. Use the existing2.3 intensity for all four slots and add a real night-GPU red/green clipping guard below8% of pixels. Run one BuildApk tag that includes full PrepareBatch/Validate, Android/Lint/signing and actual162-GPU capture before public APK and main final publication. Candidate is published by tag; main retains the previous intermediate source until this exact candidate passes all checks. No prior report is claimed as this candidate verification.
+
 ## 2026-10-12 — Unity 0.33.0 로터리 조명 슬롯 재배치
 
 Actual saved-night capture from Validate38185377881 passed with10.6% haze. Reuse the existing four realtime light slots: keep two near the camera and direct two shadowless38m spots at the central island/approaches, instead of illuminating only the front street.160 intensity compensates the greater light-to-ground distance and follows existing LampGain transitions. Keep four total/per-object lights, two fixtures/glow, original camera and unchanged triangle/material budget. Add actual spot direction/range/shadow assertions. Full eight-source publish and fresh actual PC verification are required before tagging APK; no interim APK published.

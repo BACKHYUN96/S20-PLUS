@@ -646,6 +646,11 @@ namespace PixelTraffic.UnityPrototype.Editor
             int visible = 0, pink = 0; foreach (Color32 pixel in image.GetPixels32())
             { if (pixel.r + pixel.g + pixel.b > 15) visible++; if (pixel.r > 220 && pixel.b > 220 && pixel.g < 50) pink++; }
             if (visible < image.width * image.height / 3 || pink > image.width * image.height / 100) throw new InvalidOperationException("Climate preview is black or pink: " + label);
+            if(label=="roundabout-night")
+            {
+                int clipped=0;foreach(var pixel in image.GetPixels32())if(pixel.r>=250&&pixel.g>=250)clipped++;
+                if(clipped>image.width*image.height*.08f)throw new InvalidOperationException("Junction night lighting clips grass/road detail: "+clipped+" pixels.");
+            }
             if(label=="korean-pedestrian-stop"||label=="korean-pedestrian-walk")
             {
                 int lit=0;bool walk=label.EndsWith("walk");

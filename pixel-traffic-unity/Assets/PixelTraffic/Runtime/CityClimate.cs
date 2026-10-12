@@ -108,7 +108,7 @@ namespace PixelTraffic.UnityPrototype
             runtimeSurfaces[4].SetColor("_EmissionColor", new Color(1, .92f, .68f) * LampGain * 1.5f);
             runtimeSurfaces[5].SetColor("_EmissionColor", new Color(1, .035f, .01f) * LampGain * 1.2f);
             if(runtimeSurfaces.Length>6)runtimeSurfaces[6].SetColor("_EmissionColor", Color.white * ShopGain * 1.1f);
-            foreach (var light in streetLights) light.intensity = (light.name=="Roundabout Street Light"?160f:2.3f) * LampGain;
+            foreach (var light in streetLights) light.intensity = 2.3f * LampGain;
             effects.SetLighting(LampGain);
             float wind = (float)weather.Weights[5];
             for (int i = 0; i < canopies.Length; i++)
