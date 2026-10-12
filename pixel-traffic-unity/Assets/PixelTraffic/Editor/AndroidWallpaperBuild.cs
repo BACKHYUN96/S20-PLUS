@@ -92,6 +92,9 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Patch(generated,true);ValidateGenerated(directory);string first=File.ReadAllText(generated);Patch(generated,true);Need(File.ReadAllText(generated)==first,"Manifest patch is not idempotent.");
                 XElement metadata=XDocument.Load(Path.Combine(Templates,"res/xml/pixel_traffic_wallpaper.xml")).Root;
                 Need((string)metadata.Attribute(Android+"settingsActivity")==Package+"WallpaperSettingsActivity","Wallpaper settings metadata missing.");
+                var resources=XDocument.Load(Path.Combine(Templates,"res/values/pixel_traffic_wallpaper.xml")).Root;
+                var cameras=resources.Elements("string-array").Single(e=>(string)e.Attribute("name")=="pixel_traffic_cameras");
+                Need(cameras.Elements("item").Select(e=>e.Value).SequenceEqual(new[]{"도시 전체","로터리 보기"}),"Camera settings choices missing or reordered.");
             }
             finally{Directory.Delete(directory,true);}
         }

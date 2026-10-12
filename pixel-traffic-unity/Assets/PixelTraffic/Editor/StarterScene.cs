@@ -14,7 +14,7 @@ namespace PixelTraffic.UnityPrototype.Editor
     // Generated geometry stays in its own scene; existing scenes are never rebuilt in place.
     public static class StarterScene
     {
-        internal const string Generated = "Assets/PixelTraffic/Generated/RoundaboutVisibility0330";
+        internal const string Generated = "Assets/PixelTraffic/Generated/RoundaboutCamera0340";
         private const string PipelinePath = Generated + "/MobileURP.asset";
         private static readonly Dictionary<string, Material> materials = new Dictionary<string, Material>();
 
@@ -76,6 +76,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             camera.backgroundColor = new Color(.65f, .77f, .86f);
             camera.allowHDR = false;
             camera.gameObject.AddComponent<UniversalAdditionalCameraData>();
+            camera.gameObject.AddComponent<CityCamera>();
 
             var sun = new GameObject("Afternoon Sun").AddComponent<Light>();
             sun.type = LightType.Directional;

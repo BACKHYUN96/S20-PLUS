@@ -611,7 +611,18 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
                 finally{climate.Preview(0,0);detailStreet.ApplyViews();}
                 var reflectionGpu=GroundScene.CheckReflectionGpu();
+                var cameraOptionImages=new System.Collections.Generic.List<string>();var cameraChoice=camera.GetComponent<CityCamera>();
+                if(cameraChoice==null)throw new InvalidOperationException("Camera option missing from saved scene.");
+                try
+                {
+                    camera.aspect=.45f;cameraChoice.Preview(1);
+                    foreach(int theme in new[]{0,1,2})
+                    {climate.Preview(theme,0);detailStreet.ApplyViews();cameraOptionImages.Add(CaptureState(camera,request,target,image,"camera-option-roundabout-"+(theme==0?"day":theme==1?"dusk":"night")));}
+                    climate.Preview(0,2);detailStreet.ApplyViews();cameraOptionImages.Add(CaptureState(camera,request,target,image,"camera-option-roundabout-rain"));
+                }
+                finally{cameraChoice.Preview(0);climate.Preview(0,0);detailStreet.ApplyViews();}
                 File.WriteAllText("Reports/preview-result.json", JsonUtility.ToJson(new Report {
+                    cameraOptionImages=cameraOptionImages.ToArray(),
                     roundaboutImages=roundaboutPreviews.ToArray(),roundaboutPixelChanges=roundaboutPixelChanges.ToArray(),roundaboutMotionPositions=roundaboutMotionPositions.ToArray(),
                     junctionVisibilityImages=junctionVisibilityPreviews.ToArray(),savedNightChangedPixels=savedNightChangedPixels,savedNightPixelDelta=savedNightPixelDelta,savedNightFogFraction=savedNightFogFraction,
                     result = "PASS", version = StarterConfig.VersionName, editor = Application.unityVersion,
@@ -678,6 +689,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             public int width, height;
             public string[] roundaboutImages;public int[] roundaboutPixelChanges;public Vector3[] roundaboutMotionPositions;
             public string[] junctionVisibilityImages;public int savedNightChangedPixels;public float savedNightPixelDelta,savedNightFogFraction;
+            public string[] cameraOptionImages;
             public string[] headlightColourImages;
             public string[] wetReflectionImages,koreanSignalImages;
             public string[] wiperImages;public int[] wiperPixelChanges;

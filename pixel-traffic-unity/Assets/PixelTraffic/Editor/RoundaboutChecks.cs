@@ -58,6 +58,28 @@ namespace PixelTraffic.UnityPrototype.Editor
                 {var q=camera.WorldToViewportPoint(point);Need(q.x<-.05f||q.x>1.05f||q.z<0,"recycle endpoint remains visible in saved portrait.");}
             }
             camera.aspect=aspect;
+            var cameraChoice=camera.GetComponent<CityCamera>();Need(cameraChoice!=null,"saved camera choice component missing.");
+            Vector3 originalPosition=camera.transform.position;Quaternion originalRotation=camera.transform.rotation;float originalFov=camera.fieldOfView;
+            var cameraProbe=UnityEngine.Object.FindFirstObjectByType<PrototypeDrive>();Vector3 carBefore=cameraProbe.transform.position;
+            try
+            {
+                cameraChoice.Preview(1);
+                foreach(float a in new[]{9f/20,9f/16})
+                {
+                    camera.aspect=a;
+                    for(int sample=0;sample<16;sample++)
+                    {
+                        float angle=sample*Mathf.PI/8;var q=camera.WorldToViewportPoint(new Vector3(Mathf.Cos(angle)*19.5f,.3f,235+Mathf.Sin(angle)*19.5f));
+                        Need(q.x>.05f&&q.x<.95f&&q.y>.05f&&q.y<.95f&&q.z>0,"roundabout option clips the ring.");
+                    }
+                    foreach(Vector3 point in new[]{new Vector3(-140,4,302),new Vector3(140,4,302),new Vector3(-140,4,230.2f),new Vector3(140,4,239.8f)})
+                    {var q=camera.WorldToViewportPoint(point);Need(q.x<-.05f||q.x>1.05f||q.z<0,"roundabout option exposes a recycle endpoint.");}
+                }
+                cameraChoice.Preview(0);
+                Need(Vector3.Distance(camera.transform.position,originalPosition)<.001f&&Quaternion.Angle(camera.transform.rotation,originalRotation)<.01f&&Mathf.Abs(camera.fieldOfView-originalFov)<.001f,"city view is not restored.");
+                Need(cameraProbe.transform.position==carBefore,"camera choice resets traffic.");
+            }
+            finally{cameraChoice.Preview(0);camera.aspect=aspect;}
             var drives=UnityEngine.Object.FindObjectsByType<PrototypeDrive>(FindObjectsInactive.Include,FindObjectsSortMode.None);var poses=new float[drives.Length];for(int i=0;i<drives.Length;i++)poses[i]=drives[i].transform.position.z;
             var climate=UnityEngine.Object.FindFirstObjectByType<CityClimate>();int pairChecks=0,ringSamples=0,signalFrames=0,hiddenResets=0;float maximumStep=0;
             int entries=0,completed=0,returns=0,yields=0,recycles=0,departures=0;int[] destinations=null;
@@ -116,9 +138,9 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Need(controller.Model.Roundabout.Completed>=2,"storm deadlocks the junction.");
             }
             finally{controller.SetPaused(false);for(int i=0;i<drives.Length;i++)drives[i].ResetPosition(poses[i]);climate.Preview(0,0);controller.ResetModel();controller.ApplyViews();}
-            return new Report{result="PASS: actual production routes, CCW circulation/rotated-body island and pair clearance, four random exits, circulating-priority reservation, right indicators, offscreen return, bus service, storm and fixed-clock/pause; actual GPU and phone separate",terrainMeshes=5,terrainTriangles=triangles,simulatedSeconds=600,entries=entries,completed=completed,returns=returns,yields=yields,recycles=recycles,destinations=destinations,pairChecks=pairChecks,ringSamples=ringSamples,signalFrames=signalFrames,hiddenSpawns=hiddenResets,maximumVisibleStep=maximumStep,busDepartures=departures,frameRates=new[]{15,30,60,120}};
+            return new Report{result="PASS: actual production routes, CCW circulation/rotated-body island and pair clearance, four random exits, circulating-priority reservation, right indicators, offscreen return, bus service, storm and fixed-clock/pause; actual GPU and phone separate",cameraOptionsChecked=true,terrainMeshes=5,terrainTriangles=triangles,simulatedSeconds=600,entries=entries,completed=completed,returns=returns,yields=yields,recycles=recycles,destinations=destinations,pairChecks=pairChecks,ringSamples=ringSamples,signalFrames=signalFrames,hiddenSpawns=hiddenResets,maximumVisibleStep=maximumStep,busDepartures=departures,frameRates=new[]{15,30,60,120}};
         }
         [Serializable] internal sealed class Report
-        {public string result;public int terrainMeshes,terrainTriangles,simulatedSeconds,entries,completed,returns,yields,recycles,pairChecks,ringSamples,signalFrames,hiddenSpawns,busDepartures;public int[] destinations,frameRates;public float maximumVisibleStep;}
+        {public string result;public bool cameraOptionsChecked;public int terrainMeshes,terrainTriangles,simulatedSeconds,entries,completed,returns,yields,recycles,pairChecks,ringSamples,signalFrames,hiddenSpawns,busDepartures;public int[] destinations,frameRates;public float maximumVisibleStep;}
     }
 }
