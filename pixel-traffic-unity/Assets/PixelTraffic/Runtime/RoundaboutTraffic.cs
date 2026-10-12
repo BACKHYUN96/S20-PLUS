@@ -120,10 +120,12 @@ namespace PixelTraffic.UnityPrototype
         }
         static bool Axis(Vector2 d,Vector2 axis,Vector2 fa,Vector2 sa,Vector2 fb,Vector2 sb,float la,float wa,float lb,float wb)
         =>Mathf.Abs(Vector2.Dot(d,axis))>=Mathf.Abs(Vector2.Dot(fa,axis))*la+Mathf.Abs(Vector2.Dot(sa,axis))*wa+Mathf.Abs(Vector2.Dot(fb,axis))*lb+Mathf.Abs(Vector2.Dot(sb,axis))*wb-.0001f;
+        // Exact rotated bodies already include yaw. Keep a small physical buffer;
+        // the larger road SafetyLength remains in admission/reservation forecasts.
         int PhysicalBlocker(int index,Vector2 point,float yaw)
         {
             var c=model.Cars[index];for(int j=0;j<model.Cars.Length;j++)
-            {var other=model.Cars[j];if(j==index||!other.active||other.roundHidden)continue;if(!Separated(point,yaw,c.SafetyLength,c.width,Position(other),Yaw(other),other.SafetyLength,other.width))return j;}
+            {var other=model.Cars[j];if(j==index||!other.active||other.roundHidden)continue;if(!Separated(point,yaw,c.length,c.width,Position(other),Yaw(other),other.length,other.width,.15f))return j;}
             return -1;
         }
         public int Blocker(int index,Vector2 point,float yaw)
@@ -161,8 +163,9 @@ namespace PixelTraffic.UnityPrototype
             {
                 var other=model.Cars[j];var route=States[j];
                 if(j==index||!other.active||!route.admitted||route.progress>route.path.exit)continue;
-                float horizon=state.path.entry-state.progress+own.SafetyLength+other.SafetyLength+14;
-                for(float future=0;future<=horizon;future+=2)
+                float horizon=state.path.entry-state.progress+own.SafetyLength+other.SafetyLength+8;
+                float earliest=route.progress>=route.path.entry?Mathf.Max(0,state.path.entry-state.progress-(own.SafetyLength+other.SafetyLength)*.5f-6):0;
+                for(float future=earliest;future<=horizon;future+=1)
                 {
                     Vector2 p=route.path.Pose(Mathf.Min(route.progress+future,route.path.exit),out float yaw);
                     Vector2 entry=state.path.Pose(state.path.entry,out float direction);
@@ -192,8 +195,10 @@ namespace PixelTraffic.UnityPrototype
             }
             var path=s.path;
             Vector2 point=path.Pose(0,out float yaw);if(!Free(i,point,yaw))return;
-            s.path=path;s.progress=0;s.stage=Stage.Approach;s.waitTicks=0;s.visits++;s.admitted=false;
-            c.roundabout=true;c.roundHidden=false;c.roundPosition=point;c.roundYaw=yaw;c.z=point.y;c.roundSignal=false;c.roundSignalTicks=0;c.speed=Mathf.Min(c.speed,3.8f);c.committed=false;
+            float progress=origin==0?Mathf.Max(0,(float)c.z-GateZ):0;
+            point=path.Pose(progress,out yaw);if(!Free(i,point,yaw))return;
+            s.path=path;s.progress=progress;s.stage=Stage.Approach;s.waitTicks=0;s.visits++;s.admitted=false;
+            c.roundabout=true;c.roundHidden=false;c.roundPosition=point;c.roundYaw=yaw;c.z=point.y;c.roundSignal=false;c.roundSignalTicks=0;c.speed=Mathf.Min(c.speed,4.8f);c.committed=false;
             model.Maneuvers.Cancel(c,model.ActiveTicks);if(origin==0)Destinations[s.destination]++;
         }
         Path UTurn(int incoming,int outgoing)
@@ -209,7 +214,9 @@ namespace PixelTraffic.UnityPrototype
         }
         public float RoadRoom(StreetModel.Car c)
         {
-            float room=c.Direction>0?GateZ-(float)c.z:(float)c.z-StarterConfig.RouteStart;
+            // Leave braking room beyond the handoff; it is not a mandatory stop line.
+            // Start preserves the small per-tick overshoot on the identical straight path.
+            float room=c.Direction>0?((float)c.z<GateZ?GateZ-(float)c.z+4.8f*4.8f/6.8f:GateZ+.5f-(float)c.z):(float)c.z-StarterConfig.RouteStart;
             foreach(var other in model.Cars)
             {
                 if(!other.active||!other.roundabout||other.roundHidden)continue;
@@ -240,17 +247,18 @@ namespace PixelTraffic.UnityPrototype
                 }
                 if(s.stage==Stage.Hidden){Start(i,s.origin);continue;}
                 // Approach the yield line; each entry reserves only its merge curve.
-                float hold=Mathf.Max(0,s.path.entry-32);
+                // Stagger the inner queue outside the outer bus's turning tail.
+                float hold=s.origin==0&&c.lane==2?0:Mathf.Max(0,s.path.entry-22);
                 float limit=s.path.Length;
                 if(!s.admitted&&s.progress<s.path.entry)
                 {
-                    if(s.progress>=hold-.001f&&ClearRoute(i,s)){s.admitted=true;Entries++;s.stage=Stage.Circulating;}
+                    if(s.progress>=hold-(c.speed*c.speed/6.8f+c.speed*.5f+1)&&ClearRoute(i,s)){s.admitted=true;Entries++;s.stage=Stage.Circulating;}
                     else {limit=Mathf.Min(limit,hold);s.stage=Stage.Waiting;s.waitTicks++;Yields++;}
                 }
                 if(s.progress>=s.path.exit-12)
                 {if(!c.roundSignal)c.roundSignalTicks=0;c.roundSignal=true;c.roundSignalTicks++;}
                 if(c.roundSignal&&c.roundSignalTicks<54)limit=Mathf.Min(limit,s.path.exit);
-                float room=Mathf.Max(0,limit-s.progress),target=Mathf.Min(3.8f*model.DrivingPace,Mathf.Sqrt(6.8f*room));float previous=c.speed;
+                float room=Mathf.Max(0,limit-s.progress),target=Mathf.Min(4.8f*model.DrivingPace,Mathf.Sqrt(6.8f*room));float previous=c.speed;
                 c.speed=Mathf.MoveTowards(c.speed,target,(target>c.speed?1.8f:3.4f)*StreetModel.Dt);
                 float travel=Mathf.Min(c.speed*StreetModel.Dt,room),next=Mathf.Min(s.progress+travel,limit);
                 Vector2 nextPoint=s.path.Pose(next,out float nextYaw);

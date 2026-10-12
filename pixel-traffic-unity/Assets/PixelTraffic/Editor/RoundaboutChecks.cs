@@ -35,9 +35,33 @@ namespace PixelTraffic.UnityPrototype.Editor
             }
             return " owner="+model.Roundabout.Owner;
         }
+        // Use the saved fleet's real dimensions and the production clock. Every
+        // unobstructed approach must cross the handoff and merge without a stop.
+        static int UninterruptedEntries(StreetModel.Car[] templates)
+        {
+            int cases=0;
+            foreach(var source in templates)for(int variant=-1;variant<4;variant++)
+            {
+                int origin=Mathf.Max(0,variant);
+                var car=new StreetModel.Car{lane=variant<0?2:3,z=180,cruise=6,speed=6,
+                    length=source.length,width=source.width,height=source.height,bus=source.bus};
+                var model=new StreetModel(4,new[]{car});model.EnableRoundabout();
+                if(origin>0)
+                {
+                    var state=model.Roundabout.States[0];state.path=model.Roundabout.Route(origin,0,0);
+                    state.origin=origin;state.destination=0;state.lane=0;state.progress=state.path.entry-45;state.stage=RoundaboutTraffic.Stage.Approach;
+                    car.roundabout=true;car.roundPosition=state.path.Pose(state.progress,out car.roundYaw);car.z=car.roundPosition.y;car.speed=4.8f;
+                }
+                for(int tick=0;tick<2400&&model.Roundabout.Completed==0;tick++)
+                {model.Tick();Need(car.distance>.00001f,"unobstructed vehicle stops at handoff/merge: origin="+origin+" length="+car.length);}
+                Need(model.Roundabout.Completed==1,"unobstructed vehicle never leaves the junction.");cases++;
+            }
+            return cases;
+        }
         internal static Report Validate()
         {
             var controller=UnityEngine.Object.FindFirstObjectByType<StreetSimulation>();controller.ResetModel();Need(controller.Model.Roundabout!=null,"saved runtime controller omits the junction.");
+            int uninterruptedCases=UninterruptedEntries(controller.Model.Cars);
             Transform root=GameObject.Find("Roundabout Terrain").transform;var filters=root.GetComponentsInChildren<MeshFilter>();Need(filters.Length==5,"terrain loses material sharing.");
             int triangles=0;foreach(var f in filters)
             {
@@ -82,11 +106,13 @@ namespace PixelTraffic.UnityPrototype.Editor
             finally{cameraChoice.Preview(0);camera.aspect=aspect;}
             var drives=UnityEngine.Object.FindObjectsByType<PrototypeDrive>(FindObjectsInactive.Include,FindObjectsSortMode.None);var poses=new float[drives.Length];for(int i=0;i<drives.Length;i++)poses[i]=drives[i].transform.position.z;
             var climate=UnityEngine.Object.FindFirstObjectByType<CityClimate>();int pairChecks=0,ringSamples=0,signalFrames=0,hiddenResets=0;float maximumStep=0;
+            int entriesWithoutStop=0,approachStoppedTicks=0;
             int entries=0,completed=0,returns=0,yields=0,recycles=0,departures=0,peakMoving=0,multipleMovingTicks=0,lastCompletionTick=0,lastCompleted=0,maxCompletionGap=0;int[] destinations=null;
             try
             {
                 cameraChoice.Preview(1);climate.Preview(0,0);controller.ResetModel();var model=controller.Model;
                 var previous=new Vector2[model.Cars.Length];var oldHidden=new bool[model.Cars.Length];var oldRound=new bool[model.Cars.Length];var oldLane=new int[model.Cars.Length];
+                var visit=new int[model.Cars.Length];var stoppedBeforeMerge=new bool[visit.Length];var mergeRecorded=new bool[visit.Length];
                 for(int tick=0;tick<18000;tick++)
                 {
                     for(int i=0;i<previous.Length;i++){previous[i]=RoundaboutTraffic.Position(model.Cars[i]);oldHidden[i]=model.Cars[i].roundHidden;oldRound[i]=model.Cars[i].roundabout;oldLane[i]=model.Cars[i].lane;}
@@ -105,6 +131,11 @@ namespace PixelTraffic.UnityPrototype.Editor
                         if(c.roundabout)
                         {
                             var p=RoundaboutTraffic.Position(c);var state=round.States[i];
+                            if(visit[i]!=state.visits){visit[i]=state.visits;stoppedBeforeMerge[i]=false;mergeRecorded[i]=false;}
+                            if(state.progress>=state.path.entry-40&&state.progress<state.path.entry&&c.distance<=.00001f)
+                            {approachStoppedTicks++;stoppedBeforeMerge[i]=true;}
+                            if(state.progress>=state.path.entry&&!mergeRecorded[i])
+                            {mergeRecorded[i]=true;if(!stoppedBeforeMerge[i])entriesWithoutStop++;}
                             if(state.progress>=state.path.entry&&state.progress<=state.path.exit)
                             {
                                 Need(Vector2.Distance(p,new Vector2(0,235))>13.9f,"circle cuts through its island.");
@@ -121,6 +152,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
                 var final=model.Roundabout;entries=final.Entries;completed=final.Completed;returns=final.Returns;yields=final.Yields;recycles=final.Recycles;destinations=(int[])final.Destinations.Clone();departures=model.Stops.Departures;
                 if(!(entries>=8&&completed>=8&&returns>=8&&recycles>=4&&yields>0&&ringSamples>100&&signalFrames>100))Need(false,"traffic stalls or skips entry/circulation/return/indicator stages: "+entries+"/"+completed+"/"+returns+"/"+recycles+Summary(model));
+                Need(completed>=50&&entriesWithoutStop>0,"rolling entry throughput/continuous entry regression.");
                 Need(peakMoving>=2&&multipleMovingTicks>=90,"only one ring vehicle moves at a time: peak="+peakMoving+" ticks="+multipleMovingTicks);
                 foreach(int count in destinations)Need(count>0,"one requested random destination never occurs: "+string.Join(",",destinations)+" entries="+entries+" completed="+completed);
                 Need(model.Stops.Departures>=2&&model.Cycles>=2,"roundabout starves bus service or signals.");
@@ -143,9 +175,9 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Need(controller.Model.Roundabout.Completed>=2,"storm deadlocks the junction.");
             }
             finally{cameraChoice.Preview(0);controller.SetPaused(false);for(int i=0;i<drives.Length;i++)drives[i].ResetPosition(poses[i]);climate.Preview(0,0);controller.ResetModel();controller.ApplyViews();}
-            return new Report{result="PASS: actual production routes, CCW circulation/rotated-body island and pair clearance, four random exits, circulating-priority reservation, right indicators, offscreen return, bus service, storm and fixed-clock/pause; actual GPU and phone separate",cameraOptionsChecked=true,peakMovingRingCars=peakMoving,multipleMovingTicks=multipleMovingTicks,maxCompletionGapSeconds=maxCompletionGap/30f,terrainMeshes=5,terrainTriangles=triangles,simulatedSeconds=600,entries=entries,completed=completed,returns=returns,yields=yields,recycles=recycles,destinations=destinations,pairChecks=pairChecks,ringSamples=ringSamples,signalFrames=signalFrames,hiddenSpawns=hiddenResets,maximumVisibleStep=maximumStep,busDepartures=departures,frameRates=new[]{15,30,60,120}};
+            return new Report{result="PASS: actual production routes, CCW circulation/rotated-body island and pair clearance, four random exits, rolling uninterrupted entry and circulating-priority clearance, right indicators, offscreen return, bus service, storm and fixed-clock/pause; actual GPU and phone separate",cameraOptionsChecked=true,entriesWithoutStop=entriesWithoutStop,approachStoppedSeconds=approachStoppedTicks/30f,uninterruptedEntryCases=uninterruptedCases,uninterruptedEntryStopTicks=0,peakMovingRingCars=peakMoving,multipleMovingTicks=multipleMovingTicks,maxCompletionGapSeconds=maxCompletionGap/30f,terrainMeshes=5,terrainTriangles=triangles,simulatedSeconds=600,entries=entries,completed=completed,returns=returns,yields=yields,recycles=recycles,destinations=destinations,pairChecks=pairChecks,ringSamples=ringSamples,signalFrames=signalFrames,hiddenSpawns=hiddenResets,maximumVisibleStep=maximumStep,busDepartures=departures,frameRates=new[]{15,30,60,120}};
         }
         [Serializable] internal sealed class Report
-        {public string result;public bool cameraOptionsChecked;public int peakMovingRingCars,multipleMovingTicks;public float maxCompletionGapSeconds;public int terrainMeshes,terrainTriangles,simulatedSeconds,entries,completed,returns,yields,recycles,pairChecks,ringSamples,signalFrames,hiddenSpawns,busDepartures;public int[] destinations,frameRates;public float maximumVisibleStep;}
+        {public string result;public bool cameraOptionsChecked;public float approachStoppedSeconds;public int entriesWithoutStop,uninterruptedEntryCases,uninterruptedEntryStopTicks,peakMovingRingCars,multipleMovingTicks;public float maxCompletionGapSeconds;public int terrainMeshes,terrainTriangles,simulatedSeconds,entries,completed,returns,yields,recycles,pairChecks,ringSamples,signalFrames,hiddenSpawns,busDepartures;public int[] destinations,frameRates;public float maximumVisibleStep;}
     }
 }
