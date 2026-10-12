@@ -615,6 +615,16 @@ namespace PixelTraffic.UnityPrototype.Editor
                 if(cameraChoice==null)throw new InvalidOperationException("Camera option missing from saved scene.");
                 try
                 {
+                    // ResetModel restores serialized objects; a real production tick applies
+                    // hidden junction sources and circulating poses before taking the new view.
+                    for(int i=0;i<originalCars.Length;i++)originalCars[i].ResetPosition(originalZ[i]);
+                    climate.Preview(0,0);detailStreet.ResetModel();detailStreet.Advance(60);detailStreet.ApplyViews();
+                    foreach(var car in originalCars)if(car.gameObject.activeSelf)
+                    {
+                        Vector3 p=car.transform.position;
+                        if(Vector2.Distance(new Vector2(p.x,p.z),new Vector2(0,RoundaboutTraffic.CenterZ))<13.9f)
+                            throw new InvalidOperationException("Camera option capture contains an unsynchronized vehicle inside the roundabout island.");
+                    }
                     camera.aspect=.45f;cameraChoice.Preview(1);
                     foreach(int theme in new[]{0,1,2})
                     {climate.Preview(theme,0);detailStreet.ApplyViews();cameraOptionImages.Add(CaptureState(camera,request,target,image,"camera-option-roundabout-"+(theme==0?"day":theme==1?"dusk":"night")));}
@@ -622,7 +632,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
                 finally{cameraChoice.Preview(0);climate.Preview(0,0);detailStreet.ApplyViews();}
                 File.WriteAllText("Reports/preview-result.json", JsonUtility.ToJson(new Report {
-                    cameraOptionImages=cameraOptionImages.ToArray(),
+                    cameraOptionImages=cameraOptionImages.ToArray(),cameraOptionTrafficSimulatedSeconds=60,
                     roundaboutImages=roundaboutPreviews.ToArray(),roundaboutPixelChanges=roundaboutPixelChanges.ToArray(),roundaboutMotionPositions=roundaboutMotionPositions.ToArray(),
                     junctionVisibilityImages=junctionVisibilityPreviews.ToArray(),savedNightChangedPixels=savedNightChangedPixels,savedNightPixelDelta=savedNightPixelDelta,savedNightFogFraction=savedNightFogFraction,
                     result = "PASS", version = StarterConfig.VersionName, editor = Application.unityVersion,
@@ -690,6 +700,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             public string[] roundaboutImages;public int[] roundaboutPixelChanges;public Vector3[] roundaboutMotionPositions;
             public string[] junctionVisibilityImages;public int savedNightChangedPixels;public float savedNightPixelDelta,savedNightFogFraction;
             public string[] cameraOptionImages;
+            public int cameraOptionTrafficSimulatedSeconds;
             public string[] headlightColourImages;
             public string[] wetReflectionImages,koreanSignalImages;
             public string[] wiperImages;public int[] wiperPixelChanges;
