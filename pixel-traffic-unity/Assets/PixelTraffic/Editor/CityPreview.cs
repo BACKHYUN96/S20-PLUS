@@ -551,6 +551,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 var roundaboutPreviews=new System.Collections.Generic.List<string>();
                 var roundaboutPixelChanges=new System.Collections.Generic.List<int>();int roundaboutMovingVehicles=0;
                 var roundaboutMotionPositions=new System.Collections.Generic.List<Vector3>();
+                var denseImages=new System.Collections.Generic.List<string>();var densePixelChanges=new System.Collections.Generic.List<int>();
                 var junctionVisibilityPreviews=new System.Collections.Generic.List<string>();int savedNightChangedPixels=0;float savedNightPixelDelta=0,savedNightFogFraction=0;
                 try
                 {
@@ -590,6 +591,23 @@ namespace PixelTraffic.UnityPrototype.Editor
                     for(int i=0;i<multiStart.Length;i++)
                     {if(Vector2.Distance(multiStart[i],RoundaboutTraffic.Position(detailStreet.Model.Cars[junctionTracked[i]]))<.5f)throw new InvalidOperationException("A tracked circulating vehicle stays frozen across actual GPU frames.");}
                     roundaboutMovingVehicles=junctionTracked.Count;
+                    // Explicit six-car density fixture: not a claim that all six
+                    // arrive together in the unmodified saved traffic sequence.
+                    for(int i=0;i<originalCars.Length;i++)originalCars[i].ResetPosition(originalZ[i]);climate.Preview(0,0);detailStreet.ResetModel();
+                    var dense=RoundaboutChecks.DenseIndices(detailStreet.Model.Cars);RoundaboutChecks.ConfigureDense(detailStreet.Model,dense);
+                    var denseStart=new Vector2[6];for(int i=0;i<6;i++)denseStart[i]=RoundaboutTraffic.Position(detailStreet.Model.Cars[dense[i]]);
+                    previousPixels=null;
+                    for(int frame=0;frame<4;frame++)
+                    {
+                        detailStreet.Advance(frame>0?1:1d/30);detailStreet.ApplyViews();
+                        foreach(int i in dense){var c=detailStreet.Model.Cars[i];if(!c.active||!c.roundabout||(frame>0&&c.distance<=.00001f))throw new InvalidOperationException("Six-car density GPU fixture contains a frozen car.");}
+                        denseImages.Add(CaptureState(camera,request,target,image,"roundabout-six-fixture-"+frame));
+                        var currentPixels=image.GetPixels32();if(previousPixels!=null)
+                        {int changed=0;for(int n=0;n<currentPixels.Length;n++)if(Math.Abs(currentPixels[n].r-previousPixels[n].r)+Math.Abs(currentPixels[n].g-previousPixels[n].g)+Math.Abs(currentPixels[n].b-previousPixels[n].b)>20)changed++;if(changed<=16)throw new InvalidOperationException("Six-car density motion is absent in GPU pixels.");densePixelChanges.Add(changed);}
+                        previousPixels=currentPixels;
+                    }
+                    for(int i=0;i<6;i++)if(Vector2.Distance(denseStart[i],RoundaboutTraffic.Position(detailStreet.Model.Cars[dense[i]]))<.5f)throw new InvalidOperationException("Six-car density GPU fixture does not move each vehicle.");
+
                 }
                 finally
                 {
@@ -643,7 +661,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 finally{cameraChoice.Preview(0);climate.Preview(0,0);detailStreet.ApplyViews();}
                 File.WriteAllText("Reports/preview-result.json", JsonUtility.ToJson(new Report {
                     cameraOptionImages=cameraOptionImages.ToArray(),cameraOptionTrafficSimulatedSeconds=60,
-                    roundaboutMovingVehicles=roundaboutMovingVehicles,roundaboutImages=roundaboutPreviews.ToArray(),roundaboutPixelChanges=roundaboutPixelChanges.ToArray(),roundaboutMotionPositions=roundaboutMotionPositions.ToArray(),
+                    denseMovingVehicles=6,denseImages=denseImages.ToArray(),densePixelChanges=densePixelChanges.ToArray(),roundaboutMovingVehicles=roundaboutMovingVehicles,roundaboutImages=roundaboutPreviews.ToArray(),roundaboutPixelChanges=roundaboutPixelChanges.ToArray(),roundaboutMotionPositions=roundaboutMotionPositions.ToArray(),
                     junctionVisibilityImages=junctionVisibilityPreviews.ToArray(),savedNightChangedPixels=savedNightChangedPixels,savedNightPixelDelta=savedNightPixelDelta,savedNightFogFraction=savedNightFogFraction,
                     result = "PASS", version = StarterConfig.VersionName, editor = Application.unityVersion,
                     graphicsApi = SystemInfo.graphicsDeviceType.ToString(), width = width, height = height,
@@ -707,7 +725,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         {
             public string result, version, editor, graphicsApi, image, source;
             public int width, height;
-            public int roundaboutMovingVehicles;public string[] roundaboutImages;public int[] roundaboutPixelChanges;public Vector3[] roundaboutMotionPositions;
+            public int denseMovingVehicles;public string[] denseImages;public int[] densePixelChanges;public int roundaboutMovingVehicles;public string[] roundaboutImages;public int[] roundaboutPixelChanges;public Vector3[] roundaboutMotionPositions;
             public string[] junctionVisibilityImages;public int savedNightChangedPixels;public float savedNightPixelDelta,savedNightFogFraction;
             public string[] cameraOptionImages;
             public int cameraOptionTrafficSimulatedSeconds;

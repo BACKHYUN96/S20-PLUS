@@ -13,7 +13,7 @@ namespace PixelTraffic.UnityPrototype
         public sealed class State
         {
             public Stage stage;public int origin,destination,lane,visits,waitTicks;public uint random;
-            public float progress;public Path path;public bool admitted;
+            public float progress,lastTravel;public Path path;public bool admitted;
         }
         public sealed class Path
         {
@@ -121,76 +121,111 @@ namespace PixelTraffic.UnityPrototype
         static bool Axis(Vector2 d,Vector2 axis,Vector2 fa,Vector2 sa,Vector2 fb,Vector2 sb,float la,float wa,float lb,float wb)
         =>Mathf.Abs(Vector2.Dot(d,axis))>=Mathf.Abs(Vector2.Dot(fa,axis))*la+Mathf.Abs(Vector2.Dot(sa,axis))*wa+Mathf.Abs(Vector2.Dot(fb,axis))*lb+Mathf.Abs(Vector2.Dot(sb,axis))*wb-.0001f;
         // Exact rotated bodies already include yaw. Keep a small physical buffer;
-        // the larger road SafetyLength remains in admission/reservation forecasts.
+        // the larger road SafetyLength remains at ordinary road handoffs.
         int PhysicalBlocker(int index,Vector2 point,float yaw)
         {
             var c=model.Cars[index];for(int j=0;j<model.Cars.Length;j++)
             {var other=model.Cars[j];if(j==index||!other.active||other.roundHidden)continue;if(!Separated(point,yaw,c.length,c.width,Position(other),Yaw(other),other.length,other.width,.15f))return j;}
             return -1;
         }
-        bool RoadSpawnFree(int index,Vector2 point,float yaw=0)
+        bool RoadSpawnFree(int index,Vector2 point,float yaw=0,bool roadOnly=false)
         {
             var car=model.Cars[index];
             for(int j=0;j<model.Cars.Length;j++)
             {
-                var other=model.Cars[j];if(j==index||!other.active||other.roundHidden)continue;
+                var other=model.Cars[j];if(j==index||!other.active||other.roundHidden||(roadOnly&&other.roundabout))continue;
                 if(!Separated(point,yaw,car.SafetyLength,car.width,Position(other),Yaw(other),other.SafetyLength,other.width,2.2f))return false;
             }
             return true;
         }
-        public int Blocker(int index,Vector2 point,float yaw)
-        {int other=PhysicalBlocker(index,point,yaw);return other>=0?other:ReservationBlocker(index,point,yaw);}
-        int ReservationBlocker(int index,Vector2 point,float yaw,bool exits=true)
+        public int Blocker(int index,Vector2 point,float yaw)=>PhysicalBlocker(index,point,yaw);
+        // Only the local merge is planned. Occupied remote exit curves must not
+        // reserve a whole roundabout; a circulating queue may safely follow inside.
+        bool Free(int index,Vector2 point,float yaw)=>PhysicalBlocker(index,point,yaw)<0;
+        static float ProjectedTravel(float speed,float pace,float time)
         {
-            var c=model.Cars[index];
-            if(States[index].admitted||States[index].stage==Stage.Exit||(!c.roundabout&&c.Direction<0))return -1;
+            float ramp=Mathf.Min(time,Mathf.Max(0,(pace-speed)/1.8f));
+            return speed*ramp+.9f*ramp*ramp+pace*(time-ramp);
+        }
+        static float ArrivalTime(float distance,float speed,float pace)
+        {
+            float ramp=Mathf.Max(0,(pace-speed)/1.8f),rampDistance=(pace*pace-speed*speed)/3.6f;
+            return distance<=rampDistance?(Mathf.Sqrt(speed*speed+3.6f*distance)-speed)/1.8f:ramp+(distance-rampDistance)/pace;
+        }
+        public int AdmissionBlocker(int index,out float blockedAt)
+        {
+            var state=States[index];var own=model.Cars[index];blockedAt=state.progress;
+            float pace=4.8f*model.DrivingPace;
             for(int j=0;j<States.Length;j++)
             {
-                var route=States[j];var own=model.Cars[j];
-                if(j==index||!own.active||!route.admitted)continue;
-                // Entry and exit curves are protected; the shared circle is never locked.
-                if(route.progress<route.path.entry)
-                    for(float d=route.progress;d<=route.path.entry;d+=.75f)
-                    {Vector2 p=route.path.Pose(d,out float heading);if(!Separated(point,yaw,c.SafetyLength,c.width,p,heading,own.SafetyLength,own.width))return j;}
-                if(exits&&!States[index].admitted&&(c.roundabout||c.Direction>0))
-                    for(float d=Mathf.Max(route.progress,route.path.exit);d<=route.path.clear;d+=.75f)
-                    {Vector2 p=route.path.Pose(d,out float heading);if(!Separated(point,yaw,c.SafetyLength,c.width,p,heading,own.SafetyLength,own.width))return j;}
+                var ahead=States[j];var car=model.Cars[j];
+                if(j==index||!car.active||car.roundHidden||!car.roundabout||ahead.path==null)continue;
+                if(ahead.origin==state.origin&&ahead.progress<ahead.path.entry+car.length+1.2f&&
+                    ahead.path.entry-ahead.progress<state.path.entry-state.progress-.01f)return j;
+            }
+            float end=Mathf.Min(state.path.Length,state.path.entry+own.length*.5f+2);
+            for(int j=0;j<States.Length;j++)
+            {
+                var route=States[j];var other=model.Cars[j];
+                if(j==index||!other.active||other.roundHidden||!route.admitted||route.path==null)continue;
+                // Protect the immediate exit turn against an approaching nose.
+                // A wide truck may slow here; projecting it at cruising speed
+                // must not allow the approach to pin its tail against the ring.
+                if(route.destination==0&&route.progress>=route.path.exit-12&&route.progress<route.path.exit+12)
+                {
+                    for(float a=state.progress;a<=end;a+=.75f)
+                    {
+                        Vector2 p=state.path.Pose(a,out float yaw);
+                        for(float b=route.progress;b<=Mathf.Min(route.path.clear,route.progress+12);b+=1)
+                        {
+                            Vector2 q=route.path.Pose(b,out float heading);
+                            if(!Separated(p,yaw,own.length,own.width,q,heading,other.length,other.width,.8f)){blockedAt=a;return j;}
+                        }
+                    }
+                }
+                for(float d=state.progress;d<=end;d+=.75f)
+                {
+                    float time=ArrivalTime(d-state.progress,Mathf.Min(own.speed,pace),pace);
+                    float travel=route.lastTravel>.00001f?ProjectedTravel(Mathf.Min(other.speed,pace),pace,time):0;
+                    Vector2 p=state.path.Pose(d,out float yaw),q=route.path.Pose(Mathf.Min(route.path.Length,route.progress+travel),out float heading);
+                    if(!Separated(p,yaw,own.length,own.width,q,heading,other.length,other.width,1.2f))
+                    {blockedAt=d;return j;}
+                }
             }
             return -1;
         }
-        bool Free(int index,Vector2 point,float yaw)=>Blocker(index,point,yaw)<0;
-        public int AdmissionBlocker(int index,out float blockedAt)
+        float FollowingRoom(int index)
         {
-            var state=States[index];blockedAt=state.progress;
-            for(int j=0;j<States.Length;j++)if(j!=index&&States[j].admitted&&States[j].origin==state.origin&&States[j].progress<States[j].path.entry+model.Cars[j].SafetyLength+2.2f)return j;
-            float endDistance=Mathf.Min(state.path.Length,state.path.entry+8);
-            for(float d=state.progress;d<endDistance;d+=.75f)
-            {Vector2 p=state.path.Pose(d,out float yaw);int blocker=Blocker(index,p,yaw);if(blocker>=0){blockedAt=d;return blocker;}}
-            // Circulating cars have priority: leave time for the entry curve, including
-            // a car approaching the merge from behind, before committing to it.
-            var own=model.Cars[index];
-            for(int j=0;j<States.Length;j++)
+            var state=States[index];var own=model.Cars[index];float room=float.MaxValue;
+            if(state.progress>=state.path.entry&&state.progress<state.path.exit)
             {
-                var other=model.Cars[j];var route=States[j];
-                if(j==index||!other.active||!route.admitted||route.progress>route.path.exit)continue;
-                float horizon=state.path.entry-state.progress+own.SafetyLength+other.SafetyLength+8;
-                float earliest=route.progress>=route.path.entry?Mathf.Max(0,state.path.entry-state.progress-(own.SafetyLength+other.SafetyLength)*.5f-6):0;
-                for(float future=earliest;future<=horizon;future+=1)
+                var point=Position(own)-new Vector2(0,CenterZ);float angle=Mathf.Atan2(point.y,point.x);
+                for(int j=0;j<States.Length;j++)
                 {
-                    Vector2 p=route.path.Pose(Mathf.Min(route.progress+future,route.path.exit),out float yaw);
-                    Vector2 entry=state.path.Pose(state.path.entry,out float direction);
-                    if(!Separated(entry,direction,own.SafetyLength,own.width,p,yaw,other.SafetyLength,other.width)){blockedAt=state.path.entry;return j;}
+                    var route=States[j];var other=model.Cars[j];
+                    if(j==index||!other.active||other.roundHidden||!other.roundabout||route.path==null||route.progress<route.path.entry||route.progress>route.path.exit)continue;
+                    var q=Position(other)-new Vector2(0,CenterZ);float delta=Mathf.Atan2(q.y,q.x)-angle;
+                    while(delta<0)delta+=Mathf.PI*2;
+                    if(delta<Mathf.PI)room=Mathf.Min(room,delta*Radius-(own.length+other.length)*.5f-1.2f);
                 }
             }
-            // Check the reciprocal conflict too: a new exit must not cut across
-            // another committed entry. Shared exits may follow one another.
-            for(float d=state.path.exit;d<=state.path.clear;d+=.75f)
+            float look=Mathf.Max(3,own.speed*own.speed/6.8f+own.speed*.5f+2);
+            float heading=Yaw(own)*Mathf.Deg2Rad;var forward=new Vector2(Mathf.Sin(heading),Mathf.Cos(heading));
+            for(float d=.75f;d<=look;d+=.75f)
             {
-                Vector2 p=state.path.Pose(d,out float yaw);int blocker=PhysicalBlocker(index,p,yaw);
-                if(blocker<0)blocker=ReservationBlocker(index,p,yaw,false);
-                if(blocker>=0){blockedAt=d;return blocker;}
+                Vector2 p=state.path.Pose(Mathf.Min(state.path.Length,state.progress+d),out float yaw);
+                for(int j=0;j<model.Cars.Length;j++)
+                {
+                    var other=model.Cars[j];if(j==index||!other.active||other.roundHidden)continue;
+                    var route=States[j];
+                    bool priority=state.progress>=state.path.entry;
+                    bool otherApproach=other.roundabout&&route.path!=null&&route.progress<route.path.entry;
+                    if(priority&&otherApproach)continue; // entering traffic yields; let the ring/exit clear first
+                    Vector2 q=Position(other);if(Vector2.Dot(q-Position(own),forward)<-.2f)continue;
+                    if(!Separated(p,yaw,own.length,own.width,q,Yaw(other),other.length,other.width,1.2f))return Mathf.Max(0,Mathf.Min(room,d-.75f));
+                }
             }
-            Vector2 end=state.path.Pose(endDistance,out float heading);blockedAt=endDistance;return Blocker(index,end,heading);
+            return Mathf.Max(0,room);
         }
         bool ClearRoute(int index,State state)=>AdmissionBlocker(index,out _) < 0;
         void Start(int i,int origin)
@@ -236,8 +271,6 @@ namespace PixelTraffic.UnityPrototype
                 float ahead=c.Direction*((float)other.z-(float)c.z);
                 if(ahead>=0&&Mathf.Abs(c.X-other.X)<(c.width+wide)*.5f+.05f)room=Mathf.Min(room,ahead-(c.SafetyLength+length)*.5f-2.2f);
             }
-            if(Owner>=0)
-            {int index=Array.IndexOf(model.Cars,c);Vector2 next=new Vector2(c.X,(float)c.z+c.Direction*Mathf.Min(Mathf.Max(0,room),c.cruise*StreetModel.Dt));if(ReservationBlocker(index,next,Yaw(c))>=0)room=0;}
             return Mathf.Max(0,room);
         }
         public void Tick()
@@ -271,19 +304,20 @@ namespace PixelTraffic.UnityPrototype
                 // A rolling handoff can already be beyond a hold point; yielding
                 // must keep that pose, never clamp progress backwards.
                 limit=Mathf.Max(s.progress,limit);
-                float room=Mathf.Max(0,limit-s.progress),target=Mathf.Min(4.8f*model.DrivingPace,Mathf.Sqrt(6.8f*room));float previous=c.speed;
+                float pace=(s.progress<s.path.entry-45||s.progress>s.path.clear+8)?Mathf.Max(c.cruise,4.8f):4.8f;
+                float room=Mathf.Min(Mathf.Max(0,limit-s.progress),FollowingRoom(i)),target=Mathf.Min(pace*model.DrivingPace,Mathf.Sqrt(6.8f*room));float previous=c.speed;
                 c.speed=Mathf.MoveTowards(c.speed,target,(target>c.speed?1.8f:3.4f)*StreetModel.Dt);
                 float travel=Mathf.Min(c.speed*StreetModel.Dt,room),next=Mathf.Min(s.progress+travel,limit);
                 Vector2 nextPoint=s.path.Pose(next,out float nextYaw);
                 bool blocked=!Free(i,nextPoint,nextYaw);
                 if(blocked){travel=0;next=s.progress;nextPoint=s.path.Pose(next,out nextYaw);c.speed=0;s.waitTicks++;}
-                s.progress=next;c.roundPosition=nextPoint;c.roundYaw=nextYaw;c.z=nextPoint.y;c.distance=travel;c.totalDistance+=travel;c.braking=previous>c.speed+.015f||(c.speed<.1f&&(room<.3f||blocked));
+                s.progress=next;s.lastTravel=travel;c.roundPosition=nextPoint;c.roundYaw=nextYaw;c.z=nextPoint.y;c.distance=travel;c.totalDistance+=travel;c.braking=previous>c.speed+.015f||(c.speed<.1f&&(room<.3f||blocked));
                 if(s.progress>=s.path.exit+.001f)s.stage=Stage.Exit;
                 if(s.admitted&&s.progress>=s.path.clear-.001f){s.admitted=false;Completed++;}
                 if(s.progress<s.path.Length-.001f)continue;
                 if(s.destination==0)
                 {
-                    if(!RoadSpawnFree(i,c.roundPosition,180))continue;
+                    if(!RoadSpawnFree(i,c.roundPosition,180,true))continue;
                     c.lane=s.lane;c.roundabout=false;c.roundSignal=false;c.roundHidden=false;c.z=GateZ;c.busOffset=0;s.stage=Stage.Road;s.path=null;Returns++;model.Stops.Wrapped(c);
                 }
                 else

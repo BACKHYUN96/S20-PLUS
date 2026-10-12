@@ -58,10 +58,54 @@ namespace PixelTraffic.UnityPrototype.Editor
             }
             return cases;
         }
+        // A named density fixture uses the saved fleet's dimensions and unchanged
+        // production routes. It is distinct from the naturally arriving fleet.
+        internal static int[] DenseIndices(StreetModel.Car[] cars)
+        {
+            var buses=new List<int>();var trucks=new List<int>();var passenger=new List<int>();
+            for(int i=0;i<cars.Length;i++){if(cars[i].bus)buses.Add(i);else if(cars[i].length>7)trucks.Add(i);else passenger.Add(i);}
+            Need(buses.Count>=2&&trucks.Count>=1&&passenger.Count>=3,"density fixture lacks saved vehicle types.");
+            return new[]{buses[0],passenger[0],trucks[0],passenger[1],buses[1],passenger[2]};
+        }
+        internal static void ConfigureDense(StreetModel model,int[] indices)
+        {
+            foreach(var car in model.Cars){car.active=false;car.rank=100;}
+            for(int n=0;n<indices.Length;n++)
+            {
+                int i=indices[n];var c=model.Cars[i];var state=model.Roundabout.States[i];
+                c.active=true;c.rank=0;c.lane=3;c.speed=4.8f;c.cruise=6;c.roundabout=true;c.roundHidden=false;c.roundSignal=false;c.roundSignalTicks=0;
+                state.origin=0;state.destination=0;state.lane=0;state.path=model.Roundabout.Route(0,0,0);
+                state.progress=state.path.entry+11*n;state.stage=RoundaboutTraffic.Stage.Circulating;state.admitted=true;state.lastTravel=.16f;
+                c.roundPosition=state.path.Pose(state.progress,out c.roundYaw);c.z=c.roundPosition.y;
+            }
+        }
+        static int[] DenseQueue(StreetModel.Car[] templates)
+        {
+            var selected=DenseIndices(templates);var cars=new StreetModel.Car[7];
+            for(int i=0;i<6;i++){var c=templates[selected[i]];cars[i]=new StreetModel.Car{lane=3,z=180,length=c.length,width=c.width,height=c.height,bus=c.bus,cruise=6,speed=4.8f};}
+            cars[6]=new StreetModel.Car{lane=0,z=180,length=5,width=2.2f,active=false};
+            var model=new StreetModel(4,cars);model.AutomaticLaneChanges=false;model.EnableRoundabout();ConfigureDense(model,new[]{0,1,2,3,4,5});
+            int sixTicks=0,queued=0;
+            for(int tick=0;tick<1590;tick++)
+            {
+                if(tick==90){cars[6].active=true;cars[6].rank=0;cars[6].lane=0;cars[6].roundabout=false;cars[6].roundHidden=false;cars[6].z=218;cars[6].speed=0;cars[6].cruise=0;model.Roundabout.States[6].stage=RoundaboutTraffic.Stage.Road;}
+                if(tick==690){cars[6].active=false;cars[6].rank=100;}
+                model.Tick();int moving=0,stopped=0;
+                for(int i=0;i<6;i++)
+                {
+                    var car=cars[i];var state=model.Roundabout.States[i];
+                    if(car.roundabout&&state.progress>=state.path.entry&&state.progress<state.path.exit){if(car.distance>.00001f)moving++;else stopped++;}
+                    for(int j=i+1;j<cars.Length;j++)if(car.active&&cars[j].active&&!car.roundHidden&&!cars[j].roundHidden)Need(Separate(Corners(car),Corners(cars[j])),"density fixture rotated bodies overlap: "+i+"/"+j+" tick="+tick);
+                }
+                if(tick<90&&moving==6)sixTicks++;if(tick>=90&&tick<690)queued=Mathf.Max(queued,stopped);
+            }
+            Need(sixTicks>=60&&queued>=2&&model.Roundabout.Completed>=6,"six-car circulation/internal queue does not recover: "+sixTicks+"/"+queued+"/"+model.Roundabout.Completed);
+            return new[]{sixTicks,queued,model.Roundabout.Completed};
+        }
         internal static Report Validate()
         {
             var controller=UnityEngine.Object.FindFirstObjectByType<StreetSimulation>();controller.ResetModel();Need(controller.Model.Roundabout!=null,"saved runtime controller omits the junction.");
-            int uninterruptedCases=UninterruptedEntries(controller.Model.Cars);
+            int uninterruptedCases=UninterruptedEntries(controller.Model.Cars);int[] density=DenseQueue(controller.Model.Cars);
             Transform root=GameObject.Find("Roundabout Terrain").transform;var filters=root.GetComponentsInChildren<MeshFilter>();Need(filters.Length==5,"terrain loses material sharing.");
             int triangles=0;foreach(var f in filters)
             {
@@ -153,7 +197,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 var final=model.Roundabout;entries=final.Entries;completed=final.Completed;returns=final.Returns;yields=final.Yields;recycles=final.Recycles;destinations=(int[])final.Destinations.Clone();departures=model.Stops.Departures;
                 if(!(entries>=8&&completed>=8&&returns>=8&&recycles>=4&&yields>0&&ringSamples>100&&signalFrames>100))Need(false,"traffic stalls or skips entry/circulation/return/indicator stages: "+entries+"/"+completed+"/"+returns+"/"+recycles+Summary(model));
                 Need(completed>=50&&entriesWithoutStop>0,"rolling entry throughput/continuous entry regression.");
-                Need(peakMoving>=2&&multipleMovingTicks>=90,"only one ring vehicle moves at a time: peak="+peakMoving+" ticks="+multipleMovingTicks);
+                Need(peakMoving>=3&&multipleMovingTicks>=90,"only one ring vehicle moves at a time: peak="+peakMoving+" ticks="+multipleMovingTicks);
                 foreach(int count in destinations)Need(count>0,"one requested random destination never occurs: "+string.Join(",",destinations)+" entries="+entries+" completed="+completed);
                 Need(model.Stops.Departures>=2&&model.Cycles>=2,"roundabout starves bus service or signals.");
                 // The actual fixed clock must retain route, heading, destination and progress at every frame rate.
@@ -175,9 +219,9 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Need(controller.Model.Roundabout.Completed>=2,"storm deadlocks the junction.");
             }
             finally{cameraChoice.Preview(0);controller.SetPaused(false);for(int i=0;i<drives.Length;i++)drives[i].ResetPosition(poses[i]);climate.Preview(0,0);controller.ResetModel();controller.ApplyViews();}
-            return new Report{result="PASS: actual production routes, CCW circulation/rotated-body island and pair clearance, four random exits, rolling uninterrupted entry and circulating-priority clearance, right indicators, offscreen return, bus service, storm and fixed-clock/pause; actual GPU and phone separate",cameraOptionsChecked=true,entriesWithoutStop=entriesWithoutStop,approachStoppedSeconds=approachStoppedTicks/30f,uninterruptedEntryCases=uninterruptedCases,uninterruptedEntryStopTicks=0,peakMovingRingCars=peakMoving,multipleMovingTicks=multipleMovingTicks,maxCompletionGapSeconds=maxCompletionGap/30f,terrainMeshes=5,terrainTriangles=triangles,simulatedSeconds=600,entries=entries,completed=completed,returns=returns,yields=yields,recycles=recycles,destinations=destinations,pairChecks=pairChecks,ringSamples=ringSamples,signalFrames=signalFrames,hiddenSpawns=hiddenResets,maximumVisibleStep=maximumStep,busDepartures=departures,frameRates=new[]{15,30,60,120}};
+            return new Report{result="PASS: actual production routes, CCW circulation/rotated-body island and pair clearance, four random exits, rolling uninterrupted entry and local time-aligned merges, six-car density/internal-queue recovery and circulating-priority clearance, right indicators, offscreen return, bus service, storm and fixed-clock/pause; actual GPU and phone separate",cameraOptionsChecked=true,denseVehicles=6,denseMovingTicks=density[0],denseInsideQueueCount=density[1],denseRecovered=density[2],entriesWithoutStop=entriesWithoutStop,approachStoppedSeconds=approachStoppedTicks/30f,uninterruptedEntryCases=uninterruptedCases,uninterruptedEntryStopTicks=0,peakMovingRingCars=peakMoving,multipleMovingTicks=multipleMovingTicks,maxCompletionGapSeconds=maxCompletionGap/30f,terrainMeshes=5,terrainTriangles=triangles,simulatedSeconds=600,entries=entries,completed=completed,returns=returns,yields=yields,recycles=recycles,destinations=destinations,pairChecks=pairChecks,ringSamples=ringSamples,signalFrames=signalFrames,hiddenSpawns=hiddenResets,maximumVisibleStep=maximumStep,busDepartures=departures,frameRates=new[]{15,30,60,120}};
         }
         [Serializable] internal sealed class Report
-        {public string result;public bool cameraOptionsChecked;public float approachStoppedSeconds;public int entriesWithoutStop,uninterruptedEntryCases,uninterruptedEntryStopTicks,peakMovingRingCars,multipleMovingTicks;public float maxCompletionGapSeconds;public int terrainMeshes,terrainTriangles,simulatedSeconds,entries,completed,returns,yields,recycles,pairChecks,ringSamples,signalFrames,hiddenSpawns,busDepartures;public int[] destinations,frameRates;public float maximumVisibleStep;}
+        {public string result;public bool cameraOptionsChecked;public float approachStoppedSeconds;public int denseVehicles,denseMovingTicks,denseInsideQueueCount,denseRecovered;public int entriesWithoutStop,uninterruptedEntryCases,uninterruptedEntryStopTicks,peakMovingRingCars,multipleMovingTicks;public float maxCompletionGapSeconds;public int terrainMeshes,terrainTriangles,simulatedSeconds,entries,completed,returns,yields,recycles,pairChecks,ringSamples,signalFrames,hiddenSpawns,busDepartures;public int[] destinations,frameRates;public float maximumVisibleStep;}
     }
 }
