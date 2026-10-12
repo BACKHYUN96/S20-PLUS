@@ -1,5 +1,15 @@
 # 작업 이력
 
+## 2026-10-12 — Unity 0.41.0 로터리 조경: 구현 완료·실제 PC 검증 대기
+
+사용자가0.40.0 폰 적용 성공 후 로터리 조경 그래픽 작업을 승인했다. 중앙섬의 낮은 관목9군집/꽃24군집/토양3구획과 외곽4구획의 관목8군집/작은 나무4그루를 추가했다. 436tri/6merged meshes는 기존Soil/Bark/RoadWhite/Leaves0~2 재질을 공유하고 새Light/Collider/Update/교통모델 변경이 없다. 중앙높이1.1m 미만, 외곽 실제지오메트리는 x절대값/z235거리21.5m 밖을 검사한다.
+
+현재최대119980tri로예산이빠듯하여 기존가로수에서 다른완전한잎군집의 모든outward plane 안에 .002m이상 들어간삼각형만 제거했다. 원본vertex/UV/normal은 보존한다. 독립SceneryChecks가 original20/80face subdivision을 복원하여 제거면의 완전내포와 원본normal 일치를검사한다. 원본나무32/6sharedcanopies/텍스처·수종·보행높이는 유지한다. 실제회수tri/최대예산은 PC Unity 결과대기이며 한도를늘리지않았다.
+
+변경7소스 RoundaboutScene/RoundaboutChecks/FoliageScene/SceneryChecks/StarterScene/CityPreview/StarterConfig. 0.41.0/code42/Generated/Gardens0410/Scenes/Gardens-0.41.0.unity. 새조경6캡처 낮/노을/밤/비·확대낮/밤을 추가하고 riverfront 전용초기야간캡처에도 실제 ApplyViews를 호출하여 차량조명이 theme endpoint를따르도록 바로잡았다. 기존304파일/실제index/교통모델/host12/130검증입력 추적유지.
+
+사전Roslyn7소스 syntax오류0; unrelated baseline 보존 및 authored구획·436tri검토 완료. 이는 실제Unity컴파일/지오메트리/교통/예산/기후/Android/Lint/sign/GPU/폰검사를대신하지않는다. main·build tag에게시후 연결된Windows PC에서 전체검증/서명APK/GPU184PNG실행예정. 실제검증성공과 공개다운로드검증 전 새APK전달완료로표시하지않는다.
+
 ## 2026-10-12 — Unity 0.40.0 강변 접속·보행계단·난간·원경 건물: 검증·서명 APK 전달 완료
 
 0.39.0 폰 적용 성공 후 사용자가 시안 목표의 그래픽 작업 복귀를 승인했다. 로터리 뒤 북쪽 가로도로의 보도 끝z310.4/y.15에서 강변z326/y7.1까지 양측 식재 지형과 중앙20단 계단을 연결했다. 강변 보행길z326~329.8와 강330/y8 끝벽, 중앙16m입구를 남긴16기둥·양옆 난간을 추가했다. 중앙을 막던 낮은 건물12동을 양옆6동으로 줄였고, 앞·뒤 지형 높이를 잇는 실제 기단 위에 세워 바닥과 분리되어 보이는 모습을 줄였다. 새 지형·계단·기단은 기존 하나의 opaque Distant 재질/8mesh 내 tag7 분기로 낮·노을·밤·비·눈·안개를 따른다. 추가 Light/Collider/material/동적캐릭터/교통 경로 변경은 없다. 중앙 계단은 그래픽이며 기존 보행자의 실제 이동 경로를 강변까지 확장한 것은 아니다.

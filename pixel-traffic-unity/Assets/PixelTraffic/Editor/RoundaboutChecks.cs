@@ -136,6 +136,41 @@ namespace PixelTraffic.UnityPrototype.Editor
             }
             return new[]{(float)cases,maximum};
         }
+
+        static int Gardens()
+        {
+            Transform gardens=GameObject.Find("Roundabout Gardens").transform;
+            Need(gardens.GetComponentsInChildren<Collider>().Length==0&&gardens.GetComponentsInChildren<Light>().Length==0,"planting adds traffic obstacles or realtime lights.");
+            int islandBeds=0,outerBeds=0,shrubs=0,outerShrubs=0,flowers=0,trees=0,triangles=0;
+            var names=new HashSet<string>();var allowed=new HashSet<Material>();
+            foreach(string name in new[]{"Soil","Bark","RoadWhite","Leaves0","Leaves1","Leaves2"})allowed.Add(AssetDatabase.LoadAssetAtPath<Material>(StarterScene.Generated+"/"+name+".mat"));
+            foreach(Transform marker in gardens)
+            {
+                Vector3 p=marker.localPosition,s=marker.localScale;
+                if(marker.name=="Island Planting Bed"){islandBeds++;Need(new Vector2(p.x,p.z-235).magnitude+Mathf.Max(s.x,s.z)<9.5f&&p.y>.235f&&p.y<.27f,"island bed crosses its curb or floats.");}
+                if(marker.name=="Island Shrub"){shrubs++;Need(p.y+s.y<1.1f&&new Vector2(p.x,p.z-235).magnitude+Mathf.Max(s.x,s.z)<9.5f,"central planting obscures traffic.");}
+                if(marker.name=="Island Flower Cluster")flowers++;
+                if(marker.name=="Outer Planting Bed"){outerBeds++;Need(Mathf.Abs(p.x)-s.x>21.5f&&Mathf.Abs(p.z-235)-s.z>21.5f,"outer bed enters the circle, flared approach or sidewalk.");}
+                if(marker.name=="Outer Shrub")outerShrubs++;
+                if(marker.name=="Garden Tree")trees++;
+                var filter=marker.GetComponent<MeshFilter>();if(filter==null)continue;
+                Need(names.Add(marker.name)&&allowed.Contains(marker.GetComponent<MeshRenderer>().sharedMaterial),"garden duplicates a mesh or adds a new material.");
+                Mesh mesh=filter.sharedMesh;var points=mesh.vertices;var normals=mesh.normals;var uv=mesh.uv;var indices=mesh.triangles;triangles+=indices.Length/3;
+                Need(points.Length==normals.Length&&points.Length==uv.Length,"garden normal/UV data missing.");
+                for(int i=0;i<points.Length;i++)
+                {
+                    var p0=points[i];Need(!float.IsNaN(p0.x)&&!float.IsNaN(p0.y)&&!float.IsNaN(p0.z)&&Mathf.Abs(normals[i].magnitude-1)<.001f,"garden geometry invalid.");
+                    float r=new Vector2(p0.x,p0.z-235).magnitude;
+                    bool central=r<9.5f&&p0.y>=.235f&&p0.y<1.1f;
+                    bool outside=Mathf.Abs(p0.x)>21.5f&&Mathf.Abs(p0.z-235)>21.5f&&p0.y>=.015f&&p0.y<4.7f;
+                    Need(central||outside,"actual planting enters a vehicle lane, walking band, or central sightline.");
+                }
+                for(int i=0;i<indices.Length;i+=3)
+                {int a=indices[i],b=indices[i+1],c=indices[i+2];var normal=Vector3.Cross(points[b]-points[a],points[c]-points[a]);Need(normal.sqrMagnitude>1e-10f&&Vector3.Dot(normal,normals[a]+normals[b]+normals[c])>0,"garden face degenerate or reversed.");}
+            }
+            Need(islandBeds==3&&outerBeds==4&&shrubs==9&&outerShrubs==8&&flowers==24&&trees==4&&names.Count==6&&triangles==436,"landscape groups or shared mesh budget changed.");
+            return triangles;
+        }
         internal static Report Validate()
         {
             var controller=UnityEngine.Object.FindFirstObjectByType<StreetSimulation>();controller.ResetModel();Need(controller.Model.Roundabout!=null,"saved runtime controller omits the junction.");
@@ -153,6 +188,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             foreach(var lamp in lighting.GetComponentsInChildren<MeshRenderer>())Need(lamp.sharedMaterial!=null,"junction fixture misses shared material.");
             var island=root.Find("Roundabout Island").GetComponent<MeshFilter>().sharedMesh;
             Need(Mathf.Abs(island.bounds.center.z-235)<.001f&&Mathf.Abs(island.bounds.size.x-20)<.001f&&island.bounds.max.y<.3f,"central island obscures traffic or leaves the circle.");
+            int gardenTriangles=Gardens();
             var camera=Camera.main;float aspect=camera.aspect;foreach(float a in new[]{9f/20,9f/16}){camera.aspect=a;var p=camera.WorldToViewportPoint(new Vector3(0,0,235));Need(p.x>0&&p.x<1&&p.y>0&&p.y<1&&p.z>0,"junction outside saved portrait.");}camera.aspect=aspect;
             foreach(float a in new[]{9f/20,9f/16})
             {
@@ -259,9 +295,9 @@ namespace PixelTraffic.UnityPrototype.Editor
                 Need(controller.Model.Roundabout.Completed>=2,"storm deadlocks the junction.");
             }
             finally{cameraChoice.Preview(0);controller.SetPaused(false);for(int i=0;i<drives.Length;i++)drives[i].ResetPosition(poses[i]);climate.Preview(0,0);controller.ResetModel();controller.ApplyViews();}
-            return new Report{result="PASS: actual production routes, CCW circulation/rotated-body island and pair clearance, four random exits, rolling uninterrupted entry and local time-aligned merges, first assigned exits without occupancy retention or extra laps, measured lower entrance queue and stale rear-pass cancellation at gate, six-car density/internal-queue recovery and committed-merge clearance, right indicators, offscreen return, bus service, storm and fixed-clock/pause; actual GPU and phone separate",cameraOptionsChecked=true,staleLaneRequestCases=staleCases,firstExitRoutes=(int)firstExits[0],maximumArcDegrees=firstExits[1],progressRewinds=progressRewinds,extraLaps=0,lowerQueueStopSeconds=lowerQueueTicks/30f,peakLowerQueue=peakLowerQueue,maximumLowerWaitSeconds=maxLowerWaitTicks/30f,denseVehicles=6,denseMovingTicks=density[0],denseInsideQueueCount=density[1],denseRecovered=density[2],entriesWithoutStop=entriesWithoutStop,approachStoppedSeconds=approachStoppedTicks/30f,uninterruptedEntryCases=uninterruptedCases,uninterruptedEntryStopTicks=0,peakMovingRingCars=peakMoving,multipleMovingTicks=multipleMovingTicks,maxCompletionGapSeconds=maxCompletionGap/30f,terrainMeshes=5,terrainTriangles=triangles,simulatedSeconds=600,entries=entries,completed=completed,returns=returns,yields=yields,recycles=recycles,destinations=destinations,pairChecks=pairChecks,ringSamples=ringSamples,signalFrames=signalFrames,hiddenSpawns=hiddenResets,maximumVisibleStep=maximumStep,busDepartures=departures,frameRates=new[]{15,30,60,120}};
+            return new Report{gardenTriangles=gardenTriangles,gardenMeshes=6,islandShrubs=9,islandFlowerClusters=24,outerShrubs=8,gardenTrees=4,result="PASS: actual production routes, CCW circulation/rotated-body island and pair clearance, four random exits, rolling uninterrupted entry and local time-aligned merges, first assigned exits without occupancy retention or extra laps, measured lower entrance queue and stale rear-pass cancellation at gate, six-car density/internal-queue recovery and committed-merge clearance, right indicators, offscreen return, bus service, storm and fixed-clock/pause; actual GPU and phone separate",cameraOptionsChecked=true,staleLaneRequestCases=staleCases,firstExitRoutes=(int)firstExits[0],maximumArcDegrees=firstExits[1],progressRewinds=progressRewinds,extraLaps=0,lowerQueueStopSeconds=lowerQueueTicks/30f,peakLowerQueue=peakLowerQueue,maximumLowerWaitSeconds=maxLowerWaitTicks/30f,denseVehicles=6,denseMovingTicks=density[0],denseInsideQueueCount=density[1],denseRecovered=density[2],entriesWithoutStop=entriesWithoutStop,approachStoppedSeconds=approachStoppedTicks/30f,uninterruptedEntryCases=uninterruptedCases,uninterruptedEntryStopTicks=0,peakMovingRingCars=peakMoving,multipleMovingTicks=multipleMovingTicks,maxCompletionGapSeconds=maxCompletionGap/30f,terrainMeshes=5,terrainTriangles=triangles,simulatedSeconds=600,entries=entries,completed=completed,returns=returns,yields=yields,recycles=recycles,destinations=destinations,pairChecks=pairChecks,ringSamples=ringSamples,signalFrames=signalFrames,hiddenSpawns=hiddenResets,maximumVisibleStep=maximumStep,busDepartures=departures,frameRates=new[]{15,30,60,120}};
         }
         [Serializable] internal sealed class Report
-        {public string result;public bool cameraOptionsChecked;public float approachStoppedSeconds;public int staleLaneRequestCases,firstExitRoutes,progressRewinds,extraLaps,peakLowerQueue;public float maximumArcDegrees,lowerQueueStopSeconds,maximumLowerWaitSeconds;public int denseVehicles,denseMovingTicks,denseInsideQueueCount,denseRecovered;public int entriesWithoutStop,uninterruptedEntryCases,uninterruptedEntryStopTicks,peakMovingRingCars,multipleMovingTicks;public float maxCompletionGapSeconds;public int terrainMeshes,terrainTriangles,simulatedSeconds,entries,completed,returns,yields,recycles,pairChecks,ringSamples,signalFrames,hiddenSpawns,busDepartures;public int[] destinations,frameRates;public float maximumVisibleStep;}
+        {public int gardenTriangles,gardenMeshes,islandShrubs,islandFlowerClusters,outerShrubs,gardenTrees;public string result;public bool cameraOptionsChecked;public float approachStoppedSeconds;public int staleLaneRequestCases,firstExitRoutes,progressRewinds,extraLaps,peakLowerQueue;public float maximumArcDegrees,lowerQueueStopSeconds,maximumLowerWaitSeconds;public int denseVehicles,denseMovingTicks,denseInsideQueueCount,denseRecovered;public int entriesWithoutStop,uninterruptedEntryCases,uninterruptedEntryStopTicks,peakMovingRingCars,multipleMovingTicks;public float maxCompletionGapSeconds;public int terrainMeshes,terrainTriangles,simulatedSeconds,entries,completed,returns,yields,recycles,pairChecks,ringSamples,signalFrames,hiddenSpawns,busDepartures;public int[] destinations,frameRates;public float maximumVisibleStep;}
     }
 }

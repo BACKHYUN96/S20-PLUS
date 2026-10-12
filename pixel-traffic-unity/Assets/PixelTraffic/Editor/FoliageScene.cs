@@ -123,7 +123,33 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
                 foreach(int index in faces)indices.Add(offset+index);
             }
-            var mesh=new Mesh{name=name};mesh.SetVertices(positions);mesh.SetUVs(0,uv);mesh.SetTriangles(indices,0);mesh.RecalculateNormals();mesh.RecalculateBounds();return mesh;
+            var mesh=new Mesh{name=name};mesh.SetVertices(positions);mesh.SetUVs(0,uv);mesh.SetTriangles(indices,0);mesh.RecalculateNormals();mesh.RecalculateBounds();
+            // Remove only faces strictly enclosed by another complete leaf clump.
+            // Keep the original vertices, UVs and normals, so visible silhouettes and shading are unchanged.
+            if(tree)
+            {
+                var visible=new List<int>();
+                for(int f=0;f<indices.Count;f+=3)
+                {
+                    int group=indices[f]/unit.Count;bool buried=false;
+                    for(int other=0;other<centres.Length&&!buried;other++)
+                    {
+                        if(other==group)continue;bool inside=true;
+                        for(int plane=0;plane<faces.Length&&inside;plane+=3)
+                        {
+                            int offset=other*unit.Count;
+                            Vector3 a=positions[offset+faces[plane]],b=positions[offset+faces[plane+1]],c=positions[offset+faces[plane+2]];
+                            Vector3 normal=Vector3.Cross(b-a,c-a).normalized;
+                            for(int corner=0;corner<3;corner++)
+                                if(Vector3.Dot(normal,positions[indices[f+corner]]-a)>=-.002f){inside=false;break;}
+                        }
+                        buried=inside;
+                    }
+                    if(!buried)visible.AddRange(new[]{indices[f],indices[f+1],indices[f+2]});
+                }
+                mesh.SetTriangles(visible,0);mesh.RecalculateBounds();
+            }
+            return mesh;
         }
     }
 }

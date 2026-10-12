@@ -13,7 +13,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             var gardenMaterials=new List<Material>();
             var roofProfiles=new HashSet<string>();var balconyWidths=new HashSet<int>();int upperTerraces=0;
             int trees=0,buildings=0,gardens=0,balconies=0,railPosts=0,checkedVertices=0,architectureTriangles=0,detailedBuildings=0,balconyPlants=0,airConditioners=0;
-            Texture2D leafTexture=null;
+            Texture2D leafTexture=null;int reclaimedFoliageTriangles=0;var checkedCanopies=new HashSet<Mesh>();
             foreach(var root in UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
             {
                 if(root.name=="City Tree")
@@ -34,7 +34,10 @@ namespace PixelTraffic.UnityPrototype.Editor
                         }
                         Need(fineGroups==15,"Near crown is not split into small leaf groups.");
                     }
-                    Need(mesh.triangles.Length/3==(treeNear?1200:140),"Distance foliage topology changed.");
+                    int originalTriangles=treeNear?1200:140;
+                    Need(mesh.triangles.Length/3<=originalTriangles&&mesh.triangles.Length/3>originalTriangles/2,"Distance foliage silhouette budget changed.");
+                    reclaimedFoliageTriangles+=originalTriangles-mesh.triangles.Length/3;
+                    if(checkedCanopies.Add(mesh))HiddenFaces(mesh,treeNear);
                     Need(canopy.localScale.x>=.72f&&canopy.localScale.x<1&&canopy.localScale.y>=.89f&&canopy.localScale.y<1.04f,"Tree crown variety or crossing clearance lost.");
                     Need(root.Find("Trunk")!=null&&root.Find("Trunk").GetComponent<Renderer>().bounds.max.y>4,"Tree trunk disconnected.");
                     Need(mesh.triangles.Length/3<=1200&&mesh.bounds.min.y>3&&mesh.bounds.max.y<8,"Foliage blocks walking height or exceeds silhouette budget.");
@@ -142,9 +145,53 @@ namespace PixelTraffic.UnityPrototype.Editor
             CityEnvironment.Report budget=CityEnvironment.Validate(Camera.main,pipeline);
             Need(budget.triangles<110000,"Base scenery consumed the reserved full-population budget.");
             Need(UnityEngine.Object.FindFirstObjectByType<CityClimate>().AdditionalLights==4,"Architectural details add realtime lights.");
-            return new Report{result="PASS: actual distinct opaque foliage, shared mip texture, merged facade/roof meshes, actual slabs/rail posts, normals/UV/winding and pedestrian/roof clearance; weather/wind checked by ClimateChecks; device performance unmeasured",roofProfiles=roofProfiles.Count,upperTerraces=upperTerraces,balconyWidthVariants=balconyWidths.Count,detailedBuildings=detailedBuildings,balconyPlants=balconyPlants,airConditioners=airConditioners,trees=trees,species=meshes.Count,buildings=buildings,balconies=balconies,balconyRailPosts=railPosts,roofGardens=gardens,canopyTrianglesPerTree=shapes[0].triangles.Length/3,architectureTriangles=architectureTriangles,checkedVertices=checkedVertices,leafTextureSize=leafTexture.width,leafTextureContrast=maximum-minimum};
+            Need(reclaimedFoliageTriangles>0,"Hidden crown faces were not reclaimed for the gardens.");
+            return new Report{reclaimedFoliageTriangles=reclaimedFoliageTriangles,result="PASS: actual distinct opaque foliage, shared mip texture, merged facade/roof meshes, actual slabs/rail posts, normals/UV/winding and pedestrian/roof clearance; weather/wind checked by ClimateChecks; device performance unmeasured",roofProfiles=roofProfiles.Count,upperTerraces=upperTerraces,balconyWidthVariants=balconyWidths.Count,detailedBuildings=detailedBuildings,balconyPlants=balconyPlants,airConditioners=airConditioners,trees=trees,species=meshes.Count,buildings=buildings,balconies=balconies,balconyRailPosts=railPosts,roofGardens=gardens,canopyTrianglesPerTree=shapes[0].triangles.Length/3,architectureTriangles=architectureTriangles,checkedVertices=checkedVertices,leafTextureSize=leafTexture.width,leafTextureContrast=maximum-minimum};
         }
 
+
+        static void HiddenFaces(Mesh mesh,bool near)
+        {
+            // Reconstruct every original closed clump independently of the production pruning.
+            int[] baseFaces={0,11,5,0,5,1,0,1,7,0,7,10,0,10,11,1,5,9,5,11,4,11,10,2,10,7,6,7,1,8,3,9,4,3,4,2,3,2,6,3,6,8,3,8,9,4,9,5,2,4,11,6,2,10,8,6,7,9,8,1};
+            int size=near?42:12;var faces=new List<int>(baseFaces);
+            if(near)
+            {
+                var edges=new Dictionary<long,int>();int next=12;
+                int Mid(int a,int b){long key=((long)Math.Min(a,b)<<32)|(uint)Math.Max(a,b);if(!edges.TryGetValue(key,out int v)){v=next++;edges[key]=v;}return v;}
+                faces.Clear();
+                for(int i=0;i<baseFaces.Length;i+=3)
+                {int a=baseFaces[i],b=baseFaces[i+1],c=baseFaces[i+2],ab=Mid(a,b),bc=Mid(b,c),ca=Mid(c,a);faces.AddRange(new[]{a,ab,ca,b,bc,ab,c,ca,bc,ab,bc,ca});}
+                Need(next==42,"Independent crown subdivision incomplete.");
+            }
+            var vertices=mesh.vertices;var kept=new HashSet<string>();
+            string Key(int a,int b,int c)=>a+"/"+b+"/"+c;
+            int[] indices=mesh.triangles;
+            for(int i=0;i<indices.Length;i+=3)Need(kept.Add(Key(indices[i],indices[i+1],indices[i+2])),"Pruned canopy repeats a face.");
+            var original=new List<int>();int matched=0;
+            for(int group=0;group<vertices.Length/size;group++)for(int face=0;face<faces.Count;face+=3)
+            {
+                int a=group*size+faces[face],b=group*size+faces[face+1],c=group*size+faces[face+2];original.AddRange(new[]{a,b,c});
+                if(kept.Contains(Key(a,b,c))){matched++;continue;}
+                bool covered=false;
+                for(int other=0;other<vertices.Length/size&&!covered;other++)
+                {
+                    if(other==group)continue;bool inside=true;
+                    for(int plane=0;plane<faces.Count&&inside;plane+=3)
+                    {
+                        Vector3 p=vertices[other*size+faces[plane]],q=vertices[other*size+faces[plane+1]],v=vertices[other*size+faces[plane+2]];
+                        Vector3 normal=Vector3.Cross(q-p,v-p).normalized;
+                        foreach(int corner in new[]{a,b,c})if(Vector3.Dot(normal,vertices[corner]-p)>=-.001f){inside=false;break;}
+                    }
+                    covered=inside;
+                }
+                Need(covered,"Crown pruning removed a visible surface or changed its silhouette.");
+            }
+            Need(matched==indices.Length/3,"Pruned canopy added a foreign triangle.");
+            var full=new Mesh();full.vertices=vertices;full.triangles=original.ToArray();full.RecalculateNormals();Vector3[] oldNormals=full.normals,newNormals=mesh.normals;
+            for(int i=0;i<vertices.Length;i++)Need(Vector3.Distance(oldNormals[i],newNormals[i])<.00001f,"Removing hidden foliage altered visible shading normals.");
+            UnityEngine.Object.DestroyImmediate(full);
+        }
         static List<Bounds> Boxes(Mesh mesh,int trailingQuadVertices=0)
         {
             Vector3[] v=mesh.vertices;Need((v.Length-trailingQuadVertices)%24==0,"Merged solid mesh has incomplete faces.");
@@ -178,7 +225,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         [Serializable] internal sealed class Report
         {
             public string result;
-            public int roofProfiles,upperTerraces,balconyWidthVariants,detailedBuildings,balconyPlants,airConditioners,trees,species,buildings,balconies,balconyRailPosts,roofGardens,canopyTrianglesPerTree,architectureTriangles,checkedVertices,leafTextureSize;
+            public int reclaimedFoliageTriangles,roofProfiles,upperTerraces,balconyWidthVariants,detailedBuildings,balconyPlants,airConditioners,trees,species,buildings,balconies,balconyRailPosts,roofGardens,canopyTrianglesPerTree,architectureTriangles,checkedVertices,leafTextureSize;
             public float leafTextureContrast;
         }
     }

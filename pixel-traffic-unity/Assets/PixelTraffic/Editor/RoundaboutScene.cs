@@ -34,6 +34,79 @@ namespace PixelTraffic.UnityPrototype.Editor
                 var view=obj.GetComponent<MeshRenderer>();view.sharedMaterial=material;view.shadowCastingMode=ShadowCastingMode.Off;
             }
         }
+
+        static void Gardens(Transform road)
+        {
+            Transform root=new GameObject("Roundabout Gardens").transform;root.SetParent(road,false);
+            var soil=new Shape();var bark=new Shape();var flowers=new Shape();var green=new[]{new Shape(),new Shape(),new Shape()};
+            Material Existing(string name)=>AssetDatabase.LoadAssetAtPath<Material>(StarterScene.Generated+"/"+name.Replace(" ","")+".mat");
+            void Marker(string name,Vector3 p,Vector3 size)
+            {var obj=new GameObject(name);obj.transform.SetParent(root,false);obj.transform.localPosition=p;obj.transform.localScale=size;}
+            void Bed(Vector3 p,float x,float z,bool island)
+            {
+                // A low octagonal soil basin leaves the grass visible around each planted group.
+                Marker(island?"Island Planting Bed":"Outer Planting Bed",p,new Vector3(x,.04f,z));
+                for(int n=0;n<8;n++)
+                {
+                    float a=n*Mathf.PI/4,b=(n+1)*Mathf.PI/4;
+                    soil.Triangle(p,p+new Vector3(Mathf.Cos(b)*x,0,Mathf.Sin(b)*z),p+new Vector3(Mathf.Cos(a)*x,0,Mathf.Sin(a)*z));
+                }
+            }
+            void Crown(Vector3 p,Vector3 radius,int colour)
+            {
+                // Six-sided rounded cap: low-cost opaque geometry, no alpha cards or realtime lights.
+                const int sides=6;Vector3 top=p+Vector3.up*radius.y;
+                for(int n=0;n<sides;n++)
+                {
+                    float a=n*Mathf.PI*2/sides,b=(n+1)*Mathf.PI*2/sides;
+                    Vector3 u=p+new Vector3(Mathf.Cos(a)*radius.x,0,Mathf.Sin(a)*radius.z),v=p+new Vector3(Mathf.Cos(b)*radius.x,0,Mathf.Sin(b)*radius.z);
+                    green[colour].Triangle(top,v,u);
+                    green[colour].Triangle(p-Vector3.up*radius.y*.5f,u,v);
+                }
+            }
+            float z=RoundaboutTraffic.CenterZ;
+            Vector3[] island={new Vector3(-4,.252f,z-2.6f),new Vector3(3.5f,.252f,z-3),new Vector3(0,.252f,z+3)};
+            for(int bed=0;bed<island.Length;bed++)
+            {
+                Vector3 p=island[bed];Bed(p,2.2f,1.5f,true);
+                for(int n=0;n<3;n++)
+                {
+                    Vector3 at=p+new Vector3((n-1)*1.05f,.24f,Mathf.Sin(n*2+bed)*.4f);
+                    Vector3 radius=new Vector3(.78f,.36f+n*.075f,.68f);Crown(at,radius,(bed+n)%3);
+                    Marker("Island Shrub",at,radius);
+                }
+                for(int n=0;n<8;n++)
+                {
+                    float a=(n+.3f*bed)*Mathf.PI/4;Vector3 at=p+new Vector3(Mathf.Cos(a)*1.8f,.025f,Mathf.Sin(a)*1.05f);
+                    float size=.15f+(n%3)*.035f;
+                    flowers.Quad(at+new Vector3(-size,0,0),at+new Vector3(0,.065f,size),at+new Vector3(size,0,0),at+new Vector3(0,.065f,-size));
+                    Marker("Island Flower Cluster",at,new Vector3(size,1,size));
+                }
+            }
+            // The four diagonal land parcels are outside the ring, flared entries, and paved walking bands.
+            for(int i=0;i<4;i++)
+            {
+                float side=i%2==0?-1:1,back=i<2?-1:1;
+                Vector3 p=new Vector3(side*27,.02f,z+back*26);Bed(p,4.4f,3.2f,false);
+                for(int n=0;n<2;n++)
+                {
+                    Vector3 at=p+new Vector3(side*(n*2-1),.43f,back*1.65f);Vector3 radius=new Vector3(1.15f,.57f+n*.18f,.94f);
+                    Crown(at,radius,(i+n)%3);Marker("Outer Shrub",at,radius);
+                }
+                Vector3 tree=p+new Vector3(-side,0,-back*.75f);float height=2.65f+(i%2)*.55f;
+                Marker("Garden Tree",tree,new Vector3(1,height,1));
+                for(int n=0;n<4;n++)
+                {
+                    float a=n*Mathf.PI/2,b=(n+1)*Mathf.PI/2;
+                    Vector3 u=new Vector3(Mathf.Cos(a)*.14f,0,Mathf.Sin(a)*.14f),v=new Vector3(Mathf.Cos(b)*.14f,0,Mathf.Sin(b)*.14f);
+                    bark.Quad(tree+u,tree+u+Vector3.up*height,tree+v+Vector3.up*height,tree+v);
+                }
+                Crown(tree+new Vector3(-.6f,height,0),new Vector3(1.3f,1.1f,1.1f),i%3);
+                Crown(tree+new Vector3(.55f,height+.2f,.3f),new Vector3(1.15f,1.2f,1.2f),(i+1)%3);
+            }
+            soil.Save("Garden Soil",root,Existing("Soil"));bark.Save("Garden Trunks",root,Existing("Bark"));flowers.Save("Garden Flowers",root,Existing("Road White"));
+            for(int i=0;i<green.Length;i++)green[i].Save("Garden Foliage "+i,root,Existing("Leaves "+i));
+        }
         static Vector3 Circle(float r,float angle,float y)=>new Vector3(Mathf.Cos(angle)*r,y,RoundaboutTraffic.CenterZ+Mathf.Sin(angle)*r);
         internal static void Create(Transform road)
         {
@@ -108,6 +181,7 @@ namespace PixelTraffic.UnityPrototype.Editor
             Material Existing(string name)=>AssetDatabase.LoadAssetAtPath<Material>(StarterScene.Generated+"/"+name.Replace(" ","")+".mat");
             asphalt.Save("Roundabout Asphalt",root,Existing("Asphalt"));paving.Save("Roundabout Paving",root,Existing("Paving"));
             curb.Save("Roundabout Curb",root,Existing("Curb"));lawn.Save("Roundabout Island",root,Existing("Leaves 0"));white.Save("Roundabout Markings",root,Existing("Road White"));
+            Gardens(road);
             // Reuse the existing lens/metal and pooled glow; retain four realtime lights.
             Transform lighting=new GameObject("Roundabout Lighting").transform;lighting.SetParent(road,false);
             foreach(float side in new[]{-1f,1f})
