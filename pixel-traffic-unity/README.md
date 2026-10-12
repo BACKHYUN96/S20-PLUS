@@ -1,4 +1,48 @@
-# Pixel Traffic Unity — 로터리 연속 진입 0.36.0
+# Pixel Traffic Unity — 로터리 연속 진입 0.37.0
+
+## 2026-10-12 — Unity 0.37.0 로터리 연속 진입: 검증·서명 APK 전달 완료
+
+폰에서0.36.0 적용 후에도 널널한 로터리 앞에 차량들이 줄을 서는 현상이 남아, 사용자가 여섯 대 정도가 함께 회전하고 필요하면 안쪽에서 정체하도록 요청했다. 로터리의 먼 미래 진출경로까지 예약하던 검사를 제거하고, 같은 시간에 가까운 합류를 통과할 차체를 예측하며 원주 앞차 간격과 제동거리로 속도를 조절한다. 이미 회전·진출 중인 차량은 접근 차량보다 먼저 지나가도록 하고, 길이 긴 진출차의 바로 앞12m 구간만 별도 보호하여 진입차와 서로 가로막지 않게 한다. 실제 차체 guard는 길이·각도와0.15m 길이/0.08m 폭 여유를 검사한다. 일반 도로 재진입의SafetyLength+2.2m 간격은 유지하되, 순환 중인 뒤차가 선두의 도로 복귀를 가로막지 않게 구분한다. 멀리 있는 연결 직선은 기존차량cruise, 로터리 부근4.8m/s와 기존 가감속·세 번 출구깜빡이를 유지한다. 동시 수에 인위적인6대 제한을 걸지 않으며 실제 가까운 충돌 가능성이 있을 때는 감속·양보한다.
+
+변경5CS: RoundaboutTraffic/RoundaboutChecks/CityPreview/StarterConfig/StarterScene. 0.37.0/code38, RoundaboutCapacity-0.37.0.unity / Generated/RoundaboutCapacity0370. geometry·카메라·조명·기후·보행·신호·승하차·와이퍼와host12/workflow를 유지했다. 기존304파일·실제index/status·130검증입력을 보존했다.
+
+**개발·로컬 검사:** 기존.NET8/실제6차종 치수/독립 SAT로1200초 실행: normal 완료167/최대동시4/최대무완료32초/후반 최소1224.60m/접근정차누계668.97초; 확대차체172/4/29.9초/1379.67m; 폭풍99/4/46.8초. 모든 조건 충돌·교착 없음. 동일normal fixture0.36.0의2901.9초 대비 약77% 감소이며 한 차량 대기시간이 아닌 전체 누계다. 빈 진입30조건 정차tick0, blocked rolling handoff 역이동 방지와road recycle/exit2.2m 간격 PASS. 명시적6차량 density fixture는90tick 전원 이동, 출구20초 막힘에6대 안쪽 정체, 해제 후6대 모두 완료하며 매tick 독립 SAT PASS. 자연 도착 교통과 density fixture는 구분한다. 개발 중 꼬리 때문에handoff가 막힌 경우는roadOnly복귀 간격으로, 출구버스·접근차 상호lookahead 양보는 회전/출구우선으로, 확대출구트럭 시간 예측 교착은 즉시 진출부 보호로 수정했다. fixture의 비활성차량 weather respawn은rank를 명시하여 바로잡았다. 로컬은 실제Unity/Android/폰 검사를 대신하지 않는다.
+
+**실제 Unity:** source `8c3c6a00d76964ecacd519f80afae6ef6a46ba09` / [검증 포함 BuildApk](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38217721243). 저장24차량의5진입조건 총120빈 경로에서 정차tick0. 로터리 카메라600초 실제 검사는 진입87, 완료86, 정차 없는 진입32, 최대 동시 회전4대, 다중 이동5739tick, 최대 무완료31.17초. 접근 차량 정차시간 합계301.07초는 여러 차량·방문 전체 누계이며 한 차량의 대기시간이 아니다. 네 출구[12, 12, 13, 12], 복귀49, 재진입36, 독립 회전차체 검사993301회 및 중앙섬·반시계·연속 이동·버스/보행/신호·폭풍·15/30/60/120Hz·pause PASS. 6대 밀도 fixture의 전원회전90tick/안쪽대기6대/해제후완료6대 PASS. 기존 기후/조명/와이퍼/반사 검사 PASS. 기본108616tri, 최대119962tri/1592renderers/47materials로110000/120000/2400/48 예산 미만.
+
+**실제 GPU:** BuildApk run의 수치를 기록한다. 공개 이미지 링크는 같은source의 Validate run38217721243 촬영본이며, main 촬영 변경픽셀은 자연8870/13818/21562와6대 fixture20418/19697/19351이다. 두 run의170PNG source/bytes/SHA/ZIP CRC를 각각 확인했다. BuildApk의 source/bytes/SHA/ZIP CRC가 같은170PNG 확인.4연속 frame의 실제 회전2차량 각각>.5m 이동, 변경픽셀[8873, 13817, 21548] PASS. 별도6대 density fixture의4GPU프레임에서6대 각각>.5m 이동, 변경픽셀[20424, 19704, 19356] PASS. 이는 자연 도착 교통의6대 동시 도착을 의미하지 않는다. 낮/노을/밤/강비 카메라 옵션 및 기존 안개 비교를 유지했다. Editor/URP 촬영이며 실제폰 촬영/FPS 검사가 아니다. 실제 PC 실패/수정 기록: [].
+
+**Android·전달:** `unity-apk-0.37.0-build1` / [BuildApk](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38217757188). BuildPlayer 오류0/경고0, launcherLint 오류0/경고8. 다운로드APK의 apksigner/aapt/ZIP CRC로0.37.0/code38/min29/target36/ARM64 IL2CPP와 wallpaper service/private provider/settings launcher/비활성UnityActivity 확인. 원본 v2cert SHA256 `a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6`. host12 SHA가 같아 [0.34.0 unityLibraryLint](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38192276536) 오류0/경고10/8생성파일일치를 재사용했다.
+
+[APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/a267ae4f2daf6f970b1a33136870807cc5567ce7/pixel-traffic-unity-prototype-0.37.0.apk) · [실제 frame0](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/a267ae4f2daf6f970b1a33136870807cc5567ce7/roundabout-motion-0.png) · [frame1](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/a267ae4f2daf6f970b1a33136870807cc5567ce7/roundabout-motion-1.png) · [로터리 밤](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/a267ae4f2daf6f970b1a33136870807cc5567ce7/camera-roundabout-night.png) · [6대 밀도fixture](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/a267ae4f2daf6f970b1a33136870807cc5567ce7/roundabout-six-fixture-0.png). APK31241923bytes/SHA256`6e37fdb3b845452efe36711c6ffa7f4752ee72074f69dd3fdc0259dc4467b394`. `downloads/unity-0.37.0`의18파일을 로그인 없는HTTP200/no redirect/full bytes/SHA로 확인했다. main에APK/새workflow를 추가하지 않았다.
+
+USB폰1대와 디버깅을 허용한 뒤 PowerShell 전체블록을 실행한다. 지정 폴더 C:\Users\김백현\Desktop\AI에 다운로드·SHA 확인·기존앱 업데이트:
+```powershell
+& {
+    $ErrorActionPreference = "Stop"
+    $apkFolder = "C:\Users\김백현\Desktop\AI"
+    $apkPath = Join-Path $apkFolder "pixel-traffic-unity-prototype-0.37.0.apk"
+    $apkUrl = "https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/a267ae4f2daf6f970b1a33136870807cc5567ce7/pixel-traffic-unity-prototype-0.37.0.apk"
+    $trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+    if (-not (Test-Path -LiteralPath $trafficAdb)) { throw "Unity의 adb.exe를 찾을 수 없습니다." }
+    & $trafficAdb start-server
+    if ($LASTEXITCODE -ne 0) { throw "ADB 시작 실패" }
+    $deviceLines = & $trafficAdb devices
+    if ($LASTEXITCODE -ne 0) { throw "폰 연결 확인 실패" }
+    $connectedDevices = @($deviceLines | Where-Object { $_ -match '^\S+\s+device$' })
+    if ($connectedDevices.Count -ne 1) { throw "폰 1대를 USB로 연결하고 USB 디버깅을 허용해주세요." }
+    New-Item -ItemType Directory -Force -Path $apkFolder | Out-Null
+    Write-Host "0.37.0 APK 다운로드 중..."
+    Invoke-WebRequest -UseBasicParsing -Uri $apkUrl -OutFile $apkPath
+    if ((Get-FileHash -LiteralPath $apkPath -Algorithm SHA256).Hash -ne "6e37fdb3b845452efe36711c6ffa7f4752ee72074f69dd3fdc0259dc4467b394") { throw "파일 검증 실패. 다시 실행해주세요." }
+    Write-Host "폰에 앱 설치 중..."
+    & $trafficAdb install -r $apkPath
+    if ($LASTEXITCODE -ne 0) { throw "앱 설치 실패. 위 오류를 확인해주세요." }
+    Write-Host "완료! 0.37.0 설치 성공." -ForegroundColor Green
+}
+```
+
+설치 후 카메라 구도 → 로터리 보기에서 확인한다. 0.36.0은 사용자 폰 적용 확인;0.37.0 실제폰 외형/흐름/FPS/발열/장시간 확인 대기다. 클라우드에서 폰 설치를 실행했다고 주장하지 않는다.
 
 ## 2026-10-12 — Unity 0.36.0 로터리 연속 진입: 검증·서명 APK 전달 완료
 
