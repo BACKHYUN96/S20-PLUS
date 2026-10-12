@@ -1,5 +1,47 @@
 # Unity 자동 빌드 — PC에서 시작하고 클라우드로 이동하기
 
+## 2026-10-12 — Unity 0.34.0 카메라 구도 선택: 검증·서명 APK 전달 완료
+
+요청: 기존 도시 구도와 별도로 로터리가 잘 보이는 구도를 설정에서 선택한다. Android 설정의 카메라 구도에 ‘도시 전체’/‘로터리 보기’를 추가했다. 선택을 SharedPreferences에 저장하고 기존 비공개 provider/500ms 스냅샷/JNI bridge로 wallpaper 프로세스에 전달한다. 기존 설정은 도시 전체가 기본이다. 동일 카메라의 위치·방향·FOV만 변경하고 날씨·시간대·차량 clock을 초기화하지 않는다. 구도 선택은 즉시 적용하며 다시 시작할 때 복원한다. 폰의 실제 저장/재시작 동작은 사용자 확인 대기다.
+
+로터리 보기: 위치(0,46,161), target(0,0,241), FOV60. 도시 전체: 원래 위치(1.4,14,-37), target(-4.9,1,68), FOV44. 카메라 clip/aspect·그래픽 geometry·재질·조명 예산은 유지한다. 버전0.34.0/code35, RoundaboutCamera-0.34.0.unity / Generated/RoundaboutCamera0340. 변경11소스·검증입력130파일·기존302파일과 user index/status를 보존한다. NativeAndroid 설정3개와 bridge/템플릿은 의도적으로 변경하고 나머지host7 SHA를 보존했다. 새 workflow는 추가하지 않았다.
+
+**PC 검증:** source `77403093a9282d5334461db4e48ea39469250680` / [Validate](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38190798190). 9:20/9:16에서 로터리 외곽16점의 화면 여백·재진입 끝점이 화면밖인 조건·도시 구도의 정확한 복원·카메라 선택 시 차량 위치 보존 PASS. 실제 직렬화된24차량600초 검사: 진입24,완료23,복귀11,화면밖재진입11,네방향 선택[4, 4, 4, 5],차체간격검사993347회. 15/30/60/120Hz·pause·버스 승하차/비상깜빡이·신호·보행·기후·라이트·와이퍼·반사 PASS. 기본108616tri,최대119962tri/1592renderers/47materials로 기존110000/120000/2400/48 예산 미만.
+
+**실제 GPU:** 166PNG의 source/bytes/SHA/ZIP CRC 확인. 새 옵션의 실제 CityCamera component로 낮/노을/밤/강비4장을 촬영하고 확인했다. 기존162장과 저장카메라 밤/구fog 조건 비교를 유지했다. Unity Editor/URP/GPU 결과이며 폰 촬영이나 FPS 검사가 아니다. 실패/수정 기록: [{'run': 38190055616, 'sourceCommit': '2c63e8c0a2aca4eef971253aa25da1b181bed7c9', 'reason': 'Automated validation and166GPU tests PASS but actual camera-option screenshots showed serialized vehicle positions inside grass. Editor ResetModel enables saved objects until Advance applies actual model visibility/poses. New option captures now Advance60seconds and assert no visible car inside island. Runtime camera/traffic unchanged. No APK built from this source.'}].
+
+**Android:** `unity-apk-0.34.0-build1` / [BuildApk](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38191426649). BuildPlayer 오류0/경고0,launcherLint 오류0/경고8. 변경된 native host를 포함한 동일source의 [unityLibrary Lint](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/38192276536) 오류0/경고10; 생성src/res SHA 일치8파일. 실제 내려받은 APK apksigner/aapt/ZIP CRC로0.34.0/code35/min29/target36/ARM64 IL2CPP와wallpaper service/private provider/settings launcher/비활성 Unity Activity를 확인했다. 원본v2인증서SHA256 a6e489adbb1502c8cd77689dde4efefab3a29c5953180e5e1ca61acf58a3aba6. APK의 새 ‘카메라 구도’와 ‘도시 전체’/‘로터리 보기’ 리소스도 확인했다.
+
+[APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/62a5f8bee65c9956bd5953591b1795207c9a558e/pixel-traffic-unity-prototype-0.34.0.apk) · [로터리 낮](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/62a5f8bee65c9956bd5953591b1795207c9a558e/camera-roundabout-day.png) · [로터리 밤](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/62a5f8bee65c9956bd5953591b1795207c9a558e/camera-roundabout-night.png) · [로터리 비](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/62a5f8bee65c9956bd5953591b1795207c9a558e/camera-roundabout-rain.png) · [도시 전체](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/62a5f8bee65c9956bd5953591b1795207c9a558e/roundabout-city-preview.png). APK31238223bytes/SHA256`90fc4ff4378592ae8cc678ce082e9c123bbe1ef932dde9ceb6a48e2aec9c1c06`. 다운로드branch`downloads/unity-0.34.0`의16파일을 로그인 없는HTTP200/no redirect/full bytes/SHA로 확인했다. main에APK를 추가하지 않았다.
+
+USB폰1대를 연결하고 디버깅을 허용한 뒤 아래 Windows PowerShell 전체블록을 실행한다. 지정폴더 C:\Users\김백현\Desktop\AI에 다운로드·SHA 확인·기존앱 업데이트:
+```powershell
+& {
+    $ErrorActionPreference = "Stop"
+    $apkFolder = "C:\Users\김백현\Desktop\AI"
+    $apkPath = Join-Path $apkFolder "pixel-traffic-unity-prototype-0.34.0.apk"
+    $apkUrl = "https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/62a5f8bee65c9956bd5953591b1795207c9a558e/pixel-traffic-unity-prototype-0.34.0.apk"
+    $trafficAdb = "C:\Program Files\Unity\Hub\Editor\6000.3.26f1\Editor\Data\PlaybackEngines\AndroidPlayer\SDK\platform-tools\adb.exe"
+    if (-not (Test-Path -LiteralPath $trafficAdb)) { throw "Unity의 adb.exe를 찾을 수 없습니다." }
+    & $trafficAdb start-server
+    if ($LASTEXITCODE -ne 0) { throw "ADB 시작 실패" }
+    $deviceLines = & $trafficAdb devices
+    if ($LASTEXITCODE -ne 0) { throw "폰 연결 확인 실패" }
+    $connectedDevices = @($deviceLines | Where-Object { $_ -match '^\S+\s+device$' })
+    if ($connectedDevices.Count -ne 1) { throw "폰 1대를 USB로 연결하고 USB 디버깅을 허용해주세요." }
+    New-Item -ItemType Directory -Force -Path $apkFolder | Out-Null
+    Write-Host "0.34.0 APK 다운로드 중..."
+    Invoke-WebRequest -UseBasicParsing -Uri $apkUrl -OutFile $apkPath
+    if ((Get-FileHash -LiteralPath $apkPath -Algorithm SHA256).Hash -ne "90fc4ff4378592ae8cc678ce082e9c123bbe1ef932dde9ceb6a48e2aec9c1c06") { throw "파일 검증 실패. 다시 실행해주세요." }
+    Write-Host "폰에 앱 설치 중..."
+    & $trafficAdb install -r $apkPath
+    if ($LASTEXITCODE -ne 0) { throw "앱 설치 실패. 위 오류를 확인해주세요." }
+    Write-Host "완료! 0.34.0 설치 성공." -ForegroundColor Green
+}
+```
+
+설치 후 ‘픽셀 트래픽 Unity’ 설정 → ‘카메라 구도’ → ‘로터리 보기’를 선택한다. ‘도시 전체’로 기존 구도에 돌아갈 수 있다. 폰 외형·저장/재시작·FPS·발열·장시간 동작은 사용자 확인 대기이며 클라우드에서 폰 설치를 실행했다고 주장하지 않는다. Drive 탐색기 설정은 보류한다.
+
 ## 2026-10-12 — Unity 0.34.0 카메라 구도 선택: 구현 완료·실제 검증 대기
 
 사용자가 로터리가 보이는 카메라 구도 옵션을 요청했다. Android 설정에 카메라 구도 ‘도시 전체’/‘로터리 보기’를 추가하고 기존 private provider의 SharedPreferences 스냅샷과 JNI bridge로 선택을 전달한다. 기존 설정에는 기본 도시 전체를 적용한다. CityCamera는 동일 카메라만 이동하며 차량·날씨 clock을 초기화하지 않는다. 로터리 보기 위치(0,46,161), target(0,0,241), FOV60; 도시 전체는 원래 위치(1.4,14,-37), target(-4.9,1,68), FOV44를 정확하게 복원한다. 설정은 저장되며 배경화면 다시 시작할 때 읽는다. 구도 전환은 즉시 적용한다.
