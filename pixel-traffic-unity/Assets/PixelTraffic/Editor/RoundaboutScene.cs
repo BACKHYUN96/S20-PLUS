@@ -25,7 +25,7 @@ namespace PixelTraffic.UnityPrototype.Editor
                 {
                     Vector3 p=points[i];
                     Vector2 tile=name=="Roundabout Island"?new Vector2((p.x+10)/20,(p.z-RoundaboutTraffic.CenterZ+10)/20):
-                        name=="Roundabout Paving"?new Vector2(p.x/2,p.z/4):new Vector2(p.x/6,p.z/6);
+                        name=="Roundabout Paving"?new Vector2(p.x/2.4f,p.z/2.4f):new Vector2(p.x/6,p.z/6);
                     uv[i]=new Vector2(tile.x/Mathf.Max(.001f,scale.x),tile.y/Mathf.Max(.001f,scale.y));
                 }
                 var mesh=new Mesh{name=name};mesh.SetVertices(points);mesh.SetUVs(0,uv);mesh.SetTriangles(indices,0);mesh.RecalculateNormals();mesh.RecalculateBounds();

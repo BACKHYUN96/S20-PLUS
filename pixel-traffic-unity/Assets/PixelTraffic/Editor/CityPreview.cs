@@ -719,6 +719,10 @@ namespace PixelTraffic.UnityPrototype.Editor
                     foreach(int theme in new[]{0,1,2})
                     {climate.Preview(theme,0);detailStreet.ApplyViews();finishImages.Add(CaptureState(camera,finishRequest,finishTarget,finishImage,"finish-facade-"+new[]{"day","dusk","night"}[theme]));}
                     climate.Preview(0,2);detailStreet.ApplyViews();finishImages.Add(CaptureState(camera,finishRequest,finishTarget,finishImage,"finish-facade-rain"));
+                    camera.transform.position=new Vector3(-1.5f,8,-11);camera.transform.LookAt(new Vector3(-5.3f,0,12));camera.fieldOfView=52;
+                    foreach(int theme in new[]{0,1,2})
+                    {climate.Preview(theme,0);detailStreet.ApplyViews();finishImages.Add(CaptureState(camera,finishRequest,finishTarget,finishImage,"finish-street-"+new[]{"day","dusk","night"}[theme]));}
+                    climate.Preview(0,2);detailStreet.ApplyViews();finishImages.Add(CaptureState(camera,finishRequest,finishTarget,finishImage,"finish-street-rain"));
                 }
                 finally{finishTarget.Release();UnityEngine.Object.DestroyImmediate(finishTarget);UnityEngine.Object.DestroyImmediate(finishImage);cameraChoice.Preview(0);camera.aspect=.45f;camera.transform.SetPositionAndRotation(roadCameraPosition,roadCameraRotation);camera.fieldOfView=roadFov;climate.Preview(0,0);detailStreet.ApplyViews();}
                 File.WriteAllText("Reports/preview-result.json", JsonUtility.ToJson(new Report {

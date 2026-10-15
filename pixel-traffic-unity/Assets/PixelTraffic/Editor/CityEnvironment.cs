@@ -24,12 +24,12 @@ namespace PixelTraffic.UnityPrototype.Editor
         {
             float length = RoadEnd - RoadStart, centre = (RoadStart + RoadEnd) * .5f;
             Box("City Ground", scenery, new Vector3(0, -.3f, 170), new Vector3(420, .24f, 520), Mat("City Ground", new Color(.49f, .48f, .43f)));
-            Material asphalt = Mat("Asphalt", new Color(.22f, .235f, .25f), 0, .12f);
+            Material asphalt = Mat("Asphalt", new Color(.30f, .315f, .33f), 0, .12f);
             Texture(asphalt, "Asphalt", 0, new Vector2(StarterConfig.RoadWidth / 6, length / 6));
             Box("Road", road, new Vector3(0, -.12f, centre), new Vector3(StarterConfig.RoadWidth, .24f, length), asphalt);
-            Material paving = Mat("Paving", new Color(.78f, .70f, .56f));
-            Texture(paving, "Pavers", 1, new Vector2(2, length / 4));
-            Material curb = Mat("Curb", new Color(.73f, .73f, .67f));
+            Material paving = Mat("Paving", new Color(.76f, .73f, .66f));
+            Texture(paving, "Pavers", 1, new Vector2(4 / 2.4f, (RoundaboutTraffic.GateZ-RoadStart) / 2.4f));
+            Material curb = Mat("Curb", new Color(.76f, .75f, .69f));
             foreach (float side in new[] { -1f, 1f })
             {
                 Box("Sidewalk", road, new Vector3(side * 8.4f, .08f, (RoadStart+RoundaboutTraffic.GateZ)*.5f), new Vector3(4, .16f, RoundaboutTraffic.GateZ-RoadStart), paving);

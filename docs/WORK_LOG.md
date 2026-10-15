@@ -1,5 +1,9 @@
 # 작업 이력
 
+## 2026-10-15 — Unity 0.43.0 도로·보도 재질 구현
+
+사용자 요청으로 0.42.0 다음 도로·보도 패치 착수. 원격 main d1eceb1 기준 clean clone /workspace/S20-PLUS-043을 사용하며 기존 README-only 폴더와 index는 보존했다. 변경 6소스는 GroundScene/CityEnvironment/RoundaboutScene/CityPreview/StarterScene/StarterConfig. 0.43.0/code44, 아스팔트512px 잔골재·normal, 보도512px/60×30cm stagger, 경계석256px/1.2m 이음새·좁은 모서리 명암을 구현했다. 로터리의 world-space UV도2.4m 반복으로 맞춘다. geometry/material/runtime traffic 증가는 없다. 확대 낮·노을·밤·비 캡처4장과 실제 texture/scale 검사를 추가했다. git diff --check 통과. 실제 PC Unity/GPU/Android/Lint/signing은 아직 미실행이며 통과로 표시하지 않는다. 프록시 접속은 sandbox network 권한을 적용한 정상 경로로 해결했다. [상세 인수인계](UNITY_043_HANDOFF.md).
+
 ## 2026-10-12 — Unity 0.42.0 건물 외벽·창문 재질: 검증·서명 APK 전달 완료
 
 사용자가0.41.0 폰 적용을확인하고건물퀄리티향상을승인했다. 건물24동의기존입체창틀/발코니/옥상/물리메시를유지하면서외벽석재와유리질감을다듬었다. 외벽3공유색조를밝은석재·따뜻한베이지·차분한회색으로보완하고좌우palette profile을다르게배정했다. 512×512공유Masonry와5.2×5.6m미터UV로 .65×.7m타일줄눈과floorcornice접합부명암을그렸다. 높이4/5/6층의3공유cubeUVmesh는원본24vertex/12tri/normal/position을유지한다. 기존ArchitecturalTrim/WindowFrame의128/64공유texture로석재·프레임모서리의명암을더했다.

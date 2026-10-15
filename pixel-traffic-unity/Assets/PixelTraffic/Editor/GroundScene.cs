@@ -11,26 +11,47 @@ namespace PixelTraffic.UnityPrototype.Editor
     {
         internal static void SurfaceTexture(Material material,string name,int style,Vector2 scale)
         {
-            int size=style==0?512:style==1?256:128;
+            int size=style==0?512:style==1?512:256;
             var pixels=new Color[size*size];var normal=style==0?new Color[size*size]:null;
             for(int y=0;y<size;y++)for(int x=0;x<size;x++)
             {
                 int px=x%(size-1),py=y%(size-1);
                 float grain=((px*73+py*179+px*py*13)%101)/100f;
-                float macro=Periodic(x,y,size,5),shade=.69f+macro*.22f+grain*.09f;
+                float macro=Periodic(x,y,size,5),shade=.80f+macro*.12f;
+                Color tint=Color.white;
+                if(style==0)
+                {
+                    // Fine exposed aggregate with sparse light stones, rather than uniform image noise.
+                    float aggregate=Periodic(x,y,size,64);
+                    shade+=(aggregate-.5f)*.11f+(grain-.5f)*.035f;
+                    if(grain>.965f&&aggregate>.51f)shade+=.11f;
+                    if(grain<.035f)shade-=.07f;
+                    tint=new Color(1.0f,.992f,.977f);
+                }
                 if(style==1)
                 {
-                    int row=py/32,cx=(px+(row%2)*32)%64;
-                    bool joint=cx<2||py%32<2;
-                    float stone=.87f+((px/64+row*3)%5)*.022f;
-                    shade=joint?.52f:stone+grain*.025f;
+                    // Four by eight staggered blocks per 2.4m tile: 60cm x 30cm paving.
+                    int row=py/64,cx=(px+(row%2)*64)%128,cy=py%64;
+                    int column=(px+(row%2)*64)/128;
+                    float edge=Mathf.Min(Mathf.Min(cx,127-cx),Mathf.Min(cy,63-cy));
+                    float stone=.84f+((column+row*3)%5)*.021f;
+                    shade=edge<2?.56f:edge<5?stone-.09f:stone+(grain-.5f)*.04f+(macro-.5f)*.035f;
+                    tint=((column+row)%7==0)?new Color(.96f,.97f,1):new Color(1,.995f,.975f);
                 }
-                else if(style==3)shade=py<2?.55f:.89f+grain*.065f;
-                pixels[y*size+x]=new Color(shade,shade,shade);
+                else if(style==3)
+                {
+                    float joint=Mathf.Min(py,size-1-py);
+                    float edge=Mathf.Min(px,size-1-px);
+                    shade=joint<3?.49f:joint<6?.76f:.91f+(grain-.5f)*.055f;
+                    // A narrow worn rim and dark contact edge stay on the existing curb mesh.
+                    if(edge<14)shade*=Mathf.Lerp(.76f,1,edge/14f);
+                    tint=new Color(1,.996f,.98f);
+                }
+                pixels[y*size+x]=new Color(shade*tint.r,shade*tint.g,shade*tint.b);
                 if(normal!=null)
                 {
-                    float nx=(Periodic(x-1,y,size,28)-Periodic(x+1,y,size,28))*.4f;
-                    float ny=(Periodic(x,y-1,size,28)-Periodic(x,y+1,size,28))*.4f;
+                    float nx=(Periodic(x-1,y,size,64)-Periodic(x+1,y,size,64))*.32f;
+                    float ny=(Periodic(x,y-1,size,64)-Periodic(x,y+1,size,64))*.32f;
                     Vector3 n=new Vector3(nx,ny,1).normalized;
                     normal[y*size+x]=new Color(n.x*.5f+.5f,n.y*.5f+.5f,n.z*.5f+.5f,1);
                 }
@@ -84,7 +105,7 @@ namespace PixelTraffic.UnityPrototype.Editor
         internal static void Create()
         {
             var root=new GameObject("Ground Finish").transform;
-            Material curb=AssetDatabase.LoadAssetAtPath<Material>(StarterScene.Generated+"/Curb.mat");SurfaceTexture(curb,"CurbFinish",3,new Vector2(1,210));
+            Material curb=AssetDatabase.LoadAssetAtPath<Material>(StarterScene.Generated+"/Curb.mat");SurfaceTexture(curb,"CurbFinish",3,new Vector2(1,(RoundaboutTraffic.GateZ+65)/1.2f));
             Shader shader=Shader.Find("PixelTraffic/RoadOverlay");if(shader==null)throw new InvalidOperationException("Road overlay shader missing.");
             var mat=new Material(shader){name="Ground Overlay"};AssetDatabase.CreateAsset(mat,StarterScene.Generated+"/GroundOverlay.mat");
             var cars=UnityEngine.Object.FindObjectsByType<PrototypeDrive>(FindObjectsSortMode.None);Array.Sort(cars,(a,b)=>string.CompareOrdinal(a.name,b.name));
@@ -171,6 +192,22 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
                 textures++;
             }
+            var asphaltTexture=AssetDatabase.LoadAssetAtPath<Texture2D>(StarterScene.Generated+"/Asphalt.asset");
+            var pavingTexture=AssetDatabase.LoadAssetAtPath<Texture2D>(StarterScene.Generated+"/Pavers.asset");
+            var curbTexture=AssetDatabase.LoadAssetAtPath<Texture2D>(StarterScene.Generated+"/CurbFinish.asset");
+            Need(asphaltTexture.width==512&&pavingTexture.width==512&&curbTexture.width==256,"Street finish texture resolution differs.");
+            // Inspect the baked assets and actual renderer scale, not just the pixel generator.
+            Need(pavingTexture.GetPixel(64,32).grayscale>pavingTexture.GetPixel(0,0).grayscale+.20f,"Paving joints are not distinct from the block face.");
+            Need(curbTexture.GetPixel(128,128).grayscale>curbTexture.GetPixel(128,0).grayscale+.25f,"Curb joints are not distinct from the worn stone.");
+            int pavementScales=0;
+            foreach(var renderer in UnityEngine.Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None))
+                if(renderer.name=="Sidewalk")
+                {
+                    Vector2 repeat=renderer.sharedMaterial.GetTextureScale("_BaseMap");
+                    Need(Mathf.Abs(renderer.transform.localScale.x/repeat.x-2.4f)<.001f&&Mathf.Abs(renderer.transform.localScale.z/repeat.y-2.4f)<.001f,"Paving block scale stretches along the sidewalk.");
+                    pavementScales++;
+                }
+            Need(pavementScales==2,"Expected two physically scaled sidewalks.");
             Mesh drains=GameObject.Find("Curb Drain Covers").GetComponent<MeshFilter>().sharedMesh;Need(drains.triangles.Length/3==48,"Drain cover budget differs.");
             foreach(var p in drains.vertices)Need(Mathf.Abs(p.x)>5.8f&&Mathf.Abs(p.x)<6.4f,"Drain leaves road edge or blocks sidewalk.");
             var climate=UnityEngine.Object.FindFirstObjectByType<CityClimate>();climate.Preview(2,2);ground.Sync(true);var wet=ground.RuntimeMaterial.GetVector("_Ground");
@@ -193,11 +230,11 @@ namespace PixelTraffic.UnityPrototype.Editor
                 }
             }
             climate.Preview(0,0);ground.Sync(true);Need(asset.GetFloat("_Rain")==0,"Rain preview mutates the shared ground asset.");
-            return new Report{result="PASS: seamless mipmapped asphalt, four ground renderers, wheel contacts, hidden/disabled prevention, 18 actual wet/light/rain states and 160 continuous weather transition samples; actual GPU shader checks are in preview-result",vehicles=cars.Length,contactSamples=contactSamples,textures=textures,renderers=4,fleetTriangles=336,drains=24,reflectionPools=20,reflectionStates=reflectionStates,reflectionTransitions=reflectionTransitions};
+            return new Report{result="PASS: seamless aggregate asphalt, physically scaled 60x30cm staggered paving, worn curb joints, four ground renderers, wheel contacts, hidden/disabled prevention, 18 actual wet/light/rain states and 160 continuous weather transition samples; actual GPU shader checks are in preview-result",asphaltPixels=asphaltTexture.width,pavingPixels=pavingTexture.width,curbPixels=curbTexture.width,physicallyScaledSidewalks=pavementScales,vehicles=cars.Length,contactSamples=contactSamples,textures=textures,renderers=4,fleetTriangles=336,drains=24,reflectionPools=20,reflectionStates=reflectionStates,reflectionTransitions=reflectionTransitions};
         }
         private static void Need(bool condition,string why){if(!condition)throw new InvalidOperationException(why);}
         [Serializable] internal sealed class Report
-        {public string result;public int vehicles,contactSamples,textures,renderers,fleetTriangles,drains,reflectionPools,reflectionStates,reflectionTransitions;}
+        {public string result;public int asphaltPixels,pavingPixels,curbPixels,physicallyScaledSidewalks;public int vehicles,contactSamples,textures,renderers,fleetTriangles,drains,reflectionPools,reflectionStates,reflectionTransitions;}
         [Serializable]internal sealed class ReflectionGpuReport
         {public string result;public int cases,pixels;public float peak,idleDelta,rainMeanDelta;}
         internal static ReflectionGpuReport CheckReflectionGpu()
