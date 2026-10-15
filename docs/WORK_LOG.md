@@ -2,6 +2,8 @@
 
 ## 2026-10-15 — Unity 0.43.0 도로·보도 재질 구현
 
+소스 `4de8edd4e6f0245eb3318993b1479cdf781409bb` main 푸시 완료. Actions run38672418296/job116218368262는 PC 러너 수신 대기(queued). 사용자에게 러너 PowerShell 상태를 질문했으며 Unity 검사·GPU·Android 빌드·APK 서명은 아직 실행되지 않았다. `git diff --check` 통과, 원본 checkout 변경 없음. 실제 Unity 설치가 없는 클라우드의 보조 검사로 PC 결과를 대체하지 않는다.
+
 사용자 요청으로 0.42.0 다음 도로·보도 패치 착수. 원격 main d1eceb1 기준 clean clone /workspace/S20-PLUS-043을 사용하며 기존 README-only 폴더와 index는 보존했다. 변경 6소스는 GroundScene/CityEnvironment/RoundaboutScene/CityPreview/StarterScene/StarterConfig. 0.43.0/code44, 아스팔트512px 잔골재·normal, 보도512px/60×30cm stagger, 경계석256px/1.2m 이음새·좁은 모서리 명암을 구현했다. 로터리의 world-space UV도2.4m 반복으로 맞춘다. geometry/material/runtime traffic 증가는 없다. 확대 낮·노을·밤·비 캡처4장과 실제 texture/scale 검사를 추가했다. git diff --check 통과. 실제 PC Unity/GPU/Android/Lint/signing은 아직 미실행이며 통과로 표시하지 않는다. 프록시 접속은 sandbox network 권한을 적용한 정상 경로로 해결했다. [상세 인수인계](UNITY_043_HANDOFF.md).
 
 ## 2026-10-12 — Unity 0.42.0 건물 외벽·창문 재질: 검증·서명 APK 전달 완료
