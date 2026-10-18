@@ -1,5 +1,10 @@
 # 새 채팅 인수인계 — 픽셀 트래픽 0.29.0
 
+## 2026-10-18 — Unreal Engine 5 이식 인수인계 자료 작성·GitHub 저장 완료
+
+사용자가 현재 컨셉·누적 업데이트를 UE5 개발로 이어갈 자료를 요청했다. [UE5 전용 인수인계](UNREAL_ENGINE_HANDOFF.md)를 새 진입점으로 작성했다. 기존 기능/버그 회귀·소스 위치·버전별 주제·시안 원본 미확보·좌표/단위·C++ 포팅·모바일 그래픽·Android WallpaperService 선행 기술 검증·원격 자동화·APK 전달 규칙과 새 채팅 시작문을 포함한다. 실제 원격 README/STATUS/WORK_LOG/0.43문서/StarterConfig/CityClimate/VehicleLighting 및 저장소 tree를 확인하고 문서의 C# 참조 경로가 존재함을 확인했다. 과거 이력은 보존했다. 0.42는 검증/서명 전달 완료,0.43은 소스 반영/실제 검증 성공 미확인이다. 2026-10-18 GitHub API로 run38672418296의 completed/cancelled를 확인했으며 이전 queued 기록은 당시 상태다. 새 UE 프로젝트·엔진 설치·Android 빌드/WallpaperService 연결·성능 측정은 하지 않았다. 다음 추천은 UE Android 일반 APK와 WallpaperService의 실제 Surface 렌더 연결 최소 실험이다. 문서 작성이 Unity 삭제·UE 이식 완료를 뜻하지 않는다.
+
+
 ## 2026-10-15 — 현재 진행: Unity 0.43.0 도로·보도 개선
 
 [0.43.0 전용 인수인계](UNITY_043_HANDOFF.md)를 먼저 읽는다. 도로·보도·경계석 재질 구현과 캡처4장 추가를 마쳤고 실제 PC Unity/Android/Lint/서명/GPU 검증 및 APK 전달은 대기 중이다. 최종 그래픽 목표는 사용자 채팅의 밝은 한국 도심 시안이며 원본 이미지가 저장소에 없다는 점을 명시했다. 작은 패치 대신 시안과 차이가 큰 요소를 묶어서 진행하고 완료마다 다음 추천을 안내한다.
