@@ -1,5 +1,10 @@
 # 작업 이력
 
+## 2026-10-18 — Unreal Engine 5 이식 인수인계 자료 작성·GitHub 저장 완료
+
+사용자가 현재 컨셉·누적 업데이트를 UE5 개발로 이어갈 자료를 요청했다. [UE5 전용 인수인계](UNREAL_ENGINE_HANDOFF.md)를 새 진입점으로 작성했다. 기존 기능/버그 회귀·소스 위치·버전별 주제·시안 원본 미확보·좌표/단위·C++ 포팅·모바일 그래픽·Android WallpaperService 선행 기술 검증·원격 자동화·APK 전달 규칙과 새 채팅 시작문을 포함한다. 실제 원격 README/STATUS/WORK_LOG/0.43문서/StarterConfig/CityClimate/VehicleLighting 및 저장소 tree를 확인하고 문서의 C# 참조 경로가 존재함을 확인했다. 과거 이력은 보존했다. 0.42는 검증/서명 전달 완료,0.43은 소스 반영/실제 검증 성공 미확인이다. 2026-10-18 GitHub API로 run38672418296의 completed/cancelled를 확인했으며 이전 queued 기록은 당시 상태다. 새 UE 프로젝트·엔진 설치·Android 빌드/WallpaperService 연결·성능 측정은 하지 않았다. 다음 추천은 UE Android 일반 APK와 WallpaperService의 실제 Surface 렌더 연결 최소 실험이다. 문서 작성이 Unity 삭제·UE 이식 완료를 뜻하지 않는다.
+
+
 ## 2026-10-15 — Unity 0.43.0 도로·보도 재질 구현
 
 소스 `4de8edd4e6f0245eb3318993b1479cdf781409bb` main 푸시 완료. Actions run38672418296/job116218368262는 PC 러너 수신 대기(queued). 사용자에게 러너 PowerShell 상태를 질문했으며 Unity 검사·GPU·Android 빌드·APK 서명은 아직 실행되지 않았다. `git diff --check` 통과, 원본 checkout 변경 없음. 실제 Unity 설치가 없는 클라우드의 보조 검사로 PC 결과를 대체하지 않는다.
