@@ -1,0 +1,131 @@
+name: BITWIRE Android
+
+on:
+  push:
+    branches: [main]
+    tags: ['bitwire-v*']
+    paths: ['PureBit/**', '.github/workflows/purebit-android.yml']
+  pull_request:
+    paths: ['PureBit/**', '.github/workflows/purebit-android.yml']
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: '검사 후 버전별 GitHub Release 게시 (기존 BITWIRE 서명 Secret 필수)'
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bitwire-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    outputs:
+      publish: ${{ steps.source.outputs.publish }}
+      tag: ${{ steps.source.outputs.tag }}
+    env:
+      ANDROID_USER_HOME: ${{ runner.temp }}/bitwire-android
+      BITWIRE_RELEASE_EVENT: ${{ (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/bitwire-v')) || (github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main') }}
+    defaults:
+      run:
+        working-directory: PureBit
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate version and publication trigger
+        id: source
+        env:
+          BITWIRE_PUBLISH: ${{ inputs.publish }}
+        run: |
+          mkdir -p ci-logs
+          python3 tools/release/build_release.py source
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Install the project's existing Android toolchain
+        run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0' 'ndk;28.2.13676358' 'cmake;3.22.1'
+      - name: Restore existing signing key for publication only
+        if: env.BITWIRE_RELEASE_EVENT == 'true' && steps.source.outputs.publish == 'true'
+        env:
+          BITWIRE_DEBUG_KEYSTORE_BASE64: ${{ secrets.BITWIRE_DEBUG_KEYSTORE_BASE64 }}
+        run: python3 tools/release/build_release.py restore-key
+      - name: Release tooling checks
+        run: python3 -m unittest discover -s tools/release -p 'test_*.py' -v 2>&1 | tee ci-logs/release-tests.log
+      - name: Native transport mock tests
+        run: |
+          bash tools/test_native.sh 2>&1 | tee ci-logs/native.log
+          touch ci-logs/native-success.txt
+      - name: Build APK, JVM tests and Lint
+        run: |
+          ./gradlew --no-daemon --console=plain --stacktrace :app:assembleDebug :app:testDebugUnitTest :app:lintDebug 2>&1 | tee ci-logs/gradle.log
+          touch ci-logs/gradle-success.txt
+      - name: Verify original signature and prepare BITWIRE.apk
+        if: env.BITWIRE_RELEASE_EVENT == 'true' && steps.source.outputs.publish == 'true'
+        run: python3 tools/release/build_release.py package
+      - name: Preserve verified release files for the publication job
+        if: env.BITWIRE_RELEASE_EVENT == 'true' && steps.source.outputs.publish == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: bitwire-release-${{ github.sha }}
+          path: PureBit/dist/
+          if-no-files-found: error
+          retention-days: 7
+      - name: Keep logs and test reports even when a build fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bitwire-logs-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            PureBit/ci-logs/
+            PureBit/app/build/reports/
+            PureBit/app/build/test-results/
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Remove runner signing material
+        if: always()
+        run: rm -f "$ANDROID_USER_HOME/debug.keystore"
+
+  publish:
+    needs: build
+    if: needs.build.outputs.publish == 'true' && ((github.event_name == 'push' && startsWith(github.ref, 'refs/tags/bitwire-v')) || (github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    concurrency:
+      group: bitwire-publish
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: bitwire-release-${{ github.sha }}
+          path: PureBit/dist
+      - name: Publish versioned release and verify real downloads
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: PureBit
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p ci-logs
+          python3 tools/release/publish_release.py 2>&1 | tee ci-logs/publish.log
+      - name: Keep publication logs and download verification
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bitwire-publish-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            PureBit/ci-logs/
+            PureBit/dist/download-verification.json
+          if-no-files-found: warn
+          retention-days: 7

@@ -1,0 +1,8 @@
+Hwahyun / BITWIRE garden artwork
+
+Created specifically for this project on 2026-10-15 from the user's approved concept using image generation. These bundled PNGs contain no game character, game logo, or extracted game footage. The approved concept is inspiration for original project art.
+
+garden.png: static cinematic sakura garden painting, no baked UI/moon.
+moon.png: transparent luminous moon and cherry branch, used when no album cover is available and as a frame around source artwork.
+
+Background pan, depth-layer petals, strings, UI controls and opening typography are rendered separately by the application. These images are not evidence of an audio route or bit-perfect verification.

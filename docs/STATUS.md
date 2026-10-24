@@ -1,5 +1,10 @@
 # 현재 상태
 
+## 2026-10-24 — BITWIRE GitHub 빌드·Releases 구축 진행
+
+원격 main e8e786c에 PureBit/BITWIRE 소스가 없음을 확인했다. 로컬 v1.10.0/code47을 기존 다른 앱 소스와 함께 보존하며 추가 중이다. [배포 절차](../PureBit/RELEASING.md). 일반 push/PR은 검사만, 수동 publish 또는 bitwire-v 태그만 릴리스한다. 기존 서명 Secret 복원과 인증서 지문 검사를 필수로 한다. GitHub 직접 REST API 연결이 현재 클라우드 네트워크에서 Forbidden이며 Git fetch와 연결 GitHub 도구는 동작한다. 실제 원격 Actions/Release/download 성공은 아직 미검증이며 성공 URL로 안내하지 않는다.
+
+
 ## 2026-10-18 — Unreal Engine 5 이식 인수인계 자료 작성·GitHub 저장 완료
 
 사용자가 현재 컨셉·누적 업데이트를 UE5 개발로 이어갈 자료를 요청했다. [UE5 전용 인수인계](UNREAL_ENGINE_HANDOFF.md)를 새 진입점으로 작성했다. 기존 기능/버그 회귀·소스 위치·버전별 주제·시안 원본 미확보·좌표/단위·C++ 포팅·모바일 그래픽·Android WallpaperService 선행 기술 검증·원격 자동화·APK 전달 규칙과 새 채팅 시작문을 포함한다. 실제 원격 README/STATUS/WORK_LOG/0.43문서/StarterConfig/CityClimate/VehicleLighting 및 저장소 tree를 확인하고 문서의 C# 참조 경로가 존재함을 확인했다. 과거 이력은 보존했다. 0.42는 검증/서명 전달 완료,0.43은 소스 반영/실제 검증 성공 미확인이다. 2026-10-18 GitHub API로 run38672418296의 completed/cancelled를 확인했으며 이전 queued 기록은 당시 상태다. 새 UE 프로젝트·엔진 설치·Android 빌드/WallpaperService 연결·성능 측정은 하지 않았다. 다음 추천은 UE Android 일반 APK와 WallpaperService의 실제 Surface 렌더 연결 최소 실험이다. 문서 작성이 Unity 삭제·UE 이식 완료를 뜻하지 않는다.

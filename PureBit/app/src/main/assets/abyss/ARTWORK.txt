@@ -1,0 +1,24 @@
+ABYSS ocean canyon background generated for BITWIRE, 2026-10-19.
+Background asset: ocean.png. The image contains no UI or album artwork.
+v1.7.0 replaces it with a detailed clean plate regenerated from the approved
+user-supplied ABYSS concept reference. A spurious second water surface was
+removed with image generation. A separate square portal.png, regenerated
+from the same reference, preserves textured canyon floor inside the window.
+These are reconstructed artwork, not pixel-identical extracts of the concept.
+v1.4.0 clean plate removes baked jellyfish and outlined bubbles so animated
+jellyfish can be disabled independently. Clean plate generated 2026-10-19.
+Separate transparent rocky foreground: foreground.png, generated 2026-10-19.
+It is independently transformed behind native UI; the bubble plane is above UI.
+Photorealistic translucent jellyfish sprite: jellyfish.png, generated for
+BITWIRE on 2026-10-19, revised for v1.5.0 with transparency. Decoded at reduced resolution once
+per process; bell and tentacles deform separately in a Canvas mesh, with
+vector fallback if unavailable.
+Separate transparent specular bubble sprite: bubble.png, generated 2026-10-19.
+Its empty center preserves actual native UI underneath; it does not capture UI.
+Light shafts, bubbles, glass frames, source-bass ripples and album transition
+are drawn by the app. These visuals do not measure or modify DAC samples.
+
+Play button optical glass texture: play-orb.png, generated for BITWIRE on 2026-10-20.
+Separate 1254px RGBA material without text or playback symbols. Cached at reduced resolution;
+play/pause/cancel icons are drawn separately. Reconstructed toward the approved concept,
+not a pixel-exact extraction. A vector fallback is provided.

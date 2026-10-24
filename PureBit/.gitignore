@@ -1,0 +1,20 @@
+.gradle/
+.kotlin/
+.cxx/
+**/.cxx/
+**/build/
+local.properties
+.idea/
+*.iml
+captures/
+**/__pycache__/
+
+# Never commit generated distribution material or signing credentials.
+dist/
+ci-logs/
+*.keystore
+*.jks
+*.p12
+*.pfx
+.env
+.env.*

@@ -1,0 +1,18 @@
+<resources>
+    <style name="AppTheme" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:colorAccent">#31EDD8</item>
+        <item name="android:windowBackground">#080B13</item>
+        <item name="android:windowSplashScreenBackground">#080B13</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_purebit</item>
+        <item name="android:windowSplashScreenAnimationDuration">0</item>
+        <item name="android:colorBackground">#080B13</item>
+    </style>
+    <style name="HwahyunTheme" parent="AppTheme">
+        <item name="android:colorAccent">#F1AFC5</item>
+        <item name="android:colorBackground">#120A15</item>
+        <item name="android:windowBackground">#120A15</item>
+    </style>
+</resources>

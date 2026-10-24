@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 3.22.1)
+project(purebit_usb LANGUAGES CXX)
+add_library(purebit_usb SHARED usb_direct.cpp)
+target_compile_features(purebit_usb PRIVATE cxx_std_17)
+target_compile_options(purebit_usb PRIVATE -Wall -Wextra -Werror)
+target_link_options(purebit_usb PRIVATE -Wl,-z,max-page-size=16384)
+target_link_libraries(purebit_usb PRIVATE log)

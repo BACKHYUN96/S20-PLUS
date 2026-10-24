@@ -1,3 +1,15 @@
+# 작업 기록
+
+## 2026-10-24 — BITWIRE 자동 APK 빌드·Releases 구축
+
+요청: 최신 소스 원격 확인, GitHub Actions 빌드, 수동/버전 태그 전용 Release, BITWIRE.apk 고정명과 버전/커밋/SHA256, 원본 서명·저장소 공개 설정 보존, 실제 다운로드 검증.
+
+원격 main e8e786c에 PureBit가 없고 로컬 v1.10.0/code47 전체 소스와 purebit-android.yml이 미추적이었다. git fetch 후 기존 checkout을 fast-forward하여 다른 앱과 AGENTS/docs를 보존했다. main의 기존 README/STATUS/WORK_LOG/PATCH_GUIDE를 확인했다. 기존 debug.keystore의 공개 인증서가 a6e489ad…aba6임을 확인했고 키 바이트는 출력/추적하지 않았다.
+
+범위: PureBit 최신 소스 추가, purebit-android.yml 교체, tools/release의 Python 생성/서명/메타데이터/게시/다운로드 검증과 테스트, RELEASING 및 진입 문서. 기존 앱 Gradle applicationId/버전/서명 설정 및 음악/USB/스킨 코드는 변경하지 않는다. root의 다른 앱/워크플로는 변경하지 않는다.
+
+실패/해결: 직접 gh API는 네트워크 Forbidden이므로 다른 도메인으로 우회하지 않고, Git 및 허용된 GitHub 연결 도구를 사용한다. 서명 Secret이 없거나 지문이 다르면 안전하게 실패시키며 임시 키를 게시하지 않는다. 로컬 도구 테스트7개 통과; Android/native 검증 진행 중. 실제 push/Actions/Release/download와 Secret 등록 상태는 후속 기록에 남긴다.
+
 # 작업 이력
 
 ## 2026-10-18 — Unreal Engine 5 이식 인수인계 자료 작성·GitHub 저장 완료

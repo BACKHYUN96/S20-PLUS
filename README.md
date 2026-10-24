@@ -1,5 +1,9 @@
 # S20+
 
+## BITWIRE 로컬 음악 플레이어
+
+최신 Android 소스는 [PureBit/](PureBit/)에 있으며 [GitHub Actions·Releases 사용법](PureBit/RELEASING.md)을 제공합니다. 자동 빌드와 실제 배포 검증 상태는 [STATUS](docs/STATUS.md)를 확인하세요. 다른 앱 프로젝트는 유지합니다.
+
 Unity 라이브 배경화면 **0.42.0**: 기존건물의외벽석재·타일줄눈·접합부명암과창문하늘빛·광택을다듬었습니다. 기존메시/재질한도·야간방조명·차량흐름을유지했습니다. 실제Unity/190GPU PNG/Android·Lint·원본서명·공개다운로드확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/c23848da0f84725b47c7fc39106ce064368af8c9/pixel-traffic-unity-prototype-0.42.0.apk) · [건물낮](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/c23848da0f84725b47c7fc39106ce064368af8c9/finish-facade-day.png) · [설치명령](docs/UNITY_AUTOMATION.md). 0.41폰적용확인/0.42폰확인대기. 다음추천:도로·보도재질정교화.
 
 Unity 라이브 배경화면 **0.41.0**: 로터리 중앙섬의 낮은 관목·꽃밭과 외곽 네 구획의 관목·작은 나무를 추가했습니다. 가려진 가로수 내부면을 회수해 기존 메시 예산과 차량 흐름을 유지했습니다. 실제Unity/184GPU PNG/Android·Lint·원본서명·공개다운로드 확인. [APK](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/be854c4d04f9b2b93b7f47e1b96ccf76f4e60145/pixel-traffic-unity-prototype-0.41.0.apk) · [조경 낮](https://raw.githubusercontent.com/BACKHYUN96/S20-PLUS/be854c4d04f9b2b93b7f47e1b96ccf76f4e60145/gardens-roundabout-day.png) · [설치명령](docs/UNITY_AUTOMATION.md). 0.40.0 폰 적용 확인/0.41.0 폰 확인 대기.

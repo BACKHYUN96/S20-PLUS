@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_selection_status">%1$d곡 선택 · %2$d곡 표시 · 기존 곡은 유지</string>
+</resources>
