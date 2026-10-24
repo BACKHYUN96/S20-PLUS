@@ -1,8 +1,8 @@
 # 현재 상태
 
-## 2026-10-24 — BITWIRE GitHub 빌드·Releases 구축 진행
+## 2026-10-24 — BITWIRE 원격 빌드 성공·기존 서명 Secret 등록 대기
 
-원격 main e8e786c에 PureBit/BITWIRE 소스가 없음을 확인했다. 로컬 v1.10.0/code47을 기존 다른 앱 소스와 함께 보존하며 추가 중이다. [배포 절차](../PureBit/RELEASING.md). 일반 push/PR은 검사만, 수동 publish 또는 bitwire-v 태그만 릴리스한다. 기존 서명 Secret 복원과 인증서 지문 검사를 필수로 한다. GitHub 직접 REST API 연결이 현재 클라우드 네트워크에서 Forbidden이며 Git fetch와 연결 GitHub 도구는 동작한다. 실제 원격 Actions/Release/download 성공은 아직 미검증이며 성공 URL로 안내하지 않는다.
+원격 main e8e786c에 PureBit/BITWIRE 소스가 없음을 확인했다. 로컬 v1.10.0/code47을 기존 다른 앱 소스와 함께 보존하며 추가 중이다. [배포 절차](../PureBit/RELEASING.md). 일반 push/PR은 검사만, 수동 publish 또는 bitwire-v 태그만 릴리스한다. 기존 서명 Secret 복원과 인증서 지문 검사를 필수로 한다. GitHub 직접 REST API 연결이 현재 클라우드 네트워크에서 Forbidden이며 Git fetch와 연결 GitHub 도구는 동작한다. [GitHub 실제 빌드40064417261](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/40064417261)에서 3dd346a의 SDK/네이티브/릴리스 도구/assembleDebug/JVM/Lint 성공, 일반 push의 publish skip을 확인했다. 로컬 JVM182·도구7·네이티브·Lint 및 원본 서명/16KiB 검증도 통과했다. 실제 Release/download는 서명 Secret 등록과 별도 게시 실행이 남아 있으며 성공 URL로 안내하지 않는다.
 
 
 ## 2026-10-18 — Unreal Engine 5 이식 인수인계 자료 작성·GitHub 저장 완료

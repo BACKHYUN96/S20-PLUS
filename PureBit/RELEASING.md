@@ -47,6 +47,15 @@ https://github.com/BACKHYUN96/S20-PLUS/releases/download/bitwire-v1.10.0/BITWIRE
 키를 새로 생성하지 말고, 채팅/Issue/소스/Actions artifact/공개 다운로드에 키를 올리지 않는다.
 기존 키 백업의 실제 위치는 소스 저장소에 포함하지 않는다.
 
+기존 키 지문을 먼저 검사하고 GitHub CLI stdin으로 직접 등록하는 도구:
+
+```bash
+cd PureBit
+python3 tools/release/register_signing_secret.py --keystore /secure/path/to/existing/debug.keystore
+```
+
+키 파일은 수정하지 않고 Secret 값이나 토큰을 출력/소스 저장하지 않는다. 실행 환경의 `api.github.com` 접근 및 GitHub 관리자 Secret 쓰기 권한이 필요하다.
+
 GitHub CLI로 키를 화면에 출력하지 않고 등록하는 예시:
 
 ```bash

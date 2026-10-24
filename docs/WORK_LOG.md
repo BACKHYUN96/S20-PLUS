@@ -2,6 +2,8 @@
 
 ## 2026-10-24 — BITWIRE 자동 APK 빌드·Releases 구축
 
+실제 검증: commit3dd346a / run40064417261 / build job120784547148 success. 기존SDK37.0/NDK/CMake 설치, native, 도구7, assembleDebug/testDebugUnitTest/lintDebug 통과; 일반 push의 publish job은 skipped. 로컬 실제 APK SHA256 9b6d5149…d0d93, 기존 signer a6e489ad…aba6, 코드47/1.10.0, 16KiB 정렬과 빌드메타데이터 생성 검증. 사용자에게 api.github.com 환경 허용 안내를 제공했고 등록 도구는 지문 일치 검사 후 키를 gh secret set stdin으로만 전달한다. 키 원본 수정/로그 출력/소스 저장 없음. 실제 배포와 다운로드 검증은 아직 남았다.
+
 원격 실행 추가 확인: run40064261333에서 Android setup v3 기본값이 삭제된 SDK tools 패키지를 설치하려다 실패했다. 실제 job120784065154 로그와 공식 action.yml을 대조하고 packages=platform-tools로 명시했다. ubuntu-24.04를 고정해 26 마이그레이션 영향을 피하고 setup-java/checkout은 Node24 계열 v5로 맞췄다. 앱의 SDK/Gradle/서명은 그대로다.
 
 추가 관측: a727d721 main 푸시와 원격 Gradle/workflow 내용 일치를 확인했다. 첫 run40064100089는 job env의 runner.temp 컨텍스트를 허용하지 않아 작업 시작 전 실패했다. 실행 웹 화면 annotation에서 정확한 원인을 확인하고 초기 step에서 RUNNER_TEMP를 GITHUB_ENV로 전달하도록 수정한다. 로컬 native·Gradle·JVM182·Lint 및 릴리스 도구7 검사 통과.

@@ -5,6 +5,9 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
+import base64
+import subprocess
+from register_signing_secret import register
 
 from build_release import EXPECTED_CERT, EXPECTED_PACKAGE, certificate, source_version, should_publish, restore_key, test_counts
 from publish_release import validate_bundle, stable_version
@@ -70,6 +73,29 @@ class ReleaseTests(unittest.TestCase):
             (root / "BITWIRE.apk").write_bytes(data + b"changed")
             with self.assertRaises(ValueError):
                 validate_bundle(root, "a" * 40)
+
+    def test_secret_registration_checks_identity_and_sends_value_only_on_stdin(self):
+        with tempfile.TemporaryDirectory() as temp:
+            key = Path(temp) / "fixture.keystore"
+            data = b"synthetic signing fixture, never a real private key"
+            key.write_bytes(data)
+            cert = ":".join(EXPECTED_CERT[i:i+2] for i in range(0,64,2))
+            with patch("register_signing_secret.subprocess.run") as run, patch("builtins.print"):
+                run.return_value = subprocess.CompletedProcess([],0,stdout="SHA256: " + cert)
+                register(key,"BACKHYUN96/S20-PLUS")
+                self.assertEqual(2,run.call_count)
+                command = run.call_args.args[0]
+                self.assertIn("BITWIRE_DEBUG_KEYSTORE_BASE64",command)
+                self.assertNotIn("--body",command)
+                self.assertEqual(base64.b64encode(data),run.call_args.kwargs["input"])
+            self.assertEqual(data,key.read_bytes())
+
+    def test_secret_registration_refuses_an_unrelated_key_before_github_write(self):
+        with patch("register_signing_secret.subprocess.run") as run:
+            run.return_value = subprocess.CompletedProcess([],0,stdout="SHA256: " + ":".join(["00"]*32))
+            with self.assertRaises(ValueError):
+                register("unused-fixture.keystore","BACKHYUN96/S20-PLUS")
+            self.assertEqual(1,run.call_count)
 
     def test_absent_or_failed_jvm_results_cannot_claim_build_verification(self):
         with tempfile.TemporaryDirectory() as temp:
