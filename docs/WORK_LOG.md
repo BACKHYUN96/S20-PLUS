@@ -2,6 +2,8 @@
 
 ## 2026-10-24 — BITWIRE 자동 APK 빌드·Releases 구축
 
+원격 실행 추가 확인: run40064261333에서 Android setup v3 기본값이 삭제된 SDK tools 패키지를 설치하려다 실패했다. 실제 job120784065154 로그와 공식 action.yml을 대조하고 packages=platform-tools로 명시했다. ubuntu-24.04를 고정해 26 마이그레이션 영향을 피하고 setup-java/checkout은 Node24 계열 v5로 맞췄다. 앱의 SDK/Gradle/서명은 그대로다.
+
 추가 관측: a727d721 main 푸시와 원격 Gradle/workflow 내용 일치를 확인했다. 첫 run40064100089는 job env의 runner.temp 컨텍스트를 허용하지 않아 작업 시작 전 실패했다. 실행 웹 화면 annotation에서 정확한 원인을 확인하고 초기 step에서 RUNNER_TEMP를 GITHUB_ENV로 전달하도록 수정한다. 로컬 native·Gradle·JVM182·Lint 및 릴리스 도구7 검사 통과.
 
 요청: 최신 소스 원격 확인, GitHub Actions 빌드, 수동/버전 태그 전용 Release, BITWIRE.apk 고정명과 버전/커밋/SHA256, 원본 서명·저장소 공개 설정 보존, 실제 다운로드 검증.
