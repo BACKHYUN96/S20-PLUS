@@ -30,7 +30,6 @@ jobs:
       publish: ${{ steps.source.outputs.publish }}
       tag: ${{ steps.source.outputs.tag }}
     env:
-      ANDROID_USER_HOME: ${{ runner.temp }}/bitwire-android
       BITWIRE_RELEASE_EVENT: ${{ (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/bitwire-v')) || (github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/main') }}
     defaults:
       run:
@@ -44,7 +43,13 @@ jobs:
           BITWIRE_PUBLISH: ${{ inputs.publish }}
         run: |
           mkdir -p ci-logs
+          echo "ANDROID_USER_HOME=$RUNNER_TEMP/bitwire-android" >> "$GITHUB_ENV"
           python3 tools/release/build_release.py source
+      - name: Restore existing signing key for publication only
+        if: env.BITWIRE_RELEASE_EVENT == 'true' && steps.source.outputs.publish == 'true'
+        env:
+          BITWIRE_DEBUG_KEYSTORE_BASE64: ${{ secrets.BITWIRE_DEBUG_KEYSTORE_BASE64 }}
+        run: python3 tools/release/build_release.py restore-key
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -53,11 +58,6 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Install the project's existing Android toolchain
         run: sdkmanager 'platforms;android-37.0' 'build-tools;36.0.0' 'ndk;28.2.13676358' 'cmake;3.22.1'
-      - name: Restore existing signing key for publication only
-        if: env.BITWIRE_RELEASE_EVENT == 'true' && steps.source.outputs.publish == 'true'
-        env:
-          BITWIRE_DEBUG_KEYSTORE_BASE64: ${{ secrets.BITWIRE_DEBUG_KEYSTORE_BASE64 }}
-        run: python3 tools/release/build_release.py restore-key
       - name: Release tooling checks
         run: python3 -m unittest discover -s tools/release -p 'test_*.py' -v 2>&1 | tee ci-logs/release-tests.log
       - name: Native transport mock tests
@@ -92,7 +92,7 @@ jobs:
           retention-days: 7
       - name: Remove runner signing material
         if: always()
-        run: rm -f "$ANDROID_USER_HOME/debug.keystore"
+        run: if [[ -n "${ANDROID_USER_HOME:-}" ]]; then rm -f "$ANDROID_USER_HOME/debug.keystore"; fi
 
   publish:
     needs: build

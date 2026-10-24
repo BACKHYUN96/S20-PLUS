@@ -2,6 +2,8 @@
 
 ## 2026-10-24 — BITWIRE 자동 APK 빌드·Releases 구축
 
+추가 관측: a727d721 main 푸시와 원격 Gradle/workflow 내용 일치를 확인했다. 첫 run40064100089는 job env의 runner.temp 컨텍스트를 허용하지 않아 작업 시작 전 실패했다. 실행 웹 화면 annotation에서 정확한 원인을 확인하고 초기 step에서 RUNNER_TEMP를 GITHUB_ENV로 전달하도록 수정한다. 로컬 native·Gradle·JVM182·Lint 및 릴리스 도구7 검사 통과.
+
 요청: 최신 소스 원격 확인, GitHub Actions 빌드, 수동/버전 태그 전용 Release, BITWIRE.apk 고정명과 버전/커밋/SHA256, 원본 서명·저장소 공개 설정 보존, 실제 다운로드 검증.
 
 원격 main e8e786c에 PureBit가 없고 로컬 v1.10.0/code47 전체 소스와 purebit-android.yml이 미추적이었다. git fetch 후 기존 checkout을 fast-forward하여 다른 앱과 AGENTS/docs를 보존했다. main의 기존 README/STATUS/WORK_LOG/PATCH_GUIDE를 확인했다. 기존 debug.keystore의 공개 인증서가 a6e489ad…aba6임을 확인했고 키 바이트는 출력/추적하지 않았다.
