@@ -2,6 +2,8 @@
 
 ## 2026-10-24 — BITWIRE 자동 APK 빌드·Releases 구축
 
+모바일 대안 실제 결과: [run40066084202](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/40066084202), source95d3f84, build job120789526463 success. 실제 로그에 `Signing readiness: no dedicated or existing shared repository Secret is available`이 기록됐다. 기존 앱 APK의 인증서가 BITWIRE와 같아도 저장소 Secret은 없으므로 현 단계에서 이 경로로 게시할 수 없다. 네트워크 설정이 보이지 않는 사용자에게 원본 키 백업의 휴대폰 보유 여부만 질문했으며 키 파일/내용 전송을 요구하지 않았다. 다음 선택은 모바일 GitHub 웹에서 기존 키를 Secret으로 등록하거나 PC에서 최초 등록하는 것이다. 키를 새로 만들지 않는다.
+
 모바일 대안 조사: 사용자가 모바일에서 Codex 네트워크 설정 메뉴를 찾지 못한다고 알렸다. 기존 Pixel Traffic0.29 APK의 실제 apksigner 지문 및 Unity 서명 스크립트를 확인해 BITWIRE의 a6e489ad…aba6과 동일함을 확인했다. 기존 PIXEL_TRAFFIC_KEYSTORE_BASE64 Secret이 있다면 같은 인증서의 기존 키로만 활용할 수 있도록 전용 Secret 다음 우선순위로 연결하고, 신뢰된 main push에서 키 내용을 출력하지 않는 probe-key 단계를 추가한다. Secret 실제 존재·복원 가능 여부는 아직 확인 중이다. 다른 앱/서명 설정·키를 변경하지 않는다.
 
 최신 자동 빌드도 성공: de019775 / [run40064793493](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/40064793493), build job120785653303 success. 실제 로그에서 도구9개·native 성공, assembleDebug/testDebugUnitTest/lintDebug 및 BUILD SUCCESSFUL을 확인했다. 일반 push의 publish는 skipped. 현재 main의 후속 변경은 기록 문서뿐이며 앱/워크플로는 이 검증 소스와 같다. 배포는 tag run40064854257의 기존 서명 Secret 누락으로 여전히 차단, 다운로드404 상태다.

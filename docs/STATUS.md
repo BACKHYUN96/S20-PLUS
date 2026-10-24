@@ -2,6 +2,8 @@
 
 ## 2026-10-24 — BITWIRE 원격 빌드 성공·기존 서명 Secret 등록 대기
 
+모바일 대안 실제 결과: [run40066084202](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/40066084202), source95d3f84, build job120789526463 success. 실제 로그에 `Signing readiness: no dedicated or existing shared repository Secret is available`이 기록됐다. 기존 앱 APK의 인증서가 BITWIRE와 같아도 저장소 Secret은 없으므로 현 단계에서 이 경로로 게시할 수 없다. 네트워크 설정이 보이지 않는 사용자에게 원본 키 백업의 휴대폰 보유 여부만 질문했으며 키 파일/내용 전송을 요구하지 않았다. 다음 선택은 모바일 GitHub 웹에서 기존 키를 Secret으로 등록하거나 PC에서 최초 등록하는 것이다. 키를 새로 만들지 않는다.
+
 최신 자동 빌드도 성공: de019775 / [run40064793493](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/40064793493), build job120785653303 success. 실제 로그에서 도구9개·native 성공, assembleDebug/testDebugUnitTest/lintDebug 및 BUILD SUCCESSFUL을 확인했다. 일반 push의 publish는 skipped. 현재 main의 후속 변경은 기록 문서뿐이며 앱/워크플로는 이 검증 소스와 같다. 배포는 tag run40064854257의 기존 서명 Secret 누락으로 여전히 차단, 다운로드404 상태다.
 
 **배포 차단 원인 확인:** 태그 `bitwire-v1.10.0`는 소스 `de019775387fee6c909cb01653586e190a09a01b`에 생성했다. [릴리스 실행40064854257](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/40064854257)의 원본 키 복원 단계에서 `Missing Actions secret BITWIRE_DEBUG_KEYSTORE_BASE64`로 중단됐고 publish는 실행되지 않았다. APK/latest 및 버전별 Release URL은 실제 HTTP404다. 사용자에게 Codex 환경의 api.github.com 허용 설정 방법을 안내했다. 적용 후 기존 키의 지문을 확인하여 register_signing_secret.py로 등록하고 이 태그 실행을 Re-run all jobs 해야 한다. 키/토큰을 채팅으로 받거나 키를 소스·artifact로 배포하지 않는다.

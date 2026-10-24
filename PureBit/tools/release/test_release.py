@@ -9,7 +9,7 @@ import base64
 import subprocess
 from register_signing_secret import register
 
-from build_release import EXPECTED_CERT, EXPECTED_PACKAGE, certificate, source_version, should_publish, restore_key, test_counts
+from build_release import EXPECTED_CERT, EXPECTED_PACKAGE, certificate, source_version, should_publish, restore_key, test_counts, probe_key
 from publish_release import validate_bundle, stable_version
 
 
@@ -96,6 +96,29 @@ class ReleaseTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 register("unused-fixture.keystore","BACKHYUN96/S20-PLUS")
             self.assertEqual(1,run.call_count)
+
+    def test_probe_without_secret_does_not_restore_or_generate_key(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            with patch("build_release.ROOT",root), patch.dict(os.environ,{"BITWIRE_DEBUG_KEYSTORE_BASE64":""}), patch("build_release.restore_key") as restore, patch("builtins.print"):
+                probe_key()
+                restore.assert_not_called()
+            self.assertEqual({"available":False},json.loads((root/"ci-logs/signing-readiness.json").read_text()))
+
+    def test_probe_accepts_only_original_certificate_and_always_removes_temp_key(self):
+        for correct in (True,False):
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp);home=root/"android";home.mkdir();key=home/"debug.keystore"
+                cert=EXPECTED_CERT if correct else "0"*64
+                output="SHA256: "+":".join(cert[i:i+2] for i in range(0,64,2))
+                def restore_fixture():
+                    key.write_bytes(b"synthetic fixture, not a private key")
+                with patch("build_release.ROOT",root), patch.dict(os.environ,{"BITWIRE_DEBUG_KEYSTORE_BASE64":"present fixture","ANDROID_USER_HOME":str(home)}), patch("build_release.restore_key",side_effect=restore_fixture), patch("build_release.checked",return_value=output), patch("builtins.print"):
+                    if correct:probe_key()
+                    else:
+                        with self.assertRaises(ValueError):probe_key()
+                self.assertFalse(key.exists())
+                self.assertEqual(correct,json.loads((root/"ci-logs/signing-readiness.json").read_text())["matches_original_certificate"])
 
     def test_absent_or_failed_jvm_results_cannot_claim_build_verification(self):
         with tempfile.TemporaryDirectory() as temp:

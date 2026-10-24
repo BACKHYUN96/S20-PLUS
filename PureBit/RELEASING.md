@@ -98,3 +98,9 @@ adb install -r "C:\Users\김백현\Desktop\AI\BITWIRE.apk"
 
 기존 서명키가 없는 경우 앱 제거를 대안으로 강요하지 않는다. 먼저 기존 키를 복구한다.
 빌드/다운로드 성공은 S26의 모든 기능·시각 품질·DAC bit-perfect 검증을 뜻하지 않는다.
+
+## 모바일 환경에서의 최초 설정
+
+모바일 Codex 화면에 네트워크 설정이 없을 수 있다. 기존 같은 인증서의 공유 Secret도 2026-10-24 실제 probe에서는 등록되어 있지 않았다(run40066084202). 원본 키 백업이 휴대폰에 있다면 GitHub 모바일 웹의 저장소 Settings → Secrets and variables → Actions에서 기존 키를 등록할 수 있다(메뉴에 따라 데스크톱 사이트 보기 필요). 원본 키가 없다면 최초 등록은 키가 있는 신뢰된 PC/환경에서 진행한다. 사용자에게 키/토큰을 채팅으로 보내도록 요구하지 않는다.
+
+현재 실패한 bitwire-v1.10.0 태그의 워크플로는 전용 BITWIRE_DEBUG_KEYSTORE_BASE64를 요구한다. 이 Secret을 등록한 뒤 해당 실행을 Re-run all jobs한다. 공유 Secret 후보 처리는 이후 main 워크플로에 추가된 기능이며 과거 태그 코드를 자동 변경하지 않는다.
