@@ -48,12 +48,17 @@ jobs:
       - name: Restore existing signing key for publication only
         if: env.BITWIRE_RELEASE_EVENT == 'true' && steps.source.outputs.publish == 'true'
         env:
-          BITWIRE_DEBUG_KEYSTORE_BASE64: ${{ secrets.BITWIRE_DEBUG_KEYSTORE_BASE64 }}
+          BITWIRE_DEBUG_KEYSTORE_BASE64: ${{ secrets.BITWIRE_DEBUG_KEYSTORE_BASE64 || secrets.PIXEL_TRAFFIC_KEYSTORE_BASE64 }}
         run: python3 tools/release/build_release.py restore-key
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
+      - name: Check existing same-certificate repository Secret without exposing it
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          BITWIRE_DEBUG_KEYSTORE_BASE64: ${{ secrets.BITWIRE_DEBUG_KEYSTORE_BASE64 || secrets.PIXEL_TRAFFIC_KEYSTORE_BASE64 }}
+        run: python3 tools/release/build_release.py probe-key
       - uses: android-actions/setup-android@v3
         with:
           packages: platform-tools

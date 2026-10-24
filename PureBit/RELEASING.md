@@ -62,7 +62,9 @@ GitHub CLI로 키를 화면에 출력하지 않고 등록하는 예시:
 base64 -w0 /secure/path/to/existing/debug.keystore | gh secret set BITWIRE_DEBUG_KEYSTORE_BASE64 --repo BACKHYUN96/S20-PLUS
 ```
 
-키는 게시 빌드에서만 runner 임시 ANDROID_USER_HOME으로 복원하고, 마지막에 삭제한다.
+전용 Secret이 없으면 같은 저장소의 기존 `PIXEL_TRAFFIC_KEYSTORE_BASE64`를 후보로 사용할 수 있다. 기존 앱의 실제 공개 인증서가 BITWIRE와 일치함을 확인했으며 APK 게시 전 동일 지문을 다시 강제한다. 키가 없거나 지문이 다르면 새 키로 대체하지 않는다. 신뢰된 main 푸시의 probe는 값 노출 없이 가용성/지문만 검사하고 임시 복원 파일을 즉시 삭제한다.
+
+키는 게시 빌드와 위 준비 검사에서 runner 임시 ANDROID_USER_HOME으로 복원하고, 마지막에 삭제한다.
 Secret이 없으면 명확한 오류로 게시를 중단하며 대체 키를 만들지 않는다.
 APK 생성 후 apksigner 인증서 지문이 위 값과 다르면 게시하지 않는다.
 

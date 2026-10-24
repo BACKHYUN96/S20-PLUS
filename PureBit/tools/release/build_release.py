@@ -79,6 +79,26 @@ def restore_key():
     print("Existing signing material restored to the runner's temporary Android home")
 
 
+def probe_key():
+    # Trusted main pushes only. No key data is written to logs, artifacts or source.
+    if not os.environ.get("BITWIRE_DEBUG_KEYSTORE_BASE64"):
+        print("Signing readiness: no dedicated or existing shared repository Secret is available")
+        write_json(ROOT / "ci-logs/signing-readiness.json", {"available": False})
+        return
+    restore_key()
+    target = Path(os.environ["ANDROID_USER_HOME"]) / "debug.keystore"
+    try:
+        output = checked(["keytool", "-list", "-v", "-keystore", target, "-storepass", "android", "-alias", "androiddebugkey"])
+        values = re.findall(r"SHA256:\s*([A-Fa-f0-9:]{95})", output)
+        matches = len(values) == 1 and values[0].replace(":", "").lower() == EXPECTED_CERT
+        write_json(ROOT / "ci-logs/signing-readiness.json", {"available": True, "matches_original_certificate": matches})
+        if not matches:
+            raise ValueError("Existing Secret certificate does not match BITWIRE")
+        print("Signing readiness: existing repository Secret matches the original BITWIRE certificate")
+    finally:
+        target.unlink(missing_ok=True)
+
+
 def checked(command):
     return subprocess.run([str(x) for x in command], check=True, text=True, capture_output=True).stdout
 
@@ -161,9 +181,9 @@ Latest stable APK: https://github.com/{repository}/releases/latest/download/BITW
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("operation", choices=("source", "restore-key", "package"))
+    parser.add_argument("operation", choices=("source", "restore-key", "probe-key", "package"))
     args = parser.parse_args()
     try:
-        {"source": source, "restore-key": restore_key, "package": package}[args.operation]()
+        {"source": source, "restore-key": restore_key, "probe-key": probe_key, "package": package}[args.operation]()
     except (ValueError, KeyError, subprocess.CalledProcessError) as error:
         raise SystemExit(f"BITWIRE release stopped: {error}") from None
