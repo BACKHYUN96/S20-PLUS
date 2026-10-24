@@ -2,6 +2,8 @@
 
 ## 2026-10-24 — BITWIRE 자동 APK 빌드·Releases 구축
 
+최신 자동 빌드도 성공: de019775 / [run40064793493](https://github.com/BACKHYUN96/S20-PLUS/actions/runs/40064793493), build job120785653303 success. 실제 로그에서 도구9개·native 성공, assembleDebug/testDebugUnitTest/lintDebug 및 BUILD SUCCESSFUL을 확인했다. 일반 push의 publish는 skipped. 현재 main의 후속 변경은 기록 문서뿐이며 앱/워크플로는 이 검증 소스와 같다. 배포는 tag run40064854257의 기존 서명 Secret 누락으로 여전히 차단, 다운로드404 상태다.
+
 게시 게이트 실측: de019775 소스 main 푸시 후 bitwire-v1.10.0 태그를 생성·푸시했다. tag run40064854257 / job120785834308은 Secret 누락을 명확히 보고하며 새 키 생성 없이 실패하고 publish를 skip했다. 실패 로그 artifact 저장도 성공했다. 최신/버전별 BITWIRE.apk URL은 HTTP404를 실제 확인했다. 따라서 정상 다운로드 URL/배포 완료로 보고하지 않는다. 사용자에게 네트워크 설정 안내를 제공했으며 도메인 허용 및 Secret 등록 이후 같은 tag run 재실행/실제 자산·latest HTTP/SHA 검증이 다음 필수 단계다. 로컬 도구는 지문/키 원본 보존·stdin 전달 테스트까지9개 통과한다.
 
 실제 검증: commit3dd346a / run40064417261 / build job120784547148 success. 기존SDK37.0/NDK/CMake 설치, native, 도구7, assembleDebug/testDebugUnitTest/lintDebug 통과; 일반 push의 publish job은 skipped. 로컬 실제 APK SHA256 9b6d5149…d0d93, 기존 signer a6e489ad…aba6, 코드47/1.10.0, 16KiB 정렬과 빌드메타데이터 생성 검증. 사용자에게 api.github.com 환경 허용 안내를 제공했고 등록 도구는 지문 일치 검사 후 키를 gh secret set stdin으로만 전달한다. 키 원본 수정/로그 출력/소스 저장 없음. 실제 배포와 다운로드 검증은 아직 남았다.
